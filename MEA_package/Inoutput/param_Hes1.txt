@@ -1,0 +1,24 @@
+Timepoints:
+0	30	60	90	120	150	180	210	240
+
+Parameters:
+5	10	1	1
+0	1	0	0
+
+Set parameter limits:
+5	10	1	1
+0	1	0	0
+
+Initial conditions:
+4	20	20
+1	0	0
+
+Set initial conditions limits:
+N   	N	N
+0	0	0
+	
+Fixed(0)/variable(1) parameters:
+1	1	1	1
+
+Fixed(0)/variable(1) initial conditions:
+1	1	1

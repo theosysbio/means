@@ -1,0 +1,15 @@
+Number of reactions:
+2
+
+Number of rate constants:
+3
+
+Number of variables (species):
+1
+
+Stoichiometry matrix (should be nvariables*nreactions):
+[-2,2]
+
+Reaction propensities (in terms of rate parameters c[i] and variables y[j]): 
+c[0]*y[0]*(y[0]-1)
+c[1]*((float(1)/2)*(c[2]-y[0]))
