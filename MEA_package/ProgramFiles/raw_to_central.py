@@ -13,7 +13,18 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
     Expresses higher (2+) order raw moments in terms of central moments.
     Returns `momvec` (list of central moments, `ymi`) and `mom` (list of equivalent expressions in terms of raw moments).
 
-    Based on equation 8
+    Based on equation 8 in the paper:
+
+    ::math::`\mathbf{M_{x^n}} = \sum_{k_1=0}^{n_1} ... \sum_{k_d=0}^{n_d} \mathbf{{n \choose k}} (-1)^{\mathbf{n-k}} \mu^{\mathbf{n-k}} \langle \mathbf{x^k} \rangle`
+
+    The term ::math::`\mathbf{M_{x^n}}` is named `ym{str(n)}` in the output, where `{str(n)}` is string representation
+    of vector n.
+
+    The term ::math::`\mu^{\mathbf{n-k}}`, so called alpha term is expressed with respect to `ymat` values that
+    are equivalent to ::math::`\mu_i` in the paper.
+
+    The last term, the beta term, ::math::`\langle \mathbf{x^n} \rangle` is named as `xstr(k)` in the resulting
+    symbolic expression, where k is the vector of ks (or an element of `mcounter` if you like)
 
     :param nvariables: Number of variables in the system
     :param counter: The first list output by fcount - all moments minus the first order moments
@@ -21,6 +32,7 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
     :param mcounter: The second list output by fcount - all moments including the first order moments
     :return:
     """
+
     ncounter = counter[:]
     ncounter.remove(counter[0])  # TODO: They are certainly relying on counter[0] to always be some moment we don't need as it is removed
 
@@ -96,5 +108,5 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
             mstr = mstr + str(vec[mm])          #creates string of indices for each n1,...,nd
         momvec.append(Symbol('ym' + mstr))
 
-  
+
     return (mom, momvec)
