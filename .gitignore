@@ -44,3 +44,4 @@ nosetests.xml
 #Temporary output files
 ODEout
 ODEout.*
+model*.tex
