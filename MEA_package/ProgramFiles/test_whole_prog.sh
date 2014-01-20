@@ -12,8 +12,8 @@ testModel(){
 
 	python runprogram.py --MEA --model=$INOUT_DIR/$model --ODEout=$OUT_FILE
 
-	tmp="$(mktemp)"
-	tmp2="$(mktemp)"
+	tmp="$(mktemp -t MEA.XXXXX)"
+	tmp2="$(mktemp -t MEA.XXXXX)"
 	grep -v 'Time' $INOUT_DIR/$OUT_FILE > $tmp
 	grep -v 'Time' $good_result > $tmp2
 
