@@ -3,6 +3,8 @@
 from time import time
 import sys
 import os
+
+from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
 model_ = sys.argv[1]
 os.system('python formatmodel.py '+model_)
 
@@ -11,10 +13,73 @@ os.system('python formatmodel.py '+model_)
 #   moment equations using the specified model
 #############################################################################
 
+
+
+def make_damat(amat, nMoments, nreactions, nvariables,ymat):
+
+    ##############################################################
+    # Calculate matrix of derivatives of rate equations ("damat")
+    # (n-1)th row gives nth order derivatives
+    # number of columns = nreactions
+    # each entry is a list with derivatives for that reaction/order
+    ##############################################################
+
+
+    # In the end, damat contains the derivatives of all orders (ord), for all reactions (react),
+    # with respect to all species (sps).
+    # damat[ord][react][sps]
+
+
+    nDerivatives = nMoments
+    damat = Matrix(nDerivatives,1, lambda i,j:0)
+
+
+    # At this point, `damat` is a matrix with 1 col and as many rows as moments. It is filled with 0s
+    # `amat` is the column matrix of propensities (as many as reactions)
+    # `ymat` is the column matrix of species (variables)
+
+
+    # For all moment orders
+    for D in range(0,nDerivatives):
+        # if 0th order moment
+        if D==0:
+            # create an empty row
+            row = []
+            # For all reactions
+            for na in range(0,nreactions):
+                # create an empty vect of reactions
+                reaction = []
+                # for all variables/ all species
+                for nv in range(0,nvariables):
+                    # We derive the propensity of this reaction with respect to a species
+
+                    deriv = diff(amat[na,0],ymat[nv,0])
+                    reaction.append(deriv)
+                # In the end, we get the partial derivatives of the propensity
+                # of this reaction with respect to all species.
+                row.append(reaction)
+            # For all reactions in a given order of derivation D we have a row
+            damat[D,0] = row
+        else:
+            # this does the same as above but does higher order derivatives from the results obtained before
+            prev = Matrix(damat[D-1,0])
+            row = []
+            for na in range(0,nreactions):
+                reaction = []
+                prevna = prev[na,:]
+                y = len(prevna)
+                for eq in range(0,y):
+                    for nv in range(0,nvariables):
+                        deriv = diff(prevna[0,eq],ymat[nv,0])
+                        reaction.append(deriv)
+                row.append(reaction)
+            damat[D,0] = row
+    return damat
+
 def MFK_final(nMoments):
     time1 = time()
     output = open(str(sys.argv[3]),'w')
-    from model import model 
+    from model import model
     from fcount import fcount
     from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
     from sympy import S as F
@@ -40,40 +105,10 @@ def MFK_final(nMoments):
     elif S.rows!=nvariables:
         print "Wrong number of variables in S"
 
-    ##############################################################
-    # Calculate matrix of derivatives of rate equations ("damat")
-    # (n-1)th row gives nth order derivatives
-    # number of columns = nreactions
-    # each entry is a list with derivatives for that reaction/order
-    ##############################################################
+
 
     amat = a
-    nDerivatives = nMoments
-    damat = Matrix(nDerivatives,1, lambda i,j:0)        
-    for D in range(0,nDerivatives):       
-        if D==0:                          
-            row = []
-            for na in range(0,nreactions):
-                reaction = []
-                for nv in range(0,nvariables):
-                    deriv = diff(a[na,0],ymat[nv,0])
-                    reaction.append(deriv)
-                row.append(reaction)
-            damat[D,0] = row
-        else:
-            prev = Matrix(damat[D-1,0])
-            row = []
-            for na in range(0,nreactions):
-                reaction = []
-                prevna = prev[na,:]
-                y = len(prevna)
-                for eq in range(0,y):
-                    for nv in range(0,nvariables):
-                        deriv = diff(prevna[0,eq],ymat[nv,0])
-                        reaction.append(deriv)
-                row.append(reaction)
-            damat[D,0] = row
-
+    damat = make_damat(a, nMoments, nreactions, nvariables, ymat)
 
     #####################################################################
     #  Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
@@ -99,7 +134,7 @@ def MFK_final(nMoments):
     #  CentralMoments is a list with entry for each moment (n1,...,nd) 
     #  combination.
     #####################################################################
-
+    nDerivatives = numMoments
     CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
 
     
