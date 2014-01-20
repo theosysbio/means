@@ -40,3 +40,7 @@ nosetests.xml
 
 #pycharm project
 .idea
+
+#Temporary output files
+ODEout
+ODEout.*
