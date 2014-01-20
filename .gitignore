@@ -40,5 +40,6 @@ nosetests.xml
 
 #pycharm project
 .idea
+
 .DS_Store
 .texpadtmp
