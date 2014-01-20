@@ -15,7 +15,7 @@ os.system('python formatmodel.py '+model_)
 
 
 
-def make_damat(amat, nMoments, nreactions, nvariables,ymat):
+def make_damat(amat, nMoments, nreactions, nvariables, ymat):
 
     ##############################################################
     # Calculate matrix of derivatives of rate equations ("damat")
@@ -31,7 +31,7 @@ def make_damat(amat, nMoments, nreactions, nvariables,ymat):
 
 
     nDerivatives = nMoments
-    damat = Matrix(nDerivatives,1, lambda i,j:0)
+    damat = Matrix(nDerivatives, 1, lambda i, j : 0)
 
 
     # At this point, `damat` is a matrix with 1 col and as many rows as moments. It is filled with 0s
@@ -40,13 +40,13 @@ def make_damat(amat, nMoments, nreactions, nvariables,ymat):
 
 
     # For all moment orders
-    for D in range(0,nDerivatives):
+    for D in range(0, nDerivatives):
         # if 0th order moment
         if D==0:
             # create an empty row
             row = []
             # For all reactions
-            for na in range(0,nreactions):
+            for na in range(0, nreactions):
                 # create an empty vect of reactions
                 reaction = []
                 # for all variables/ all species
