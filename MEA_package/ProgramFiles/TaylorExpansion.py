@@ -1,16 +1,29 @@
-########################################################################
-#  TaylorExpansion function creates terms used in eq. 6
-#  to calculate dmu/dt for each species/variable
-#  (equivalent to taylorexp and iterate_counter functions in Matlab code
-#  Returns TE_matrix: row for each reaction, column for n1,...,nd
-#  combination in counter (i.e. all but 1st order)
-########################################################################
+
 
 from sympy import Matrix, Symbol, factorial
 from sympy import S as F
 
+
 def TaylorExpansion(nreactions, nvariables, damat, a, counter, nMoments):
-    
+
+    """
+    TaylorExpansion function creates terms used in eq. 6
+    to calculate dmu/dt for each species/variable
+    (equivalent to taylorexp and iterate_counter functions in Matlab code
+    Returns TE_matrix: row for each reaction, column for n1,...,nd
+    combination in counter (i.e. all but 1st order)
+
+
+
+    :param nreactions: the number of reactions. Should be equal to len(a)
+    :param nvariables: The number of variables/species
+    :param damat: the differentiation matrix of propensities
+    :param a: the propensities of all reactions
+    :param counter: the matrix of combinations of derivative order for each species
+    :param nMoments: the number of moments used in expansion
+    :return:
+    """
+
     TE_matrix = Matrix(nreactions, len(counter), lambda i,j: 0)
 
     for L in range(0, nreactions):              #loop through each reaction 
@@ -22,7 +35,7 @@ def TaylorExpansion(nreactions, nvariables, damat, a, counter, nMoments):
             if Dnumber==0:                      #if no differentiation, add original propensity term
                 TE_matrix[L,i] = a[L]
                 
-            elif (Dnumber>0 and Dnumber<=nMoments):  #if differentiation needed, calculate required term
+            elif (Dnumber > 0 and Dnumber <= nMoments):  #if differentiation needed, calculate required term
 
                 r_1 = 1                        #calculate factorial term (r_1 = n!)
                 for j in nvec:
@@ -47,4 +60,5 @@ def TaylorExpansion(nreactions, nvariables, damat, a, counter, nMoments):
                     Didx = Didx + ((nvariables) ** (Dnumber - nzs - 1)) * (nnew[nzs])
 
                 TE_matrix[L,i] = (F(1)/r_1)*damat[Dnumber-1][L][Didx]
-    return (TE_matrix) 
+    return (TE_matrix)
+
