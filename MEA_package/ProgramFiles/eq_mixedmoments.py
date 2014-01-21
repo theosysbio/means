@@ -27,7 +27,7 @@ def eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nD
     :param nDerivatives: the maximum order of moments
     :param kvec: vector of ks (upper limit for the sums).
     :param ekcounter: all possible ::math::`[e_1, ..., e_d]` vectors that are needed for the sums (precomputed in advance)
-    :param dAdt:
+    :param dAdt: the result of equation 10 in the paper, ::math::`\frac{d\alpha}{dt}` term. A column vector with columns representing different counter values.
     :return:
     """
     mixedmomentst = Matrix(len(ekcounter), dAdt.cols, lambda i, j: 0)
