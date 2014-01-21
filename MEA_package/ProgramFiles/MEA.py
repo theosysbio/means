@@ -84,7 +84,7 @@ def make_damat(amat, nMoments, ymat):
 
 
 def MFK_final(nMoments):
-    print "test"
+
     time1 = time()
     output = open(str(sys.argv[3]),'w')
     from model import model
@@ -318,7 +318,6 @@ def get_args():
 
     return (model_, numMoments)
 if __name__ == "__main__":
-    print "test"
     model_, numMoments = get_args()
     os.system('python formatmodel.py '+model_)
     MFK_final(numMoments)
