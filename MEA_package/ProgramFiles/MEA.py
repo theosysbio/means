@@ -316,7 +316,7 @@ def get_args():
     numMoments = int(sys.argv[2])
 
     return (model_, numMoments)
-if __name__ == "__main__":
+if __name__ == "__main_":
     model_, numMoments = get_args()
     os.system('python formatmodel.py '+model_)
     MFK_final(numMoments)

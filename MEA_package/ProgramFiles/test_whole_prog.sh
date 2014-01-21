@@ -11,12 +11,23 @@ testModel(){
 	good_result=$INOUT_DIR/$model.out
 
 	python runprogram.py --MEA --model=$INOUT_DIR/$model --ODEout=$OUT_FILE
+	
+	if [ ! -f $OUT_FILE ];
+	then
+		echo "$model FAILED!!"
+		echo "No output was generated"
+		return $FALSE
+	fi
 
 	tmp="$(mktemp -t MEA.XXXXX)"
 	tmp2="$(mktemp -t MEA.XXXXX)"
 	grep -v 'Time' $INOUT_DIR/$OUT_FILE > $tmp
 	grep -v 'Time' $good_result > $tmp2
-
+	echo "================================="
+	cat $tmp
+	echo "---------------------------------"
+	cat $tmp2
+	
 	diff_res=$(diff $tmp $tmp2)
 	if [ "$dif_res" != "" ] 
 	then
@@ -26,6 +37,8 @@ testModel(){
 		echo "$model OK"
 		return $TRUE
 	fi 
+	
+	
 
 	rm $tmp $tmp2
 }
