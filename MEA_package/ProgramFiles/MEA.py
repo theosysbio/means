@@ -5,8 +5,6 @@ import sys
 import os
 
 from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
-model_ = sys.argv[1]
-os.system('python formatmodel.py '+model_)
 
 #############################################################################
 #   MFK_final takes number of moments as input, and produces central
@@ -15,20 +13,27 @@ os.system('python formatmodel.py '+model_)
 
 
 
-def make_damat(amat, nMoments, nreactions, nvariables, ymat):
+def make_damat(amat, nMoments, ymat):
 
-    ##############################################################
-    # Calculate matrix of derivatives of rate equations ("damat")
-    # (n-1)th row gives nth order derivatives
-    # number of columns = nreactions
-    # each entry is a list with derivatives for that reaction/order
-    ##############################################################
+    """
+    Calculate matrix of derivatives of rate equations ("damat")
+    (n-1)th row gives nth order derivatives
+    number of columns = nreactions
+    each entry is a list with derivatives for that reaction/order
 
+    In the end, damat contains the derivatives of all orders (ord), for all reactions (react),
+    with respect to all species (sps):
+    damat[ord][react][sps]
+    All "mixed derivatives" are also calculated.
 
-    # In the end, damat contains the derivatives of all orders (ord), for all reactions (react),
-    # with respect to all species (sps).
-    # damat[ord][react][sps]
+    :param amat: the propensity vector
+    :param nMoments: the number of moments used in expansion
+    :param ymat: the species vector
 
+    :return: the "matrix" of derivation of amat
+    """
+    nreactions = len(amat)
+    nvariables = len(ymat)
 
     nDerivatives = nMoments
     damat = Matrix(nDerivatives, 1, lambda i, j : 0)
@@ -76,6 +81,8 @@ def make_damat(amat, nMoments, nreactions, nvariables, ymat):
             damat[D,0] = row
     return damat
 
+
+
 def MFK_final(nMoments):
     time1 = time()
     output = open(str(sys.argv[3]),'w')
@@ -108,7 +115,7 @@ def MFK_final(nMoments):
 
 
     amat = a
-    damat = make_damat(a, nMoments, nreactions, nvariables, ymat)
+    damat = make_damat(a, nMoments, ymat)
 
     #####################################################################
     #  Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
@@ -134,7 +141,7 @@ def MFK_final(nMoments):
     #  CentralMoments is a list with entry for each moment (n1,...,nd) 
     #  combination.
     #####################################################################
-    nDerivatives = numMoments
+    nDerivatives = nMoments
     CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
 
     
@@ -304,5 +311,12 @@ def MFK_final(nMoments):
     out_tex.write('\n\end{document}')
     out_tex.close()
 
-numMoments = int(sys.argv[2])
-MFK_final(numMoments)
+def get_args():
+    model_ = sys.argv[1]
+    numMoments = int(sys.argv[2])
+
+    return (model_, numMoments)
+if __name__ == "__main__":
+    model_, numMoments = get_args()
+    os.system('python formatmodel.py '+model_)
+    MFK_final(numMoments)

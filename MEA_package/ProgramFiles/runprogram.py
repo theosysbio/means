@@ -132,6 +132,7 @@ def run():
                 print "\n  Error:\n  "+model+"  does not exist in working directory.\n  Please try again with correct model filename.\n"
                 sys.exit()
             else:
+                print "TEST"
                 os.system('python MEA.py '+wd+model+' '+str(nMoments)+' '+wd+ODEout)
 
     if LNA == True:
