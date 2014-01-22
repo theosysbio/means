@@ -25,9 +25,9 @@ testModel(){
 	grep -v 'Time' $good_result > $tmp2
 	
 	diff_res=$(diff $tmp $tmp2)
-	if [ "$dif_res" != "" ] 
+	if [ -n "$diff_res" ] 
 	then
-		echo "$model FAILED!!"
+		echo "Model $model FAILED!!"
 		return $FALSE
 	else
 		echo "$model OK"
