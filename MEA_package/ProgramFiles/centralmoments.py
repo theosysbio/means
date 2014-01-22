@@ -13,6 +13,26 @@ from eq_mixedmoments import eq_mixedmoments
 
 def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives):
     
+    """
+    :param counter:
+    :param mcounter:
+    :param ncounter: counter without zeroth oder moment
+    :param nvec:    the moment vector
+    :param repmat:  replicate mcounter times the moment vector
+    :param M:       du/dt in paper
+    :param TaylorM:
+    :param Taylorexp:
+    :param nvariables:
+    :param ymat:     species y0, y1,...yd
+    :param nreactions:
+    :param nMoments:
+    :param amat:
+    :param S:
+    :param nDerivatives:
+    :param centralmoments: size is len(counter)*(len(counter)-1
+    :param
+    :return:
+    """
     mixmom = 0
     ncounter = counter[:]
     ncounter.remove(counter[0])    #counter w/o zeroth order moment, remove because central moment is 1
@@ -24,9 +44,8 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
     # or 1st order central moment as this is 0
     ###############################################################
 
-   # for Tn in range(0,len(ncounter)):
-    for Tn in range(0,1):
-        centralmomentsTn = []   #one number, appended to centralmoments in the end
+    for Tn in range(0,len(ncounter)):
+        centralmomentsTn = []
         nvec = ncounter[Tn]   #the moment
         repmat = []
         for i in range(0,len(mcounter)):
@@ -36,24 +55,19 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
 
         G = Matrix(mcounter)
         H = Matrix(repmat)
-        check = G - H   #(n-k) in Eq. 9 in paper?
-        print "check"
-        print check
-        print "G"
-        print G
-        print "H"
-        print H
-        print
+        check = G - H
 
-        midx = []
+        midx = []   #index of moments, if mcounter is smaller than repmat
 
         for i in range(0,check.rows):
             mc = max(check[i,:])
             if mc<=0:
                 midx.append(i)
+
         Taylorexp = [[0]*len(counter)]*len(mcounter)
         for Tm in range(0,len(midx)):
-            mvec = mcounter[midx[Tm]]
+            mvec = mcounter[midx[Tm]]   #equivalent to k in paper
+
 
             ##########################################
             # f_2 is the (n k) binomial term in equation 9
@@ -61,6 +75,7 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
             f_2=1
             for fi in range(0,len(mvec)):
                 f_2 = f_2*factorial(nvec[fi])/(factorial(mvec[fi])*factorial(nvec[fi]-mvec[fi])) #binomial formula
+
             ##########################################
             # f_3 is (-1)^(n-k) term in equation 9
             ##########################################
@@ -74,7 +89,8 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
             # (equivalent to fA_counter in Angelique's code)
             # ymat used in place of means - these will be replaced later
             ##########################################
-            A = (ymat[0])**(nvec[0]-mvec[0])
+
+            A = (ymat[0])**(nvec[0]-mvec[0])    #A is always 1
             for nv in range(1, nvariables):
                 A = A*(ymat[nv]**(nvec[nv]-mvec[nv]))
             
@@ -87,8 +103,8 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
             # Calculate B, dBdt terms in equation 9
             ##########################################
 
-            mstr = str(mvec[0])     #moment string
-            for mm in range(1,len(mvec)):   #for each moment
+            mstr = str(mvec[0])
+            for mm in range(1,len(mvec)):   #for each k
                 mstr = mstr+str(mvec[mm])
             B = Symbol('x'+mstr)
 
@@ -98,12 +114,10 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
 
             C = Matrix(mcounter)
             D = Matrix(repmat)
+
             check = C - D
-            print "check"
-            print check
 
-
-            ekidx = []  #index of e k, see Eq. 11
+            ekidx = []  #indeces of e k, see Eq. 11
             for i in range(0,check.rows):
                 mc = max(check[i,:])
                 if mc<1:
@@ -111,15 +125,16 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
 
             ekcounter = []
             for i in range(0,len(ekidx)):
-                ekcounter.append(mcounter[ekidx[i]])    #ekcounter is a matrix
-                print "mcounter is", mcounter
-                print "ekcounter is", ekcounter
+                ekcounter.append(mcounter[ekidx[i]])
+
+
 
             for i in range(0,len(ekcounter)):
                 if sum(ekcounter[i])==0:
                     ekcounter[i] = "zero"
 
             ekcounter.remove("zero")
+
             if ekcounter != []:
                 dBdt = eq_mixedmoments(nreactions,nvariables,nMoments,amat,counter,S,ymat,nDerivatives,mvec,ekcounter,dAdt)
 
@@ -127,19 +142,11 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
 
                 dBdt = Matrix(dAdt.rows,dAdt.cols,lambda i,j:0)
                 B=1
-
-            print "new B", B
      
-            mixmom = mixmom+1
+            #mixmom = mixmom+1
 
             Taylorexp[Tm] = (f_2*f_3*(A*dBdt+B*dAdt))
-            print "taylorexp_tm",Taylorexp[Tm]
-            print "f2",f_2
-            print "f3",f_3
-            print "A", A
-            print "B",B
-            print "dadt",dAdt
-            print "dbdt",dBdt
+
         #################################################
         # Create list of central moments terms to return
         # to MEA program
@@ -153,7 +160,6 @@ def eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMom
         for j in range(0,len(counter)):
             centralmomentsTn.append(sum(Taylorexp1[:,j]))
         centralmoments.append(centralmomentsTn)
-        #print "midx"
-        #print midx
+
 
     return centralmoments
