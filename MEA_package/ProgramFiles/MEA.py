@@ -81,7 +81,17 @@ def make_damat(amat, nMoments, ymat):
             damat[D,0] = row
     return damat
 
-
+def make_T_matrix(nvariables, nreactions, TE_matrix, S):
+    #TODO AFAIK, the variable T is unused. If this is true, this function is unnecessary
+    T = []
+    for nv in range(0,nvariables):
+        row = []
+        for nr in range(0,nreactions):
+            Stmp = S[nv,nr]
+            Ttmp = TE_matrix[nr,:]
+            row.append(Stmp*Ttmp)
+        T.append(row)
+    return T
 
 def MFK_final(nMoments):
 
@@ -128,15 +138,8 @@ def MFK_final(nMoments):
 
 
     M = (S*TE_matrix) 
-    #TODO it seems that T is unused!!!
-    T = []
-    for nv in range(0,nvariables):
-        row = []
-        for nr in range(0,nreactions):
-            Stmp = S[nv,nr]
-            Ttmp = TE_matrix[nr,:]
-            row.append(Stmp*Ttmp)
-        T.append(row)
+
+    T = make_T_matrix(nvariables, nreactions, TE_matrix, S)
 
     #####################################################################
     #  Calculate expressions to use in central moments equations (eq. 9)
