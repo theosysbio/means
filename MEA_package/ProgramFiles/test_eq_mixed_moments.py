@@ -178,3 +178,127 @@ class TestEqMixedMoments_Under_p53(AbstractTestEqMixedMoments):
                ])])
 
         self.assertEqual(answer, correct_answer)
+
+class TestEqMixedMoments_Under_dimer(AbstractTestEqMixedMoments):
+    """
+    Tests the EqMixedMoments function under dimer model as it is specified
+    """
+
+    def get_instance_values(self):
+        constants = sympy.Matrix([sympy.var('c_0'), sympy.var('c_1'), sympy.var('c_2')])
+        species = sympy.Matrix([sympy.var('y_0')])
+        number_of_moments = 2
+        stoichiometry_matrix = sympy.Matrix([[-2, 2]])
+        propensities = sympy.Matrix([constants[0] * species[0] * (species[0] - 1),
+                                     constants[1] * (0.5 * constants[2] - 0.5 * species[0])])
+        counter = [[0], [2]]
+
+        return constants, species, number_of_moments, stoichiometry_matrix, propensities, counter
+
+
+    def test_random_case(self):
+        """
+        For an (actual) usage case of this program picked at random, the outputs should match up
+        :return:
+        """
+        answer = self.fetch_answer(kvec=[2],
+                                   ekcounter=[[1], [2]],
+                                   da_dt=sympy.Matrix([[0, 0]])
+        )
+
+        correct_answer = sympy.Matrix([
+            map(sympy.sympify, [
+                '-4*c_0*y_0**2*(y_0 - 1) + 4*c_0*y_0*(y_0 - 1) + 4*c_1*y_0*(0.5*c_2 - 0.5*y_0) + 4*c_1*(0.5*c_2 - 0.5*y_0)',
+                '-8*c_0*y_0 - 4*c_0*(y_0 - 1) + 4*c_0 - 2.0*c_1'
+               ])])
+
+        self.assertEqual(answer, correct_answer)
+
+
+    def test_da_dt_non_zero_ase(self):
+        """
+        For an (actual) usage case of this program that has da_dt non zero, the outputs should match up
+        :return:
+        """
+        da_dt = sympy.Matrix([map(sympy.sympify, ['-2*c_0*y_0*(y_0 - 1) + 2*c_1*(0.5*c_2 - 0.5*y_0)',
+                                                                           '-2*c_0'])])
+
+        answer = self.fetch_answer(kvec=[1],
+                                   ekcounter=[[1]],
+                                   da_dt=da_dt)
+
+        correct_answer = da_dt
+        self.assertEqual(answer, correct_answer)
+
+class TestEqMixedMoments_Under_hes1(AbstractTestEqMixedMoments):
+    """
+    Tests the EqMixedMoments function under dimer model as it is specified
+    """
+
+    def get_instance_values(self):
+        constants = sympy.Matrix([sympy.var('c_0'), sympy.var('c_1'), sympy.var('c_2'), sympy.var('c_3')])
+        species = sympy.Matrix([sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')])
+        number_of_moments = 2
+        stoichiometry_matrix = sympy.Matrix([[-1,  0,  0,  0, 0, 1],
+                                             [0, -1,  0, -1, 1, 0],
+                                             [ 0,  0, -1,  1, 0, 0]])
+        propensities = sympy.Matrix([0.03*species[0],
+                                     0.03*species[1],
+                                     0.03*species[2],
+                                     constants[3] * species[1],
+                                     constants[2] * species[0],
+                                     1.0/(1+species[2]**2/constants[0]**2)])
+        counter = [[0, 0, 0], [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
+
+        return constants, species, number_of_moments, stoichiometry_matrix, propensities, counter
+
+
+    def test_random_case(self):
+        """
+        For an (actual) usage case of this program picked at random, the outputs should match up
+        :return:
+        """
+        answer = self.fetch_answer(kvec=[2, 0, 0],
+                                   ekcounter=[[1, 0, 0], [2, 0, 0]],
+                                   da_dt=sympy.Matrix([[0, 0, 0, 0, 0, 0, 0]])
+        )
+
+        correct_answer = sympy.Matrix([
+            map(sympy.sympify, [
+                '-0.06*y_0**2 + 0.03*y_0 + 2.0*y_0/(1 + y_2**2/c_0**2) + 1.0/(1 + y_2**2/c_0**2)',
+                '-2.0*y_0/(c_0**2*(1 + y_2**2/c_0**2)**2) - 1.0/(c_0**2*(1 + y_2**2/c_0**2)**2) + 8.0*y_0*y_2**2/(c_0**4*(1 + y_2**2/c_0**2)**3) + 4.0*y_2**2/(c_0**4*(1 + y_2**2/c_0**2)**3)',
+                0,
+                0,
+                '-4.0*y_2/(c_0**2*(1 + y_2**2/c_0**2)**2)',
+                0,
+                -0.06
+               ])])
+
+        self.assertEqual(answer, correct_answer)
+
+    def test_da_dt_nonzero_case(self):
+        """
+        For an (actual) usage case of this program picked at random, where da_dt is non zero.
+        The outputs should match up
+        :return:
+        """
+
+        da_dt = sympy.Matrix([map(sympy.sympify,
+                                  ['-0.03*y_0 + 1.0/(1 + y_2**2/c_0**2)',
+                                   '-1.0/(c_0**2*(1 + y_2**2/c_0**2)**2) + 4.0*y_2**2/(c_0**4*(1 + y_2**2/c_0**2)**3)',
+                                   0,
+                                   0,
+                                   0,
+                                   0,
+                                   0])])
+
+
+        answer = self.fetch_answer(kvec=[1, 0, 0],
+                                   ekcounter=[[1, 0, 0]],
+                                   da_dt=da_dt)
+
+
+        # Its weird that this is true so often:
+        correct_answer = da_dt
+
+        self.assertEqual(answer, correct_answer)
