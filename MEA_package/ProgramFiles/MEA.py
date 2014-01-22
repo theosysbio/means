@@ -5,13 +5,37 @@ import sys
 import os
 
 from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
+from fcount import fcount
+from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
+from sympy import S as F
+from sympy.solvers import solve
+from TaylorExpansion import TaylorExpansion
+from centralmoments import eq_centralmoments
+from raw_to_central import raw_to_central
+from sympy import latex
 
 #############################################################################
 #   MFK_final takes number of moments as input, and produces central
 #   moment equations using the specified model
 #############################################################################
 
+def get_and_check_model():
+    from model import model
 
+    (S,a,nreactions,nvariables,ymat,Mumat, c) = model()
+
+    #Delete temporary model file
+    os.system('rm model.py*')
+    #TODO use assertions instead of `if else`
+    #Check stoichiometry matrix
+    if S.cols==nreactions and S.rows==nvariables:
+        print "S=okay"
+    elif S.cols!=nreactions:
+        print "Wrong number of reactions in S"
+    elif S.rows!=nvariables:
+        print "Wrong number of variables in S"
+
+    return (S,a,nreactions,nvariables,ymat,Mumat, c)
 
 def make_damat(amat, nMoments, ymat):
 
@@ -93,67 +117,8 @@ def make_T_matrix(nvariables, nreactions, TE_matrix, S):
         T.append(row)
     return T
 
-def MFK_final(nMoments):
 
-    time1 = time()
-    output = open(str(sys.argv[3]),'w')
-    from model import model
-    from fcount import fcount
-    from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
-    from sympy import S as F
-    from sympy.solvers import solve
-    from TaylorExpansion import TaylorExpansion
-    from centralmoments import eq_centralmoments
-    from raw_to_central import raw_to_central
-    from sympy import latex
-
-
-
-    #Define the kinetic model
-    [S,a,nreactions,nvariables,ymat,Mumat, c] = model()
-
-    #Delete temporary model file
-    os.system('rm model.py*')
-
-    #Check stoichiometry matrix
-    if S.cols==nreactions and S.rows==nvariables:            
-        print "S=okay"
-    elif S.cols!=nreactions:
-        print "Wrong number of reactions in S"
-    elif S.rows!=nvariables:
-        print "Wrong number of variables in S"
-
-
-
-    amat = a
-    damat = make_damat(a, nMoments, ymat)
-
-
-    #####################################################################
-    #  Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
-    #####################################################################
-
-    [counter, mcounter] = fcount(nMoments, nvariables)
-    TE_matrix = TaylorExpansion(nreactions,nvariables,damat,amat,counter,nMoments)
-
-
-    M = (S*TE_matrix) 
-
-    T = make_T_matrix(nvariables, nreactions, TE_matrix, S)
-
-    #####################################################################
-    #  Calculate expressions to use in central moments equations (eq. 9)
-    #  CentralMoments is a list with entry for each moment (n1,...,nd) 
-    #  combination.
-    #####################################################################
-    nDerivatives = nMoments
-    CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
-
-
-    #####################################################################
-    #  Substitute means in CentralMoments by y_i (ymat entry)
-    ####################################################################
-
+def substitute_mean_by_y(CentralMoments, nvariables):
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numv[i] = 1
@@ -162,20 +127,78 @@ def MFK_final(nMoments):
             numstr = numstr + str(numv[j])
         t1 = Symbol('y_%d' %(i))
         t2 = Symbol('x'+numstr)
-        
+
         for m in range(0, len(CentralMoments)):
             for n in range(0, len(CentralMoments[m])):
                 CentralMoments[m][n] = Subs(CentralMoments[m][n], t2, t1).doit()
-    
+    return CentralMoments
+
+def MFK_final(nMoments):
+
+    time1 = time()
+    output = open(str(sys.argv[3]),'w')
+
+
+
+
+
+    # Define the kinetic model
+    (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
+
+    # Make the derivation matrix
+    damat = make_damat(amat, nMoments, ymat)
+
+
+    # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
+    (counter, mcounter) = fcount(nMoments, nvariables)
+    # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
+    TE_matrix = TaylorExpansion(nreactions,nvariables,damat,amat,counter,nMoments)
+
+    # M is the product of the stoichiometry matrix by the Taylor Expansion terms.
+    # one row per species and one col per element of counter
+    M = S*TE_matrix
+
+    # T seems unused, TODO
+    T = make_T_matrix(nvariables, nreactions, TE_matrix, S)
+
+
+    #  Calculate expressions to use in central moments equations (eq. 9)
+    #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
+    # TODO remove `nDerivatives`: it is simply an alias for nMoments
+    nDerivatives = nMoments
+    CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
+
+
+    #####################################################################
+    #  Substitute means in CentralMoments by y_i (ymat entry)
+    ####################################################################
+
+
+    CentralMoments = substitute_mean_by_y(CentralMoments, nvariables)
+    # print CentralMoments
+    # for i in range(0, nvariables):
+    #     numv = [0] * nvariables
+    #     numv[i] = 1
+    #     numstr = str(numv[0])
+    #     for j in range(1, nvariables):
+    #         numstr = numstr + str(numv[j])
+    #     t1 = Symbol('y_%d' %(i))
+    #     t2 = Symbol('x'+numstr)
+    #
+    #     for m in range(0, len(CentralMoments)):
+    #         for n in range(0, len(CentralMoments[m])):
+    #             CentralMoments[m][n] = Subs(CentralMoments[m][n], t2, t1).doit()
+
     #####################################################################
     #  Substitute higher order raw moments in terms of central moments
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
     #####################################################################   
     
-    [mom, momvec] = raw_to_central(nvariables, counter, ymat, mcounter)
-    
+    (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
+
     # Substitute one for zeroth order raw moments in mom
+    # Unnecessary outer loop
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numstr = str(numv[0])
@@ -185,7 +208,8 @@ def MFK_final(nMoments):
         t2 = Symbol('x'+numstr)
         for m in range(0, len(mom)):
             mom[m] = Subs(mom[m], t2, t1).doit()
-                           
+
+
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
     for i in range(0, nvariables):
         numv = [0] * nvariables
