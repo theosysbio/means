@@ -118,7 +118,8 @@ def make_T_matrix(nvariables, nreactions, TE_matrix, S):
     return T
 
 
-def substitute_mean_by_y(CentralMoments, nvariables):
+def substitute_mean_by_y(mom, nvariables):
+
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numv[i] = 1
@@ -128,19 +129,19 @@ def substitute_mean_by_y(CentralMoments, nvariables):
         t1 = Symbol('y_%d' %(i))
         t2 = Symbol('x'+numstr)
 
-        for m in range(0, len(CentralMoments)):
-            for n in range(0, len(CentralMoments[m])):
-                CentralMoments[m][n] = Subs(CentralMoments[m][n], t2, t1).doit()
-    return CentralMoments
+        for m in range(0, len(mom)):
+            if isinstance(mom[m],list):
+                for n in range(0, len(mom[m])):
+                    mom[m][n] = Subs(mom[m][n], t2, t1).doit()
+            else:
+                mom[m] = Subs(mom[m], t2, t1).doit()
+
+    return mom
 
 def MFK_final(nMoments):
 
     time1 = time()
     output = open(str(sys.argv[3]),'w')
-
-
-
-
 
     # Define the kinetic model
     (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
@@ -166,7 +167,7 @@ def MFK_final(nMoments):
     #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
     # TODO remove `nDerivatives`: it is simply an alias for nMoments
     nDerivatives = nMoments
-    CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
+    CentralMoments = eq_centralmoments(counter,mcounter, M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
 
 
     #####################################################################
@@ -175,19 +176,6 @@ def MFK_final(nMoments):
 
 
     CentralMoments = substitute_mean_by_y(CentralMoments, nvariables)
-    # print CentralMoments
-    # for i in range(0, nvariables):
-    #     numv = [0] * nvariables
-    #     numv[i] = 1
-    #     numstr = str(numv[0])
-    #     for j in range(1, nvariables):
-    #         numstr = numstr + str(numv[j])
-    #     t1 = Symbol('y_%d' %(i))
-    #     t2 = Symbol('x'+numstr)
-    #
-    #     for m in range(0, len(CentralMoments)):
-    #         for n in range(0, len(CentralMoments[m])):
-    #             CentralMoments[m][n] = Subs(CentralMoments[m][n], t2, t1).doit()
 
     #####################################################################
     #  Substitute higher order raw moments in terms of central moments
@@ -198,12 +186,13 @@ def MFK_final(nMoments):
     (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
 
     # Substitute one for zeroth order raw moments in mom
-    # Unnecessary outer loop
+    # TODO unnecessary outer loop
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numstr = str(numv[0])
         for j in range(1, nvariables):
             numstr = numstr + str(numv[j])
+
         t1 = F(1)
         t2 = Symbol('x'+numstr)
         for m in range(0, len(mom)):
@@ -211,17 +200,9 @@ def MFK_final(nMoments):
 
 
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
-    for i in range(0, nvariables):
-        numv = [0] * nvariables
-        numv[i] = 1
-        numstr = str(numv[0])
-        for j in range(1, nvariables):
-            numstr = numstr + str(numv[j])
-        t1 = Symbol('y_%d' %(i))
-        t2 = Symbol('x'+numstr)
-        for m in range(0, len(mom)):
-            mom[m] = Subs(mom[m], t2, t1).doit()
-            
+    mom = substitute_mean_by_y(mom,nvariables)
+
+
     # Substitute raw moment terms in CentralMoments in terms of central moments
     # (need to iterate in reverse from highest to lowest order moments to ensure all
     # raw moments are replaced as some higher order raw moments are expressed in terms 
@@ -235,8 +216,12 @@ def MFK_final(nMoments):
 
         for m in range(0,len(CentralMoments)):
             for n in range(0,len(CentralMoments[m])):
+                tmp = (CentralMoments[m][n],mm, soln)
                 CentralMoments[m][n] = Subs(CentralMoments[m][n],mm, soln).doit()
-    
+                if tmp != (CentralMoments[m][n],mm, soln):
+                    print tmp
+                    print (CentralMoments[m][n],mm, soln)
+
     ##############################################################################
     # Substitute central moment terms ymn, where n gives n1,...nd combination
     # for yxi where i indicates index in counter for that n1,...,nd
@@ -248,8 +233,11 @@ def MFK_final(nMoments):
         nM = 1
     yms = Matrix(nM,1,lambda i,j:var('yx%d' % i))
 
+
     for i in range(0,len(momvec)):
-        yx=Symbol('yx'+str(i+1))
+        yx = Symbol('yx'+str(i+1))
+        print momvec[i]
+
         for m in range(0, len(CentralMoments)):
             for n in range(0, len(CentralMoments[m])):
                 CentralMoments[m][n] = Subs(CentralMoments[m][n], momvec[i], yx).doit()
