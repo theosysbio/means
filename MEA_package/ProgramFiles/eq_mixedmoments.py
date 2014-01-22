@@ -30,7 +30,7 @@ def eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nD
     :param kvec: vector of ks (upper limit for the sums).
     :param ekcounter: all possible ::math::`[e_1, ..., e_d]` vectors that are needed for the sums (precomputed in advance)
     :param dAdt: the result of equation 10 in the paper, ::math::`\frac{d\alpha}{dt}` term. A column vector with columns representing different counter values.
-    :return:
+    :return: A vector of mixed moments, where each column is for each combination k1, ..., kd in equation 9 (i.e. `ekcounter` values)
     """
     mixedmomentst = Matrix(len(ekcounter), dAdt.cols, lambda i, j: 0)
     for reaction in range(0, nreactions):
@@ -159,7 +159,8 @@ def eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nD
         # Columns (species) are summed over to give mixed moments (for all species at once, not individually)
         # which gives dB/dt terms for use in eq. 9.
         mixedmomentst = mixedmomentst + mixedmoments
-        
+
     # `Mixedmoments` is a vector with an entry for each k1,...,kd combination in equation 9
     mixedmoments = Matrix(1, mixedmomentst.cols, lambda i, j: sum(mixedmomentst[:, j]))
+
     return mixedmoments
