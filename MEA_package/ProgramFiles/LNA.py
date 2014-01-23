@@ -1,14 +1,15 @@
 from sympy import Matrix,Symbol,diff,latex
 #from create_cfile_LNA import create_c
-import os
-import sys
-model_ = sys.argv[1]
-LNAout = sys.argv[2]
-os.system('python formatmodel.py '+model_)
+if __name__ == '__main__':
+    import os
+    import sys
+    model_ = sys.argv[1]
+    LNAout = sys.argv[2]
+    os.system('python formatmodel.py '+model_)
 
-from model import model
+    from model import model
 
-[S,a,nreactions,nvariables,ymat,Mumat,c] = model()
+    [S,a,nreactions,nvariables,ymat,Mumat,c] = model()
 
 
 def LNA(S,a,ymat,c,LNAout):
