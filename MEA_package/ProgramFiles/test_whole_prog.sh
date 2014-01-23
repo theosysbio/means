@@ -1,7 +1,8 @@
 #!/bin/bash
 
 ##  The expected out files are named`MODEL_FILENAME.txt.out`
-INOUT_DIR="../Inoutput/"
+INOUT_DIR="../Inoutput"
+MODEL_ANSWERS_DIR="../Inoutput/model_answers/"
 OUT_FILE="ODEout.tmp"
 
 testModel(){
@@ -44,10 +45,22 @@ testModel(){
 }
 
 models=(model_p53.txt model_MM.txt model_dimer.txt model_Hes1.txt)
+# MEA tests
 for m in "${models[@]}"
 do
 	echo "testing $m:"
-    testModel "--MEA --model=$INOUT_DIR/$m --ODEout=$OUT_FILE" "$INOUT_DIR/$m.out"
+    testModel "--MEA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA2/$m.out"
+    # Check if last command failed, and exit
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+done
+
+# LNA tests
+for m in "${models[@]}"
+do
+	echo "testing $m:"
+    testModel "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
     # Check if last command failed, and exit
     if [ $? -ne 0 ]; then
         exit 1
