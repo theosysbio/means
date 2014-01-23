@@ -117,7 +117,15 @@ def make_T_matrix(nvariables, nreactions, TE_matrix, S):
 
 def substitute_mean_with_y(mom, nvariables):
 
-    # e.g. x001,x010 x100 are means ?
+    """
+    Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_1, y_2)
+
+    :param mom: the list of expressions (moments)
+    :param nvariables: the number of species
+    :return: the substituted expressions
+    """
+
+    # e.g. x001,x010 x100 are means
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numv[i] = 1
@@ -137,11 +145,18 @@ def substitute_mean_with_y(mom, nvariables):
     return mom
 
 def substitute_raw_with_central(CentralMoments, momvec, mom):
-    # Substitute raw moment terms in CentralMoments in terms of central moments
-    # (need to iterate in reverse from highest to lowest order moments to ensure all
-    # raw moments are replaced as some higher order raw moments are expressed in terms
-    # of central and lower order raw moments)
 
+    """
+    Substitute raw moment terms in CentralMoments in terms of central moments
+    (need to iterate in reverse from highest to lowest order moments to ensure all
+    raw moments are replaced as some higher order raw moments are expressed in terms
+    of central and lower order raw moments)
+
+    :param CentralMoments:
+    :param momvec:
+    :param mom:
+    :return: the substituted central moments
+    """
     for i in range(len(momvec)-1,-1,-1):
         string = str(momvec[i])
 
@@ -156,11 +171,16 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     return CentralMoments
 
 def substitute_ym_with_yx(CentralMoments, momvec):
-    ##############################################################################
-    # Substitute central moment terms ymn, where n gives n1,...nd combination
-    # for yxi where i indicates index in counter for that n1,...,nd
-    ##############################################################################
 
+
+    """
+    Substitute central moment terms ymn, where n gives n1,...nd combination
+    for yxi where i indicates index in counter for that n1,...,nd
+
+    :param CentralMoments:
+    :param momvec:
+    :return:  the substituted central moments
+    """
     for i in range(0,len(momvec)):
         yx = Symbol('yx'+str(i+1))
 
@@ -174,6 +194,17 @@ def substitute_ym_with_yx(CentralMoments, momvec):
     return CentralMoments
 
 def make_mfk(CentralMoments, yms, M):
+    #TODO figure-out what MFK stands for
+
+
+
+    """
+
+    :param CentralMoments:
+    :param yms:
+    :param M:
+    :return: MFK.
+    """
     # Get expressions for higher order central moments
     MFK1 = M*yms
 
@@ -203,9 +234,24 @@ def make_mfk(CentralMoments, yms, M):
 
 
 def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
-    # Create list with moment names (moment_list)
-    output = open(out_file_prefix,'w')
 
+    """
+    Write output and latex formatted equations
+
+    :param out_file_prefix: name of the output file. Default is ODEout.
+    :param nvariables: number of species
+    :param nMoments: the number of moments used in expansion
+    :param counter: the combination of orders of derivation
+    :param c: the constants. Provided by the model
+    :param yms:
+    :param ymat:
+    :param MFK:
+    :param deltatime: the elapsed time
+    """
+
+
+    output = open(out_file_prefix,'w')
+    # Create list with moment names (moment_list)
     moment_list = []
     for i in range(0, nvariables):
         means_vec = [0]*nvariables
@@ -255,7 +301,10 @@ def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, M
 
 def MFK_final(nMoments):
 
-
+    """
+    Produces central moment equations using the specified up to a given order.
+    :param nMoments: the number of moments used in expansion
+    """
 
     # Set the timer (in order to report how long the execution of this function took)
     time1 = time()
