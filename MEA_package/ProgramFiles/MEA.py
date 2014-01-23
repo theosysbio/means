@@ -153,11 +153,56 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
         # mm is the raw moment
         mm = Symbol('x'+num)
         soln = solve(mom[i] - momvec[i], mm)
-
         for m in range(0,len(CentralMoments)):
             for n in range(0,len(CentralMoments[m])):
                 CentralMoments[m][n] = Subs(CentralMoments[m][n],mm, soln).doit()
     return CentralMoments
+
+def substitute_ym_with_yx(CentralMoments, momvec):
+    ##############################################################################
+    # Substitute central moment terms ymn, where n gives n1,...nd combination
+    # for yxi where i indicates index in counter for that n1,...,nd
+    ##############################################################################
+
+    for i in range(0,len(momvec)):
+        yx = Symbol('yx'+str(i+1))
+
+        for m in range(0, len(CentralMoments)):
+            for n in range(0, len(CentralMoments[m])):
+                CentralMoments[m][n] = Subs(CentralMoments[m][n], momvec[i], yx).doit()
+                try:
+                    CentralMoments[m][n] = simplify(CentralMoments[m][n])
+                except:
+                    pass
+    return CentralMoments
+
+def make_mfk(CentralMoments, yms, M):
+    # Get expressions for higher order central moments
+    MFK1 = M*yms
+
+    MFK = []
+    # Reshape to a vector
+    for i in range(0,len(MFK1)):
+        try:
+            MFK1[i] = simplify(MFK1[i])
+        except:
+            pass
+        MFK.append(MFK1[i])
+
+
+    for i in range(0,len(CentralMoments)):
+        rowmat = Matrix(1, len(CentralMoments[i]), CentralMoments[i])
+
+        # This should be a scalar
+        MFK2 = rowmat * yms
+        # TODO scalar => {len() == 1} so why do we need a loop here ?
+        for j in range(0,len(MFK2)):
+            try:
+                MFK2[j] = simplify(MFK2[j])
+            except:
+                pass
+            MFK.append(MFK2[j])
+    return MFK
 
 def MFK_final(nMoments):
 
@@ -224,55 +269,22 @@ def MFK_final(nMoments):
     # Substitute raw moment, in CentralMoments, with of central moments
     CentralMoments = substitute_raw_with_central(CentralMoments, momvec, mom)
 
-    ##############################################################################
-    # Substitute central moment terms ymn, where n gives n1,...nd combination
-    # for yxi where i indicates index in counter for that n1,...,nd
-    ##############################################################################
+    # Use counter index (c) for yx (yxc) instead of moment (ymn) (e.g. ym021)
+    CentralMoments = substitute_ym_with_yx(CentralMoments, momvec)
 
+    # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
     if len(CentralMoments) != 0:
         nM = len(CentralMoments[0])
     else:
         nM = 1
-    yms = Matrix(nM,1,lambda i,j:var('yx%d' % i))
 
-
-    for i in range(0,len(momvec)):
-        yx = Symbol('yx'+str(i+1))
-
-        for m in range(0, len(CentralMoments)):
-            for n in range(0, len(CentralMoments[m])):
-                CentralMoments[m][n] = Subs(CentralMoments[m][n], momvec[i], yx).doit()
-                try:
-                    CentralMoments[m][n] = simplify(CentralMoments[m][n])
-                except:
-                    pass
-    
-    ##############################################################################
-    # Get expressions for each central moment, and enter into list MFK
-    ##############################################################################
-    
+    yms = Matrix(nM, 1, lambda i, j : var('yx%d' % i))
     # Set zeroth order central moment to 1
     yms[0] = 1
- 
-    # Get expressions for higher order central moments
-    MFK1 = M*yms
-    MFK = []
-    for i in range(0,len(MFK1)):
-        try:
-            MFK1[i] = simplify(MFK1[i])
-        except:
-            pass
-        MFK.append(MFK1[i])
-        
-    for i in range(0,len(CentralMoments)):
-        rowmat = Matrix(1,len(CentralMoments[i]),CentralMoments[i])
-        MFK2 = rowmat*yms
-        for j in range(0,len(MFK2)):
-            try:
-                MFK2[j] = simplify(MFK2[j])
-            except:
-                pass
-            MFK.append(MFK2[j])
+
+    # Get expressions for each central moment, and enter into list MFK
+    MFK = make_mfk(CentralMoments, yms, M)
+
 
 
     ###############################################################################
