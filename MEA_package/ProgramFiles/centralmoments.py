@@ -1,12 +1,3 @@
-##################################################################
-# Used to calculate terms required for use in the equations giving
-# time dependence of central moments (Equation 9 in Angelique's 
-# paper).  
-#
-# Returns list 'CentralMoments' with an entry for each moment
-# (n1,...,nd) combination
-##################################################################
-
 from sympy import Matrix, Symbol
 from math import factorial
 from eq_mixedmoments import eq_mixedmoments
@@ -14,6 +5,11 @@ from eq_mixedmoments import eq_mixedmoments
 
 def eq_centralmoments(counter, mcounter, M, TaylorM, nvariables, ymat, nreactions, nMoments, amat, S, nDerivatives):
     """
+    Function used to calculate the terms required for use in equations giving the time dependence of central moments
+    (this is the Equation 9 in the paper).
+
+    Returns a list of central moments with an entry for each moment (n1, ..., nd) combination.
+
     :param counter: see `fcount` function
     :param mcounter: see `fcount` function
     :param M: du/dt in paper
