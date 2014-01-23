@@ -16,13 +16,17 @@ testModel(){
 	then
 		echo "Failed"
 		echo "No output was generated"
-		return 0
+		return 1
 	fi
 
 	tmp="$(mktemp -t MEA.XXXXX)"
 	tmp2="$(mktemp -t MEA.XXXXX)"
 	grep -v 'Time' $INOUT_DIR/$OUT_FILE > $tmp
 	grep -v 'Time' $expected_output > $tmp2
+    
+    # Not removing this may make the next test appear to be failing with output
+    # mismatch even though it did not produce any
+    rm $INOUT_DIR/$OUT_FILE
 	
 	diff_res=$(diff $tmp $tmp2)
 	if [ -n "$diff_res" ] 
@@ -42,6 +46,7 @@ testModel(){
 		rm $tmp $tmp2
         return 0
 	fi 
+    
 }
 
 models=(model_p53.txt model_MM.txt model_dimer.txt model_Hes1.txt)
