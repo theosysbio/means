@@ -14,10 +14,7 @@ from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
 from sympy import latex
 
-#############################################################################
-#   MFK_final takes number of moments as input, and produces central
-#   moment equations using the specified model
-#############################################################################
+
 
 def get_and_check_model():
     from model import model
@@ -204,10 +201,65 @@ def make_mfk(CentralMoments, yms, M):
             MFK.append(MFK2[j])
     return MFK
 
+
+def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
+    # Create list with moment names (moment_list)
+    output = open(out_file_prefix,'w')
+
+    moment_list = []
+    for i in range(0, nvariables):
+        means_vec = [0]*nvariables
+        means_vec[i] = 1
+        moment_list.append(means_vec)
+    moment_list += counter[1:]
+
+
+    # Get list of parameters for LHS of ODEs
+
+    LHS = ymat[:]
+    for moms in range(1,len(yms)):
+        LHS.append(yms[moms])
+
+    constants = c[:]
+
+    out_tex = open(out_file_prefix+'.tex','w')
+    out_tex.write('\documentclass{article}\n\usepackage[landscape, margin=0.5in, a3paper]{geometry}\n\\begin{document}\n\section*{RHS of equations}\n')
+
+    # Write equations, LHS, constants, moment names, and numbers of variables/moments/equations
+
+    output.write('MEA\n\nRHS of equations:\n')
+    for i in range(len(MFK)):
+            output.write(str(MFK[i])+'\n')
+            out_tex.write('$\dot '+str(latex(LHS[i]))+ ' = '+str(latex(MFK[i]))+'$\\\\\\\\')
+    output.write('\nLHS:\n')
+    out_tex.write('\n\section*{Moments}\n')
+    for i in range(len(LHS)):
+        output.write(str(LHS[i])+'\n')
+        out_tex.write('\n$'+str(latex(LHS[i]))+'$: {'+str(moment_list[i])+'}\\\\')
+
+    output.write('\nConstants:\n')
+    for i in range(len(constants)):
+        output.write(str(constants[i])+'\n')
+
+    output.write('Number of variables:\n'+str(nvariables)+'\nNumber of moments:\n'+str(nMoments)+'\nTime taken (s): '+str(deltatime))
+
+    output.write('\n\nNumber of equations:\n'+str(len(LHS)))
+    output.write('\n\nList of moments:\n')
+    for i in range(len(moment_list)):
+        output.write(str(moment_list[i])+'\n')
+
+    output.close()
+
+    out_tex.write('\n\end{document}')
+    out_tex.close()
+
 def MFK_final(nMoments):
 
+
+
+    # Set the timer (in order to report how long the execution of this function took)
     time1 = time()
-    output = open(str(sys.argv[3]),'w')
+
 
     # Define the kinetic model
     (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
@@ -239,12 +291,10 @@ def MFK_final(nMoments):
     #  Substitute means in CentralMoments by y_i (ymat entry)
     CentralMoments = substitute_mean_with_y(CentralMoments, nvariables)
 
-    #####################################################################
+
     #  Substitute higher order raw moments in terms of central moments
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
-    #####################################################################   
-    
     (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
 
 
@@ -286,66 +336,17 @@ def MFK_final(nMoments):
     MFK = make_mfk(CentralMoments, yms, M)
 
 
-
-    ###############################################################################
     # Write information to output file (and moment names and equations to .tex file)
-    ################################################################################
+    write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
 
-    # Create list with moment names (moment_list)
-
-    moment_list = []
-    for i in range(0, nvariables):
-        means_vec = [0]*nvariables
-        means_vec[i] = 1
-        moment_list.append(means_vec)
-    moment_list += counter[1:]
-
-
-    # Get list of parameters for LHS of ODEs
-
-    LHS = ymat[:]
-    for moms in range(1,len(yms)):
-        LHS.append(yms[moms])
-
-    constants = c[:]
- 
-    out_tex = open(str(sys.argv[3])+'.tex','w')
-    out_tex.write('\documentclass{article}\n\usepackage[landscape, margin=0.5in, a3paper]{geometry}\n\\begin{document}\n\section*{RHS of equations}\n')
-
-    # Write equations, LHS, constants, moment names, and numbers of variables/moments/equations
-
-    output.write('MEA\n\nRHS of equations:\n')
-    for i in range(len(MFK)):
-            output.write(str(MFK[i])+'\n')
-            out_tex.write('$\dot '+str(latex(LHS[i]))+ ' = '+str(latex(MFK[i]))+'$\\\\\\\\')
-    output.write('\nLHS:\n')
-    out_tex.write('\n\section*{Moments}\n')
-    for i in range(len(LHS)):
-        output.write(str(LHS[i])+'\n')
-        out_tex.write('\n$'+str(latex(LHS[i]))+'$: {'+str(moment_list[i])+'}\\\\')
-
-    output.write('\nConstants:\n')
-    for i in range(len(constants)):
-        output.write(str(constants[i])+'\n')
-    time2 = time()
-    time3 = time2-time1
-    output.write('Number of variables:\n'+str(nvariables)+'\nNumber of moments:\n'+str(nMoments)+'\nTime taken (s): '+str(time3))
-    
-    output.write('\n\nNumber of equations:\n'+str(len(LHS)))
-    output.write('\n\nList of moments:\n')
-    for i in range(len(moment_list)):
-        output.write(str(moment_list[i])+'\n')
-        
-    output.close()
-    
-    out_tex.write('\n\end{document}')
-    out_tex.close()
 
 def get_args():
     model_ = sys.argv[1]
     numMoments = int(sys.argv[2])
 
     return (model_, numMoments)
+
+
 if __name__ == "__main__":
     model_, numMoments = get_args()
     os.system('python formatmodel.py '+model_)
