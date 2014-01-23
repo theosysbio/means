@@ -86,5 +86,5 @@ def LNA(S, a, ymat, c, LNAout):
     out_tex.write('\n\n\end{document}')
     out_tex.close()
 
-
-LNA(S, a, ymat, c, LNAout)
+if __name__ == '__main__':
+    LNA(S, a, ymat, c, LNAout)
