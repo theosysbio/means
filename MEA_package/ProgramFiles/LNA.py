@@ -14,13 +14,17 @@ if __name__ == '__main__':
 
 
 def LNA(S, a, ymat):
+
+    # dPdt is matrix of each species differentiated w.r.t. time
     dPdt = Matrix(len(ymat), 1, lambda i, j: 0)
     for i in range(len(ymat)):
         dPidt = S[i, 0] * a[0]
         for j in range(1, len(a)):
             dPidt += S[i, j] * a[j]
-        dPdt[i] = dPidt  #Matrix of the deterministic parts of each species differentiated wrt time
+        dPdt[i] = dPidt
 
+    # A Is a matrix of each species (rows) and the derivatives of their stochiometry matrix rows
+    # against each other species
     A = Matrix(len(ymat), len(ymat), lambda i, j: 0)
     for i in range(A.rows):
         for k in range(A.cols):
@@ -34,18 +38,24 @@ def LNA(S, a, ymat):
         #        for k in range(len(a)):
         #            E[i,k] = S[i,k]*(a[k]**(-0.5))
 
+    # `diagA` is a matrix that has values sqrt(a[i]) on the diagonal
     diagA = Matrix(len(a), len(a), lambda i, j: 0)
     for i in range(len(a)):
         for j in range(len(a)):
             if i == j:
                 diagA[i, j] = a[i] ** 0.5
+
+    # E is stoichiometry matrix times diagA
     E = S * diagA
 
-    V = Matrix(len(ymat), len(ymat), lambda i, j: 'V_' + str(i) + str(j))  ####Make V_ij equal to V_ji####
+    # V is a matrix of symbols V_ij for all i and j (TODO: this won't work for more than 10 species)
+    V = Matrix(len(ymat), len(ymat), lambda i, j: 'V_' + str(i) + str(j))  # TODO: (from original authors) Make V_ij equal to V_ji
 
-    dVdt = A * V + V * (A.T) + E * (
-    E.T)   #Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time. I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
+    # Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time.
+    # I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
+    dVdt = A * V + V * (A.T) + E * (E.T)
 
+    # Generate moments list
     momlist = [0] * len(ymat)
     for i in range(len(ymat)):
         momlist_i = [0] * len(ymat)
