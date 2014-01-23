@@ -1,51 +1,113 @@
 import unittest
 import sympy
 from centralmoments import eq_centralmoments
-from sympy import Matrix, Symbol
-from math import factorial
 from initialize_parameters import initialize_parameters
-from sympy import sympify
-
-# eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives):
 
 class CentralMomentsTestCase(unittest.TestCase):
+
+
     def test_centralmoments_using_p53model(self):
-
-        nreactions = 6
-        nrateconstants = 7
-        nvariables = 3
-        ymat = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
-        [something, Mumat, c]=initialize_parameters(nrateconstants,nvariables)
-        nMoments = 2
-        S = Matrix(3,6,[1,-1,-1,0,0,0,0,0,0,1,-1,0,0,0,0,0,1,-1])
-        a = Matrix(nreactions, 1, lambda i,j:0)
-        a[0] = c[0]
-        a[1] = c[1]*ymat[0]
-        a[2] = c[2]*ymat[2]*ymat[0]/(ymat[0]+c[6])
-        a[3] = c[3]*ymat[0]
-        a[4] = c[4]*ymat[1]
-        a[5] = c[5]*ymat[2]
-
-        #counter and mcount are obtained from fcount(2,3)
         counter = [[0, 0, 0], [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
-        mcounter =  [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
 
-        ymat = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
-        nDerivatives = nMoments
-        amat = a
-        damat = Matrix(nDerivatives,1, lambda i,j:0)
+        mcounter = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 0, 2], [0, 1, 1], [0, 2, 0],
+                    [1, 0, 1], [1, 1, 0], [2, 0, 0]]
 
-        M = sympify.matrix[[sympify("c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"),sympify("0") ,sympify("0") ,sympify("0"), sympify("c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"),sympify("0"), sympify("-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2")],
-[sympify("c*y_0 - c_4*y_1"), sympify("0"), sympify("0"), sympify("0"), sympify("0"), sympify("0"), sympify("0")]
-[sympify(c_4*y_1 - c_5*y_2), sympify("0"), sympify("0"), sympify("0"), sympify("0"), sympify("0"), sympify("0")]
+        m = sympy.Matrix([map(sympy.sympify,
+                              ['c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)',
+                               0,
+                               0,
+                               0,
+                               'c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)',
+                               0,
+                               '-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2']),
+                          map(sympy.sympify, [
+                              'c_3*y_0 - c_4*y_1',
+                               0,
+                               0,
+                               0,
+                               0,
+                               0,
+                               0]),
+                          map(sympy.sympify, [
+                              'c_4*y_1 - c_5*y_2',
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                          ])])
 
-        TaylorM = 0 # not used in centralmoments.py
+        taylor_m = None  # I don't think this is used
 
-        centralmoments_test = eq_centralmoments(counter,mcounter,M,TaylorM,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
-     #   centralmoments_expected =
-        self.assertEqual(len(centralmoments_test), nreactions)
-     #   self.assertEqual()
+        number_of_variables = 3
+        species = sympy.Matrix(map(sympy.var, ['y_0', 'y_1', 'y_2']))
+        number_of_reactions = 6
+        number_of_moments = 2
+        propensities = sympy.Matrix(map(sympy.sympify, ['c_0',
+                                                         'c_1 * y_0',
+                                                         'c_2*y_0*y_2/(c_6 + y_0)',
+                                                         'c_3*y_0',
+                                                         'c_4*y_1',
+                                                         'c_5*y_2']))
+
+        stoichiometry_matrix = sympy.Matrix([[1, -1, -1, 0,  0,  0],
+                                            [0,  0,  0, 1, -1,  0],
+                                            [0,  0,  0, 0,  1, -1]])
+
+        number_of_derivatives = number_of_moments
 
 
+        answer = eq_centralmoments(counter, mcounter, m, taylor_m,
+                                   number_of_variables, species, number_of_reactions,
+                                   number_of_moments, propensities, stoichiometry_matrix, number_of_derivatives)
 
 
+        # Note that this is a list, rather than a matrix
+        correct_answer = [
+            map(sympy.sympify, ['2*c_4*y_1*y_2 + c_4*y_1 - 2*c_5*y_2**2 + c_5*y_2 - 2*x001*(c_4*y_1 - c_5*y_2)',
+                                '-2*c_5',
+                                '2*c_4',
+                                0,
+                                0,
+                                0,
+                                0]),
+            map(sympy.sympify, ['c_3*y_0*y_2 + c_4*y_1**2 - c_4*y_1*y_2 - c_4*y_1 - c_5*y_1*y_2 - x001*(c_3*y_0 - c_4*y_1) - x010*(c_4*y_1 - c_5*y_2)',
+                                0,
+                                '-c_4 - c_5',
+                                'c_4',
+                                'c_3',
+                                0,
+                                0]),
+            map(sympy.sympify, ['2*c_3*y_0*y_1 + c_3*y_0 - 2*c_4*y_1**2 + c_4*y_1 - 2*x010*(c_3*y_0 - c_4*y_1)',
+                                0,
+                                0,
+                                '-2*c_4',
+                                0,
+                                '2*c_3',
+                                0]),
+            map(sympy.sympify, ['c_0*y_2 - c_1*y_0*y_2 - c_2*y_0*y_2**2/(c_6 + y_0) + c_4*y_0*y_1 - c_5*y_0*y_2 - x001*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) - x100*(c_4*y_1 - c_5*y_2)',
+                                '-c_2*y_0/(c_6 + y_0)',
+                                0,
+                                0,
+                                '-c_1 + 2*c_2*y_0*y_2/(c_6 + y_0)**2 - 2*c_2*y_2/(c_6 + y_0) - c_5 - x001*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))',
+                                'c_4',
+                                '-c_2*y_0*y_2**2/(c_6 + y_0)**3 + c_2*y_2**2/(c_6 + y_0)**2 - x001*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)']),
+            map(sympy.sympify, ['c_0*y_1 - c_1*y_0*y_1 - c_2*y_0*y_1*y_2/(c_6 + y_0) + c_3*y_0**2 - c_4*y_0*y_1 - x010*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) - x100*(c_3*y_0 - c_4*y_1)',
+                                0,
+                                '-c_2*y_0/(c_6 + y_0)',
+                                0,
+                                'c_2*y_0*y_1/(c_6 + y_0)**2 - c_2*y_1/(c_6 + y_0) - x010*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))',
+                                '-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0) - c_4',
+                                '-c_2*y_0*y_1*y_2/(c_6 + y_0)**3 + c_2*y_1*y_2/(c_6 + y_0)**2 + c_3 - x010*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)'
+                                ]),
+            map(sympy.sympify, ['2*c_0*y_0 + c_0 - 2*c_1*y_0**2 + c_1*y_0 - 2*c_2*y_0**2*y_2/(c_6 + y_0) + c_2*y_0*y_2/(c_6 + y_0) - 2*x100*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0))',
+                                0,
+                                0,
+                                0,
+                                '2*c_2*y_0**2/(c_6 + y_0)**2 - 4*c_2*y_0/(c_6 + y_0) - c_2*y_0/(c_6 + y_0)**2 + c_2/(c_6 + y_0) - 2*x100*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))',
+                                0,
+                                '-2*c_1 - 2*c_2*y_0**2*y_2/(c_6 + y_0)**3 + 4*c_2*y_0*y_2/(c_6 + y_0)**2 + c_2*y_0*y_2/(c_6 + y_0)**3 - 2*c_2*y_2/(c_6 + y_0) - c_2*y_2/(c_6 + y_0)**2 - 2*x100*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)'
+                                ])]
+
+        self.assertEqual(answer, correct_answer)

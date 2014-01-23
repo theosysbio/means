@@ -25,9 +25,16 @@ def eq_centralmoments(counter, mcounter, M, TaylorM, nvariables, ymat, nreaction
     :param amat: propensities
     :param S: stoichiometry matrix
     :param nDerivatives: number of derivatives, currently always the same as `nMoments`
-    :return: centralmoments matrix of size `len(counter) * (len(counter)-1)`
-            that contains sum of the terms `f2*f3*(AdB/dt + B dA/dt)` in eq. 9 for each n1,...,nd combination in eq. 9
+    :return: centralmoments list of size `(len(counter)-1)` containing an entry for each n1,...,nd combination
+            (i.e. each value of counter)
+            This list contains sum of the terms `f2*f3*(AdB/dt + B dA/dt)` in eq. 9 for each n1,...,nd combination in eq. 9
     """
+
+    args = counter, mcounter, M, TaylorM, nvariables, ymat, nreactions, nMoments, amat, S, nDerivatives
+    for arg in args:
+        print arg
+        print '----' * 10
+
     mixmom = 0
     ncounter = counter[:]
     ncounter.remove(counter[0])    #counter w/o zeroth order moment, remove because central moment is 1
@@ -157,5 +164,9 @@ def eq_centralmoments(counter, mcounter, M, TaylorM, nvariables, ymat, nreaction
         for j in range(0, len(counter)):
             centralmomentsTn.append(sum(Taylorexp1[:, j]))
         centralmoments.append(centralmomentsTn)
+
+    print 'Answer:'
+    print centralmoments
+    print len(centralmoments), len(counter)
 
     return centralmoments
