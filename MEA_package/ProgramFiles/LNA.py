@@ -13,7 +13,7 @@ if __name__ == '__main__':
     [S, a, nreactions, nvariables, ymat, Mumat, c] = model()
 
 
-def LNA(S, a, ymat, c, LNAout):
+def LNA(S, a, ymat):
     dPdt = Matrix(len(ymat), 1, lambda i, j: 0)
     for i in range(len(ymat)):
         dPidt = S[i, 0] * a[0]
@@ -52,6 +52,9 @@ def LNA(S, a, ymat, c, LNAout):
         momlist_i[i] = 1
         momlist[i] = momlist_i
 
+    return dPdt, dVdt, V, momlist
+
+def print_output(LNAout, dPdt, dVdt, ymat, V, c, momlist):
     output = open(LNAout, 'w')
     output.write('LNA\n\nRHS of equations:\n')
     for i in dPdt:
@@ -87,4 +90,6 @@ def LNA(S, a, ymat, c, LNAout):
     out_tex.close()
 
 if __name__ == '__main__':
-    LNA(S, a, ymat, c, LNAout)
+    dPdt, dVdt, V, momlist = LNA(S, a, ymat)
+    print_output(LNAout, dPdt, dVdt, ymat, V, c, momlist)
+
