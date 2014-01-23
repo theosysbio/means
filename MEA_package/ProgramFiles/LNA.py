@@ -16,6 +16,8 @@ if __name__ == '__main__':
 def LNA(S, a, ymat):
 
     # dPdt is matrix of each species differentiated w.r.t. time
+    # The code below literally multiplies the stoichiometry matrix to a column vector of propensities
+    # from the right (::math::`\frac{dP}{dt} = \mathbf{Sa}`)
     dPdt = Matrix(len(ymat), 1, lambda i, j: 0)
     for i in range(len(ymat)):
         dPidt = S[i, 0] * a[0]
@@ -23,8 +25,10 @@ def LNA(S, a, ymat):
             dPidt += S[i, j] * a[j]
         dPdt[i] = dPidt
 
-    # A Is a matrix of each species (rows) and the derivatives of their stochiometry matrix rows
+    # A Is a matrix of each species (rows) and the derivatives of their stoichiometry matrix rows
     # against each other species
+    # Code below computes the matrix A, that is of size `len(ymat) x len(ymat)`, for which each entry
+    # ::math::`A_{ik} = \sum_j S_{ij} \frac{\partial a_j}{\partial y_k} = \mathfb{S_i} \frac{\partial \mathbf{a}}{\partial y_k}`
     A = Matrix(len(ymat), len(ymat), lambda i, j: 0)
     for i in range(A.rows):
         for k in range(A.cols):
@@ -56,6 +60,8 @@ def LNA(S, a, ymat):
     dVdt = A * V + V * (A.T) + E * (E.T)
 
     # Generate moments list
+    # This just returns all possible vectors with only first-order moments
+    # (e.g. [1,0,0], [0,1,0], [0,0,1] in three species case)
     momlist = [0] * len(ymat)
     for i in range(len(ymat)):
         momlist_i = [0] * len(ymat)
