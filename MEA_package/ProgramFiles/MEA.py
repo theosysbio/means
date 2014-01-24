@@ -146,17 +146,19 @@ def substitute_mean_with_y(mom, nvariables):
 
 def substitute_raw_with_central(CentralMoments, momvec, mom):
 
+    #todo decribe CentralMoments
     """
     Substitute raw moment terms in CentralMoments in terms of central moments
     (need to iterate in reverse from highest to lowest order moments to ensure all
     raw moments are replaced as some higher order raw moments are expressed in terms
     of central and lower order raw moments)
 
-    :param CentralMoments:
-    :param momvec:
-    :param mom:
+    :param CentralMoments: TODO
+    :param momvec: the symbols for central moment (e.g. ym_11, ym02, ...)
+    :param mom:  the expressions of central moments in terms of raw moments
     :return: the substituted central moments
     """
+
     for i in range(len(momvec)-1,-1,-1):
         string = str(momvec[i])
 
