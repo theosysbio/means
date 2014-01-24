@@ -15,26 +15,6 @@ from CVODE import CVODE
 import re
 from math import factorial
 
-################################################################
-# Functions 'make_i0' and 'i0_to_test'
-#
-# Explanation of variables (all but i0 provided by user in input file):
-# i0        single list of all variable parameters (kinetic parameters
-#           or initial conditions) that need to be inferred
-# param     list of starting values for kinetic parameters
-# vary      list to identify which values in param to vary during inference
-# initcond  list of starting values (i.e. at t0) for moments
-# varyic    list to identify which values in initcond to vary
-#
-# make_i0 creates the list of variables to infer based on the values
-# in vary/varyic (0 = fixed, 1 = optimise), i0 is passed to the 
-# fmin minimisation function.
-# 
-# i0_to_test is used within the distance/cost function to create 
-# the current kinetic parameter and initial condition vectors to
-# be used during that iteration, using the current values in i0
-##################################################################
-
 def make_i0(param, vary, initcond, varyic):
     """
     Creates a list of variables to infer, based on the values in vary/varyic (0=fixed, 1=optimised).
