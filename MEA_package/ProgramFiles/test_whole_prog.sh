@@ -61,8 +61,8 @@ testModel(){
     
 }
 
-buildRefs="true"
-max_mom=3
+buildRefs="false"
+max_mom=2
 
 models=(model_p53.txt model_MM.txt model_dimer.txt model_Hes1.txt)
 # MEA tests
