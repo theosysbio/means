@@ -92,6 +92,9 @@ def CVODE(library, t, t0_sp, param):
     # Results are stored in res_c
     libmylib.ftest(byref(param_c), nsim, byref(init_sp_c), byref(res_c), byref(time_c))
 
+    # Parses results from the C file, that are in a flattened matrix format,
+    # and reformats these results into an actual matrix
+    # This is numpy.zeros, it creates a three dimensional matrix filled with zeros
     results = zeros([nsim, ntimepoints, nspecies])
     ind = 0
     for i in range(nsim):
@@ -100,8 +103,8 @@ def CVODE(library, t, t0_sp, param):
                 results[i, t_, sp] = res_c[ind]
                 ind += 1
 
-    # soln is array with a row for each timepoint, giving values for each species
 
+    # soln is array with a row for each timepoint, giving values for each species
     soln = zeros([ntimepoints, nspecies])
     for k in range(ntimepoints):
         for l in range(nspecies):
