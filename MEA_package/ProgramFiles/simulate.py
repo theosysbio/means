@@ -9,21 +9,6 @@ from sympy import Matrix
 
 from CVODE import CVODE
 
-#########################################################################
-# Arguments:
-# mfkoutput     Name of output file from MFK/LNA (specify using --ODEout)
-# trajout       Name of output file with simulated trajectories (specify 
-#               using --simout)
-# lib           Name of C file for solver (specify with --library)
-# t             List of timepoints
-# param         List of kinetic parameters
-# initcond      List of initial conditions for each moment
-#               (t, param, initcond are specified in --timeparam file)
-# maxorder      Maximum order of moments to output to plot/datafile
-#               (defaults to maxorder in MFK output, specify using
-#               --maxorder if fewer required)
-########################################################################
-
 #######################################################################
 # Variables within function:
 # moment_list   Contains the names for each moment (e.g. [1,0,1], where
@@ -38,6 +23,17 @@ from CVODE import CVODE
 ########################################################################
 
 def simulate(mfkoutput, trajout, lib, t, param, initcond, maxorder):
+    """
+
+    :param mfkoutput: Name of output file from MFK/LNA (specified by --ODEout)
+    :param trajout: Name of output file for this function (where simulated trajectories would be stored, i.e. --simout)
+    :param lib: Name of the C file for solver (i.e. --library)
+    :param t: List of timepoints
+    :param param: List of kinetic parameters
+    :param initcond: List of initial conditions for each moment (in timeparameters file)
+    :param maxorder: Maximum order of moments to output to either plot or datafile. (Defaults to maximum order of moments)
+    :return:
+    """
 
     # Get required info from mfkoutput, and if not all initial conditions
     # are specified set the remainder to 0 as default
@@ -169,12 +165,17 @@ def simulate(mfkoutput, trajout, lib, t, param, initcond, maxorder):
     
 
 
-######################################################
-##### GRAPH CREATOR
-##### soln is output from CVODE, an array of
-##### the solutions at each time point for each moment
-######################################################
 def graphbuilder(soln,momexpout,title,t,momlist):
+    """
+    Creates a plot of the solutions
+
+    :param soln: output from CVODE (array of solutions at each time point for each moment)
+    :param momexpout:
+    :param title:
+    :param t:
+    :param momlist:
+    :return:
+    """
     simtype = 'momexp'
     LHSfile = open(momexpout)
     lines = LHSfile.readlines()

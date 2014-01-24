@@ -3,15 +3,18 @@
 ##  The expected out files are named`MODEL_FILENAME.txt.out`
 INOUT_DIR="../Inoutput"
 MODEL_ANSWERS_DIR="../Inoutput/model_answers/"
-OUT_FILE="ODEout.tmp"
+
+buildRefs="false"
+max_mom=2
+test_simulation="true"
 
 generateReferenceResults(){
     parameters=$1
     expected_output=$2
-    echo "> python runprogram.py $parameters --ODEout=$OUT_FILE"
-	python runprogram.py $parameters --ODEout=$OUT_FILE
-	echo "> mv $INOUT_DIR/$OUT_FILE  $expected_output"
-	mv $INOUT_DIR/$OUT_FILE  $expected_output
+    echo "> python runprogram.py $parameters --ODEout=$out_file"
+	python runprogram.py $parameters --ODEout=$out_file
+	echo "> mv $INOUT_DIR/$out_file  $expected_output"
+	mv $INOUT_DIR/$out_file  $expected_output
 
 }
 
@@ -19,26 +22,27 @@ generateReferenceResults(){
 
 testModel(){
     parameters=$1
-    expected_output=$2
+    out_file=$2
+    expected_output=$3
 
-    echo "> python runprogram.py $parameters --ODEout=$OUT_FILE"	
-	time python runprogram.py $parameters --ODEout=$OUT_FILE
+    echo "> python runprogram.py $parameters"	
+	time python runprogram.py $parameters
 
-    if [ ! -f $INOUT_DIR/$OUT_FILE ];
+    if [ ! -f $INOUT_DIR/$out_file ];
 	then
 		echo "Failed"
 		echo "No output was generated"
 		return 1
 	fi
 
-	tmp="$(mktemp -t MEA.XXXXX)"
-	tmp2="$(mktemp -t MEA.XXXXX)"
-	grep -v 'Time' $INOUT_DIR/$OUT_FILE > $tmp
-	grep -v 'Time' $expected_output > $tmp2
+	tmp="$(mktemp -t MEA.ACTUAL.XXXXX)"
+	tmp2="$(mktemp -t MEA.EXPECTED.XXXXX)"
+	cat $INOUT_DIR/$out_file | grep -v "Time taken" | grep -v "Input file:" > $tmp
+    cat $INOUT_DIR/$expected_output | grep -v "Time taken" | grep -v "Input file:" > $tmp2
     
     # Not removing this may make the next test appear to be failing with output
     # mismatch even though it did not produce any
-    rm $INOUT_DIR/$OUT_FILE
+    rm $INOUT_DIR/$out_file
 	
 	diff_res=$(diff $tmp $tmp2)
 	if [ -n "$diff_res" ] 
@@ -61,9 +65,6 @@ testModel(){
     
 }
 
-buildRefs="false"
-max_mom=2
-
 models=(model_p53.txt model_MM.txt model_dimer.txt model_Hes1.txt)
 # MEA tests
 for i in $(seq 2 $max_mom)
@@ -74,7 +75,7 @@ do
 			generateReferenceResults "--MEA --nMom=$i --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA$i/$m.out"
 		else
 			echo "testing $m:"
-			testModel "--MEA --nMom=$i --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA$i/$m.out"
+			testModel "--MEA --nMom=$i --model=$INOUT_DIR/$m --ODEout=ODEout.tmp" "ODEout.tmp" "$MODEL_ANSWERS_DIR/MEA$i/$m.out"
 			
 			# Check if last command failed, and exit
 			if [ $? -ne 0 ]; then
@@ -91,10 +92,36 @@ do
 		generateReferenceResults "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
 	else
 		echo "testing $m:"
-		testModel "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
+		testModel "--LNA --model=$INOUT_DIR/$m --ODEout=ODEout.tmp" "ODEout.tmp" "$MODEL_ANSWERS_DIR/LNA/$m.out"
 		# Check if last command failed, and exit
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
 	fi
 done
+
+
+# simulation tests this has the potential of being awfully broken due to floating point rounding
+simtest_models=("MM" "p53")
+
+# Let's find the sundials library on your computer
+sundials_parameters=""
+if [ -f "/usr/local/lib/libsundials_cvode.a" ];
+then
+    # This is where sundials is on Mac OS X if installed from brew
+    sundials_parameters="--sd2=/usr/local/lib/ --sd1=/usr/local/include/"
+else
+    echo "ERROR: Cannot run simulation tests as cannot file sundials library"
+    exit 1
+fi
+if [ $test_simulation == "true" ]; then
+    for m in "${simtest_models[@]}" 
+    do
+        echo "Testing model $m:"
+        testModel "--MEA --nMom=3 --model=../Inoutput/model_$m.txt --compile $sundials_parameters --timeparam=../Inoutput/param_$m.txt --sim --simout=simout_$m.txt --ODEout=ODEout.tmp" "simout_$m.txt" "$MODEL_ANSWERS_DIR/sim/simout_$m.txt"
+
+        if [ $? -ne 0 ]; then
+            exit 1
+        fi
+    done
+fi
