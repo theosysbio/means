@@ -146,7 +146,7 @@ def substitute_mean_with_y(mom, nvariables):
 
 def substitute_raw_with_central(CentralMoments, momvec, mom):
 
-    #todo decribe CentralMoments
+    #todo describe CentralMoments
     """
     Substitute raw moment terms in CentralMoments in terms of central moments
     (need to iterate in reverse from highest to lowest order moments to ensure all
@@ -154,7 +154,7 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     of central and lower order raw moments)
 
     :param CentralMoments: TODO
-    :param momvec: the symbols for central moment (e.g. ym_11, ym02, ...)
+    :param momvec: the symbols for central moments (e.g. ym11, ym02, ...)
     :param mom:  the expressions of central moments in terms of raw moments
     :return: the substituted central moments
     """
@@ -180,9 +180,11 @@ def substitute_ym_with_yx(CentralMoments, momvec):
     for yxi where i indicates index in counter for that n1,...,nd
 
     :param CentralMoments:
-    :param momvec:
-    :return:  the substituted central moments
+    :param momvec: the symbols for central moments ()
+    :return: the symbols for central moments (e.g. ym11, ym02, ...)
     """
+
+
     for i in range(0,len(momvec)):
         yx = Symbol('yx'+str(i+1))
 
@@ -198,15 +200,14 @@ def substitute_ym_with_yx(CentralMoments, momvec):
 def make_mfk(CentralMoments, yms, M):
     #TODO figure-out what MFK stands for
 
-
-
     """
 
     :param CentralMoments:
     :param yms:
     :param M:
-    :return: MFK.
+    :return: MFK ...
     """
+
     # Get expressions for higher order central moments
     MFK1 = M*yms
 
@@ -234,6 +235,7 @@ def make_mfk(CentralMoments, yms, M):
             MFK.append(MFK2[j])
     return MFK
 
+
 def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
 
     """
@@ -244,7 +246,7 @@ def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, M
     :param nMoments: the number of moments used in expansion
     :param counter: the combination of orders of derivation
     :param c: the constants. Provided by the model
-    :param yms:
+    :param yms: the vector of symbols for the central moments
     :param ymat:
     :param MFK:
     :param deltatime: the elapsed time
