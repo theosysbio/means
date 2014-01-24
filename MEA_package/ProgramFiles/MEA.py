@@ -117,7 +117,7 @@ def make_T_matrix(nvariables, nreactions, TE_matrix, S):
 def substitute_mean_with_y(mom, nvariables):
 
     """
-    Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_1, y_2)
+    Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
 
     :param mom: the list of expressions (moments)
     :param nvariables: the number of species
@@ -352,7 +352,7 @@ def MFK_final(nMoments):
 
 
     # Substitute one for zeroth order raw moments in mom
-    # TODO unnecessary outer loop
+    # TODO apparently unnecessary outer loop
     for i in range(0, nvariables):
         numv = [0] * nvariables
         numstr = str(numv[0])
