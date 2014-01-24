@@ -114,7 +114,6 @@ def make_T_matrix(nvariables, nreactions, TE_matrix, S):
         T.append(row)
     return T
 
-
 def substitute_mean_with_y(mom, nvariables):
 
     """
@@ -124,6 +123,7 @@ def substitute_mean_with_y(mom, nvariables):
     :param nvariables: the number of species
     :return: the substituted expressions
     """
+
 
     # e.g. x001,x010 x100 are means
     for i in range(0, nvariables):
@@ -231,7 +231,6 @@ def make_mfk(CentralMoments, yms, M):
                 pass
             MFK.append(MFK2[j])
     return MFK
-
 
 def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
 
