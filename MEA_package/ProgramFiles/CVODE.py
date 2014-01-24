@@ -95,7 +95,7 @@ def CVODE(library, t, t0_sp, param):
     # Parses results from the C file, that are in a flattened matrix format,
     # and reformats these results into an actual matrix
     # This is numpy.zeros, it creates a three dimensional matrix filled with zeros
-    results = zeros([nsim, ntimepoints, nspecies])
+    results = zeros([nsim, ntimepoints, nspecies])  # TODO: it looks like nsim is always one
     ind = 0
     for i in range(nsim):
         for t_ in range(ntimepoints):
@@ -108,7 +108,7 @@ def CVODE(library, t, t0_sp, param):
     soln = zeros([ntimepoints, nspecies])
     for k in range(ntimepoints):
         for l in range(nspecies):
-            soln[k, l] = results[0, k, l]
+            soln[k, l] = results[0, k, l]  # TODO: Zero here explicitly assumes nsim always zero
 
     #print "final time=", time.time()-t0
     #print_results(results, outfile)
