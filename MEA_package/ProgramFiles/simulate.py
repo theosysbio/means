@@ -165,12 +165,17 @@ def simulate(mfkoutput, trajout, lib, t, param, initcond, maxorder):
     
 
 
-######################################################
-##### GRAPH CREATOR
-##### soln is output from CVODE, an array of
-##### the solutions at each time point for each moment
-######################################################
 def graphbuilder(soln,momexpout,title,t,momlist):
+    """
+    Creates a plot of the solutions
+
+    :param soln: output from CVODE (array of solutions at each time point for each moment)
+    :param momexpout:
+    :param title:
+    :param t:
+    :param momlist:
+    :return:
+    """
     simtype = 'momexp'
     LHSfile = open(momexpout)
     lines = LHSfile.readlines()

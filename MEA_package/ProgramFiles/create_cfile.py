@@ -16,43 +16,63 @@ import numpy as np
 from powers_py2c import replace_powers
 
 
-def create_c(inputfile, outputfile, t, sd_1, sd_2): 
-    
+def create_c(inputfile, outputfile, t, sd_1, sd_2):
+    """
+
+    :param inputfile: input file - the output of MEA/LNA
+    :param outputfile: output file to store the c program (minus .c extension)
+    :param t: timepoints returned from `paramtime`
+    :param sd_1: location of folder where sundials include files could be found
+    :param sd_2: location of folder where sundials lib files could be found
+    :return:
+    """
+
     # Timing
+    # TODO: By the looks of it these lines ignore the actual timepoint information
+    # and assume start time equals zero (otherwise t[1] will not be the timestep)
+    # time points are equally distributed
+    # TODO: What happens if len(t) = 0
     starttime = float(t[0])
     timestep = float(t[1])
     endtime = float(t[-1])
     ntimepoints = float(len(t))  #NOUT
 
+    # Read the MEA/LNA output
     file = open(inputfile)
     lines = file.readlines()
     
-    # Create important indices for data extraction
+    # Create important indices for data extraction (find out where data is located)
     MFKindex = lines.index('RHS of equations:\n')
     LHSindex = lines.index('LHS:\n')
     cindex = lines.index('Constants:\n')
     nvarindex = lines.index('Number of variables:\n')
 
-    # Extract MFK
+    # Extract MFK (RHS of equations)
     MFK = []
     for i in range(MFKindex+1,LHSindex-1):
         MFK.append(lines[i].rstrip())
     NEQ = len(MFK)      #Number of equations
     
-    # Extract c
+    # Extract constants
     c = []
     for i in range(cindex+1,nvarindex):
         c.append(lines[i].rstrip())
     NPAR = len(c) #Number of parameters
 
-    #Extract LHS
+    # Extract LHS of equations
     LHS = []
     Ith = []
     for i in range(LHSindex+1,cindex-1):
         LHS.append(lines[i].rstrip())
+
+    # TODO: Not entirely sure what is happening here what is Ith(), and what is d and why are we adding them
     for i in range(len(LHS)):
+        # The Ith is a shorthand for `NV_Ith_S` documented in (http://computation.llnl.gov/casc/sundials/documentation/kin_guide/node7.html),
+        # which access to the individual components of the data array of an N_Vector.
         Ith.append(LHS[i]+' = Ith(y,'+str(i+1)+');')
         LHS.append('d'+LHS[i])
+
+
     Ithstring = '\n'
     count = 0
     tri = 0
