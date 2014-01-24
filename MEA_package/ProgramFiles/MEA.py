@@ -118,15 +118,17 @@ def MFK_final(nMoments):
     amat = a
     damat = make_damat(a, nMoments, ymat)
 
+
     #####################################################################
     #  Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
     #####################################################################
 
     [counter, mcounter] = fcount(nMoments, nvariables)
     TE_matrix = TaylorExpansion(nreactions,nvariables,damat,amat,counter,nMoments)
-    
+
+
     M = (S*TE_matrix) 
-    
+    #TODO it seems that T is unused!!!
     T = []
     for nv in range(0,nvariables):
         row = []
@@ -135,7 +137,6 @@ def MFK_final(nMoments):
             Ttmp = TE_matrix[nr,:]
             row.append(Stmp*Ttmp)
         T.append(row)
-   
 
     #####################################################################
     #  Calculate expressions to use in central moments equations (eq. 9)
@@ -145,7 +146,7 @@ def MFK_final(nMoments):
     nDerivatives = nMoments
     CentralMoments = eq_centralmoments(counter,mcounter,M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
 
-    
+
     #####################################################################
     #  Substitute means in CentralMoments by y_i (ymat entry)
     ####################################################################

@@ -5,11 +5,23 @@ INOUT_DIR="../Inoutput"
 MODEL_ANSWERS_DIR="../Inoutput/model_answers/"
 OUT_FILE="ODEout.tmp"
 
+generateReferenceResults(){
+    parameters=$1
+    expected_output=$2
+    echo "> python runprogram.py $parameters --ODEout=$OUT_FILE"
+	python runprogram.py $parameters --ODEout=$OUT_FILE
+	echo "> mv $INOUT_DIR/$OUT_FILE  $expected_output"
+	mv $INOUT_DIR/$OUT_FILE  $expected_output
+
+}
+
+
+
 testModel(){
     parameters=$1
     expected_output=$2
 
-    echo "> python runprogram $parameters --ODEout=$OUT_FILE"	
+    echo "> python runprogram.py $parameters --ODEout=$OUT_FILE"	
 	time python runprogram.py $parameters --ODEout=$OUT_FILE
 
     if [ ! -f $INOUT_DIR/$OUT_FILE ];
@@ -49,25 +61,40 @@ testModel(){
     
 }
 
+buildRefs="false"
+max_mom=2
+
 models=(model_p53.txt model_MM.txt model_dimer.txt model_Hes1.txt)
 # MEA tests
-for m in "${models[@]}"
+for i in $(seq 2 $max_mom)
 do
-	echo "testing $m:"
-    testModel "--MEA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA2/$m.out"
-    # Check if last command failed, and exit
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
+	for m in "${models[@]}"
+		do
+		if [ $buildRefs == "true" ]; then
+			generateReferenceResults "--MEA --nMom=$i --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA$i/$m.out"
+		else
+			echo "testing $m:"
+			testModel "--MEA --nMom=$i --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/MEA$i/$m.out"
+			
+			# Check if last command failed, and exit
+			if [ $? -ne 0 ]; then
+				exit 1
+			fi
+		fi
+	done
 done
 
 # LNA tests
 for m in "${models[@]}"
-do
-	echo "testing $m:"
-    testModel "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
-    # Check if last command failed, and exit
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
+do	
+	if [ $buildRefs == "true" ]; then
+		generateReferenceResults "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
+	else
+		echo "testing $m:"
+		testModel "--LNA --model=$INOUT_DIR/$m" "$MODEL_ANSWERS_DIR/LNA/$m.out"
+		# Check if last command failed, and exit
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+	fi
 done
