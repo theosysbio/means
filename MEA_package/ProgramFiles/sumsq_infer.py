@@ -307,7 +307,7 @@ def infer_results(restart_results, t, vary, initcond_full, varyic, inferfile):
                             Internal list for each optimisation performed (i.e. if several random restarts selected
                             using --restart option in main menu, each set of results, sorted in order of increasing
                             distance will be present in `restart_results`). If not restarts used, there will be
-                            just one interanl list.
+                            just one internal list.
     :param t:
     :param vary:
     :param initcond_full:
