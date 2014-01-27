@@ -125,3 +125,16 @@ if [ $test_simulation == "true" ]; then
         fi
     done
 fi
+test_inference="true"
+inference_models=("dimer")
+if [ $test_inference == "true" ]; then
+   for m in "${inference_models[@]}"
+   do
+       echo "Testing model $m:"
+       testModel "--MEA --model=model_$m.txt --ODEout=ODEout.tmp --compile --library=$m.tmp --timeparam=param_$m.txt --infer --data=data_${m}_x40.txt --inferfile=inferout.tmp $sundials_parameters" "inferout.tmp" "$MODEL_ANSWERS_DIR/infer/infer_$m.txt"
+
+       if [ $? -ne 0 ]; then
+           exit 1
+       fi
+   done
+fi
