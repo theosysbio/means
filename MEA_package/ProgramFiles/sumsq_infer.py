@@ -18,6 +18,9 @@ from math import factorial
 def make_i0(param, vary, initcond, varyic):
     """
     Creates a list of variables to infer, based on the values in vary/varyic (0=fixed, 1=optimised).
+
+    This should contain all variables that are varied as it would be passed to optimisation method.
+
     :param param: list of starting values for kinetic parameters
     :param vary: list to identify which values in `param` to vary during inference (0=fixed, 1=optimise)
     :param initcond: list of starting values (i.e. at t0) for moments
@@ -37,7 +40,10 @@ def make_i0(param, vary, initcond, varyic):
 def i0_to_test(i0, param, vary, initcond, varyic):
     """
     Used within the distance/cost function to create the current kinetic parameter and initial condition vectors
-    to be used during that interaction, using current values in i0
+    to be used during that interaction, using current values in i0.
+
+    This function takes i0 and complements it with additional information from variables that we do not want to vary
+    so the simulation function could be run and values compared.
 
     :param i0: `i0` list returned from `make_i0`
     :param param: list of starting values for kinetic parameters
