@@ -1,5 +1,3 @@
-from sympy import Matrix, Symbol, factorial
-from sympy import S as F
 import sympy as sp
 import itertools
 import operator
@@ -47,14 +45,14 @@ def get_factorial_term(counter_entry):
     """
 
     # compute all factorials
-    factos = [factorial(c) for c in counter_entry]
+    factos = [sp.factorial(c) for c in counter_entry]
     # multiply them
-    prod = reduce(operator.mul,factos)
+    prod = reduce(operator.mul, factos)
     # return the invert
     return sp.S(1)/sp.S(prod)
 
 
-def taylor_expansion (variables, propensity, counter):
+def taylor_expansion(variables, propensity, counter):
     """
     Calculates  creates terms used in eq. 6 (see Ale et al. 2013) to calculate dmu/dt for EACH VARIABLE combination,
     and EACH REACTION.
@@ -73,7 +71,7 @@ def taylor_expansion (variables, propensity, counter):
     factorial_terms = [get_factorial_term(c) for (c) in counter] * len(propensity)
 
     # we make a matrix in which every element is the entry-wise multiplication of `derives` and factorial_terms
-    te_matrix = sp.Matrix(len(propensity), len(counter), [d*f for (d,f) in zip(derives, factorial_terms)])
+    te_matrix = sp.Matrix(len(propensity), len(counter), [d*f for (d, f) in zip(derives, factorial_terms)])
     return te_matrix
 
 

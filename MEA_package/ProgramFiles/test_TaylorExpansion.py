@@ -38,7 +38,7 @@ class TaylorExpansionTestCase(unittest.TestCase):
 
         self.assertEqual(a_expected, a_result)
         self.assertEqual(b_expected, b_result)
-        self.assertEqual(c_expected, c_result )
+        self.assertEqual(c_expected, c_result)
 
 
 

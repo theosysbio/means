@@ -9,10 +9,11 @@ from fcount import fcount
 from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
 from sympy import S as F
 from sympy.solvers import solve
-from TaylorExpansion import TaylorExpansion
+from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
 from sympy import latex
+import sympy
 
 
 
@@ -34,73 +35,6 @@ def get_and_check_model():
 
     return (S,a,nreactions,nvariables,ymat,Mumat, c)
 
-def make_damat(amat, nMoments, ymat):
-
-    """
-    Calculate matrix of derivatives of rate equations ("damat")
-    (n-1)th row gives nth order derivatives
-    number of columns = nreactions
-    each entry is a list with derivatives for that reaction/order
-
-    In the end, damat contains the derivatives of all orders (ord), for all reactions (react),
-    with respect to all species (sps):
-    damat[ord][react][sps]
-    All "mixed derivatives" are also calculated.
-
-    :param amat: the propensity vector
-    :param nMoments: the number of moments used in expansion
-    :param ymat: the species vector
-
-    :return: the "matrix" of derivation of amat
-    """
-    nreactions = len(amat)
-    nvariables = len(ymat)
-
-    nDerivatives = nMoments
-    damat = Matrix(nDerivatives, 1, lambda i, j : 0)
-
-
-    # At this point, `damat` is a matrix with 1 col and as many rows as moments. It is filled with 0s
-    # `amat` is the column matrix of propensities (as many as reactions)
-    # `ymat` is the column matrix of species (variables)
-
-
-    # For all moment orders
-    for D in range(0, nDerivatives):
-        # if 0th order moment
-        if D==0:
-            # create an empty row
-            row = []
-            # For all reactions
-            for na in range(0, nreactions):
-                # create an empty vect of reactions
-                reaction = []
-                # for all variables/ all species
-                for nv in range(0,nvariables):
-                    # We derive the propensity of this reaction with respect to a species
-
-                    deriv = diff(amat[na,0],ymat[nv,0])
-                    reaction.append(deriv)
-                # In the end, we get the partial derivatives of the propensity
-                # of this reaction with respect to all species.
-                row.append(reaction)
-            # For all reactions in a given order of derivation D we have a row
-            damat[D,0] = row
-        else:
-            # this does the same as above but does higher order derivatives from the results obtained before
-            prev = Matrix(damat[D-1,0])
-            row = []
-            for na in range(0,nreactions):
-                reaction = []
-                prevna = prev[na,:]
-                y = len(prevna)
-                for eq in range(0,y):
-                    for nv in range(0,nvariables):
-                        deriv = diff(prevna[0,eq],ymat[nv,0])
-                        reaction.append(deriv)
-                row.append(reaction)
-            damat[D,0] = row
-    return damat
 
 def make_T_matrix(nvariables, nreactions, TE_matrix, S):
     #TODO AFAIK, the variable T is unused. If this is true, this function is unnecessary
@@ -317,13 +251,15 @@ def MFK_final(nMoments):
     (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
 
     # Make the derivation matrix
-    damat = make_damat(amat, nMoments, ymat)
+    ## damat = make_damat(amat, nMoments, ymat) TODO
 
 
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
     (counter, mcounter) = fcount(nMoments, nvariables)
     # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
-    TE_matrix = TaylorExpansion(nreactions,nvariables,damat,amat,counter,nMoments)
+    TE_matrix = taylor_expansion(ymat, amat, counter)
+
+
 
     # M is the product of the stoichiometry matrix by the Taylor Expansion terms.
     # one row per species and one col per element of counter
