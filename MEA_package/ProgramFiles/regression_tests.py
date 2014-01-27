@@ -140,6 +140,49 @@ def diff_comparison(output, expected_output):
                                      expected_output.splitlines())
         return differences
 
+def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-6):
+    # Do nothing if things equal
+    if output == expected_output:
+        return []
+
+    differences = []
+
+    output_lines = output.splitlines()
+    expected_output_lines = expected_output.splitlines()
+
+    for output_line, expected_output_line in zip(output_lines, expected_output_lines):
+        # If lines are equal, skip this
+        if output_line == expected_output_line:
+            continue
+
+        output_columns = output_line.split('\t')
+        expected_output_columns = expected_output_line.split('\t')
+
+        equal = True
+        for output_column, expected_output_column in zip(output_columns, expected_output_columns):
+            # Check for strict equality first
+            if output_column == expected_output_column:
+                continue
+
+            # Convert to floating point
+            try:
+                float_o_c, float_e_o_c = float(output_column), float(expected_output_column)
+            except ValueError:
+                # If conversion failed, and we already know that the lines aren't equal,
+                # conclude that the lines aren't equal
+                equal = False
+                break
+
+            # Check if floats differ within epsilon
+            if abs(float_o_c - float_e_o_c) > epsilon:
+                equal = False
+                break
+
+        if not equal:
+            differences.append(output_line)
+            differences.append(expected_output_line)
+
+
 
 def generate_tests_from_options(options):
 
@@ -173,7 +216,7 @@ def generate_tests_from_options(options):
                                                   output_file=output_file),
                        os.path.join(options.inout_dir, output_file),
                        os.path.join(options.model_answers_dir, 'sim', output_file),
-                       diff_comparison,
+                       compare_tsv_with_float_epsilon,
                        filter_function=filter_input_file)
 
     if 'inference' in options.tests:
