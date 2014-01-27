@@ -18,6 +18,9 @@ from math import factorial
 def make_i0(param, vary, initcond, varyic):
     """
     Creates a list of variables to infer, based on the values in vary/varyic (0=fixed, 1=optimised).
+
+    This should contain all variables that are varied as it would be passed to optimisation method.
+
     :param param: list of starting values for kinetic parameters
     :param vary: list to identify which values in `param` to vary during inference (0=fixed, 1=optimise)
     :param initcond: list of starting values (i.e. at t0) for moments
@@ -37,7 +40,10 @@ def make_i0(param, vary, initcond, varyic):
 def i0_to_test(i0, param, vary, initcond, varyic):
     """
     Used within the distance/cost function to create the current kinetic parameter and initial condition vectors
-    to be used during that interaction, using current values in i0
+    to be used during that interaction, using current values in i0.
+
+    This function takes i0 and complements it with additional information from variables that we do not want to vary
+    so the simulation function could be run and values compared.
 
     :param i0: `i0` list returned from `make_i0`
     :param param: list of starting values for kinetic parameters
@@ -182,10 +188,10 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
         :param vary:
         :param initcond:
         :param varyic:
-        :param mu:
-        :param t:
+        :param mu: each entry is a timecourse from the sample data file
+        :param t: timepoints (from sample data file)
         :param cfile:
-        :param mom_index_list:
+        :param mom_index_list: the indices of the corresponding moments in simulated trajectories produced by CVODE
         :return:
         """
 
@@ -199,6 +205,7 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
 
         # Check if parameters/initconds are within allowed bounds (if --limit used)
         # and return max_dist if outside these ranges
+        # TODO: Maybe worth solving the ODEs (i.e. obtaining `test_soln` *after* checking for limits ?
 
         if limits != None:
             for a in range(0, len(i0)):
@@ -225,12 +232,14 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
                 return max_dist              # disallow negative means/variance/covariance
 
             tmu = [test_soln[:, i] for i in range(0, len(initcond))]
+            # tmu - list of values for each of the initcond
             dist = 0
             for sp in range(0, len(mu)):
                 for tp in range(0, len(t)):
                     if mu[sp][tp] == 'N':     # account for missing datapoints ('N' in datafile)
                         dist += 0
                     else:
+                        # This should be something among the lines of adding the squared difference
                         dist += (mu[sp][tp] - tmu[mom_index_list[sp]][tp]) ** 2
 
         # If LNA used...
@@ -257,10 +266,6 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
         y_list.append(dist)
         i0_list.append(i0[0])
         return dist
-
-    # callback: function called after each iteration (each iteration will involve several
-    # distance function evaluations).  Use this to save data after each iteration if wanted.
-    # x is the current i0 returned after that iteration.
 
     def my_callback(x):
         """

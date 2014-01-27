@@ -21,10 +21,11 @@ def CVODE(library, t, t0_sp, param):
     :return:
     """
 
-    # Again similar handling of timepoints
+    # Some initial timepoints, the actual timepoint handling is a bit lower, see `time_c` variable
     starttime = t[0]
     endtime = t[-1]
     ntimepoints = len(t)
+
 
     libmylib = CDLL(library)  # Load up the CDLL provided by library
 
@@ -83,6 +84,8 @@ def CVODE(library, t, t0_sp, param):
         res_c[i] = 0.0
 
     arr_type_t = ntimepoints * c_double
+
+    # This is where the actual timepoints are handled to pass to C
     time_c = arr_type_t()
     for i in range(ntimepoints):
         time_c[i] = t[i]
