@@ -25,7 +25,7 @@ def derive_expr_from_counter_entry(expression, variables, counter_entry):
 
     expr_out = expression
     # we recursively derive the expression with respect to all variables at the degree specified in counter
-    for (var, degree) in zip(variables,counter_entry):
+    for (var, degree) in zip(variables, counter_entry):
         expr_out = sp.diff(expr_out, var, degree)
         # If the expression reaches 0, we can return 0
         if(expr_out == sp.S(0)):
@@ -54,7 +54,7 @@ def get_factorial_term(counter_entry):
 
 def taylor_expansion(variables, propensity, counter):
     """
-    Calculates  creates terms used in eq. 6 (see Ale et al. 2013) to calculate dmu/dt for EACH VARIABLE combination,
+    Creates terms used in eq. 6 (see Ale et al. 2013) to calculate dmu/dt for EACH VARIABLE combination,
     and EACH REACTION.
 
     :param variables: the name of the variables (typically {y_0, y_1, ..., y_n})
