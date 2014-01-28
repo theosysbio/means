@@ -6,11 +6,9 @@ if __name__ == '__main__':
 
     model_ = sys.argv[1]
     LNAout = sys.argv[2]
-    os.system('python formatmodel.py ' + model_)
-
-    from model import model
-
-    [S, a, nreactions, nvariables, ymat, Mumat, c] = model()
+    
+    from formatmodel import parse_model
+    [S, a, nreactions, nvariables, ymat, Mumat, c] = parse_model(model_).legacy_interface()
 
 
 def LNA(S, a, ymat):

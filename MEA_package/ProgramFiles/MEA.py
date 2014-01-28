@@ -11,16 +11,14 @@ from sympy import S as F
 from sympy.solvers import solve
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
+from formatmodel import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
 import sympy
 
+def get_and_check_model(model_filename):
 
-
-def get_and_check_model():
-    from model import model
-
-    (S,a,nreactions,nvariables,ymat,Mumat, c) = model()
+    S,a,nreactions,nvariables,ymat,Mumat, c = parse_model(model_filename).legacy_interface()
 
     #Delete temporary model file
     os.system('rm model.py*')
@@ -236,10 +234,11 @@ def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, M
     out_tex.write('\n\end{document}')
     out_tex.close()
 
-def MFK_final(nMoments):
+def MFK_final(model_filename, nMoments):
 
     """
     Produces central moment equations using the specified up to a given order.
+    :param model_filename: file that contains model information
     :param nMoments: the number of moments used in expansion
     """
 
@@ -248,7 +247,7 @@ def MFK_final(nMoments):
 
 
     # Define the kinetic model
-    (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
+    (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model(model_filename)
 
     # Make the derivation matrix
     ## damat = make_damat(amat, nMoments, ymat) TODO
@@ -337,5 +336,4 @@ def get_args():
 
 if __name__ == "__main__":
     model_, numMoments = get_args()
-    os.system('python formatmodel.py '+model_)
-    MFK_final(numMoments)
+    MFK_final(model_, numMoments)

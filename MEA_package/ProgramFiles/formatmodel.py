@@ -137,6 +137,12 @@ def model():
     return model_str
 
 def parse_model(input_filename):
+    """
+    Parses model from the `input_filename` file and returns it
+    :param input_filename:
+    :return: Parsed model object
+    :rtype: Model
+    """
 
     infile = open(input_filename)
     try:
