@@ -130,8 +130,10 @@ def eq_centralmoments(counter, mcounter, M, TaylorM, nvariables, ymat, nreaction
             ekcounter.remove("zero")
 
             if ekcounter != []:
-                dBdt = eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nDerivatives, mvec,
-                                       ekcounter, dAdt)
+                #dBdt = eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nDerivatives, mvec,
+                 #                      ekcounter, dAdt)
+                dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
+
 
             else:
 

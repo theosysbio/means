@@ -27,20 +27,14 @@ class AbstractTestEqMixedMoments(unittest.TestCase):
         """
 
         # These are the arguments as it is called for model MM
-        KWARGS = {'nreactions': len(self.PROPENSITIES),
-                  'nvariables': len(self.SPECIES),
-                  'nMoments': self.NUMBER_OF_MOMENTS,
+        KWARGS = {
                   'amat': self.PROPENSITIES,
                   'counter': self.COUNTER,
                   'S': self.STOICHIOMETRY_MATRIX,
                   'ymat': self.SPECIES,
-                  'nDerivatives': self.NUMBER_OF_MOMENTS,
                   'kvec': kvec,
                   'ekcounter': ekcounter,
-                  # This one must be a column vector for the code to work!
-                  'dAdt': da_dt
         }
-
         answer = eq_mixedmoments(**KWARGS)
         return answer
 

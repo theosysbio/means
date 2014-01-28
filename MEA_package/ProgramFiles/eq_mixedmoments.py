@@ -5,8 +5,7 @@
 # time dependencies of the mixed moments
 ####################################################################
 
-from sympy import Symbol, Matrix, diff
-from sympy import S as F
+
 import sympy as sp
 from TaylorExpansion import derive_expr_from_counter_entry
 from TaylorExpansion import get_factorial_term
@@ -61,8 +60,9 @@ def make_s_pow_e(S, reac_idx, e_vec):
     return product
 
 
-def eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nDerivatives, kvec, ekcounter, dAdt):
+def eq_mixedmoments(amat, counter, S, ymat , kvec, ekcounter):
 
+    # f o
     f_of_x_vec = [make_f_of_x(ymat, kvec, c, reac) for (reac, c) in itertools.product(amat, ekcounter)]
 
     f_expectation_vec = [make_f_expectation(ymat, f, counter) for f in f_of_x_vec]
@@ -77,9 +77,10 @@ def eq_mixedmoments(nreactions, nvariables, nMoments, amat, counter, S, ymat, nD
 
     summed = [reduce(operator.add, to_sum[: ,i ]) for i in range(to_sum.cols)]
 
-    mixedmoments = Matrix(1, len(summed), summed)
+    mixed_moments = sp.Matrix(1, len(summed), summed)
 
-    return mixedmoments
+
+    return mixed_moments
 
 #
 #
