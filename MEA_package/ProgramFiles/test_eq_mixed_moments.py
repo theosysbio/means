@@ -1,6 +1,13 @@
 import unittest
 import sympy
 from eq_mixedmoments import eq_mixedmoments
+from eq_mixedmoments import make_f_of_x
+from eq_mixedmoments import make_f_expectation
+from eq_mixedmoments import make_k_chose_e
+from eq_mixedmoments import make_s_pow_e
+
+
+
 
 
 class AbstractTestEqMixedMoments(unittest.TestCase):
@@ -297,3 +304,96 @@ class TestEqMixedMoments_Under_hes1(AbstractTestEqMixedMoments):
         correct_answer = da_dt
 
         self.assertEqual(answer, correct_answer)
+
+class TestUtilFunctions(AbstractTestEqMixedMoments):
+
+    def get_instance_values(self):
+        constants = sympy.Matrix([sympy.var('c_0'), sympy.var('c_1'), sympy.var('c_2'), sympy.var('c_3')])
+        species = sympy.Matrix([sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')])
+        number_of_moments = 2
+        stoichiometry_matrix = sympy.Matrix([[-1,  0,  0,  0, 0, 1],
+                                             [0, -1,  0, -1, 1, 0],
+                                             [ 0,  0, -1,  1, 0, 0]])
+        propensities = sympy.Matrix([0.03*species[0],
+                                     0.03*species[1],
+                                     0.03*species[2],
+                                     constants[3] * species[1],
+                                     constants[2] * species[0],
+                                     1.0/(1+species[2]**2/constants[0]**2)])
+        counter = [[0, 0, 0], [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
+
+        return constants, species, number_of_moments, stoichiometry_matrix, propensities, counter
+
+
+    def test_make_f_expectation(self):
+
+        """
+        Given the vectors of variable names,
+        Given the vector of combination of moment orders "counter"
+        Given the specified reaction equation,
+        Then resulting vector Should be exactly as expected
+
+        :return:
+        """
+
+        variables = sympy.Matrix(["y_0", "y_1", "y_2"])
+        expr = sympy.S("(y_0 + c_0 * y_1 )/y_2")
+        counter = self.COUNTER
+
+        result = make_f_expectation(variables, expr, counter)
+        expected_result = sympy.Matrix(["(c_0*y_1 + y_0)/y_2", "(c_0*y_1 + y_0)/y_2**3", "-c_0/y_2**2", "0", "-1/y_2**2", "0", "0"])
+        self.assertEqual(result, expected_result)
+
+    def test_make_k_chose_e(self):
+        """
+        Given the vectors k and e ,
+        Then result Should be exactly as specified
+
+        :return:
+        """
+
+        test_a = {"e_vec":[1,2,0], "k_vec":[1,2,0]}
+        expected_a = 1
+        test_b = {"e_vec":[1,2,0], "k_vec":[3,3,3]}
+        expected_b = 9
+
+        result_a = make_k_chose_e(**test_a)
+        result_b = make_k_chose_e(**test_b)
+
+        self.assertEqual(result_a, expected_a)
+        self.assertEqual(result_b, expected_b)
+
+
+    def test_make_s_pow_e(self):
+
+        """
+        Given the vector e and,
+        Given the to stoichio. toy matrix,
+        Then result Should be exactly as specified
+
+        :return:
+        """
+
+        stoichiometry_matrix = sympy.Matrix([[-1], [3], [1]])
+        e_vec = [3, 2, 2]
+        expected_result = (-1 ** 3) * (3 ** 2) * (1 ** 2)
+        result = make_s_pow_e(stoichiometry_matrix, 0, e_vec)
+        self.assertEqual(result, expected_result)
+
+    def test_make_f_of_x(self):
+
+        """
+        Given the vectors k and e and the specified reaction equation,
+        Then result Should be exactly as specified
+
+        :return:
+        """
+
+        e_vec = [1,2,0]
+        k_vec = [3,3,3]
+        variables = sympy.Matrix(["y_0", "y_1", "y_2"])
+        reaction = sympy.S("(y_0 + c_0 * y_1 )/y_2")
+        expected_result = sympy.S("y_0**2*y_1*y_2**2*(c_0*y_1 + y_0)")
+        result =  make_f_of_x(variables, k_vec, e_vec, reaction)
+
+        self.assertEqual(result, expected_result)

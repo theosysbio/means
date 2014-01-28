@@ -83,6 +83,7 @@ def make_s_pow_e(S, reac_idx, e_vec):
     """
 
     vec = [S[i, reac_idx] ** e for i,e in enumerate(e_vec)]
+
     product = reduce(operator.mul, vec)
     return product
 
