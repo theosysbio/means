@@ -109,3 +109,96 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+
+    def test_initialisation_of_propensities_as_list_of_strings(self):
+        """
+        The model constructor should accept propensities as list of strings
+        e.g. ['y_0+y_1', 'y_1+y_2']
+        and return them as sympy (column) Matrix of equations
+        i.e. sympy.Matrix(['y_0+y_1', 'y_1+y_2'])
+        """
+        answer = sympy.Matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
+                               ['c_1*(-y_0 - y_1 + 301)'],
+                               ['c_2*(-y_0 - y_1 + 301)']])
+        # List
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  ['c_0*y_0*(y_0 + y_1 - 181)',
+                   'c_1*(-y_0 - y_1 + 301)',
+                   'c_2*(-y_0 - y_1 + 301)'],
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+        # List of lists
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  [['c_0*y_0*(y_0 + y_1 - 181)'],
+                   ['c_1*(-y_0 - y_1 + 301)'],
+                   ['c_2*(-y_0 - y_1 + 301)']],
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+        # Double list
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  [['c_0*y_0*(y_0 + y_1 - 181)',
+                    'c_1*(-y_0 - y_1 + 301)',
+                    'c_2*(-y_0 - y_1 + 301)']],
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+    def test_initialisation_of_propensities_as_matrix(self):
+        """
+        The model constructor should accept propensities as a sympy matrix
+        e.g. sympy.Matrix(['y_0+y_1', 'y_1+y_2'])
+        and return them as sympy (column) Matrix of equations
+        i.e. sympy.Matrix(['y_0+y_1', 'y_1+y_2'])
+        """
+        answer = sympy.Matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
+                               ['c_1*(-y_0 - y_1 + 301)'],
+                               ['c_2*(-y_0 - y_1 + 301)']])
+        # Column
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  sympy.Matrix(['c_0*y_0*(y_0 + y_1 - 181)',
+                               'c_1*(-y_0 - y_1 + 301)',
+                               'c_2*(-y_0 - y_1 + 301)']),
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+        # Row matrix
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  [['c_0*y_0*(y_0 + y_1 - 181)',
+                   'c_1*(-y_0 - y_1 + 301)',
+                   'c_2*(-y_0 - y_1 + 301)']],
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+    def test_initialisation_of_propensities_as_list_of_sympy_formulae(self):
+        """
+        The model constructor should accept propensities as list of strings
+        e.g. map(sympy.sympify, ['y_0+y_1', 'y_1+y_2'])
+        and return them as sympy (column) Matrix of equations
+        i.e. sympy.Matrix(['y_0+y_1', 'y_1+y_2'])
+        """
+        answer = sympy.Matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
+                               ['c_1*(-y_0 - y_1 + 301)'],
+                               ['c_2*(-y_0 - y_1 + 301)']])
+        # List
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  map(sympy.sympify, ['c_0*y_0*(y_0 + y_1 - 181)',
+                                      'c_1*(-y_0 - y_1 + 301)',
+                                      'c_2*(-y_0 - y_1 + 301)']),
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
+
+        # Double list
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  [map(sympy.sympify, ['c_0*y_0*(y_0 + y_1 - 181)',
+                                       'c_1*(-y_0 - y_1 + 301)',
+                                       'c_2*(-y_0 - y_1 + 301)'])],
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.propensities, answer)
