@@ -61,7 +61,51 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
+    def test_initialisation_of_variables_as_list_of_strings(self):
+        """
+        The model constructor should accept variables as
+        a list of strings, i.e. ['y_0', 'y_1']
+        It should return them as sympy.symbols(['y_0', 'y_1'])
+        :return:
+        """
 
+        m = Model(self.SAMPLE_CONSTANTS,
+                  ['y_0', 'y_1'],
+                  self.SAMPLE_PROPENSITIES,
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
 
+    def test_initialisation_of_variables_as_list_of_sympy_symbols(self):
+        """
+        The model constructor should accept variables as
+        a list of sympy symbols i.e. sympy.symbols(['y_0', 'y_1'])
+        It should return them as sympy.symbols(['y_0', 'y_1'])
+        :return:
+        """
 
+        m = Model(self.SAMPLE_CONSTANTS,
+                  sympy.symbols(['y_0', 'y_1']),
+                  self.SAMPLE_PROPENSITIES,
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
 
+    def test_initialisation_of_variables_as_list_of_sympy_matrix(self):
+        """
+        The model constructor should accept variables as
+        sympy.Matrix i.e. sympy.Matrix(['y_0', 'y_1'])
+        It should return them as sympy.symbols(['y_0', 'y_1'])
+        :return:
+        """
+        # Column
+        m = Model(self.SAMPLE_CONSTANTS,
+                  sympy.Matrix(['y_0', 'y_1']),
+                  self.SAMPLE_PROPENSITIES,
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+
+        # Row
+        m = Model(self.SAMPLE_CONSTANTS,
+                  sympy.Matrix([['y_0', 'y_1']]),
+                  self.SAMPLE_PROPENSITIES,
+                  self.SAMPLE_STOICHIOMETRY_MATRIX)
+        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
