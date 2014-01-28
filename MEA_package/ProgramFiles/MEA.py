@@ -11,30 +11,10 @@ from sympy import S as F
 from sympy.solvers import solve
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
+from model import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
 import sympy
-
-
-
-def get_and_check_model():
-    from model import model
-
-    (S,a,nreactions,nvariables,ymat,Mumat, c) = model()
-
-    #Delete temporary model file
-    os.system('rm model.py*')
-    #TODO use assertions instead of `if else`
-    #Check stoichiometry matrix
-    if S.cols==nreactions and S.rows==nvariables:
-        print "S=okay"
-    elif S.cols!=nreactions:
-        print "Wrong number of reactions in S"
-    elif S.rows!=nvariables:
-        print "Wrong number of variables in S"
-
-    return (S,a,nreactions,nvariables,ymat,Mumat, c)
-
 
 def make_T_matrix(nvariables, nreactions, TE_matrix, S):
     #TODO AFAIK, the variable T is unused. If this is true, this function is unnecessary
@@ -236,19 +216,27 @@ def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, M
     out_tex.write('\n\end{document}')
     out_tex.close()
 
-def MFK_final(nMoments):
+def MFK_final(model_filename, nMoments):
 
     """
     Produces central moment equations using the specified up to a given order.
+    :param model_filename: file that contains model information
     :param nMoments: the number of moments used in expansion
     """
 
     # Set the timer (in order to report how long the execution of this function took)
     time1 = time()
 
+    model = parse_model(model_filename)
 
-    # Define the kinetic model
-    (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model()
+    # TODO: make the terms pythonic
+    S = model.stoichiometry_matrix
+    amat = model.propensities
+    nreactions = model.number_of_reactions
+    nvariables = model.number_of_variables
+    ymat = model.variables
+    c = model.constants
+
 
     # Make the derivation matrix
     ## damat = make_damat(amat, nMoments, ymat) TODO
@@ -258,8 +246,6 @@ def MFK_final(nMoments):
     (counter, mcounter) = fcount(nMoments, nvariables)
     # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
     TE_matrix = taylor_expansion(ymat, amat, counter)
-
-
 
     # M is the product of the stoichiometry matrix by the Taylor Expansion terms.
     # one row per species and one col per element of counter
@@ -337,5 +323,4 @@ def get_args():
 
 if __name__ == "__main__":
     model_, numMoments = get_args()
-    os.system('python formatmodel.py '+model_)
-    MFK_final(numMoments)
+    MFK_final(model_, numMoments)
