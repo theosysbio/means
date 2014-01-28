@@ -82,22 +82,6 @@ class Model(object):
     def number_of_constants(self):
         return len(self.__constants)
 
-def initialize_parameters(nrateconstants,nvariables):
-
-    mumat = sympy.Matrix(nvariables, 1, lambda i,j:sympy.var('y_%d' % (i)))
-    Mumat = sympy.Matrix(nvariables, 1, lambda i,j:sympy.var('mu_%d' % (i)))
-    c = sympy.Matrix(nrateconstants, 1, lambda i,j:sympy.var('c_%d' % (i)))
-
-    return [mumat, Mumat, c]
-
-def index_to_symbol(indexed_string):
-    """
-    Replaces indexed form to symbols, e.g. would replace c[0] to c_0
-    :param indexed_string: string containing several indexed vectors
-    :return:
-    """
-    return re.sub("(\w+)\[(\d+)\]", r"\1_\2", indexed_string)
-
 def parse_model(input_filename):
     """
     Parses model from the `input_filename` file and returns it
@@ -105,6 +89,14 @@ def parse_model(input_filename):
     :return: Parsed model object
     :rtype: Model
     """
+
+    def index_to_symbol(indexed_string):
+        """
+        Helper function that replaces indexed form to symbols, e.g. would replace c[0] to c_0
+        :param indexed_string: string containing several indexed vectors
+        :return:
+        """
+        return re.sub("(\w+)\[(\d+)\]", r"\1_\2", indexed_string)
 
     infile = open(input_filename)
     try:
