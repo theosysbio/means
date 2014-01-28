@@ -1,5 +1,6 @@
 import unittest
 import sympy
+import numpy as np
 from formatmodel import Model
 
 class TestModelInitialisation(unittest.TestCase):
@@ -11,6 +12,8 @@ class TestModelInitialisation(unittest.TestCase):
                                         ['c_2*(-y_0 - y_1 + 301)']])
 
     SAMPLE_STOICHIOMETRY_MATRIX = sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+
+    #-- Constants -----------------------------------------------------
 
     def test_initialisation_of_constants_as_list_of_strings(self):
         """
@@ -61,6 +64,8 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
+    #-- Variables ---------------------------------------------------
+
     def test_initialisation_of_variables_as_list_of_strings(self):
         """
         The model constructor should accept variables as
@@ -74,6 +79,7 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+
 
     def test_initialisation_of_variables_as_list_of_sympy_symbols(self):
         """
@@ -109,6 +115,8 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+
+    #-- Propensity matrix -------------------------------------------------
 
     def test_initialisation_of_propensities_as_list_of_strings(self):
         """
@@ -202,3 +210,52 @@ class TestModelInitialisation(unittest.TestCase):
                                        'c_2*(-y_0 - y_1 + 301)'])],
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.propensities, answer)
+
+    #-- Stoichiometry matrix -----------------------------------------------
+
+    def test_initialisation_of_stoichiometry_matrix_as_list(self):
+        """
+        The model constructor should accept stoichiometry_matrix as list
+        e.g. [[-1, 1, 0], [0, 0, 1]]
+        and return them as sympy Matrix
+        e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+        """
+        answer = sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+        # List
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  self.SAMPLE_PROPENSITIES,
+                  [[-1, 1, 0], [0, 0, 1]])
+        self.assertEqual(m.stoichiometry_matrix, answer)
+
+    def test_initialisation_of_stoichiometry_matrix_as_matrix(self):
+        """
+        The model constructor should accept stoichiometry_matrix as a sympy matrix
+        e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+        and return them as sympy Matrix
+        e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+        """
+        answer = sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+
+        # Column
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  self.SAMPLE_PROPENSITIES,
+                  sympy.Matrix([[-1, 1, 0], [0, 0, 1]]))
+        self.assertEqual(m.stoichiometry_matrix, answer)
+
+    def test_initialisation_of_stoichiometry_matrix_as_numpy_array(self):
+        """
+        The model constructor should accept stoichiometry_matrix as a numpy matrix
+        e.g. np.array(['y_0+y_1', 'y_1+y_2'])
+        and return them as sympy Matrix
+        e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
+        """
+        answer = np.array([[-1, 1, 0], [0, 0, 1]])
+
+        # Column
+        m = Model(self.SAMPLE_CONSTANTS,
+                  self.SAMPLE_VARIABLES,
+                  self.SAMPLE_PROPENSITIES,
+                  sympy.Matrix([[-1, 1, 0], [0, 0, 1]]))
+        self.assertEqual(m.stoichiometry_matrix, answer)
