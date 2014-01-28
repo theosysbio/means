@@ -105,7 +105,7 @@ def format_model_to_legacy_model_py(model):
 
 
     model_str = """
-from sympy import Matrix, Symbol
+from sympy import *
 from initialize_parameters import initialize_parameters
 def model():
     nreactions = {number_of_reactions!r}
@@ -169,8 +169,8 @@ def parse_model(input_filename, output_file):
                 index+=1
             a = str.replace(a,'y', 'ymat')
 
-    constants = sympy.symbols(['c_{0}'.format(number_of_constants)])
-    variables = sympy.symbols(['y_{0}',format(number_of_species)])
+    constants = sympy.symbols(['c_{0}'.format(i) for i in xrange(number_of_constants)])
+    variables = sympy.symbols(['y_{0}'.format(i) for i in xrange(number_of_species)])
     model = Model(constants, variables, propensities, stoichiometry_matrix)
 
 

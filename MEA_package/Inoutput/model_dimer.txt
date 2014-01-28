@@ -12,4 +12,4 @@ Stoichiometry matrix (should be nvariables*nreactions):
 
 Reaction propensities (in terms of rate parameters c[i] and variables y[j]): 
 c[0]*y[0]*(y[0]-1)
-c[1]*((float(1)/2)*(c[2]-y[0]))
+c[1]*((1.0/2)*(c[2]-y[0]))
