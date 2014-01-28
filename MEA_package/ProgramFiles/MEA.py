@@ -11,7 +11,7 @@ from sympy import S as F
 from sympy.solvers import solve
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
-from formatmodel import parse_model
+from model import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
 import sympy

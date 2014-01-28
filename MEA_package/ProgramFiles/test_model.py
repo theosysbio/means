@@ -1,7 +1,7 @@
 import unittest
 import sympy
 import numpy as np
-from formatmodel import Model
+from model import Model
 
 class TestModelInitialisation(unittest.TestCase):
 
