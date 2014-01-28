@@ -47,11 +47,11 @@ class Model(object):
         if self.stoichiometry_matrix.cols != self.propensities.rows:
             raise ValueError('There must be a column in stoichiometry matrix '
                              'for each row in propensities matrix. '
-                             'S: {0!r}, propensities: {1!r}'.format(self.stoichiometry_matrix, self.propensities))
+                             'S ({0.rows}x{0.cols}): {0!r} , propensities ({1.rows}x{1.cols}): {1!r}'.format(self.stoichiometry_matrix, self.propensities))
 
         if self.stoichiometry_matrix.rows != len(self.variables):
             raise ValueError('There must be a row in stoichiometry matrix for each variable. '
-                             'S: {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.variables))
+                             'S ({0.rows}x{0.cols}): {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.variables))
 
 
     # Expose public interface for the specified instance variables
@@ -147,7 +147,7 @@ def parse_model(input_filename, output_file):
             number_of_species = int(D[i+1].rstrip())
 
         if REGEXP_STOICHIOMETRY.match(D[i]):
-            stoichiometry_components = D[i+1:i+1+number_of_species]
+            stoichiometry_components = map(lambda x: x.rstrip().strip('[]').split(','), D[i+1:i+1+number_of_species])
             stoichiometry_matrix = sympy.Matrix(stoichiometry_components)
 
             # TODO: remove this
