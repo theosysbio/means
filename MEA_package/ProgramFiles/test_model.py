@@ -259,3 +259,26 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_PROPENSITIES,
                   sympy.Matrix([[-1, 1, 0], [0, 0, 1]]))
         self.assertEqual(m.stoichiometry_matrix, answer)
+
+    #-- Validation ----------------------------------------------------------
+
+    def test_model_validates_the_size_of_stoichiometry_and_propensity_matrices(self):
+        """
+        Given a stoichiometry matrix and propensity matrix, the model should raise a value error
+        if the number of columns in stoichiometry matrix
+        is not equal to the number of rows in propensity matrix
+        :return:
+        """
+        self.assertRaises(ValueError, Model,
+                          self.SAMPLE_CONSTANTS, self.SAMPLE_VARIABLES,
+                          self.SAMPLE_PROPENSITIES, sympy.Matrix([[1, 1], [0, 0]]))
+
+    def test_model_validates_the_size_of_stoichiometry_matrix_and_number_of_variables(self):
+        """
+        Given a stoichiometry matrix and variables list, the model should raise a value error
+        if the number of rows in stoichiometry matrix is not equal to number of variables
+        :return:
+        """
+        self.assertRaises(ValueError, Model,
+                          self.SAMPLE_CONSTANTS, self.SAMPLE_VARIABLES,
+                          self.SAMPLE_PROPENSITIES, sympy.Matrix([[1, 1, 1]]))
