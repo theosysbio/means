@@ -53,6 +53,17 @@ class Model(object):
             raise ValueError('There must be a row in stoichiometry matrix for each variable. '
                              'S ({0.rows}x{0.cols}): {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.variables))
 
+    def legacy_interface(self):
+        """
+        Returns all parameters of the model in a list (legacy way)
+        """
+        print 'Using legacy_interface on Model is deprecated. Change all usages of this'
+        return [self.stoichiometry_matrix, self.propensities,
+                self.number_of_reactions,
+                self.number_of_variables,
+                self.variables,
+                None,
+                self.constants]
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
@@ -125,61 +136,49 @@ def model():
 
     return model_str
 
-def parse_model(input_filename, output_file):
+def parse_model(input_filename):
 
     infile = open(input_filename)
     try:
-        D = infile.readlines()    #read input data
+        lines = infile.readlines()    #read input data
     finally:
         infile.close()
-
 
     stoichiometry_matrix = None
     propensities = None
 
+    # TODO: get rid of this nasty loop
     # Extract required information
-    for i in range(0,len(D)):
-        if REGEXP_NREACTIONS.match(D[i]):
-            number_of_reactions = int(D[i+1].rstrip())
-        if REGEXP_NCONSTANTS.match(D[i]):
-            number_of_constants = int(D[i+1].rstrip())
-        if REGEXP_NVARIABLES.match(D[i]):
-            number_of_species = int(D[i+1].rstrip())
+    for i in range(0, len(lines)):
+        if REGEXP_NREACTIONS.match(lines[i]):
+            number_of_reactions = int(lines[i+1].rstrip())
+        if REGEXP_NCONSTANTS.match(lines[i]):
+            number_of_constants = int(lines[i+1].rstrip())
+        if REGEXP_NVARIABLES.match(lines[i]):
+            number_of_species = int(lines[i+1].rstrip())
 
-        if REGEXP_STOICHIOMETRY.match(D[i]):
-            stoichiometry_components = map(lambda x: x.rstrip().strip('[]').split(','), D[i+1:i+1+number_of_species])
+        if REGEXP_STOICHIOMETRY.match(lines[i]):
+            stoichiometry_components = map(lambda x: x.rstrip().strip('[]').split(','), lines[i+1:i+1+number_of_species])
             stoichiometry_matrix = sympy.Matrix(stoichiometry_components)
 
-            # TODO: remove this
-            S = ''
-            for j in range(i+1, i+1+int(number_of_species)):
-
-                if REGEXP_S_ENTRY.match(D[j]):
-                    S += str(REGEXP_S_ENTRY.match(D[j]).group(1)) +','
-            S = 'Matrix('+str(number_of_species)+','+str(number_of_reactions)+',['+S.rstrip(',')+'])'
-
-        if REGEXP_PROPENSITIES.match(D[i]):
-            propensity_components = D[i+1:i+1+number_of_reactions]
+        if REGEXP_PROPENSITIES.match(lines[i]):
+            propensity_components = lines[i+1:i+1+number_of_reactions]
             propensities = sympy.Matrix(map(index_to_symbol, propensity_components))
-
-            a = ''
-            index = 0
-            for k in range(i+1, i+1+int(number_of_reactions)):
-                a += '\ta['+str(index)+'] = '+D[k].rstrip() + '\n'
-                index+=1
-            a = str.replace(a,'y', 'ymat')
 
     constants = sympy.symbols(['c_{0}'.format(i) for i in xrange(number_of_constants)])
     variables = sympy.symbols(['y_{0}'.format(i) for i in xrange(number_of_species)])
     model = Model(constants, variables, propensities, stoichiometry_matrix)
 
+    return model
+
+def print_model_to_file(output_file, model):
 
     output = open(output_file,'w')
     try:
         output.write(format_model_to_legacy_model_py(model))
-        #'from sympy import Matrix\nfrom initialize_parameters import initialize_parameters\n\ndef model():\n\tnreactions = '+str(number_of_reactions)+'\n\tnrateconstants = '+str(number_of_constants)+'\n\tnvariables = '+str(number_of_species)+'\n\t[ymat, Mumat, c]=initialize_parameters(nrateconstants,nvariables)\n\tS = '+S+'\n\ta = Matrix(nreactions, 1, lambda i,j:0)\n'+a+'\n\treturn [S, a, nreactions, nvariables, ymat, Mumat, c]')
     finally:
         output.close()
 
 if __name__ == '__main__':
-    parse_model(sys.argv[1], OUTPUT_FILE)
+    model = parse_model(sys.argv[1])
+    print_model_to_file(OUTPUT_FILE, model)
