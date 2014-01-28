@@ -105,6 +105,6 @@ class TaylorExpansionTestCase(unittest.TestCase):
         expected_te_mat[0,0] = simplify("c_0*y_0*(y_0 + y_1 - 181)")
         expected_te_mat[1,0] = simplify("c_1*(-y_0 - y_1 + 301)")
         expected_te_mat[2,0] = simplify("c_2*(-y_0 - y_1 + 301)")
-        expected_te_mat[0, 2],expected_te_mat[0, 3] = (Symbol("c_0"),Symbol("c_0"))
+        expected_te_mat[0, 3],expected_te_mat[0, 5] = (Symbol("c_0"),Symbol("c_0"))
 
         self.assertEqual(expected_te_mat, te_result)
