@@ -1,15 +1,8 @@
-import sys
 import re
 from sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols
-# Regex to identify relevant sections
 import sympy
 
-REGEXP_NREACTIONS = re.compile('Number of reactions')
-REGEXP_NCONSTANTS = re.compile('Number of rate constants')
-REGEXP_NVARIABLES = re.compile('Number of variables')
-REGEXP_STOICHIOMETRY = re.compile('Stoichiometry')
-REGEXP_S_ENTRY = re.compile('\[(.+)\]')
-REGEXP_PROPENSITIES = re.compile('Reaction propensities')
+
 
 class Model(object):
     """
@@ -97,6 +90,14 @@ def parse_model(input_filename):
         :return:
         """
         return re.sub("(\w+)\[(\d+)\]", r"\1_\2", indexed_string)
+
+    # Regular expressions to identify appropriate sections of the file
+    REGEXP_NREACTIONS = re.compile('Number of reactions')
+    REGEXP_NCONSTANTS = re.compile('Number of rate constants')
+    REGEXP_NVARIABLES = re.compile('Number of variables')
+    REGEXP_STOICHIOMETRY = re.compile('Stoichiometry')
+    REGEXP_S_ENTRY = re.compile('\[(.+)\]')
+    REGEXP_PROPENSITIES = re.compile('Reaction propensities')
 
     infile = open(input_filename)
     try:
