@@ -32,11 +32,12 @@ class AbstractTestEqMixedMoments(unittest.TestCase):
                   'counter': self.COUNTER,
                   'S': self.STOICHIOMETRY_MATRIX,
                   'ymat': self.SPECIES,
-                  'kvec': kvec,
-                  'ekcounter': ekcounter,
+                  'k_vec': kvec,
+                  'ek_counter': ekcounter,
         }
         answer = eq_mixedmoments(**KWARGS)
         return answer
+
 
 class TestEqMixedMoments_Under_MM_model(AbstractTestEqMixedMoments):
     """
