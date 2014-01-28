@@ -1,17 +1,4 @@
 from sympy import Matrix, Symbol, diff, latex
-#from create_cfile_LNA import create_c
-if __name__ == '__main__':
-    import os
-    import sys
-
-    model_ = sys.argv[1]
-    LNAout = sys.argv[2]
-    os.system('python formatmodel.py ' + model_)
-
-    from model import model
-
-    [S, a, nreactions, nvariables, ymat, Mumat, c] = model()
-
 
 def LNA(S, a, ymat):
 
@@ -106,6 +93,16 @@ def print_output(LNAout, dPdt, dVdt, ymat, V, c, momlist):
     out_tex.close()
 
 if __name__ == '__main__':
-    dPdt, dVdt, V, momlist = LNA(S, a, ymat)
-    print_output(LNAout, dPdt, dVdt, ymat, V, c, momlist)
+
+    import sys
+
+    model_ = sys.argv[1]
+    LNAout = sys.argv[2]
+
+    from model import parse_model
+
+    model = parse_model(model_)
+
+    dPdt, dVdt, V, momlist = LNA(model.stoichiometry_matrix, model.propensities, model.variables)
+    print_output(LNAout, dPdt, dVdt, model.variables, V, model.constants, momlist)
 
