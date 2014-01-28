@@ -182,7 +182,6 @@ def create_c(inputfile, outputfile, t, sd_1, sd_2):
 #    os.system('g++ -shared -Wl -o '+outputfile+'.so.1.0 ./'+outputfile+'.o -g -O2 -fPIC /cluster/soft/Linux_2.6_64/lib/libsundials_cvode.a /cluster/soft/Linux_2.6_64/lib/libsundials_nvecserial.a -lm')
 
     os.system('g++ -I' +sd_1+ ' -g -O2 -fPIC -c ./'+outputfile+'.c -o '+outputfile+'.o')
-    os.system('g++ -shared -Wl -o '+outputfile+'.so.1.0 ./'+outputfile+'.o -g -O2 -fPIC ' +sd_2+ 'libsundials_cvode.a ' +sd_2+ 'libsundials_nvecserial.a -lm')
-
-
+    os.system('g++ -shared -o '+outputfile+'.so.1.0 ./'+outputfile+'.o -g -O2 -fPIC ' +sd_2+ 'libsundials_cvode.a ' +sd_2+ 'libsundials_nvecserial.a -lm')
+    
     return LHS
