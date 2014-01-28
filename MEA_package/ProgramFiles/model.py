@@ -106,22 +106,23 @@ def parse_model(input_filename):
 
     stoichiometry_matrix = None
     propensities = None
+    number_of_reactions = None
+    number_of_species = None
+    number_of_constants = None
 
     # TODO: get rid of this nasty loop
     # Extract required information
     for i, line in enumerate(lines):
         if STRING_NREACTIONS in line:
             number_of_reactions = int(lines[i+1].rstrip())
-        if STRING_NCONSTANTS in line:
+        elif STRING_NCONSTANTS in line:
             number_of_constants = int(lines[i+1].rstrip())
-        if STIRNG_NVARIABLES in line:
+        elif STIRNG_NVARIABLES in line:
             number_of_species = int(lines[i+1].rstrip())
-
-        if STRING_STOICHIOMETRY in line:
+        elif STRING_STOICHIOMETRY in line:
             stoichiometry_components = map(lambda x: x.rstrip().strip('[]').split(','), lines[i+1:i+1+number_of_species])
             stoichiometry_matrix = sympy.Matrix(stoichiometry_components)
-
-        if STIRNG_PROPENSITIES in line:
+        elif STIRNG_PROPENSITIES in line:
             propensity_components = lines[i+1:i+1+number_of_reactions]
             propensities = sympy.Matrix(map(index_to_symbol, propensity_components))
 
