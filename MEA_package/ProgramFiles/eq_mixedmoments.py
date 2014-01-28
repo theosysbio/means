@@ -5,7 +5,6 @@
 # time dependencies of the mixed moments
 ####################################################################
 
-
 import sympy as sp
 from TaylorExpansion import derive_expr_from_counter_entry
 from TaylorExpansion import get_factorial_term
@@ -83,10 +82,8 @@ def make_s_pow_e(S, reac_idx, e_vec):
     """
 
     vec = [S[i, reac_idx] ** e for i,e in enumerate(e_vec)]
-
     product = reduce(operator.mul, vec)
     return product
-
 
 def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
 
@@ -111,7 +108,6 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
     # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
     # vector in which each elemnt relates to an entry of counter
     f_expectation_vec = [make_f_expectation(ymat, f, counter) for f in f_of_x_vec]
-
 
     # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars
     s_pow_e_vec = [make_s_pow_e(S, reac_idx, c) for (reac_idx, c) in itertools.product(range(len(amat)), ek_counter)]
