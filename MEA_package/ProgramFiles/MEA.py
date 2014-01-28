@@ -21,7 +21,6 @@ def get_and_check_model(model_filename):
     S,a,nreactions,nvariables,ymat,Mumat, c = parse_model(model_filename).legacy_interface()
 
     #Delete temporary model file
-    os.system('rm model.py*')
     #TODO use assertions instead of `if else`
     #Check stoichiometry matrix
     if S.cols==nreactions and S.rows==nvariables:

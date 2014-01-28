@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
     model_ = sys.argv[1]
     LNAout = sys.argv[2]
-    
+
     from formatmodel import parse_model
     [S, a, nreactions, nvariables, ymat, Mumat, c] = parse_model(model_).legacy_interface()
 
