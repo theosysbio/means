@@ -282,3 +282,15 @@ class TestModelInitialisation(unittest.TestCase):
         self.assertRaises(ValueError, Model,
                           self.SAMPLE_CONSTANTS, self.SAMPLE_VARIABLES,
                           self.SAMPLE_PROPENSITIES, sympy.Matrix([[1, 1, 1]]))
+
+    def test_model_validates_that_propensities_is_a_vector(self):
+        """
+        Given a matrix (not a vector) for propensity matrix,
+        the creation model should fail with ValueError
+        :return:
+        """
+        self.assertRaises(ValueError, Model,
+                          self.SAMPLE_CONSTANTS,
+                          self.SAMPLE_VARIABLES,
+                          sympy.Matrix([[1, 2], [3, 4], [5, 6]]),
+                          self.SAMPLE_STOICHIOMETRY_MATRIX)

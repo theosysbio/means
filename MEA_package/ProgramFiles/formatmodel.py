@@ -1,6 +1,6 @@
 import sys
 import re
-
+from sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols
 # Regex to identify relevant sections
 import sympy
 
@@ -24,6 +24,7 @@ class Model(object):
     __propensities = None
     __stoichiometry_matrix = None
 
+
     def __init__(self, constants, variables, propensities, stoichiometry_matrix):
         """
         Creates a `Model` object that stores the model of reactions we want to analyse
@@ -32,10 +33,23 @@ class Model(object):
         :param propensities: a matrix of propensities for each of the reaction in the model.
         :param stoichiometry_matrix: stoichiometry matrix for the model
         """
-        self.__constants = sympy.sympify(constants)
-        self.__variables = sympy.sympify(variables)
-        self.__propensities = sympy.Matrix(propensities)
-        self.__stoichiometry_matrix = sympy.Matrix(stoichiometry_matrix)
+        self.__constants = to_list_of_symbols(constants)
+        self.__variables = to_list_of_symbols(variables)
+        self.__propensities = to_sympy_column_matrix(to_sympy_matrix(propensities))
+        self.__stoichiometry_matrix = to_sympy_matrix(stoichiometry_matrix)
+
+        self.validate()
+
+    def validate(self):
+        """
+        Validates whether the particular model is created properly
+        """
+        if self.stoichiometry_matrix.cols != self.propensities.rows:
+            raise ValueError('There must be a column in stoichiometry matrix for each row in propensities matrix')
+
+        if self.stoichiometry_matrix.rows != len(self.variables):
+            raise ValueError('There must be a row in stoichiometry matrix for each variable')
+
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
