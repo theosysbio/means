@@ -91,13 +91,12 @@ def parse_model(input_filename):
         """
         return re.sub("(\w+)\[(\d+)\]", r"\1_\2", indexed_string)
 
-    # Regular expressions to identify appropriate sections of the file
-    REGEXP_NREACTIONS = re.compile('Number of reactions')
-    REGEXP_NCONSTANTS = re.compile('Number of rate constants')
-    REGEXP_NVARIABLES = re.compile('Number of variables')
-    REGEXP_STOICHIOMETRY = re.compile('Stoichiometry')
-    REGEXP_S_ENTRY = re.compile('\[(.+)\]')
-    REGEXP_PROPENSITIES = re.compile('Reaction propensities')
+    # Strings to identify appropriate sections of the file
+    STRING_NREACTIONS = 'Number of reactions'
+    STRING_NCONSTANTS = 'Number of rate constants'
+    STIRNG_NVARIABLES = 'Number of variables'
+    STRING_STOICHIOMETRY = 'Stoichiometry'
+    STIRNG_PROPENSITIES = 'Reaction propensities'
 
     infile = open(input_filename)
     try:
@@ -110,19 +109,19 @@ def parse_model(input_filename):
 
     # TODO: get rid of this nasty loop
     # Extract required information
-    for i in range(0, len(lines)):
-        if REGEXP_NREACTIONS.match(lines[i]):
+    for i, line in enumerate(lines):
+        if STRING_NREACTIONS in line:
             number_of_reactions = int(lines[i+1].rstrip())
-        if REGEXP_NCONSTANTS.match(lines[i]):
+        if STRING_NCONSTANTS in line:
             number_of_constants = int(lines[i+1].rstrip())
-        if REGEXP_NVARIABLES.match(lines[i]):
+        if STIRNG_NVARIABLES in line:
             number_of_species = int(lines[i+1].rstrip())
 
-        if REGEXP_STOICHIOMETRY.match(lines[i]):
+        if STRING_STOICHIOMETRY in line:
             stoichiometry_components = map(lambda x: x.rstrip().strip('[]').split(','), lines[i+1:i+1+number_of_species])
             stoichiometry_matrix = sympy.Matrix(stoichiometry_components)
 
-        if REGEXP_PROPENSITIES.match(lines[i]):
+        if STIRNG_PROPENSITIES in line:
             propensity_components = lines[i+1:i+1+number_of_reactions]
             propensities = sympy.Matrix(map(index_to_symbol, propensity_components))
 
