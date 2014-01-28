@@ -45,10 +45,13 @@ class Model(object):
         Validates whether the particular model is created properly
         """
         if self.stoichiometry_matrix.cols != self.propensities.rows:
-            raise ValueError('There must be a column in stoichiometry matrix for each row in propensities matrix')
+            raise ValueError('There must be a column in stoichiometry matrix '
+                             'for each row in propensities matrix. '
+                             'S: {0!r}, propensities: {1!r}'.format(self.stoichiometry_matrix, self.propensities))
 
         if self.stoichiometry_matrix.rows != len(self.variables):
-            raise ValueError('There must be a row in stoichiometry matrix for each variable')
+            raise ValueError('There must be a row in stoichiometry matrix for each variable. '
+                             'S: {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.variables))
 
 
     # Expose public interface for the specified instance variables
