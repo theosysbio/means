@@ -11,8 +11,6 @@ REGEXP_STOICHIOMETRY = re.compile('Stoichiometry')
 REGEXP_S_ENTRY = re.compile('\[(.+)\]')
 REGEXP_PROPENSITIES = re.compile('Reaction propensities')
 
-OUTPUT_FILE = 'model.py'
-
 class Model(object):
     """
     Stores the model of reactions we want to analyse
@@ -52,18 +50,6 @@ class Model(object):
         if self.stoichiometry_matrix.rows != len(self.variables):
             raise ValueError('There must be a row in stoichiometry matrix for each variable. '
                              'S ({0.rows}x{0.cols}): {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.variables))
-
-    def legacy_interface(self):
-        """
-        Returns all parameters of the model in a list (legacy way)
-        """
-        print 'Using legacy_interface on Model is deprecated. Change all usages of this'
-        return [self.stoichiometry_matrix, self.propensities,
-                self.number_of_reactions,
-                self.number_of_variables,
-                self.variables,
-                None,
-                self.constants]
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
@@ -112,30 +98,6 @@ def index_to_symbol(indexed_string):
     """
     return re.sub("(\w+)\[(\d+)\]", r"\1_\2", indexed_string)
 
-def format_model_to_legacy_model_py(model):
-
-
-    model_str = """
-from sympy import *
-from initialize_parameters import initialize_parameters
-def model():
-    nreactions = {number_of_reactions!r}
-    nrateconstants = {number_of_constants!r}
-    nvariables = {number_of_species!r}
-    [ymat, Mumat, c]=initialize_parameters(nrateconstants,nvariables)
-    {stoichiometry_matrix}
-    S = e # a hack, as sympy can only print to e = [expr] form
-    {propensities}
-    a = e
-    return [S, a, nreactions, nvariables, ymat, Mumat, c]
-      """.format(number_of_reactions=model.number_of_reactions,
-                 number_of_constants=model.number_of_constants,
-                 number_of_species=model.number_of_variables,
-                 stoichiometry_matrix=sympy.python(model.stoichiometry_matrix).replace('\n', '\n    '),
-                 propensities=sympy.python(model.propensities).replace('\n', '\n    '))
-
-    return model_str
-
 def parse_model(input_filename):
     """
     Parses model from the `input_filename` file and returns it
@@ -176,15 +138,3 @@ def parse_model(input_filename):
     model = Model(constants, variables, propensities, stoichiometry_matrix)
 
     return model
-
-def print_model_to_file(output_file, model):
-
-    output = open(output_file,'w')
-    try:
-        output.write(format_model_to_legacy_model_py(model))
-    finally:
-        output.close()
-
-if __name__ == '__main__':
-    model = parse_model(sys.argv[1])
-    print_model_to_file(OUTPUT_FILE, model)

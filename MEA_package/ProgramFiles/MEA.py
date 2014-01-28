@@ -16,23 +16,6 @@ from raw_to_central import raw_to_central
 from sympy import latex
 import sympy
 
-def get_and_check_model(model_filename):
-
-    S,a,nreactions,nvariables,ymat,Mumat, c = parse_model(model_filename).legacy_interface()
-
-    #Delete temporary model file
-    #TODO use assertions instead of `if else`
-    #Check stoichiometry matrix
-    if S.cols==nreactions and S.rows==nvariables:
-        print "S=okay"
-    elif S.cols!=nreactions:
-        print "Wrong number of reactions in S"
-    elif S.rows!=nvariables:
-        print "Wrong number of variables in S"
-
-    return (S,a,nreactions,nvariables,ymat,Mumat, c)
-
-
 def make_T_matrix(nvariables, nreactions, TE_matrix, S):
     #TODO AFAIK, the variable T is unused. If this is true, this function is unnecessary
     T = []
@@ -244,9 +227,16 @@ def MFK_final(model_filename, nMoments):
     # Set the timer (in order to report how long the execution of this function took)
     time1 = time()
 
+    model = parse_model(model_filename)
 
-    # Define the kinetic model
-    (S, amat, nreactions, nvariables, ymat, Mumat, c) = get_and_check_model(model_filename)
+    # TODO: make the terms pythonic
+    S = model.stoichiometry_matrix
+    amat = model.propensities
+    nreactions = model.number_of_reactions
+    nvariables = model.number_of_variables
+    ymat = model.variables
+    c = model.constants
+
 
     # Make the derivation matrix
     ## damat = make_damat(amat, nMoments, ymat) TODO
@@ -256,8 +246,6 @@ def MFK_final(model_filename, nMoments):
     (counter, mcounter) = fcount(nMoments, nvariables)
     # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
     TE_matrix = taylor_expansion(ymat, amat, counter)
-
-
 
     # M is the product of the stoichiometry matrix by the Taylor Expansion terms.
     # one row per species and one col per element of counter
