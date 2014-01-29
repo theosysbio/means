@@ -28,9 +28,6 @@ def create_options_parser():
         # install it
         if os.path.isfile('/usr/local/lib/libsundials_cvode.a'):
             return "--sd2=/usr/local/lib/ --sd1=/usr/local/include/"
-        # This is where it is stored in jenkins
-        elif os.path.isfile('/usr/share/lib/libsundials_cvode.a'):
-            return "--sd2=/usr/share/lib/ --sd1=/usr/local/include/"
         else:
             return None
 
