@@ -290,7 +290,7 @@ def main():
                 traceback_ = traceback.format_exc(10)
 
         if options.xunit:
-            print '<testcase classname="regression" name="{0}" time_taken="{1}">'.format(test.name,
+            print '<testcase classname="regression" name="{0}" time="{1}">'.format(test.name,
                                                                                          time_taken.total_seconds() if time_taken else "")
         if exception:
             if options.xunit:
