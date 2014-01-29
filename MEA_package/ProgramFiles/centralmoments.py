@@ -62,7 +62,6 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
             dAdt = reduce(operator.add, [(n - m) * (y ** (-1)) * A * vec for y,n,m,vec in zip(ymat, nvec, mvec, m_mat)])
 
 
-
             # this is different from before, because it uses mvec i.e. k
             ekcounter = [c for c in mcounter if all_higher_or_eq(mvec, c) if sum(c) > 0]
 
@@ -73,7 +72,7 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
                 B = 1
             else:
                 # Calculate B, dBdt terms in equation 9
-                B = sp.S("x" + "".join([str(s) for s in mvec]))
+                B = sp.S("x_" + "_".join([str(s) for s in mvec]))
 
 
             Taylorexp[Tm] = (n_choose_k * minus_one_pow_n_minus_k * (A * dBdt + B * dAdt))

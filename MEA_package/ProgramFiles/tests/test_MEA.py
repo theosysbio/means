@@ -11,46 +11,6 @@ import re
 
 class MEATestCase(unittest.TestCase):
 
-    ## we do not need this anymore, for we do not need damat
-
-    # def test_make_damat(self):
-    #     """
-    #     Given the number of moments is 3, the number of species is 2,
-    #     And Given the propensities of the 3 reactions in `a_strings`,
-    #     Then results of make_damat() should produce the derivation "matrix" (`result_damat`)
-    #     exactly equal to the the expected one (`expected_damat`).
-    #
-    #     :return:
-    #     """
-    #
-    #     nMoments, nvariables = 3, 2
-    #
-    #     ymat = Matrix(nvariables, 1, lambda i, j : 0)
-    #     for i in range(nvariables):
-    #         ymat[i,0] = Symbol("y_%i" % i)
-    #
-    #     a_strings = ["c_0*y_0*(120-301+y_0+y_1)", "c_1*(301-(y_0+y_1))", "c_2*(301-(y_0+y_1))"]
-    #
-    #     nreactions = len(a_strings)
-    #
-    #     amat = Matrix(nMoments, 1, lambda i, j : simplify(a_strings[i]))
-    #
-    #     result_damat = make_damat(amat, nMoments, ymat)
-    #
-    #     expected_damat = Matrix(nMoments, 1, lambda i, j : 0)
-    #
-    #     z = S(0)
-    #     expected_damat[0,0] = [[diff(simplify(a_strings[0]), Symbol("y_0")), simplify("c_0*y_0")],
-    #                             [simplify("-c_1"), simplify("-c_1")],
-    #                             [simplify("-c_2"), simplify("-c_2")]]
-    #
-    #     expected_damat[1,0] = [[simplify("2*c_0"), simplify("c_0"), simplify("c_0"), z],
-    #                             [z] * 4,
-    #                             [z] * 4]
-    #
-    #     expected_damat[2,0] = [[z]*8] * 3
-    #     self.assertEqual(expected_damat, result_damat)
-
     def test_substitute_mean_with_y_simple_list(self):
 
         """
@@ -63,16 +23,18 @@ class MEATestCase(unittest.TestCase):
 
         nvar = 2
         mom = simplify([
-        "-2*x01*y_1 + x02 + y_1**2",
-        " -x01*y_0 - x10*y_1 + x11 + y_0*y_1",
-        " -2*x10*y_0 + x20 + y_0**2"])
+        "-2*x_0_1*y_1 + x_0_2 + y_1**2",
+        " -x_0_1*y_0 - x_1_0*y_1 + x_1_1 + y_0*y_1",
+        " -2*x_1_0*y_0 + x_2_0 + y_0**2"])
 
         expected_mom = simplify([
-        "-2*y_1*y_1 + x02 + y_1**2",
-        " -y_1*y_0 - y_0*y_1 + x11 + y_0*y_1",
-        "-2*y_0*y_0 + x20 + y_0**2"])
+        "-2*y_1*y_1 + x_0_2 + y_1**2",
+        " -y_1*y_0 - y_0*y_1 + x_1_1 + y_0*y_1",
+        "-2*y_0*y_0 + x_2_0 + y_0**2"])
 
 
+
+        # print mom
         out_mom = substitute_mean_with_y(mom, nvar)
 
         self.assertEqual(Matrix(out_mom), Matrix(expected_mom))
@@ -91,9 +53,9 @@ class MEATestCase(unittest.TestCase):
 
         nvar = 2
         mom = simplify([
-            ["-2*c_2*x01*(-y_0 - y_1 + 301)", "-2*c_2"],
-            ["c_2*x10*(-y_0 - y_1 + 301)- x01", "x01 - c_0*y_0 - c_0*y_1"],
-            ["0","2 * x10 * (-c_0 * y_0 * (y_0 + y_1 - 181))"]
+            ["-2*c_2*x_0_1*(-y_0 - y_1 + 301)", "-2*c_2"],
+            ["c_2*x_1_0*(-y_0 - y_1 + 301)- x_0_1", "x_0_1 - c_0*y_0 - c_0*y_1"],
+            ["0","2 * x_1_0 * (-c_0 * y_0 * (y_0 + y_1 - 181))"]
             ])
 
 
@@ -133,10 +95,10 @@ class MEATestCase(unittest.TestCase):
         ])
 
 
-        mom = simplify(["x02 - y_1**2", "x11 - y_0*y_1", "x20 - y_0**2"])
+        mom = simplify(["x_0_2 - y_1**2", "x_1_1 - y_0*y_1", "x_2_0 - y_0**2"])
 
 
-        momvec = simplify(["ym02", "ym11", "ym20"])
+        momvec = simplify(["ym_0_2", "ym_1_1", "ym_2_0"])
 
         central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
@@ -151,19 +113,19 @@ class MEATestCase(unittest.TestCase):
         :return:
         """
 
-        momvec = simplify(["ym02", "ym11", "ym20", "ym03"])
+        momvec = simplify(["ym_0_2", "ym_1_1", "ym_2_0", "ym_0_3"])
         central_moments = simplify(
             [
-                ["ym02 * 3", "ym11 + 32 + x", "ym20 + y_0"],
-                ["ym01 * 3", "ym11 + 32 + x", "ym20 + y_0"],
-                ["ym02 * 3", "ym11 + 32 + x", "ym03 + y_0"]
+                ["ym_0_2 * 3", "ym_1_1 + 32 + x", "ym_2_0 + y_0"],
+                ["ym_0_1 * 3", "ym_1_1 + 32 + x", "ym_2_0 + y_0"],
+                ["ym_0_2 * 3", "ym_1_1 + 32 + x", "ym_0_3 + y_0"]
             ])
 
 
         expected_central_moments = simplify(
             [
                 ["yx1 * 3", "yx2 + 32 + x", "yx3 + y_0"],
-                ["ym01 * 3", "yx2 + 32 + x", "yx3 + y_0"],
+                ["ym_0_1 * 3", "yx2 + 32 + x", "yx3 + y_0"],
                 ["yx1 * 3", "yx2 + 32 + x", "yx4 + y_0"]
             ])
 
@@ -202,6 +164,5 @@ class MEATestCase(unittest.TestCase):
              "-c_2*yx3 - yx1*(c_0*y_0 + c_1) - yx2*(2*c_0*y_0 + c_0*y_1 - 181*c_0 + c_1 + c_2)",
              "c_0*y_0**2 + c_0*y_0*y_1 - 181*c_0*y_0 - c_1*y_0 - c_1*y_1 + 301*c_1 - yx2*(2*c_0*y_0 - c_0 + 2*c_1) - yx3*(4*c_0*y_0 + 2*c_0*y_1 - 363*c_0 + 2*c_1)"]
         )
-
 
         self.assertEqual(Matrix(mfk), Matrix(expected_mfk))

@@ -2,11 +2,11 @@
 
 from time import time
 import sys
-import os
+import itertools
 
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
 from fcount import fcount
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify
+import sympy as sp
+from sympy import Matrix,  Symbol, Subs, var, simplify
 from sympy import S as F
 from sympy.solvers import solve
 from TaylorExpansion import taylor_expansion
@@ -16,47 +16,40 @@ from raw_to_central import raw_to_central
 from sympy import latex
 import sympy
 
-def make_T_matrix(nvariables, nreactions, TE_matrix, S):
-    #TODO AFAIK, the variable T is unused. If this is true, this function is unnecessary
-    T = []
-    for nv in range(0,nvariables):
-        row = []
-        for nr in range(0,nreactions):
-            Stmp = S[nv,nr]
-            Ttmp = TE_matrix[nr,:]
-            row.append(Stmp*Ttmp)
-        T.append(row)
-    return T
 
-def substitute_mean_with_y(mom, nvariables):
+
+def substitute_all(expr, pairs):
+    out = expr
+    for (a,b) in pairs:
+        out = sp.Subs(out, b, a)
+
+    to_ret = out.doit()
+    return to_ret
+
+
+def substitute_mean_with_y(moments, nvariables):
 
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
 
-    :param mom: the list of expressions (moments)
+    :param moments: the list of expressions (moments)
     :param nvariables: the number of species
     :return: the substituted expressions
     """
 
 
-    # e.g. x001,x010 x100 are means
-    for i in range(0, nvariables):
-        numv = [0] * nvariables
-        numv[i] = 1
-        numstr = str(numv[0])
-        for j in range(1, nvariables):
-            numstr = numstr + str(numv[j])
-        t1 = Symbol('y_%d' %(i))
-        t2 = Symbol('x'+numstr)
+    diag_mat = [["1" if x == y else "0" for x in range(nvariables)] for y in range(nvariables)]
+    substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
+    substitutions_pairs = [(sp.Symbol(a), sp.Symbol(b)) for (a,b) in substitutions_pairs]
 
-        for m in range(0, len(mom)):
-            if isinstance(mom[m],list):
-                for n in range(0, len(mom[m])):
-                    mom[m][n] = Subs(mom[m][n], t2, t1).doit()
-            else:
-                mom[m] = Subs(mom[m], t2, t1).doit()
+    # for 2d lists
+    if isinstance(moments[0], list):
+        out_moms =[[substitute_all(m, substitutions_pairs) for m in mom ] for mom in moments]
+    # 1d lists
+    else:
+        out_moms =[substitute_all(m, substitutions_pairs) for m in moments]
 
-    return mom
+    return out_moms
 
 def substitute_raw_with_central(CentralMoments, momvec, mom):
 
@@ -87,7 +80,6 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     return CentralMoments
 
 def substitute_ym_with_yx(CentralMoments, momvec):
-
 
     """
     Substitute central moment terms ymn, where n gives n1,...nd combination
@@ -264,17 +256,16 @@ def MFK_final(model_filename, nMoments):
 
 
     # Substitute one for zeroth order raw moments in mom
-    # TODO apparently unnecessary outer loop
-    for i in range(0, nvariables):
-        numv = [0] * nvariables
-        numstr = str(numv[0])
-        for j in range(1, nvariables):
-            numstr = numstr + str(numv[j])
 
-        t1 = F(1)
-        t2 = Symbol('x'+numstr)
-        for m in range(0, len(mom)):
-            mom[m] = Subs(mom[m], t2, t1).doit()
+    numv = [0] * nvariables
+    numstr = str(numv[0])
+    for j in range(1, nvariables):
+        numstr = numstr + str(numv[j])
+
+    t1 = F(1)
+    t2 = Symbol('x'+numstr)
+    for m in range(0, len(mom)):
+        mom[m] = Subs(mom[m], t2, t1).doit()
 
 
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
