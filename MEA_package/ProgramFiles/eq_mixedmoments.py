@@ -102,6 +102,10 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
     :return: dB/dt
     """
 
+    if len(ek_counter) == 0:
+        return sp.Matrix(1, len(counter), lambda i, j: 0)
+
+
     # compute F(x) for EACH REACTION and EACH entry in the EKCOUNTER (eq. 12)
     f_of_x_vec = [make_f_of_x(ymat, k_vec, c, reac) for (reac, c) in itertools.product(amat, ek_counter)]
 
@@ -124,7 +128,7 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
     to_sum = sp.Matrix(product).reshape(len(product),len(product[0]))
 
     # then we sum over the columns
-    summed = [reduce(operator.add, to_sum[: ,i]) for i in range(to_sum.cols)]
+    summed = [reduce(operator.add, to_sum[:,i]) for i in range(to_sum.cols)]
 
     # let us return it as a column vector
     mixed_moments = sp.Matrix(1, len(summed), summed)
