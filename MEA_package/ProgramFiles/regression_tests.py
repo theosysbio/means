@@ -3,6 +3,8 @@ import argparse
 from datetime import datetime
 import os
 import difflib
+import sys
+import traceback
 
 ALLOWED_TESTS = ['mea', 'lna',
                  'simulation',
@@ -57,6 +59,9 @@ def create_options_parser():
                                                       'e.g. --sundials-paramteres="--sd1=/foo/bar --sd2=/bar/baz"',
                         default=_infer_sundials_parameters())
 
+    parser.add_argument('--xunit', help='Return output in xunit format (parseable by Jenkins)',
+                        default=False, action='store_true')
+
     return parser
 
 class NoOutputGeneratedException(Exception):
@@ -64,14 +69,16 @@ class NoOutputGeneratedException(Exception):
 
 class Test(object):
 
+    name = None
     command = None
     output_file = None
     expected_output_file = None
     comparison_function = None
     filter_function = None
 
-    def __init__(self, command, output_file, expected_output_file,
+    def __init__(self, name, command, output_file, expected_output_file,
                  comparison_function, filter_function=None):
+        self.name = name
         self.command = command
         self.output_file = output_file
         self.expected_output_file = expected_output_file
@@ -189,7 +196,8 @@ def generate_tests_from_options(options):
     if 'mea' in options.tests:
         for model in MODELS:
             for moment in range(2, options.max_moment+1):
-                yield Test(MEA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model),
+                yield Test('MEA-{0}'.format(model),
+                           MEA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model),
                                                moments=moment),
                            os.path.join(options.inout_dir, 'ODEout.tmp'),
                            os.path.join(options.model_answers_dir, 'MEA{0}'.format(moment), model + '.out'),
@@ -198,7 +206,8 @@ def generate_tests_from_options(options):
 
     if 'lna' in options.tests:
         for model in MODELS:
-            yield Test(LNA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model)),
+            yield Test('LNA-{0}'.format(model),
+                       LNA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model)),
                        os.path.join(options.inout_dir, 'ODEout.tmp'),
                        os.path.join(options.model_answers_dir, 'LNA', model + '.out'),
                        diff_comparison,
@@ -210,7 +219,8 @@ def generate_tests_from_options(options):
 
         for model in SIMULATION_MODELS:
             output_file = 'simout_{0}.txt'.format(model)
-            yield Test(SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+            yield Test('simulation-{0}'.format(model),
+                       SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                   sundials_parameters=options.sundials_parameters,
                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                   output_file=output_file),
@@ -221,7 +231,8 @@ def generate_tests_from_options(options):
 
     if 'inference' in options.tests:
         for model, dataset in INFERENCE_MODELS:
-            yield Test(INFERENCE_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+            yield Test('inference-{0}-{1}'.format(model, dataset),
+                       INFERENCE_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                  sundials_parameters=options.sundials_parameters,
                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                  dataset=dataset),
@@ -236,21 +247,59 @@ def main():
     parser = create_options_parser()
     options = parser.parse_args()
 
+    tests_to_run = list(generate_tests_from_options(options))
+    number_of_tests = len(tests_to_run)
 
-    tests_to_run = generate_tests_from_options(options)
+    if options.xunit:
+        print '<testsuite tests="{0}">'.format(number_of_tests)
+
 
     for i, test in enumerate(tests_to_run):
-        print '> Running test #{0}'.format(i+1)
-        print test
-        test.run_command()
-        differences = test.compare_outputs()
-        if not differences:
-            print "> ALL OK"
-            print
+
+        if not options.xunit:
+            print '> Running test #{0}/{1} ({1})'.format(i+1, number_of_tests, test.name)
+            print test
+
+        exception = None
+        traceback = None
+        time_taken = None
+        try:
+            __, time_taken = test.run_command()
+        except Exception, e:
+            exception = e
+            traceback_ = traceback.format_exc(10)
+
+        if options.xunit:
+            print '<testcase classname="regression" name="{0}" time_taken="{1}">'.format(test.name,
+                                                                                         time_taken.total_seconds() if time_taken else "")
+        if exception:
+            if options.xunit:
+                print '<failure type="Exception" message="{0}"></failure>'.format(traceback_)
+                # Note that we need to execute all tests even if previous ones failed for xunit
+            else:
+                print '> Test Failed with exception {0!r}'.format(e)
+                print traceback_
+                break
         else:
-            print '> Test FAILED, here are the differences between files:'
-            print '\n'.join(differences)
-            break
+            differences = test.compare_outputs()
+            if not differences:
+                if not options.xunit:
+                    print "> ALL OK"
+                    print
+            else:
+                string_differences = '\n'.join(differences)
+                if options.xunit:
+                    print '<failure type="Output Mismatch" message="{0}"></failure>'.format(string_differences)
+                    # Again no break here
+                else:
+                    print '> Test FAILED, here are the differences between files:'
+                    print '\n'.join(string_differences)
+                    break
+        if options.xunit:
+            print '</testcase>'
+
+    if options.xunit:
+        print '</testsuite>'
 
 if __name__ == '__main__':
     main()
