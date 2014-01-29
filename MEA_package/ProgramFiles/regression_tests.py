@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime
 import os
 import difflib
-import sys
+import subprocess
 import traceback
 
 ALLOWED_TESTS = ['mea', 'lna',
@@ -88,12 +88,20 @@ class Test(object):
         self.comparison_function = comparison_function
         self.filter_function = filter_function
 
+    def cleanup(self):
+        # Cleanup
+        try:
+            os.remove(self.output_file)
+        except OSError:
+            pass
+
     def run_command(self):
         start_time = datetime.now()
-        result = os.system(self.command)
+        proc = subprocess.Popen([self.command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        (out, err) = proc.communicate()
         end_time = datetime.now()
 
-        return result, end_time-start_time
+        return out, err, end_time-start_time
 
     def _filter_output(self, output):
         if self.filter_function is None:
@@ -264,20 +272,35 @@ def main():
             print test
 
         exception = None
-        traceback = None
+        traceback_ = None
         time_taken = None
+
+        # Remove the previous output file
+        test.cleanup()
+
         try:
-            __, time_taken = test.run_command()
+            out, err, time_taken = test.run_command()
         except Exception, e:
             exception = e
             traceback_ = traceback.format_exc(10)
+
+        differences = None
+        if not exception:
+            try:
+                differences = test.compare_outputs()
+            except Exception, e:
+                exception = e
+                traceback_ = traceback.format_exc(10)
 
         if options.xunit:
             print '<testcase classname="regression" name="{0}" time_taken="{1}">'.format(test.name,
                                                                                          time_taken.total_seconds() if time_taken else "")
         if exception:
             if options.xunit:
-                print '<failure type="Exception" message="{0}"></failure>'.format(traceback_)
+                print '<failure type="Exception"><![CDATA[\n' \
+                      'STDOUT:\n{out}------------\n' \
+                       'STDERR:\n{err}------------\n' \
+                       'TRACEBACK\n{traceback}]]></failure>'.format(out=out, err=err, traceback=traceback_)
                 # Note that we need to execute all tests even if previous ones failed for xunit
             else:
                 print '> Test Failed with exception {0!r}'.format(e)
@@ -292,7 +315,10 @@ def main():
             else:
                 string_differences = '\n'.join(differences)
                 if options.xunit:
-                    print '<failure type="Output Mismatch" message="{0}"></failure>'.format(string_differences)
+                    print '<failure type="Output Mismatch"><![CDATA[\n' \
+                          'STDOUT:\n{out}------------\n' \
+                          'STDERR:\n{err}------------\n' \
+                          'MISMATCH:\n{mismatch}]]></failure>'.format(out=out, err=err, mismatch=string_differences)
                     # Again no break here
                 else:
                     print '> Test FAILED, here are the differences between files:'
