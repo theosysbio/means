@@ -6,7 +6,6 @@ from eq_mixedmoments import make_k_chose_e
 def all_higher_or_eq(a, b):
     return all([a >= b for a, b in zip(a, b)])
 
-
 def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
     """
     Function used to calculate the terms required for use in equations giving the time dependence of central moments
@@ -29,15 +28,18 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
     # (does not include 0th order central moment as this is 1,
     # or 1st order central moment as this is 0
 
-    m_mat = [M[nv, :] for nv in range(len(ymat))]
+
+    # copy matrix as a list of rows vectors (1/species)
+    m_mat = [M[nv, :] for nv in range(M.rows)]
 
     for nvec in counter:
+
         # skip zeroth moment
         if sum(nvec) == 0:
             continue
 
         # Find all moments in mcounter that are smaller than `nvec`.
-        midx =  [i for i,c in enumerate(mcounter) if all_higher_or_eq(nvec, c)]
+        midx = [i for i,c in enumerate(mcounter) if all_higher_or_eq(nvec, c)]
 
         Taylorexp = [[0] * len(counter)] * len(mcounter)
 
@@ -45,12 +47,10 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
             mvec = mcounter[midx[Tm]]   #equivalent to k in paper
 
             # f_2 is the (n k) binomial term in equation 9
-            f_2 = make_k_chose_e(mvec, nvec)
+            n_choose_k = make_k_chose_e(mvec, nvec)
 
-            ##########################################
             # f_3 is (-1)^(n-k) term in equation 9
-
-            f_3 = reduce(operator.mul, [(-1) ** (n - m)  for (n,m) in zip(nvec, mvec)])
+            minus_one_pow_n_minus_k = reduce(operator.mul, [(-1) ** (n - m) for (n,m) in zip(nvec, mvec)])
 
             ##########################################
             # Calculate A, dAdt terms in equation 9
@@ -59,21 +59,24 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
 
             A = reduce(operator.mul,  [y ** (n - m) for y,n,m in zip(ymat, nvec, mvec)])
 
-            dAdt = reduce(operator.add, [(n - m) * (y ** (-1)) * A * vec  for y,n,m,vec in zip(ymat, nvec, mvec, m_mat)])
+            dAdt = reduce(operator.add, [(n - m) * (y ** (-1)) * A * vec for y,n,m,vec in zip(ymat, nvec, mvec, m_mat)])
 
-            # Calculate B, dBdt terms in equation 9
-            B = sp.S("x" + "".join([str(s) for s in mvec]))
+
 
             # this is different from before, because it uses mvec i.e. k
             ekcounter = [c for c in mcounter if all_higher_or_eq(mvec, c) if sum(c) > 0]
 
-            if ekcounter != []:
-                dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
-            else:
-                dBdt = sp.Matrix(dAdt.rows, dAdt.cols, lambda i, j: 0)
-                B = 1
+            dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
 
-            Taylorexp[Tm] = (f_2 * f_3 * (A * dBdt + B * dAdt))
+
+            if len(ekcounter) == 0:
+                B = 1
+            else:
+                # Calculate B, dBdt terms in equation 9
+                B = sp.S("x" + "".join([str(s) for s in mvec]))
+
+
+            Taylorexp[Tm] = (n_choose_k * minus_one_pow_n_minus_k * (A * dBdt + B * dAdt))
 
         #################################################
         # Create list of central moments terms to return

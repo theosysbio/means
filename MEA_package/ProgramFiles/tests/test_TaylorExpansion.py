@@ -1,4 +1,3 @@
-
 from fcount import fcount
 import unittest
 from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S
