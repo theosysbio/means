@@ -237,11 +237,6 @@ def MFK_final(model_filename, nMoments):
     ymat = model.variables
     c = model.constants
 
-
-    # Make the derivation matrix
-    ## damat = make_damat(amat, nMoments, ymat) TODO
-
-
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
     (counter, mcounter) = fcount(nMoments, nvariables)
     # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
@@ -251,16 +246,11 @@ def MFK_final(model_filename, nMoments):
     # one row per species and one col per element of counter
     M = S*TE_matrix
 
-    # T seems unused, TODO
-    T = make_T_matrix(nvariables, nreactions, TE_matrix, S)
 
 
     #  Calculate expressions to use in central moments equations (eq. 9)
     #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
-    # TODO remove `nDerivatives`: it is simply an alias for nMoments
-    nDerivatives = nMoments
-    CentralMoments = eq_centralmoments(counter,mcounter, M,T,nvariables,ymat,nreactions,nMoments,amat,S,nDerivatives)
-
+    CentralMoments  = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
 
     #  Substitute means in CentralMoments by y_i (ymat entry)
     CentralMoments = substitute_mean_with_y(CentralMoments, nvariables)

@@ -34,13 +34,7 @@ class CentralMomentsTestCase(unittest.TestCase):
                               0,
                               0
                           ])])
-
-        taylor_m = None  # I don't think this is used
-
-        number_of_variables = 3
         species = sympy.Matrix(map(sympy.var, ['y_0', 'y_1', 'y_2']))
-        number_of_reactions = 6
-        number_of_moments = 2
         propensities = sympy.Matrix(map(sympy.sympify, ['c_0',
                                                         'c_1 * y_0',
                                                         'c_2*y_0*y_2/(c_6 + y_0)',
@@ -52,12 +46,8 @@ class CentralMomentsTestCase(unittest.TestCase):
                                              [0, 0, 0, 1, -1, 0],
                                              [0, 0, 0, 0, 1, -1]])
 
-        number_of_derivatives = number_of_moments
 
-        answer = eq_centralmoments(counter, mcounter, m, taylor_m,
-                                   number_of_variables, species, number_of_reactions,
-                                   number_of_moments, propensities, stoichiometry_matrix, number_of_derivatives)
-
+        answer = eq_centralmoments(counter, mcounter, m, species, propensities, stoichiometry_matrix)
 
         # Note that this is a list, rather than a matrix
         correct_answer = [
@@ -129,11 +119,8 @@ class CentralMomentsTestCase(unittest.TestCase):
                               0]),
         ])
 
-        taylor_m = None  # I don't think this is used
 
-        number_of_variables = 2
         species = sympy.Matrix(map(sympy.var, ['y_0', 'y_1']))
-        number_of_reactions = 3
         number_of_moments = 2
         propensities = sympy.Matrix(map(sympy.sympify, ['c_0*y_0*(y_0 + y_1 - 181)',
                                                         'c_1*(-y_0 - y_1 + 301)',
@@ -142,12 +129,7 @@ class CentralMomentsTestCase(unittest.TestCase):
         stoichiometry_matrix = sympy.Matrix([[-1, 1, 0],
                                              [0, 0, 1]])
 
-        number_of_derivatives = number_of_moments
-
-        answer = eq_centralmoments(counter, mcounter, m, taylor_m,
-                                   number_of_variables, species, number_of_reactions,
-                                   number_of_moments, propensities, stoichiometry_matrix, number_of_derivatives)
-
+        answer = eq_centralmoments(counter, mcounter, m, species, propensities, stoichiometry_matrix)
 
         # Note that this is a list, rather than a matrix
         correct_answer = [
