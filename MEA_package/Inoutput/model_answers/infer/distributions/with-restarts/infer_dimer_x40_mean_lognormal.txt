@@ -1,0 +1,180 @@
+Starting parameters:	[0.0004554892402894598, 0.47501474187662623, 295.22973695696555]
+Optimised parameters:	[0.00099881275252752312, 1.4006911980083234e-06, 305.28494742612963]
+Starting initial conditions:	[297.74510894751694, 0]
+Optimised initial conditions:	[290.00662949070011, 0]
+Optimisation successful:
+	Number of iterations: 175
+	Number of function evaluations: 384
+	Distance at minimum: 2043.45383107
+
+Starting parameters:	[0.0005649161107698522, 0.23973989023077547, 266.6270907864568]
+Optimised parameters:	[0.00099973995196135971, 3.5665223069392366e-06, 290.56806515771149]
+Starting initial conditions:	[310.0834985372611, 0]
+Optimised initial conditions:	[298.26542471706023, 0]
+Optimisation successful:
+	Number of iterations: 364
+	Number of function evaluations: 724
+	Distance at minimum: 2053.10217102
+
+Starting parameters:	[0.0006069231430262842, 0.01806388081790017, 316.0178105672216]
+Optimised parameters:	[0.0009999999999894039, 0.002736127247595181, 290.14233766284542]
+Starting initial conditions:	[307.3986553849228, 0]
+Optimised initial conditions:	[290.01064066002596, 0]
+Optimisation successful:
+	Number of iterations: 369
+	Number of function evaluations: 723
+	Distance at minimum: 2067.37182908
+
+Starting parameters:	[0.000711934489218956, 0.4061766670670037, 299.14564489577396]
+Optimised parameters:	[0.00099999930932755544, 4.8665435439585575e-06, 325.02032554557451]
+Starting initial conditions:	[317.499398194471, 0]
+Optimised initial conditions:	[310.31172298313874, 0]
+Optimisation successful:
+	Number of iterations: 264
+	Number of function evaluations: 547
+	Distance at minimum: 2070.03507131
+
+Starting parameters:	[0.0007577010445679998, 0.09076698764179292, 326.99245980567656]
+Optimised parameters:	[0.00099374800774110162, 2.9728374445738437e-11, 260.04491332825876]
+Starting initial conditions:	[305.3931180963934, 0]
+Optimised initial conditions:	[308.28071012542506, 0]
+Optimisation successful:
+	Number of iterations: 216
+	Number of function evaluations: 442
+	Distance at minimum: 2077.2000133
+
+Starting parameters:	[0.0009832434790000085, 0.323395120924143, 321.51768096508846]
+Optimised parameters:	[0.00098649097063204351, 1.7621746221711111e-05, 329.95994306524528]
+Starting initial conditions:	[308.5566302101982, 0]
+Optimised initial conditions:	[309.49830052426921, 0]
+Optimisation successful:
+	Number of iterations: 275
+	Number of function evaluations: 573
+	Distance at minimum: 2091.14937728
+
+Starting parameters:	[0.00044321862972413785, 0.2745184084816503, 277.04315747346413]
+Optimised parameters:	[0.00099271748684331843, 4.7193049264641535e-09, 309.70568237522298]
+Starting initial conditions:	[300.05354915559656, 0]
+Optimised initial conditions:	[319.31832090256512, 0]
+Optimisation successful:
+	Number of iterations: 222
+	Number of function evaluations: 454
+	Distance at minimum: 2094.34142132
+
+Starting parameters:	[0.0005117031022065925, 0.04633962589375923, 262.9598724160719]
+Optimised parameters:	[0.00099952943992625458, 0.011113529785483292, 323.93268545206092]
+Starting initial conditions:	[302.4460577640957, 0]
+Optimised initial conditions:	[319.92701865300575, 0]
+Optimisation successful:
+	Number of iterations: 236
+	Number of function evaluations: 499
+	Distance at minimum: 2223.26431029
+
+Starting parameters:	[0.0009401659921182054, 0.3824115282766407, 287.8336879459488]
+Optimised parameters:	[0.00088382369743028209, 9.0634850414972547e-12, 296.55646125529097]
+Starting initial conditions:	[296.014716664528, 0]
+Optimised initial conditions:	[290.71202030615495, 0]
+Optimisation successful:
+	Number of iterations: 159
+	Number of function evaluations: 340
+	Distance at minimum: 2250.68336357
+
+Starting parameters:	[0.00034805725941723, 0.16294333510802272, 289.46402913906036]
+Optimised parameters:	[0.00081238540920563151, 0.00024370095313915602, 260.00000000443538]
+Starting initial conditions:	[311.4089756984055, 0]
+Optimised initial conditions:	[290.00082238240958, 0]
+Optimisation successful:
+	Number of iterations: 311
+	Number of function evaluations: 650
+	Distance at minimum: 2404.69719603
+
+Starting parameters:	[0.00037632576848893205, 0.10347488406716177, 271.88282933308903]
+Optimised parameters:	[0.00080722910135368068, 4.4429967291638038e-07, 305.83825830134606]
+Starting initial conditions:	[304.8664621209961, 0]
+Optimised initial conditions:	[319.99642733130975, 0]
+Optimisation successful:
+	Number of iterations: 248
+	Number of function evaluations: 574
+	Distance at minimum: 2466.18130745
+
+Starting parameters:	[0.0008947941927086623, 0.05272801131066823, 282.92792259674445]
+Optimised parameters:	[0.00099999658222540847, 0.044719724175363913, 260.35780418874754]
+Starting initial conditions:	[295.6852164362177, 0]
+Optimised initial conditions:	[319.7570053576294, 0]
+Optimisation successful:
+	Number of iterations: 171
+	Number of function evaluations: 365
+	Distance at minimum: 2584.49711284
+
+Starting parameters:	[0.0006785914407594653, 0.4678999637706997, 278.41030332161245]
+Optimised parameters:	[0.00099983879489320103, 0.045143865286767025, 329.99999998255487]
+Starting initial conditions:	[301.84116185794596, 0]
+Optimised initial conditions:	[319.99078142723317, 0]
+Optimisation successful:
+	Number of iterations: 350
+	Number of function evaluations: 678
+	Distance at minimum: 2692.18524809
+
+Starting parameters:	[0.0002864672252647903, 0.2777556433637119, 323.50563513335777]
+Optimised parameters:	[0.00054826795253225442, 1.1265258538514485e-05, 260.02612325982244]
+Starting initial conditions:	[314.7917085883323, 0]
+Optimised initial conditions:	[304.31783481724597, 0]
+Optimisation terminated: maximum number of iterations or function evaluations exceeded.
+	Number of iterations: 266
+	Number of function evaluations: 803
+	Distance at minimum: 3302.96234201
+
+Starting parameters:	[0.00024143502356740684, 0.3585005380398752, 270.1598034345283]
+Optimised parameters:	[0.00043864720869610111, 6.6802984626543375e-12, 329.98069072184751]
+Starting initial conditions:	[313.43827371516153, 0]
+Optimised initial conditions:	[290.01698754825497, 0]
+Optimisation successful:
+	Number of iterations: 393
+	Number of function evaluations: 766
+	Distance at minimum: 3887.10470353
+
+Starting parameters:	[0.0001745201871375618, 0.2010707059611681, 305.778847519086]
+Optimised parameters:	[0.00041297846939238069, 1.8615020938880275e-11, 260.00067879054814]
+Starting initial conditions:	[318.7522293173015, 0]
+Optimised initial conditions:	[291.29400970681701, 0]
+Optimisation successful:
+	Number of iterations: 245
+	Number of function evaluations: 496
+	Distance at minimum: 4077.67680619
+
+Starting parameters:	[0.0008091097697476629, 0.34225070162816873, 303.04612241410257]
+Optimised parameters:	[0.00099997675209341844, 0.32377467152802814, 260.00000003212114]
+Starting initial conditions:	[291.99453332719986, 0]
+Optimised initial conditions:	[307.18039976576347, 0]
+Optimisation successful:
+	Number of iterations: 291
+	Number of function evaluations: 593
+	Distance at minimum: 4845.56244773
+
+Starting parameters:	[0.00013075539660656614, 0.43054504629142387, 293.0123946344922]
+Optimised parameters:	[0.00023428813347601456, 2.0332793936554822e-09, 279.18320773937808]
+Starting initial conditions:	[290.83035725677905, 0]
+Optimised initial conditions:	[319.9851433370676, 0]
+Optimisation successful:
+	Number of iterations: 210
+	Number of function evaluations: 469
+	Distance at minimum: 6490.41311943
+
+Starting parameters:	[7.448765186949678e-05, 0.12972231950983537, 315.23866961490387]
+Optimised parameters:	[0.00022813152056331729, 4.788431572887685e-12, 260.67386260077785]
+Starting initial conditions:	[316.11197235038276, 0]
+Optimised initial conditions:	[319.74820483115411, 0]
+Optimisation successful:
+	Number of iterations: 379
+	Number of function evaluations: 745
+	Distance at minimum: 6627.10693545
+
+Starting parameters:	[2.2184081189319336e-05, 0.18863392285686698, 311.16836513224933]
+Optimised parameters:	[0.00020134919497616366, 1.0247746752999876e-07, 260.00311145501792]
+Starting initial conditions:	[293.16257222981903, 0]
+Optimised initial conditions:	[290.00023274082514, 0]
+Optimisation terminated: maximum number of iterations or function evaluations exceeded.
+	Number of iterations: 414
+	Number of function evaluations: 800
+	Distance at minimum: 7162.69793016
+
