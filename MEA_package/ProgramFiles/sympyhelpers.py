@@ -45,3 +45,20 @@ def to_list_of_symbols(values):
         values = list(values)
     # Convert list to a list of symbols
     return sympy.sympify(values)
+
+
+def deep_compare_expressions(expr1, expr2):
+    """
+    Compare two sympy expressions that are not necessarily expanded.
+    :param expr1: a first expression
+    :param expr2: a second expression
+    :return: True if the expressions are similar, False otherwise
+    """
+
+    # the simplified difference is equal to zero: same expressions
+    if sympy.simplify(expr1 - expr2) == 0:
+        return True
+    else:
+        return False
+
+
