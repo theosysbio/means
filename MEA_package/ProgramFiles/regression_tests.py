@@ -348,7 +348,7 @@ def generate_tests_from_options(options):
                                                   output_file=output_file_lna,
                                                   method='LNA'),
                        os.path.join(options.inout_dir, output_file_lna),
-                       os.path.join(options.model_answers_dir, 'sim', output_file),
+                       os.path.join(options.model_answers_dir, 'sim', output_file_lna),
                        compare_tsv_with_float_epsilon,
                        filter_function=filter_input_file)
 
