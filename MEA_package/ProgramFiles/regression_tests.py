@@ -35,8 +35,8 @@ INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x
                                   ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2, 0.6)] # Let's give lots of slack for this one
 
 INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
-INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 20, 1e-6),
-                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 2, 0.2)]
+INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 1e-6, 1e-6),
+                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 1e-6, 1e-6)]
 
 def create_options_parser():
 
@@ -431,7 +431,7 @@ def generate_tests_from_options(options):
                                                                    timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                                    dataset=dataset,
                                                                    distribution=distribution,
-                                                                   restart_params='--restart --nRestart=20'),
+                                                                   restart_params='--restart --nRestart=5 --random-seed=42'),
                            os.path.join(options.inout_dir, 'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', 'with-restarts',
                                         model_answer_template.format(distribution)),
