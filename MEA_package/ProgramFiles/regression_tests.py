@@ -8,7 +8,9 @@ import traceback
 
 ALLOWED_TESTS = ['mea', 'lna',
                  'simulation',
-                 'inference', 'inference-with-restarts']
+                 'inference',
+                 'inference-with-restarts',
+                 'inference-with-distributions']
 
 MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 
@@ -17,6 +19,7 @@ LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.
 SIMULATION_TEMPLATE = 'python runprogram.py --MEA --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
 INFERENCE_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=10 {sundials_parameters}'
+INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
 SIMULATION_MODELS = ['MM', 'p53']
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
@@ -24,6 +27,10 @@ INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
 INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 0.0015),
                                   ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 0.1),
                                   ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2)]
+
+INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
+INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 2),
+                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 2)]
 
 def create_options_parser():
 
@@ -300,6 +307,34 @@ def generate_tests_from_options(options):
                        distance_comparisons(allowed_slack),
                        filter_function=filter_input_file)
 
+    if 'inference-with-distributions' in options.tests:
+        for model, dataset, model_answer_template, allowed_slack in INFERENCE_WITH_DISTRIBUTIONS_MODELS:
+            for distribution in INFERENCE_DISTRIBUTIONS:
+                yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
+
+                           INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+                                                                   sundials_parameters=options.sundials_parameters,
+                                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
+                                                                   dataset=dataset,
+                                                                   distribution=distribution,
+                                                                   restart_params=''),
+                           os.path.join(options.inout_dir, 'inferout.tmp'),
+                           os.path.join(options.model_answers_dir, 'infer', 'distributions', model_answer_template.format(distribution)),
+                           diff_comparison,
+                           filter_function=None)
+                yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
+
+                           INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+                                                                   sundials_parameters=options.sundials_parameters,
+                                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
+                                                                   dataset=dataset,
+                                                                   distribution=distribution,
+                                                                   restart_params='--restart --nRestart=20'),
+                           os.path.join(options.inout_dir, 'inferout.tmp'),
+                           os.path.join(options.model_answers_dir, 'infer', 'distributions', 'with-restarts',
+                                        model_answer_template.format(distribution)),
+                           distance_comparisons(allowed_slack),
+                           filter_function=None)
 
 
 
