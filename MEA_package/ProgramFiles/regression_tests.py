@@ -339,18 +339,18 @@ def generate_tests_from_options(options):
                        os.path.join(options.model_answers_dir, 'sim', output_file),
                        compare_tsv_with_float_epsilon,
                        filter_function=filter_input_file)
-
-            output_file_lna = 'simout_{0}_LNA.txt'.format(model)
-            yield Test('simulation-{0}-LNA'.format(model),
-                       SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                  sundials_parameters=options.sundials_parameters,
-                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
-                                                  output_file=output_file_lna,
-                                                  method='LNA'),
-                       os.path.join(options.inout_dir, output_file_lna),
-                       os.path.join(options.model_answers_dir, 'sim', output_file_lna),
-                       compare_tsv_with_float_epsilon,
-                       filter_function=filter_input_file)
+            # Yeah: these won't be that easy to test, as they add some multivariate gaussian when simulating it, soz.
+            # output_file_lna = 'simout_{0}_LNA.txt'.format(model)
+            # yield Test('simulation-{0}-LNA'.format(model),
+            #            SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+            #                                       sundials_parameters=options.sundials_parameters,
+            #                                       timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
+            #                                       output_file=output_file_lna,
+            #                                       method='LNA'),
+            #            os.path.join(options.inout_dir, output_file_lna),
+            #            os.path.join(options.model_answers_dir, 'sim', output_file_lna),
+            #            compare_tsv_with_float_epsilon,
+            #            filter_function=filter_input_file)
 
     if 'inference' in options.tests:
         for model, dataset, model_answer in INFERENCE_MODELS:
