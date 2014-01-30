@@ -1,7 +1,7 @@
-###########################################################################
-# Simulates data for given model, moments, parameters, initial conditions
-# and method (moment expansion or LNA)
-#########################################################################
+"""
+Simulates data for given model, moments, parameters, initial conditions
+and method (moment expansion or LNA)
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
