@@ -17,7 +17,9 @@ LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.
 SIMULATION_TEMPLATE = 'python runprogram.py --MEA --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
 INFERENCE_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 SIMULATION_MODELS = ['MM', 'p53']
-INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt')]
+INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
+                    ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
+                    ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
 
 
 def create_options_parser():
@@ -238,14 +240,14 @@ def generate_tests_from_options(options):
                        filter_function=filter_input_file)
 
     if 'inference' in options.tests:
-        for model, dataset in INFERENCE_MODELS:
+        for model, dataset, model_answer in INFERENCE_MODELS:
             yield Test('inference-{0}-{1}'.format(model, dataset),
                        INFERENCE_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                  sundials_parameters=options.sundials_parameters,
                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                  dataset=dataset),
                        os.path.join(options.inout_dir, 'inferout.tmp'),
-                       os.path.join(options.model_answers_dir, 'infer', 'infer_{0}.txt'.format(model)),
+                       os.path.join(options.model_answers_dir, 'infer', model_answer),
                        diff_comparison,
                        filter_function=filter_input_file)
 
