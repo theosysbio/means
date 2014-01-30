@@ -55,6 +55,8 @@ def mv_index(mfkoutput, mom_names):
     # Get species id for sample data 
     sp_id = []
     for j in range(len(mom_names)):
+        # TODO: The following line silently assumes that `sum(mom_names) == 1`, e.g. `mom_names == [0,1,0]` or similar.
+        # We need to make this assumption explicit
         sp_id.append(mom_names[j].index(1))
 
     # Get indices in CVODE solutions for the moments in sample data
@@ -63,13 +65,16 @@ def mv_index(mfkoutput, mom_names):
     return sp_id, mean_id, var_id, moments_list, mom_index_list
 
 
-#########################################################################
-# Function to calculate gamma/normal/lognormal pdf given mean, var, x.
-# x is the experimental species number measured at a particular timepoint
-# returns ln(pdf)  
-#########################################################################
-
 def eval_density(mean, var, x, distribution):
+    """
+    Calculates gamma/lognormal/normal pdf given mean variance, x
+    where x is the experimental species number measured at a particular timepoint. Returns ln(pdf)
+    :param mean: mean
+    :param var: variance
+    :param x: experimental species number measured at a particular timepoint
+    :param distribution: distribution to consider. Either 'gamma', 'normal' and 'lognormal'
+    :return: normal log of the pdf
+    """
     if distribution == 'gamma':
         b = var / mean
         a = mean / b
