@@ -51,6 +51,87 @@ def parse_expansion_output(expansion_output_filename):
 
     return simulation_type, number_of_species, lhs, moment_list
 
+
+def simulate_lna(soln, number_of_species, t):
+
+    mu = [0] * number_of_species
+    mu_t = [0] * len(t)
+    for i in range(0, number_of_species):
+        mu_i = [0] * len(t)
+        for j in range(len(t)):
+            if i == 0:
+                V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
+                for v in range(2 * number_of_species):
+                    V[v] = soln[j, v + number_of_species]
+                mu_t[j] = np.random.multivariate_normal(soln[j, 0:number_of_species], V)
+            mu_i[j] = mu_t[j][i]
+        mu[i] = mu_i
+
+    # write results to output file (Input file name, parameters, initial condtions,
+    # timepoints, and trajectories for each moment)
+    return mu
+
+
+def output_lna_result(expansion_output_filename, initial_conditions, moment_list, mu, number_of_species, param, t,
+                      trajout):
+    output = open(trajout, 'w')
+
+    try:
+        output.write('>Input file: ' + str(expansion_output_filename) + '\n>Parameters: ' + str(
+            param) + '\n>Starting values: ' + str(initial_conditions) + '\n')
+        output.write('time')
+        for i in range(0, len(t)):
+            output.write('\t' + str(t[i]))
+        output.write('\n')
+        for m in range(0, number_of_species):
+            output.write(moment_list[m])
+            for i in range(0, len(t)):
+                output.write('\t' + str(mu[m][i]))
+            output.write('\n')
+    finally:
+        output.close()
+
+
+def print_mea_output(expansion_output_filename, initial_conditions, maxorder, moment_list, mu, number_of_species, param,
+                     t, trajout):
+    # Check maximum order of moments to output to file/plot
+    if maxorder == False:
+        maxmoment = [int(i) for i in moment_list[-1].split(',')]
+        maxorder = sum(maxmoment)
+
+    # Create list of moments as lists of integers
+    # (moment_list is list of strings)
+    moment_list_int = []
+    for i in range(0, len(moment_list)):
+        moment_ints = [int(j) for j in moment_list[i].split(',')]
+        moment_list_int.append(moment_ints)
+
+    # write results to output file (Input file name, parameters,
+    # initial conditions, data needed for maximum entropy
+    # (no.timepoints, no.species, max order of moments),
+    # timepoints, and trajectories for each moment)
+    output = open(trajout, 'w')
+    initcond_str = ''
+    for i in initial_conditions:
+        initcond_str += (str(i) + ',')
+    initcond_str = '[' + initcond_str.rstrip(',') + ']'
+    output.write('>\tInput file: ' + str(expansion_output_filename) + '\n>\tParameters: ' + str(
+        param) + '\n>\tStarting values: ' + initcond_str + '\n')
+    output.write('#\t' + str(len(t)) + '\t' + str(number_of_species) + '\t' + str(maxorder) + '\n')
+    output.write('time')
+    for i in range(0, len(t)):
+        output.write('\t' + str(t[i]))
+    output.write('\n')
+    # write trajectories of moments (up to maxorder) to output file
+    for m in range(0, len(moment_list_int)):
+        if sum(moment_list_int[m]) <= int(maxorder):
+            output.write(moment_list[m])
+            for i in range(0, len(t)):
+                output.write('\t' + str(mu[m][i]))
+            output.write('\n')
+    output.close()
+
+
 def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditions, maxorder):
     """
 
@@ -80,42 +161,11 @@ def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditio
 
 
     if simulation_type == 'LNA':
-
         # solve with selected parameters
         soln = CVODE(lib, t, initial_conditions, param)
-
-        mu = [0] * number_of_species
-        mu_t = [0] * len(t)
-        for i in range(0, number_of_species):
-            mu_i = [0] * len(t)
-            for j in range(len(t)):
-                if i == 0:
-                    V = Matrix(number_of_species, number_of_species, lambda k, l:0)
-                    for v in range(2*number_of_species):
-                        V[v] = soln[j, v+number_of_species]
-                    mu_t[j] = np.random.multivariate_normal(soln[j, 0:number_of_species], V)
-                mu_i[j] = mu_t[j][i]
-            mu[i] = mu_i
-
-        # write results to output file (Input file name, parameters, initial condtions,
-        # timepoints, and trajectories for each moment)
-
-        output = open(trajout, 'w')
-
-        output.write('>Input file: '+str(expansion_output_filename)+'\n>Parameters: '+str(param)+'\n>Starting values: '+str(initial_conditions)+'\n')
-
-        output.write('time')
-        for i in range(0, len(t)):
-            output.write('\t'+str(t[i]))
-        output.write('\n')
-
-        for m in range(0, number_of_species):
-            output.write(moment_list[m])
-            for i in range(0, len(t)):
-                output.write('\t'+str(mu[m][i]))
-            output.write('\n')
-
-        output.close()
+        mu = simulate_lna(soln, number_of_species, t)
+        output_lna_result(expansion_output_filename, initial_conditions, moment_list, mu, number_of_species, param, t,
+                          trajout)
 
         return [mu, moment_list]
 
@@ -128,48 +178,9 @@ def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditio
 
         soln = CVODE(lib, t, initial_conditions, param)
         mu = [soln[:,i] for i in range(0, len(initial_conditions))]
-        
-        # Check maximum order of moments to output to file/plot
-        if maxorder == False:
-            maxmoment = [int(i) for i in moment_list[-1].split(',')]
-            maxorder = sum(maxmoment)
 
-        # Create list of moments as lists of integers
-        # (moment_list is list of strings)
-        moment_list_int = []
-        for i in range(0, len(moment_list)):
-            moment_ints = [int(j) for j in moment_list[i].split(',')]
-            moment_list_int.append(moment_ints)
-            
-        # write results to output file (Input file name, parameters, 
-        # initial conditions, data needed for maximum entropy
-        # (no.timepoints, no.species, max order of moments),
-        # timepoints, and trajectories for each moment)
-
-        output = open(trajout, 'w')
-
-        initcond_str = ''
-        for i in initial_conditions:
-            initcond_str += (str(i)+',')
-        initcond_str = '['+initcond_str.rstrip(',')+']'
-        output.write('>\tInput file: '+str(expansion_output_filename)+'\n>\tParameters: '+str(param)+'\n>\tStarting values: '+initcond_str+'\n')
-
-        output.write('#\t'+str(len(t))+'\t'+str(number_of_species)+'\t'+str(maxorder)+'\n')
-
-        output.write('time')
-        for i in range(0, len(t)):
-            output.write('\t'+str(t[i]))
-        output.write('\n')
-
-        # write trajectories of moments (up to maxorder) to output file
-        for m in range(0, len(moment_list_int)):
-            if sum(moment_list_int[m]) <= int(maxorder):
-                output.write(moment_list[m])
-                for i in range(0, len(t)):
-                    output.write('\t'+str(mu[m][i]))
-                output.write('\n')
-
-        output.close()
+        print_mea_output(expansion_output_filename, initial_conditions, maxorder, moment_list, mu, number_of_species,
+                         param, t, trajout)
 
         return [soln,moment_list]
     
