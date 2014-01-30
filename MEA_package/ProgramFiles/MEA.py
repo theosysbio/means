@@ -54,6 +54,7 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
         x_to_solve = sp.Symbol('x'+str(mv)[2:])
         solved_x = solve(m - mv, x_to_solve)
         out_central_moments = [[sp.Subs(cm, x_to_solve,solved_x).doit() for cm in cent_mom] for cent_mom in out_central_moments]
+        out_central_moments = [[sp.simplify(cm) for cm in cent_mom] for cent_mom in out_central_moments]
     return out_central_moments
 
 def substitute_ym_with_yx(central_moments, momvec):

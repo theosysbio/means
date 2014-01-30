@@ -64,10 +64,11 @@ class ODEProblem(object):
 
 
 
-def parse_model(input_filename):
+def parse_model(input_filename, from_string=False):
     """
     Parses model from the `input_filename` file and returns it
     :param input_filename:
+    :param from_string: True if a string containing the file data is passed instead of a filename
     :return: Parsed `ODEProblem` object
     :rtype: ODEProblem
     """
@@ -78,12 +79,14 @@ def parse_model(input_filename):
     STRING_CONSTANT = 'Constants:'
     STRING_MOM = 'List of moments:'
 
-    infile = open(input_filename)
-    try:
-        lines = infile.readlines()    #read input data
-    finally:
-        infile.close()
-
+    if not from_string:
+        infile = open(input_filename)
+        try:
+            lines = infile.readlines()    #read input data
+        finally:
+            infile.close()
+    else:
+        lines = input_filename.split("\n")
 
     all_fields = dict()
     field = None
@@ -98,6 +101,7 @@ def parse_model(input_filename):
                 all_fields[field].append(rsline)
 
     # now we query all the fields we need
+
     try:
         right_hand_side = sympy.Matrix([sympy.simplify(l) for l in all_fields[STRING_RIGHT_HAND]])
     except KeyError:
@@ -121,4 +125,3 @@ def parse_model(input_filename):
 
     return ODEProblem(left_hand_side, right_hand_side,constants, moments)
 
-parse_model("../Inoutput/ODEout.tmp")

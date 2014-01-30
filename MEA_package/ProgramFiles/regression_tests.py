@@ -7,6 +7,9 @@ import subprocess
 import traceback
 import numpy as np
 import scipy.spatial.distance
+import ode_problem
+import sympyhelpers
+
 
 ALLOWED_TESTS = ['mea', 'lna',
                  'simulation',
@@ -170,6 +173,38 @@ def diff_comparison(output, expected_output):
                                      expected_output.splitlines())
         return differences
 
+def compare_ode_problems(output, expected_output):
+
+
+    expected_problem = ode_problem.parse_model(expected_output, from_string=True)
+    result_problem = ode_problem.parse_model(output, from_string=True)
+
+    expected_mom_dic = expected_problem.moment_dic
+    result_mom_dic = result_problem.moment_dic
+
+    expected_mom_keys = set(expected_mom_dic .keys())
+    result_mom_keys = set(result_mom_dic.keys())
+
+
+    # ensure we have the same keys
+    if len(result_mom_keys - expected_mom_keys) != 0:
+        return "Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_keys),
+                                                                            str(result_mom_keys))
+
+    expected_rhs = expected_problem.right_hand_side
+    result_rhs = result_problem.right_hand_side
+
+    for e,r in zip(expected_rhs, result_rhs):
+        if not sympyhelpers.deep_compare_expressions(e,r):
+            return "different rhs equations!! \nexpected=\n%s\nresult=\n%s" %(str(e),str(r))
+
+    if expected_problem.left_hand_side != result_problem.left_hand_side:
+        return "different lhs equations!! \nexpected=\n%s\nresult=\n%s" % (str(expected_problem.left_hand_side),
+                                                                           str(result_problem.left_hand_side))
+
+
+
+
 def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-6):
     # Do nothing if things equal
     if output == expected_output:
@@ -291,6 +326,8 @@ def generate_tests_from_options(options):
                                                moments=moment),
                            os.path.join(options.inout_dir, 'ODEout.tmp'),
                            os.path.join(options.model_answers_dir, 'MEA{0}'.format(moment), model + '.out'),
+                           # todo use new comparison of equations:
+                           #compare_ode_problems,
                            diff_comparison,
                            filter_function=filter_time_taken)
 
