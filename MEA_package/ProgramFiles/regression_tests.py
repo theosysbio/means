@@ -194,7 +194,7 @@ def compare_ode_problems(output, expected_output):
     result_rhs = result_problem.right_hand_side
 
     for e,r in zip(expected_rhs, result_rhs):
-        if not sympyhelpers.deep_compare_expressions(e,r):
+        if not sympyhelpers.sympy_expressions_equal(e,r):
             return "different rhs equations!! \nexpected=\n%s\nresult=\n%s" %(str(e),str(r))
 
     if expected_problem.left_hand_side != result_problem.left_hand_side:

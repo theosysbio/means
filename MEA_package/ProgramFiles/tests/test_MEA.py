@@ -7,6 +7,7 @@ from MEA import make_mfk
 import unittest
 from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S
 import re
+from sympyhelpers import assert_sympy_expressions_equal
 
 
 class MEATestCase(unittest.TestCase):
@@ -78,13 +79,13 @@ class MEATestCase(unittest.TestCase):
         :return:
         """
 
-        central_moments = simplify([
+        central_moments = Matrix([
             ["c_2*(-y_0 - y_1 + 301)", "-2*c_2", "-2*c_2", "0"],
             ["-c_0*y_0*y_1*(y_0 + y_1 - 181) + c_1*y_1*(-y_0 - y_1 + 301) - y_1*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "-c_0*y_0 - c_1", "-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1 - c_2", "-c_2"],
             ["-2*c_0*y_0**2*(y_0 + y_1 - 181) + c_0*y_0*(y_0 + y_1 - 181) + 2*c_1*y_0*(-y_0 - y_1 + 301) + c_1*(-y_0 - y_1 + 301) - 2*y_0*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "0", "-2*c_0*y_0 + c_0 - 2*c_1", "-2*c_0*y_0 - 2*c_0*(y_0 + y_1 - 181) + c_0 - 2*c_1"]
         ])
 
-        expected_central_moments = simplify([
+        expected_central_moments = Matrix([
             ["c_2*(-y_0 - y_1 + 301)", "-2*c_2", "-2*c_2", "0"],
             ["-c_0*y_0*y_1*(y_0 + y_1 - 181) + c_1*y_1*(-y_0 - y_1 + 301) - y_1*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "-c_0*y_0 - c_1", "-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1 - c_2", "-c_2"],
             ["-2*c_0*y_0**2*(y_0 + y_1 - 181) + c_0*y_0*(y_0 + y_1 - 181) + 2*c_1*y_0*(-y_0 - y_1 + 301) + c_1*(-y_0 - y_1 + 301) - 2*y_0*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "0", "-2*c_0*y_0 + c_0 - 2*c_1", "-2*c_0*y_0 - 2*c_0*(y_0 + y_1 - 181) + c_0 - 2*c_1"]
@@ -97,7 +98,7 @@ class MEATestCase(unittest.TestCase):
 
         central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
-        self.assertEqual(Matrix(central_moments), Matrix(expected_central_moments))
+        assert_sympy_expressions_equal(central_moments, expected_central_moments)
 
     def test_substitute_ym_with_yx(self):
         """

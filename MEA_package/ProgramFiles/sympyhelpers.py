@@ -1,4 +1,5 @@
 import sympy
+from sympy.core.sympify import SympifyError
 
 def substitute_all(expr, pairs):
     """
@@ -47,7 +48,7 @@ def to_list_of_symbols(values):
     return sympy.sympify(values)
 
 
-def deep_compare_expressions(expr1, expr2):
+def sympy_expressions_equal(expr1, expr2):
     """
     Compare two sympy expressions that are not necessarily expanded.
     :param expr1: a first expression
@@ -55,9 +56,45 @@ def deep_compare_expressions(expr1, expr2):
     :return: True if the expressions are similar, False otherwise
     """
     # the simplified difference is equal to zero: same expressions
-    if sympy.simplify(expr1 - expr2) == 0:
-        return True
-    else:
+
+    try:
+        return sympy.simplify(expr1 - expr2) == 0
+    except SympifyError:
+        # Doing sympy.simplify(expr1 - expr2) raises an error if expr1 or expr2 is a matrix
+        if isinstance(expr1, sympy.Matrix) or isinstance(expr2, sympy.Matrix):
+            return _sympy_matrices_equal(expr1, expr2)
+        else:
+            raise
+
+def assert_sympy_expressions_equal(expr1, expr2):
+    """
+    Raises `AssertionError` if `expr1` is not equal to `expr2`.
+
+    :param expr1: first expression
+    :param expr2: second expression
+    :return: None
+    """
+    if not sympy_expressions_equal(expr1, expr2):
+        raise AssertionError("{0!r} != {1!r}".format(expr1, expr2))
+
+def _sympy_matrices_equal(matrix_left, matrix_right):
+    """
+    Compare two sympy matrices that are not necessarily expanded.
+    Calls `deep_compare_expressions` for each element in the matrices.
+
+    Private function. Use `sympy_expressions_equal`.
+    The former should be able to compare everything.
+
+    :param matrix_left:
+    :param matrix_right:
+    :return:
+    """
+    if matrix_left.cols != matrix_right.cols or matrix_left.rows != matrix_right.rows:
         return False
 
+    for expression_left, expression_right in zip(matrix_left, matrix_right):
+        if not sympy_expressions_equal(expression_left, expression_right):
+            return False
+
+    return True
 
