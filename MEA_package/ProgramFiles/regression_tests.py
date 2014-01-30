@@ -6,7 +6,6 @@ import difflib
 import subprocess
 import traceback
 import numpy as np
-import scipy.spatial.distance
 import ode_problem
 import sympyhelpers
 
@@ -22,7 +21,7 @@ MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 MEA_TEMPLATE = 'python runprogram.py --MEA --nMom={moments} --model={model_file} --ODEout=ODEout.tmp'
 LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.tmp'
 SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
-INFERENCE_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
+INFERENCE_TEMPLATE = 'python runprogram.py --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
 SIMULATION_MODELS = ['MM', 'p53']
@@ -265,7 +264,7 @@ def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-5):
     return differences
 
 def parameter_and_distance_comparisons(allowed_difference_between_top_distances=1e-6,
-                                       allowed_difference_between_parameters=1e-14):
+                                       allowed_difference_between_parameters=1e-6):
 
     def f(output, expected_output):
 
@@ -296,6 +295,11 @@ def parameter_and_distance_comparisons(allowed_difference_between_top_distances=
         output_parameters_lines = filter(lambda x: 'Optimised parameters' in x, output.splitlines())
         expected_output_parameters_lines = filter(lambda x: 'Optimised parameters' in x, expected_output.splitlines())
 
+        output_conditions_lines = filter(lambda x: 'Optimised initial conditions' in x, output.splitlines())
+        expected_output_conditions_lines = filter(lambda x: 'Optimised initial conditions' in x,
+                                                  expected_output.splitlines())
+
+
         differences = []
 
         if len(output_distance_lines) != len(expected_output_distance_lines):
@@ -315,8 +319,7 @@ def parameter_and_distance_comparisons(allowed_difference_between_top_distances=
             best_parameters_o = np.array(parse_parameters(output_parameters_lines[0]))
             best_parameters_e = np.array(parse_parameters(expected_output_parameters_lines[0]))
 
-            distance = scipy.spatial.distance.cosine(best_parameters_o, best_parameters_e)
-            # TODO: this should be some sort of significance test
+            distance = np.sqrt(np.sum(np.square(best_parameters_o - best_parameters_e)))
             if distance > allowed_difference_between_parameters:
                 differences.append("Minimum distances between the expected parameters and actual ones "
                                    "differ by more than {0}".format(allowed_difference_between_parameters))
@@ -325,9 +328,17 @@ def parameter_and_distance_comparisons(allowed_difference_between_top_distances=
                 differences.append("Expected: {0}".format(best_parameters_e))
                 differences.append("Distance: {0}".format(distance))
 
-            # TODO: Not checking for optimised conditions, these tend to vary a lot and I cannot be bothered to
-            # add another parameter
+            best_conditions_o = np.array(parse_parameters(output_conditions_lines[0]))
+            best_conditions_e = np.array(parse_parameters(expected_output_conditions_lines[0]))
 
+            distance_conditions = np.sqrt(np.sum(np.square(best_conditions_o - best_conditions_e)))
+            if distance_conditions > allowed_difference_between_parameters:
+                differences.append("Minimum distances between the expected conditions and actual ones "
+                                   "differ by more than {0}".format(allowed_difference_between_parameters))
+
+                differences.append("Got: {0}".format(best_conditions_o))
+                differences.append("Expected: {0}".format(best_conditions_e))
+                differences.append("Distance: {0}".format(distance_conditions))
 
         return differences
 
