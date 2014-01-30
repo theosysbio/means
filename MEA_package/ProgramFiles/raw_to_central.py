@@ -98,8 +98,6 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
 
     # This block of code just traces back the values from ncounter that were used to generate mom
     # and then returns them as list of symbols ym_{n_values}
-    momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c])) for c in counter]
-    print mom
-    print momvec
+    momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c])) for c in ncounter]
 
     return (mom, momvec)

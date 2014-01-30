@@ -97,7 +97,6 @@ class MEATestCase(unittest.TestCase):
 
         mom = simplify(["x_0_2 - y_1**2", "x_1_1 - y_0*y_1", "x_2_0 - y_0**2"])
 
-
         momvec = simplify(["ym_0_2", "ym_1_1", "ym_2_0"])
 
         central_moments = substitute_raw_with_central(central_moments, momvec, mom)
