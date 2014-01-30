@@ -110,6 +110,11 @@ def run():
             elif option[0:4] == 'pdf=': distribution = option[4:]
             elif option[0:6] == 'maxent': distribution = 'maxent'
             elif option[0:3] == 'LNA' : LNA = True
+            elif option.startswith('random-seed='):
+                import random
+                random_seed = int(option[12:])
+                print 'Setting random seed to {0}'.format(random_seed)
+                random.seed(random_seed)
             elif not(sys.argv[i-1][2:] == 'LNA'):
                 print "\nunknown option "+sys.argv[i]
                 printOptions()
