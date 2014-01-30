@@ -5,6 +5,8 @@ import os
 import difflib
 import subprocess
 import traceback
+import numpy as np
+import scipy.spatial.distance
 
 ALLOWED_TESTS = ['mea', 'lna',
                  'simulation',
@@ -24,13 +26,14 @@ SIMULATION_MODELS = ['MM', 'p53']
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
-INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 0.0015),
-                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 0.1),
-                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2)]
+INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 0.0015, 1e-6),
+                                  # This one is a bit bad at param inference, so lots of slack distance constraints
+                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 0.1, 1e-6),
+                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2, 0.6)] # Let's give lots of slack for this one
 
 INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
-INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 2),
-                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 2)]
+INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 20, 1e-6),
+                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 2, 0.2)]
 
 def create_options_parser():
 
@@ -45,7 +48,7 @@ def create_options_parser():
 
     def _validate_tests(test):
         if not test in ALLOWED_TESTS:
-            raise Exception('{0!r} not in the allowed test list: {1!r}'.format(test, ALLOWED_TESTS.keys()))
+            raise Exception('{0!r} not in the allowed test list: {1!r}'.format(test, ALLOWED_TESTS))
         return test
 
     parser = argparse.ArgumentParser()
@@ -209,7 +212,8 @@ def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-6):
             differences.append(output_line)
             differences.append(expected_output_line)
 
-def distance_comparisons(allowed_difference_between_top_distances):
+def parameter_and_distance_comparisons(allowed_difference_between_top_distances=1e-6,
+                                       allowed_difference_between_parameters=1e-14):
 
     def f(output, expected_output):
 
@@ -223,8 +227,22 @@ def distance_comparisons(allowed_difference_between_top_distances):
             # More hacky, but quicker to write than regexp:
             return float(line.split(':')[1])
 
+        def parse_parameters(line):
+            """
+            Parses the parameters from a string like:
+            Optimised parameters:	[0.00012706267823174886, 0.089218889489651565, 301.05734997831519]
+            Note that this uses `eval` so very unsafe, but hey...
+            :param line:
+            :return:
+            """
+            return eval(line.split(':')[1].strip())
+
+
         output_distance_lines = filter(lambda x: 'Distance at minimum' in x, output.splitlines())
         expected_output_distance_lines = filter(lambda x: 'Distance at minimum' in x, expected_output.splitlines())
+
+        output_parameters_lines = filter(lambda x: 'Optimised parameters' in x, output.splitlines())
+        expected_output_parameters_lines = filter(lambda x: 'Optimised parameters' in x, expected_output.splitlines())
 
         differences = []
 
@@ -241,6 +259,23 @@ def distance_comparisons(allowed_difference_between_top_distances):
                                    "differ by more than {0}".format(allowed_difference_between_top_distances))
                 differences.append("Got: {0}".format(min_distance_output))
                 differences.append("Expected: {0}".format(min_distance_expected_output))
+
+            best_parameters_o = np.array(parse_parameters(output_parameters_lines[0]))
+            best_parameters_e = np.array(parse_parameters(expected_output_parameters_lines[0]))
+
+            distance = scipy.spatial.distance.cosine(best_parameters_o, best_parameters_e)
+            # TODO: this should be some sort of significance test
+            if distance > allowed_difference_between_parameters:
+                differences.append("Minimum distances between the expected parameters and actual ones "
+                                   "differ by more than {0}".format(allowed_difference_between_parameters))
+
+                differences.append("Got: {0}".format(best_parameters_o))
+                differences.append("Expected: {0}".format(best_parameters_e))
+                differences.append("Distance: {0}".format(distance))
+
+            # TODO: Not checking for optimised conditions, these tend to vary a lot and I cannot be bothered to
+            # add another parameter
+
 
         return differences
 
@@ -293,10 +328,10 @@ def generate_tests_from_options(options):
                                                  dataset=dataset),
                        os.path.join(options.inout_dir, 'inferout.tmp'),
                        os.path.join(options.model_answers_dir, 'infer', model_answer),
-                       diff_comparison,
+                       parameter_and_distance_comparisons(),
                        filter_function=filter_input_file)
     if 'inference-with-restarts' in options.tests:
-        for model, dataset, model_answer, allowed_slack in INFERENCE_WITH_RESTARTS_MODELS:
+        for model, dataset, model_answer, allowed_slack, allowed_slack_params in INFERENCE_WITH_RESTARTS_MODELS:
             yield Test('inference-restarts-{0}-{1}'.format(model, dataset),
                        INFERENCE_WITH_RESTARTS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                                sundials_parameters=options.sundials_parameters,
@@ -304,11 +339,11 @@ def generate_tests_from_options(options):
                                                                dataset=dataset),
                        os.path.join(options.inout_dir, 'inferout.restarts.tmp'),
                        os.path.join(options.model_answers_dir, 'infer', 'with-restarts', model_answer),
-                       distance_comparisons(allowed_slack),
+                       parameter_and_distance_comparisons(allowed_slack, allowed_slack_params),
                        filter_function=filter_input_file)
 
     if 'inference-with-distributions' in options.tests:
-        for model, dataset, model_answer_template, allowed_slack in INFERENCE_WITH_DISTRIBUTIONS_MODELS:
+        for model, dataset, model_answer_template, allowed_slack, allowed_slack_params in INFERENCE_WITH_DISTRIBUTIONS_MODELS:
             for distribution in INFERENCE_DISTRIBUTIONS:
                 yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
 
@@ -320,7 +355,7 @@ def generate_tests_from_options(options):
                                                                    restart_params=''),
                            os.path.join(options.inout_dir, 'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', model_answer_template.format(distribution)),
-                           diff_comparison,
+                           parameter_and_distance_comparisons(),
                            filter_function=None)
                 yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
 
@@ -333,7 +368,7 @@ def generate_tests_from_options(options):
                            os.path.join(options.inout_dir, 'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', 'with-restarts',
                                         model_answer_template.format(distribution)),
-                           distance_comparisons(allowed_slack),
+                           parameter_and_distance_comparisons(allowed_slack, allowed_slack_params),
                            filter_function=None)
 
 
