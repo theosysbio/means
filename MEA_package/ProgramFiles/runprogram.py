@@ -115,6 +115,8 @@ def run():
                 random_seed = int(option[12:])
                 print 'Setting random seed to {0}'.format(random_seed)
                 random.seed(random_seed)
+                import numpy.random
+                numpy.random.seed(random_seed)
             elif not(sys.argv[i-1][2:] == 'LNA'):
                 print "\nunknown option "+sys.argv[i]
                 printOptions()
