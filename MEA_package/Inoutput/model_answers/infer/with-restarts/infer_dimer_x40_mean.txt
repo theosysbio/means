@@ -1,0 +1,90 @@
+Starting parameters:	[0.00011555738545098414, 0.16915863355152616, 283.97993821527626]
+Optimised parameters:	[0.0001355888838309157, 0.081339609171980423, 319.15151088368594]
+Starting initial conditions:	[314.41718191580327, 0]
+Optimised initial conditions:	[301.04706374960654, 0]
+Optimisation successful:
+	Number of iterations: 168
+	Number of function evaluations: 318
+	Distance at minimum: 0.0100665847664
+
+Starting parameters:	[0.0005385260828494417, 0.38669704108569913, 325.9061220700819]
+Optimised parameters:	[0.00015110896921380991, 0.067135549964264657, 362.72688189365203]
+Starting initial conditions:	[302.73361114500875, 0]
+Optimised initial conditions:	[301.12902926698632, 0]
+Optimisation successful:
+	Number of iterations: 133
+	Number of function evaluations: 265
+	Distance at minimum: 0.0850711159611
+
+Starting parameters:	[0.0009227270698514687, 0.07831133974898219, 305.97003964119807]
+Optimised parameters:	[6.5206928494213032e-05, 0.14575062316438903, 228.19178936091436]
+Starting initial conditions:	[308.6992477503394, 0]
+Optimised initial conditions:	[300.65399260978222, 0]
+Optimisation successful:
+	Number of iterations: 227
+	Number of function evaluations: 407
+	Distance at minimum: 0.554498029256
+
+Starting parameters:	[8.828813889801479e-05, 0.2320339811083988, 292.93210190460155]
+Optimised parameters:	[3.7433431152836393e-05, 0.17108099756255257, 211.17060784949194]
+Starting initial conditions:	[306.5391160872442, 0]
+Optimised initial conditions:	[300.48356898032864, 0]
+Optimisation successful:
+	Number of iterations: 163
+	Number of function evaluations: 336
+	Distance at minimum: 1.18227716882
+
+Starting parameters:	[0.0004923587941879075, 0.4884605433415298, 277.6079679022271]
+Optimised parameters:	[1.9913959309374797e-05, 0.18709024359808829, 202.7933674205247]
+Starting initial conditions:	[311.25254708412683, 0]
+Optimised initial conditions:	[300.38544356097589, 0]
+Optimisation successful:
+	Number of iterations: 167
+	Number of function evaluations: 339
+	Distance at minimum: 1.71207362139
+
+Starting parameters:	[0.0003779951363279835, 0.13996587552499257, 319.71671243831435]
+Optimised parameters:	[1.3377732006283239e-05, 0.19329074154654363, 200.04426809449294]
+Starting initial conditions:	[298.51559346476097, 0]
+Optimised initial conditions:	[300.3792413665991, 0]
+Optimisation successful:
+	Number of iterations: 156
+	Number of function evaluations: 311
+	Distance at minimum: 1.93963713934
+
+Starting parameters:	[0.0006806362931099369, 0.03182199848697265, 266.07576425805337]
+Optimised parameters:	[0.00016536996031063533, 0.030809377892464598, 578.5568626974175]
+Starting initial conditions:	[292.09328497135493, 0]
+Optimised initial conditions:	[297.74100562932199, 0]
+Optimisation successful:
+	Number of iterations: 192
+	Number of function evaluations: 391
+	Distance at minimum: 66.6118896047
+
+Starting parameters:	[0.0007845067845815822, 0.31047372159211806, 271.31190684447955]
+Optimised parameters:	[5.89023614336768e-09, 0.4189440032575924, 206.8893168893326]
+Starting initial conditions:	[318.2173234566249, 0]
+Optimised initial conditions:	[322.01366803456972, 0]
+Optimisation successful:
+	Number of iterations: 248
+	Number of function evaluations: 504
+	Distance at minimum: 2881.77616046
+
+Starting parameters:	[0.0008828708655356705, 0.2664468965560671, 300.5945891517854]
+Optimised parameters:	[2.3603978217241942e-15, 0.45731290910770345, 207.27252095997821]
+Starting initial conditions:	[295.59959713867727, 0]
+Optimised initial conditions:	[325.70163865482306, 0]
+Optimisation successful:
+	Number of iterations: 326
+	Number of function evaluations: 625
+	Distance at minimum: 3644.2030151
+
+Starting parameters:	[0.00020670444960138102, 0.4451413529042647, 310.22078902992774]
+Optimised parameters:	[4.0326189378844373e-11, 0.45413828091953767, 204.99847343307539]
+Starting initial conditions:	[300.2625214358327, 0]
+Optimised initial conditions:	[308.93545062143255, 0]
+Optimisation successful:
+	Number of iterations: 333
+	Number of function evaluations: 628
+	Distance at minimum: 4327.65257743
+

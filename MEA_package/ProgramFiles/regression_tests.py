@@ -8,7 +8,7 @@ import traceback
 
 ALLOWED_TESTS = ['mea', 'lna',
                  'simulation',
-                 'inference']
+                 'inference', 'inference-with-restarts']
 
 MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 
@@ -16,9 +16,14 @@ MEA_TEMPLATE = 'python runprogram.py --MEA --nMom={moments} --model={model_file}
 LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.tmp'
 SIMULATION_TEMPLATE = 'python runprogram.py --MEA --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
 INFERENCE_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
+INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=10 {sundials_parameters}'
 SIMULATION_MODELS = ['MM', 'p53']
-INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt')]
-
+INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
+                    ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
+                    ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
+INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 0.0015),
+                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 0.1),
+                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2)]
 
 def create_options_parser():
 
@@ -197,7 +202,42 @@ def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-6):
             differences.append(output_line)
             differences.append(expected_output_line)
 
+def distance_comparisons(allowed_difference_between_top_distances):
 
+    def f(output, expected_output):
+
+        def parse_distance(line):
+            """
+            Parses the floating point distance from a string like
+            "Distance at minimum: 0.00257923702193"
+            :param line:
+            :return:
+            """
+            # More hacky, but quicker to write than regexp:
+            return float(line.split(':')[1])
+
+        output_distance_lines = filter(lambda x: 'Distance at minimum' in x, output.splitlines())
+        expected_output_distance_lines = filter(lambda x: 'Distance at minimum' in x, expected_output.splitlines())
+
+        differences = []
+
+        if len(output_distance_lines) != len(expected_output_distance_lines):
+            differences.append('Number "distance at minimum" lines do not match in the outputs. '
+                               'Got {0}, expected: {1}'.format(len(output_distance_lines),
+                                                               len(expected_output_distance_lines)))
+        else:
+            min_distance_output = parse_distance(output_distance_lines[0])
+            min_distance_expected_output = parse_distance(expected_output_distance_lines[0])
+
+            if abs(min_distance_output - min_distance_expected_output) > allowed_difference_between_top_distances:
+                differences.append("The minimum distances between the expected output and the actual one "
+                                   "differ by more than {0}".format(allowed_difference_between_top_distances))
+                differences.append("Got: {0}".format(min_distance_output))
+                differences.append("Expected: {0}".format(min_distance_expected_output))
+
+        return differences
+
+    return f
 
 def generate_tests_from_options(options):
 
@@ -238,16 +278,28 @@ def generate_tests_from_options(options):
                        filter_function=filter_input_file)
 
     if 'inference' in options.tests:
-        for model, dataset in INFERENCE_MODELS:
+        for model, dataset, model_answer in INFERENCE_MODELS:
             yield Test('inference-{0}-{1}'.format(model, dataset),
                        INFERENCE_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                  sundials_parameters=options.sundials_parameters,
                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                  dataset=dataset),
                        os.path.join(options.inout_dir, 'inferout.tmp'),
-                       os.path.join(options.model_answers_dir, 'infer', 'infer_{0}.txt'.format(model)),
+                       os.path.join(options.model_answers_dir, 'infer', model_answer),
                        diff_comparison,
                        filter_function=filter_input_file)
+    if 'inference-with-restarts' in options.tests:
+        for model, dataset, model_answer, allowed_slack in INFERENCE_WITH_RESTARTS_MODELS:
+            yield Test('inference-restarts-{0}-{1}'.format(model, dataset),
+                       INFERENCE_WITH_RESTARTS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
+                                                               sundials_parameters=options.sundials_parameters,
+                                                               timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
+                                                               dataset=dataset),
+                       os.path.join(options.inout_dir, 'inferout.restarts.tmp'),
+                       os.path.join(options.model_answers_dir, 'infer', 'with-restarts', model_answer),
+                       distance_comparisons(allowed_slack),
+                       filter_function=filter_input_file)
+
 
 
 
@@ -265,7 +317,7 @@ def main():
     for i, test in enumerate(tests_to_run):
 
         if not options.xunit:
-            print '> Running test #{0}/{1} ({1})'.format(i+1, number_of_tests, test.name)
+            print '> Running test #{0}/{1} ({2})'.format(i+1, number_of_tests, test.name)
             print test
 
         exception = None
@@ -307,7 +359,7 @@ def main():
             differences = test.compare_outputs()
             if not differences:
                 if not options.xunit:
-                    print "> ALL OK"
+                    print "> ALL OK. Runtime: {0}s".format(time_taken.total_seconds())
                     print
             else:
                 string_differences = '\n'.join(differences)
@@ -319,7 +371,7 @@ def main():
                     # Again no break here
                 else:
                     print '> Test FAILED, here are the differences between files:'
-                    print '\n'.join(string_differences)
+                    print string_differences
                     break
         if options.xunit:
             print '</testcase>'
