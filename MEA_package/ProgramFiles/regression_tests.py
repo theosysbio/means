@@ -267,7 +267,7 @@ def main():
     for i, test in enumerate(tests_to_run):
 
         if not options.xunit:
-            print '> Running test #{0}/{1} ({1})'.format(i+1, number_of_tests, test.name)
+            print '> Running test #{0}/{1} ({2})'.format(i+1, number_of_tests, test.name)
             print test
 
         exception = None
@@ -309,7 +309,7 @@ def main():
             differences = test.compare_outputs()
             if not differences:
                 if not options.xunit:
-                    print "> ALL OK"
+                    print "> ALL OK. Runtime: {0}s".format(time_taken.total_seconds())
                     print
             else:
                 string_differences = '\n'.join(differences)
