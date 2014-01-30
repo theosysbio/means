@@ -23,16 +23,16 @@ MEA_TEMPLATE = 'python runprogram.py --MEA --nMom={moments} --model={model_file}
 LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.tmp'
 SIMULATION_TEMPLATE = 'python runprogram.py --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
 INFERENCE_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
-INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=10 {sundials_parameters}'
+INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
 SIMULATION_MODELS = ['MM', 'p53']
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
-INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 0.0015, 1e-6),
+INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 1e-6, 1e-6),
                                   # This one is a bit bad at param inference, so lots of slack distance constraints
-                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 0.1, 1e-6),
-                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 2, 0.6)] # Let's give lots of slack for this one
+                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 1e-6, 1e-6),
+                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 1e-6, 1e-6)]
 
 INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
 INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 1e-6, 1e-6),
