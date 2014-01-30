@@ -32,11 +32,7 @@ class MEATestCase(unittest.TestCase):
         " -y_1*y_0 - y_0*y_1 + x_1_1 + y_0*y_1",
         "-2*y_0*y_0 + x_2_0 + y_0**2"])
 
-
-
-        # print mom
         out_mom = substitute_mean_with_y(mom, nvar)
-
         self.assertEqual(Matrix(out_mom), Matrix(expected_mom))
 
 

@@ -54,7 +54,6 @@ def deep_compare_expressions(expr1, expr2):
     :param expr2: a second expression
     :return: True if the expressions are similar, False otherwise
     """
-
     # the simplified difference is equal to zero: same expressions
     if sympy.simplify(expr1 - expr2) == 0:
         return True

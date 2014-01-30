@@ -6,7 +6,7 @@ import itertools
 
 from fcount import fcount
 import sympy as sp
-from sympy import Matrix,  Symbol, Subs, var, simplify
+from sympy import Matrix, var, simplify
 from sympy.solvers import solve
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
@@ -16,7 +16,6 @@ from sympy import latex
 from sympyhelpers import substitute_all
 
 def substitute_mean_with_y(moments, nvariables):
-
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
 
@@ -24,7 +23,6 @@ def substitute_mean_with_y(moments, nvariables):
     :param nvariables: the number of species
     :return: the substituted expressions
     """
-
 
     diag_mat = [["1" if x == y else "0" for x in range(nvariables)] for y in range(nvariables)]
     substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
@@ -39,7 +37,6 @@ def substitute_mean_with_y(moments, nvariables):
     return out_moms
 
 def substitute_raw_with_central(CentralMoments, momvec, mom):
-
     #todo describe CentralMoments
     """
     Substitute raw moment terms in CentralMoments in terms of central moments
@@ -60,7 +57,6 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     return out_central_moments
 
 def substitute_ym_with_yx(central_moments, momvec):
-
     """
     Substitute central moment terms ymn, where n gives n1,...nd combination
     with yxi where i indicates index in counter for that n1,...,nd
@@ -78,12 +74,9 @@ def substitute_ym_with_yx(central_moments, momvec):
 
     return out_moms
 
-
 def make_mfk(CentralMoments, yms, M):
     #TODO figure-out what MFK stands for
-
     """
-
     :param CentralMoments:
     :param yms:
     :param M:
@@ -199,6 +192,7 @@ def MFK_final(model_filename, nMoments):
     # TODO: make the terms pythonic
     S = model.stoichiometry_matrix
     amat = model.propensities
+    ##todo unused
     nreactions = model.number_of_reactions
     nvariables = model.number_of_variables
     ymat = model.variables
@@ -226,12 +220,9 @@ def MFK_final(model_filename, nMoments):
     (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
 
     # Substitute one for zeroth order raw moments in mom
-
     symbol_one = sp.S(1)
     x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
-
-    mom = [sp.Subs(m, x_zero, symbol_one) for m in mom]
-    mom = [m.doit() for m in mom]
+    mom = [sp.Subs(m, x_zero, symbol_one).doit() for m in mom]
 
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
     mom = substitute_mean_with_y(mom,nvariables)
@@ -252,12 +243,9 @@ def MFK_final(model_filename, nMoments):
     # Set zeroth order central moment to 1
     yms[0] = 1
 
-    print yms
-
     # Get expressions for each central moment, and enter into list MFK
     MFK = make_mfk(central_moments, yms, M)
 
-    print yms
     # Write information to output file (and moment names and equations to .tex file)
     write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
 
