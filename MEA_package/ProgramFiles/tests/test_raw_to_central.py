@@ -11,7 +11,6 @@ class TestRawToCentral(unittest.TestCase):
 
         :return:
         """
-        nvariables = 3
 
         # Since I do not want to deal with whole matrix here, I provide only one set of possible values
         # Note that the function removes the first zero vector as of current code base, thus the leading zero vector
@@ -22,7 +21,7 @@ class TestRawToCentral(unittest.TestCase):
                              [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
         means_of_species = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
 
-        right_hand_sides, _left_hand_sides = raw_to_central(nvariables, n_values, means_of_species, possible_k_values)
+        right_hand_sides, _left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
 
         self.assertEqual(len(right_hand_sides), 1, "Was expecting to get back only one equation")
 
@@ -39,7 +38,6 @@ class TestRawToCentral(unittest.TestCase):
         self.assertEqual(right_hand_sides[0], correct_answer)
 
     def test_a_single_calculation_of_MXn_is_correct_for_mixed_moment_of_order_two(self):
-        nvariables = 3
 
         # Since I do not want to deal with whole matrix here, I provide only one set of possible values
         # Note that the function removes the first zero vector as of current code base, thus the leading zero vector
@@ -50,7 +48,7 @@ class TestRawToCentral(unittest.TestCase):
                              [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
         means_of_species = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
 
-        right_hand_sides, left_hand_sides = raw_to_central(nvariables, n_values, means_of_species, possible_k_values)
+        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
 
         self.assertEqual(len(right_hand_sides), 1, "Was expecting to get back only one equation")
 
@@ -72,12 +70,11 @@ class TestRawToCentral(unittest.TestCase):
         :return:
         """
 
-        nvariables = 2
         n_values = [[0, 0], [0, 2], [1, 1], [2, 0]]
         possible_k_values = n_values + [[1, 0], [0, 1]]
         means_of_species = [sympy.var('y_0'), sympy.var('y_1')]
 
-        right_hand_sides, left_hand_sides = raw_to_central(nvariables, n_values, means_of_species, possible_k_values)
+        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
         self.assertEqual(len(right_hand_sides), 3, "Was expecting to get back three equations, one for each n_value except for zero vector")
 
         beta_terms = {'00': sympy.Symbol('x_0_0'),

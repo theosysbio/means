@@ -199,6 +199,8 @@ def MFK_final(model_filename, nMoments):
     ymat = model.variables
     c = model.constants
 
+    a = 0
+
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
     (counter, mcounter) = fcount(nMoments, nvariables)
     # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
@@ -211,29 +213,36 @@ def MFK_final(model_filename, nMoments):
     #  Calculate expressions to use in central moments equations (eq. 9)
     #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
     central_moments = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
-
     #  Substitute means in CentralMoments by y_i (ymat entry)
     central_moments = substitute_mean_with_y(central_moments, nvariables)
+
 
     #  Substitute higher order raw moments in terms of central moments
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
-    (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
+    (mom, momvec) = raw_to_central(counter, ymat, mcounter)
 
+    print time() - time1; a += 1; print a
     # Substitute one for zeroth order raw moments in mom
     symbol_one = sp.S(1)
     x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
     mom = [sp.Subs(m, x_zero, symbol_one).doit() for m in mom]
 
+
+    print time() - time1; a += 1; print a
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
     mom = substitute_mean_with_y(mom,nvariables)
 
+    print time() - time1; a += 1; print a
+    print "here"
     # Substitute raw moment, in CentralMoments, with of central moments
     central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
+    print time() - time1; a += 1; print a
     # Use counter index (c) for yx (yxc) instead of moment (ymn) (e.g. ym021)
     central_moments = substitute_ym_with_yx(central_moments, momvec)
 
+    print time() - time1; a += 1; print a
     # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
     if len(central_moments) != 0:
         nM = len(central_moments[0])
@@ -243,10 +252,10 @@ def MFK_final(model_filename, nMoments):
     yms = sp.Matrix(nM, 1, lambda i, j : var('yx%i' % i))
     # Set zeroth order central moment to 1
     yms[0] = 1
-
+    print time() - time1; a += 1; print a
     # Get expressions for each central moment, and enter into list MFK
     MFK = make_mfk(central_moments, yms, M)
-
+    print time() - time1; a += 1; print a
     # Write information to output file (and moment names and equations to .tex file)
     write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
 
