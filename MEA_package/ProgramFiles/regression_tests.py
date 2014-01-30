@@ -28,14 +28,14 @@ SIMULATION_MODELS = ['MM', 'p53']
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
-INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt', 1e-6, 1e-6),
+INFERENCE_WITH_RESTARTS_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                                   # This one is a bit bad at param inference, so lots of slack distance constraints
-                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt', 1e-6, 1e-6),
-                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt', 1e-6, 1e-6)]
+                                  ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
+                                  ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
 
 INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
-INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt', 1e-6, 1e-6),
-                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt', 1e-6, 1e-6)]
+INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt'),
+                                       ('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt')]
 
 def create_options_parser():
 
@@ -409,7 +409,7 @@ def generate_tests_from_options(options):
                        parameter_and_distance_comparisons(),
                        filter_function=filter_input_file)
     if 'inference-with-restarts' in options.tests:
-        for model, dataset, model_answer, allowed_slack, allowed_slack_params in INFERENCE_WITH_RESTARTS_MODELS:
+        for model, dataset, model_answer in INFERENCE_WITH_RESTARTS_MODELS:
             yield Test('inference-restarts-{0}-{1}'.format(model, dataset),
                        INFERENCE_WITH_RESTARTS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
                                                                sundials_parameters=options.sundials_parameters,
@@ -417,11 +417,11 @@ def generate_tests_from_options(options):
                                                                dataset=dataset),
                        os.path.join(options.inout_dir, 'inferout.restarts.tmp'),
                        os.path.join(options.model_answers_dir, 'infer', 'with-restarts', model_answer),
-                       parameter_and_distance_comparisons(allowed_slack, allowed_slack_params),
+                       parameter_and_distance_comparisons(),
                        filter_function=filter_input_file)
 
     if 'inference-with-distributions' in options.tests:
-        for model, dataset, model_answer_template, allowed_slack, allowed_slack_params in INFERENCE_WITH_DISTRIBUTIONS_MODELS:
+        for model, dataset, model_answer_template in INFERENCE_WITH_DISTRIBUTIONS_MODELS:
             for distribution in INFERENCE_DISTRIBUTIONS:
                 yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
 
@@ -446,7 +446,7 @@ def generate_tests_from_options(options):
                            os.path.join(options.inout_dir, 'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', 'with-restarts',
                                         model_answer_template.format(distribution)),
-                           parameter_and_distance_comparisons(allowed_slack, allowed_slack_params),
+                           parameter_and_distance_comparisons(),
                            filter_function=None)
 
 
