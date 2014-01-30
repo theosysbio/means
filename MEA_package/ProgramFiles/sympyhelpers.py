@@ -1,4 +1,18 @@
 import sympy
+
+def substitute_all(expr, pairs):
+    """
+    Performs multiple substitutions in an expression
+    :param expr: a sympy expression
+    :param pairs: a list of pairs (a,b) where each b_i is to be substituted with a_i
+    :return: the substituted expression
+    """
+    out = expr
+    for (a,b) in pairs:
+        out = sympy.Subs(out, b, a)
+    to_ret = out.doit()
+    return to_ret
+
 def to_sympy_matrix(value):
     """
     Converts value to a `sympy.Matrix` object, if possible.

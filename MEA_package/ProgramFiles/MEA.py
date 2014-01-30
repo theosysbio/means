@@ -13,25 +13,7 @@ from centralmoments import eq_centralmoments
 from model import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
-import sympy
-
-
-
-def substitute_all(expr, pairs):
-    """
-    Performs multiple substitutions in an expression
-
-    :param expr: a sympy expression
-    :param nvariables: a list of pairs (a,b) where each b_i is to be substituted with a_i
-    :return: the substituted expression
-    """
-
-    out = expr
-    for (a,b) in pairs:
-        out = sp.Subs(out, b, a)
-    to_ret = out.doit()
-    return to_ret
-
+from sympyhelpers import substitute_all
 
 def substitute_mean_with_y(moments, nvariables):
 
