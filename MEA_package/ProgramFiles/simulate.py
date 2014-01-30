@@ -155,34 +155,22 @@ def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditio
     if len(initial_conditions) < len(lhs):
         initial_conditions.extend([0.0] * (len(lhs) - len(initial_conditions)))
 
-    ####################################################################
-    # If simulation type is LNA ...
-    ####################################################################
+    # solve with selected parameters
+    simulation = CVODE(lib, t, initial_conditions, param)
 
-
+    # Interpret the simulation results
     if simulation_type == 'LNA':
-        # solve with selected parameters
-        soln = CVODE(lib, t, initial_conditions, param)
-        mu = simulate_lna(soln, number_of_species, t)
+        # LNA results build a multivariate gaussian model, which is sampled from here:
+        mu = simulate_lna(simulation, number_of_species, t)
         output_lna_result(expansion_output_filename, initial_conditions, moment_list, mu, number_of_species, param, t,
                           trajout)
-
         return [mu, moment_list]
-
-    ####################################################################
-    # If simulation type is MEA ...
-    ####################################################################
     elif simulation_type == 'MEA':
-
-        # Solve equations for moment trajectories with given parameters
-
-        soln = CVODE(lib, t, initial_conditions, param)
-        mu = [soln[:,i] for i in range(0, len(initial_conditions))]
-
+        mu = [simulation[:,i] for i in range(0, len(initial_conditions))]
         print_mea_output(expansion_output_filename, initial_conditions, maxorder, moment_list, mu, number_of_species,
                          param, t, trajout)
 
-        return [soln,moment_list]
+        return [simulation,moment_list]
     
 
 
