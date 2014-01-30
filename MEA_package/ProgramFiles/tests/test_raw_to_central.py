@@ -28,9 +28,9 @@ class TestRawToCentral(unittest.TestCase):
 
         # TODO: these symbols should not be hardcoded here as they may change provided change in other parts of code
         # I am not sure how to avoid this now though, so they stay.
-        beta_terms = [sympy.Symbol('x000'), sympy.Symbol('x001'), sympy.Symbol('x100'), sympy.Symbol('x101')]
+        beta_terms = [sympy.Symbol('x_0_0_0'), sympy.Symbol('x_0_0_1'), sympy.Symbol('x_1_0_0'), sympy.Symbol('x_1_0_1')]
 
-        # This is what the code should return: x000*y_0*y_2 - x001*y_0 - x100*y_2 + x101
+        # This is what the code should return: x_0_0_0*y_0*y_2 - x_0_0_1*y_0 - x_1_0_0*y_2 + x_1_0_1
         correct_answer = beta_terms[0] * means_of_species[0] * means_of_species[2] \
                          - beta_terms[1] * means_of_species[0] \
                          - beta_terms[2] * means_of_species[2] \
@@ -56,9 +56,9 @@ class TestRawToCentral(unittest.TestCase):
 
         # TODO: these symbols should not be hardcoded here as they may change provided change in other parts of code
         # I am not sure how to avoid this now though, so they stay.
-        beta_terms = [sympy.Symbol('x000'), sympy.Symbol('x100'), sympy.Symbol('x200')]
+        beta_terms = [sympy.Symbol('x_0_0_0'), sympy.Symbol('x_1_0_0'), sympy.Symbol('x_2_0_0')]
 
-        # This is what the code should return: x000*y_0**2 - 2*x100*y_0 + x200
+        # This is what the code should return: x_0_0_0*y_0**2 - 2*x_1_0_0*y_0 + x_2_0_0
         correct_answer = beta_terms[0] * (means_of_species[0]**2) \
                          - 2 * beta_terms[1] * means_of_species[0] \
                          + beta_terms[2]
@@ -80,12 +80,12 @@ class TestRawToCentral(unittest.TestCase):
         right_hand_sides, left_hand_sides = raw_to_central(nvariables, n_values, means_of_species, possible_k_values)
         self.assertEqual(len(right_hand_sides), 3, "Was expecting to get back three equations, one for each n_value except for zero vector")
 
-        beta_terms = {'00': sympy.Symbol('x00'),
-                      '01': sympy.Symbol('x01'),
-                      '10': sympy.Symbol('x10'),
-                      '11': sympy.Symbol('x11'),
-                      '02': sympy.Symbol('x02'),
-                      '20': sympy.Symbol('x20')}
+        beta_terms = {'00': sympy.Symbol('x_0_0'),
+                      '01': sympy.Symbol('x_0_1'),
+                      '10': sympy.Symbol('x_1_0'),
+                      '11': sympy.Symbol('x_1_1'),
+                      '02': sympy.Symbol('x_0_2'),
+                      '20': sympy.Symbol('x_2_0')}
 
         correct_answers = [
             beta_terms['00'] * means_of_species[1]**2 - 2 * beta_terms['01'] * means_of_species[1] + beta_terms['02'],

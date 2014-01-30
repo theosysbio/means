@@ -5,6 +5,7 @@
 #######################################################################
 
 from sympy import Matrix, Symbol
+import sympy as sp
 from math import factorial
 
 
@@ -86,11 +87,8 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
             for nv in range(1, nvariables):
                 A = A * (ymat[nv] ** (nvec[nv] - mvec[nv]))  # Equivalent to ::math::`\mu_i^{n_i - k_i}` in the equation, ymat being the mu
 
-            mstr = str(mvec[0])                          # beta term: x^k
-            for mm in range(1, len(mvec)):
-                mstr = mstr + str(mvec[mm])
-            B = Symbol('x' + mstr)                       # For some reason, the x^k term is stored as x_str(k) symbol
-                                                         # e.g. x_120 for k = [1,2,0]
+            B = Symbol('x_' + "_".join([str(i) for i in mvec]))                   # For some reason, the x^k term is stored as x_str(k) symbol
+
 
             # Join all things up to complete the part right to the sum operators in equation 8
             Taylorexp[Tm] = f_2 * f_3 * (A * B)              #calculate term for k1,....,kd
@@ -100,13 +98,8 @@ def raw_to_central(nvariables, counter, ymat, mcounter):
 
     # This block of code just traces back the values from ncounter that were used to generate mom
     # and then returns them as list of symbols ym_{n_values}
-    momvec = []
-    for i in range(0, len(ncounter)):
-        vec = ncounter[i]
-        mstr = str(vec[0])
-        for mm in range(1, len(vec)):
-            mstr = mstr + str(vec[mm])          #creates string of indices for each n1,...,nd
-        momvec.append(Symbol('ym' + mstr))
-
+    momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c])) for c in counter]
+    print mom
+    print momvec
 
     return (mom, momvec)
