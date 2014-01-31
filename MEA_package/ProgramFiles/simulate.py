@@ -2,12 +2,12 @@
 Simulates data for given model, moments, parameters, initial conditions
 and method (moment expansion or LNA)
 """
-
+from assimulo.problem import Explicit_Problem
+from assimulo.solvers.sundials import CVode
 import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
 
-from CVODE import CVODE
 
 #######################################################################
 # Variables within function:
@@ -72,19 +72,19 @@ def simulate_lna(soln, number_of_species, t):
     return mu
 
 
-def output_lna_result(expansion_output_filename, initial_conditions, moment_list, mu, number_of_species, param, t,
+def output_lna_result(initial_conditions, moment_list, mu, number_of_species, param, t,
                       trajout):
     output = open(trajout, 'w')
 
     try:
-        output.write('>Input file: ' + str(expansion_output_filename) + '\n>Parameters: ' + str(
-            param) + '\n>Starting values: ' + str(initial_conditions) + '\n')
+        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format(
+            [round(x, 6) for x in param], [round(y, 6) for y in initial_conditions]))
         output.write('time')
         for i in range(0, len(t)):
             output.write('\t' + str(t[i]))
         output.write('\n')
         for m in range(0, number_of_species):
-            output.write(moment_list[m])
+            output.write(', '.join(map(str, moment_list[m])))
             for i in range(0, len(t)):
                 output.write('\t' + str(mu[m][i]))
             output.write('\n')
@@ -92,19 +92,15 @@ def output_lna_result(expansion_output_filename, initial_conditions, moment_list
         output.close()
 
 
-def print_mea_output(expansion_output_filename, initial_conditions, maxorder, moment_list, mu, number_of_species, param,
+def print_mea_output(initial_conditions, maxorder, moment_list, mu, number_of_species, param,
                      t, trajout):
     # Check maximum order of moments to output to file/plot
     if maxorder == False:
-        maxmoment = [int(i) for i in moment_list[-1].split(',')]
-        maxorder = sum(maxmoment)
+        maxorder = max(map(sum, moment_list))
 
     # Create list of moments as lists of integers
     # (moment_list is list of strings)
-    moment_list_int = []
-    for i in range(0, len(moment_list)):
-        moment_ints = [int(j) for j in moment_list[i].split(',')]
-        moment_list_int.append(moment_ints)
+    moment_list_int = moment_list[:]
 
     # write results to output file (Input file name, parameters,
     # initial conditions, data needed for maximum entropy
@@ -115,7 +111,7 @@ def print_mea_output(expansion_output_filename, initial_conditions, maxorder, mo
     for i in initial_conditions:
         initcond_str += (str(i) + ',')
     initcond_str = '[' + initcond_str.rstrip(',') + ']'
-    output.write('>\tInput file: ' + str(expansion_output_filename) + '\n>\tParameters: ' + str(
+    output.write('>\tParameters: ' + str(
         param) + '\n>\tStarting values: ' + initcond_str + '\n')
     output.write('#\t' + str(len(t)) + '\t' + str(number_of_species) + '\t' + str(maxorder) + '\n')
     output.write('time')
@@ -125,22 +121,59 @@ def print_mea_output(expansion_output_filename, initial_conditions, maxorder, mo
     # write trajectories of moments (up to maxorder) to output file
     for m in range(0, len(moment_list_int)):
         if sum(moment_list_int[m]) <= int(maxorder):
-            output.write(moment_list[m])
+            output.write(', '.join(map(str, moment_list[m])))
             for i in range(0, len(t)):
                 output.write('\t' + str(mu[m][i]))
             output.write('\n')
     output.close()
 
 
-def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditions, maxorder):
-    """
+def rhs_factory(rhs_function, constant_values):
 
-    :param expansion_output_filename: Name of output file from MFK/LNA (specified by --ODEout)
+    def rhs(t, variable_values):
+        """
+        Computes the values for right-hand-sides of the equation, used to define model
+        """
+        return rhs_function(*(np.concatenate((constant_values, variable_values))))
+
+    return rhs
+
+def simulate_system(rhs, initial_values, timepoints):
+    initial_timepoint = timepoints[0]
+
+    model = Explicit_Problem(rhs, initial_values, initial_timepoint)
+    solver = CVode(model)
+    solver.verbosity = 50  # Verbosity flag suppresses output
+    solver.iter = 'Newton'
+    solver.discr = 'BDF'
+    # solver.atol = 1e-4
+    # solver.rtol = 1e-4 # This is the default values in solver.c but they seem very low
+    solver.linear_solver = 'dense'
+
+    number_of_timesteps = len(timepoints)
+    simulated_timepoints = np.empty(number_of_timesteps, float)
+    simulated_values = np.empty((number_of_timesteps, len(initial_values)), float)
+
+    for i, timepoint in enumerate(timepoints):
+        simulated_timepoint, simulated_value = solver.simulate(timepoint)
+
+        # Set the appropriate timepoints and values
+        simulated_timepoints[i] = simulated_timepoint[-1]  # We only need the last point the way we're simulating this
+        simulated_values[i] = simulated_value[-1]
+
+    return simulated_timepoints, simulated_values
+
+
+def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
+    """
+    :param simulation_type: either "MEA" or "LNA"
+    :param problem: Parsed problem to simulate
+    :type problem: ODEProblem
     :param trajout: Name of output file for this function (where simulated trajectories would be stored, i.e. --simout)
     :param lib: Name of the C file for solver (i.e. --library)
-    :param t: List of timepoints
-    :param param: List of kinetic parameters
-    :param initial_conditions: List of initial conditions for each moment (in timeparameters file)
+    :param timepoints: List of timepoints
+    :param initial_constants: List of kinetic parameters
+    :param initial_variables: List of initial conditions for each moment (in timeparameters file)
     :param maxorder: Maximum order of moments to output to either plot or datafile. (Defaults to maximum order of moments)
     :return:
     """
@@ -148,29 +181,40 @@ def simulate(expansion_output_filename, trajout, lib, t, param, initial_conditio
     # Get required info from the expansion output
 
     # TODO: Replace this with Quentin's code.
-    simulation_type, number_of_species, lhs, moment_list = parse_expansion_output(expansion_output_filename)
+    number_of_species = problem.number_of_species
+    lhs = problem.left_hand_side
+    moment_list = problem.ordered_moments
 
     # If not all intial conditions specified, append zeros to them
-    initial_conditions = initial_conditions[:]  # Make a copy before do
-    if len(initial_conditions) < len(lhs):
-        initial_conditions.extend([0.0] * (len(lhs) - len(initial_conditions)))
+    initial_variables = initial_variables[:]  # Make a copy before do
+    if len(initial_variables) < len(lhs):
+        initial_variables.extend([0.0] * (len(lhs) - len(initial_variables)))
+
+    initial_variables = np.array(initial_variables)
+    initial_constants = np.array(initial_constants)
+    rhs_function = rhs_factory(problem.rhs_as_function, initial_constants)
+
+    initial_time = timepoints[0]
+    number_of_timepoints = len(timepoints)
+    last_timepoint = timepoints[-1]
+
+    simulated_timepoints, simulation = simulate_system(rhs_function, initial_variables, timepoints)
 
     # solve with selected parameters
-    simulation = CVODE(lib, t, initial_conditions, param)
 
     # Interpret the simulation results
     if simulation_type == 'LNA':
         # LNA results build a multivariate gaussian model, which is sampled from here:
-        mu = simulate_lna(simulation, number_of_species, t)
-        output_lna_result(expansion_output_filename, initial_conditions, moment_list, mu, number_of_species, param, t,
+        mu = simulate_lna(simulation, number_of_species, timepoints)
+        output_lna_result(initial_variables, moment_list, mu, number_of_species, initial_constants, simulated_timepoints,
                           trajout)
-        return [mu, moment_list]
+        return [simulated_timepoints, mu, moment_list]
     elif simulation_type == 'MEA':
-        mu = [simulation[:,i] for i in range(0, len(initial_conditions))]
-        print_mea_output(expansion_output_filename, initial_conditions, maxorder, moment_list, mu, number_of_species,
-                         param, t, trajout)
+        mu = [simulation[:,i] for i in range(0, len(initial_variables))]
+        print_mea_output(initial_variables, maxorder, moment_list, mu, number_of_species,
+                         initial_constants, simulated_timepoints, trajout)
 
-        return [simulation,moment_list]
+        return simulated_timepoints, simulation, moment_list
     
 
 

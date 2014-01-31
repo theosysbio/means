@@ -1,6 +1,7 @@
 import os
 import sys
 from create_cfile import create_c
+from ode_problem import parse_problem
 from paramtime import paramtime
 from simulate import simulate, graphbuilder
 from sumsq_infer import optimise, infer_results, graph
@@ -162,6 +163,7 @@ def run():
                 sys.exit()
             else:
                 [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
+
                 create_c(wd+ODEout,wd+library,t, sundials_1, sundials_2)
              
     if (solve==True)and(infer==True):
@@ -179,10 +181,13 @@ def run():
                 sys.exit()
             else:
                 [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
-                [solution,momlist] = simulate(wd+ODEout,wd+trajout,wd+lib,t,param,initcond, maxorder)
+                problem = parse_problem(wd+ODEout)  # TODO: os.path.join
+
+                simulated_timepoints, solution, momlist = simulate('LNA' if LNA else 'MEA', problem,
+                                             wd+trajout,wd+lib,t,param,initcond, maxorder)
                 
                 if plot == True:
-                    graphbuilder(solution,wd+ODEout,plottitle,t,momlist)
+                    graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
 
     if infer == True:
         if tpfile == None:

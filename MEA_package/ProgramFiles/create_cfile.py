@@ -13,8 +13,11 @@
 import re
 import os
 import numpy as np
+import sympy
 from powers_py2c import replace_powers
-from ode_problem import parse_model
+from ode_problem import parse_problem
+from assimulo.problem import Explicit_Problem
+from assimulo.solvers.sundials import CVode
 
 def build_c_library(constants, lhs_equations, ntimepoints, number_of_constants, number_of_equations, outputfile,
                     rhs_equations, sd_1, sd_2, starttime, timestep):
@@ -131,7 +134,6 @@ def build_c_library(constants, lhs_equations, ntimepoints, number_of_constants, 
         'g++ -shared -o ' + outputfile + '.so.1.0 ./' + outputfile + '.o -g -O2 -fPIC ' + sd_2 + 'libsundials_cvode.a ' + sd_2 + 'libsundials_nvecserial.a -lm')
     return lhs_equations_list
 
-
 def create_c(inputfile, outputfile, t, sd_1, sd_2):
     """
 
@@ -153,7 +155,7 @@ def create_c(inputfile, outputfile, t, sd_1, sd_2):
     endtime = float(t[-1])
     ntimepoints = float(len(t))  #NOUT
 
-    ode_problem = parse_model(inputfile)
+    ode_problem = parse_problem(inputfile)
     constants = ode_problem.constants
     lhs_equations = ode_problem.left_hand_side
     number_of_constants = len(constants)

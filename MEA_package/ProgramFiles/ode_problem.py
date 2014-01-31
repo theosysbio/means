@@ -1,16 +1,22 @@
 
 import sympy
+import numpy as np
+from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
+
 
 class ODEProblem(object):
     """
     Stores the left and right hand side equations to be simulated
+
     """
 
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
     __right_hand_side = None
+    __right_hand_side_as_function = None  # Buffer to cache rhs as function
     __left_hand_side = None
     __moment_dic = None
     __constants = None
+    __ordered_moments = None
 
     def __init__(self, left_hand_side, right_hand_side, constants, moments):
         """
@@ -20,10 +26,11 @@ class ODEProblem(object):
         :param constants: the constants of the model
         :param moments: the moments as a list of n-tuple, where n is the number of species
         """
-        self.__left_hand_side = left_hand_side
-        self.__right_hand_side = right_hand_side
-        self.__constants = constants[:]
+        self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
+        self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
+        self.__constants = to_list_of_symbols(constants)
         self.__moment_dic = self.make_moment_dic(moments)
+        self.__ordered_moments = moments
 
         self.validate()
 #
@@ -54,6 +61,16 @@ class ODEProblem(object):
         return self.__left_hand_side
 
     @property
+    def variables(self):
+        return to_list_of_symbols(self.__left_hand_side)
+
+    @property
+    def number_of_species(self):
+        # TODO: there must be a better way to do this i.e. without counting in a loop
+        # (this is how it was done in legacy way)
+        return sum([str(x).startswith('y_') for x in self.left_hand_side])
+
+    @property
     def right_hand_side(self):
         return self.__right_hand_side
 
@@ -65,9 +82,20 @@ class ODEProblem(object):
     def moment_dic(self):
         return self.__moment_dic
 
+    @property
+    def ordered_moments(self):
+        # TODO: consider removing this
+        return self.__ordered_moments
 
+    @property
+    def rhs_as_function(self):
+        if self.__right_hand_side_as_function is None:
+            self.__right_hand_side_as_function = sympy.lambdify(self.constants + self.variables,
+                                                                self.right_hand_side)
 
-def parse_model(input_filename, from_string=False):
+        return self.__right_hand_side_as_function
+
+def parse_problem(input_filename, from_string=False):
     """
     Parses model from the `input_filename` file and returns it
     :param input_filename:
@@ -116,7 +144,7 @@ def parse_model(input_filename, from_string=False):
         print 'The field "' + STRING_LEFT_HAND + '" is not in the input file "' + input_filename +'"'
         raise
     try:
-        constants = sympy.Matrix([l for l in all_fields[STRING_CONSTANT]])
+        constants = all_fields[STRING_CONSTANT]
     except KeyError:
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
