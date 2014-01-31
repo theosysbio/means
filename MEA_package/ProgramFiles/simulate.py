@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sympy import Matrix
 
 
+
 #######################################################################
 # Variables within function:
 # moment_list   Contains the names for each moment (e.g. [1,0,1], where
@@ -21,6 +22,11 @@ from sympy import Matrix
 # Simulate function returns (mu, moment_list) i.e. trajectories and 
 # corresponding list of names identifying the moments
 ########################################################################
+# These are the default values in solver.c but they seem very low
+RTOL = 1e-4
+ATOL = 1e-4
+NP_FLOATING_POINT_PRECISION = np.double
+
 
 def parse_expansion_output(expansion_output_filename):
     expansion_output_handle = open(expansion_output_filename, 'r')
@@ -134,7 +140,8 @@ def rhs_factory(rhs_function, constant_values):
         """
         Computes the values for right-hand-sides of the equation, used to define model
         """
-        return rhs_function(*(np.concatenate((constant_values, variable_values))))
+        all_values = np.concatenate((constant_values, variable_values))
+        return rhs_function(*all_values)
 
     return rhs
 
@@ -146,20 +153,15 @@ def simulate_system(rhs, initial_values, timepoints):
     solver.verbosity = 50  # Verbosity flag suppresses output
     solver.iter = 'Newton'
     solver.discr = 'BDF'
-    # solver.atol = 1e-4
-    # solver.rtol = 1e-4 # This is the default values in solver.c but they seem very low
+    solver.atol = ATOL
+    solver.rtol = RTOL
     solver.linear_solver = 'dense'
 
     number_of_timesteps = len(timepoints)
-    simulated_timepoints = np.empty(number_of_timesteps, float)
-    simulated_values = np.empty((number_of_timesteps, len(initial_values)), float)
-
-    for i, timepoint in enumerate(timepoints):
-        simulated_timepoint, simulated_value = solver.simulate(timepoint)
-
-        # Set the appropriate timepoints and values
-        simulated_timepoints[i] = simulated_timepoint[-1]  # We only need the last point the way we're simulating this
-        simulated_values[i] = simulated_value[-1]
+    simulated_timepoints = np.empty(number_of_timesteps, dtype=NP_FLOATING_POINT_PRECISION)
+    simulated_values = np.empty((number_of_timesteps,
+                                 len(initial_values)), dtype=NP_FLOATING_POINT_PRECISION)
+    simulated_timepoints, simulated_values = solver.simulate(timepoints[-1], ncp_list=timepoints)
 
     return simulated_timepoints, simulated_values
 
@@ -190,8 +192,8 @@ def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constan
     if len(initial_variables) < len(lhs):
         initial_variables.extend([0.0] * (len(lhs) - len(initial_variables)))
 
-    initial_variables = np.array(initial_variables)
-    initial_constants = np.array(initial_constants)
+    initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
+    initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
     rhs_function = rhs_factory(problem.rhs_as_function, initial_constants)
 
     initial_time = timepoints[0]

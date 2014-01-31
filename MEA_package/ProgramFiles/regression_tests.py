@@ -20,11 +20,11 @@ MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 
 MEA_TEMPLATE = 'python runprogram.py --MEA --nMom={moments} --model={model_file} --ODEout=ODEout.tmp'
 LNA_TEMPLATE = 'python runprogram.py --LNA --model={model_file} --ODEout=ODEout.tmp'
-SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp'
+SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp --maxorder=2'
 INFERENCE_TEMPLATE = 'python runprogram.py --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
-SIMULATION_MODELS = [('MM', 1e-2, 1e-2), ('p53', 1.5, 1e-2)]  # TODO: why is there such a big slack required for p53?
+SIMULATION_MODELS = [('MM', 1e-3, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
@@ -240,21 +240,31 @@ def compare_tsv_with_float_epsilon(epsilon=1e-2):
                 equal = True
 
                 try:
-                    left_columns = map(float, left_columns)
-                    right_columns = map(float, right_columns)
+                    left_columns = map(np.longfloat, left_columns)
+                    right_columns = map(np.longfloat, right_columns)
                 except ValueError:
                     differences.append('Non float column rows differ')
                     equal = False
                 else:
-                    left_columns = np.array(left_columns)
-                    right_columns = np.array(right_columns)
+                    moment_order = sum(map(int, right_header.split(', ')))
+                    left_columns = np.array(left_columns, np.longfloat)
+                    right_columns = np.array(right_columns, np.longfloat)
 
-                    distance = np.sqrt(np.sum(np.square(left_columns-right_columns)))
+                    try:
+                        # If epsilon is a dict of orders this would work
+                        curr_epsilon = epsilon[moment_order]
+                    except TypeError:
+                        curr_epsilon = epsilon
 
-                    if distance > epsilon:
+                    diff = left_columns-right_columns
+                    distance = np.max(diff)
+                    if distance > curr_epsilon:
                         equal = False
                         differences.append('Left and right columns differ by {0} (threshold: {1})'.format(distance,
-                                                                                                          epsilon))
+                                                                                                          curr_epsilon))
+                        max_i = np.argmax(diff)
+                        differences.append("Left column: {0}".format(left_columns[max_i]))
+                        differences.append("Right column: {0}".format(right_columns[max_i]))
 
             if not equal:
                 differences.append('Lines: ')
