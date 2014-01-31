@@ -6,8 +6,7 @@ import itertools
 
 from fcount import fcount
 import sympy as sp
-from sympy import Matrix, var, simplify
-from sympy.solvers import solve
+from sympy import Matrix, var
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
 from model import parse_model
@@ -49,12 +48,24 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     :param mom:  the expressions of central moments in terms of raw moments
     :return: the substituted central moments
     """
+
     out_central_moments = CentralMoments[:]
-    for (mv, m) in reversed(zip(momvec, mom)):
-        x_to_solve = sp.Symbol('x'+str(mv)[2:])
-        solved_x = solve(m - mv, x_to_solve)
-        out_central_moments = [[sp.Subs(cm, x_to_solve,solved_x).doit() for cm in cent_mom] for cent_mom in out_central_moments]
+
+    #x_to_solve =)
+
+    xs_to_solve = [sp.Symbol('x'+str(mv)[2:]) for mv in momvec]
+    right_hand_sides = [m - mv for (mv, m) in zip(momvec, mom)]
+    solved_xs = [sp.solve(rhs, xts) for (rhs, xts) in zip(right_hand_sides, xs_to_solve)]
+
+
+    for (xts, sx) in reversed(zip(xs_to_solve, solved_xs)):
+        out_central_moments = [[sp.Subs(cm, xts, sx).doit() for cm in cent_mom] for cent_mom in out_central_moments]
+#        out_central_moments = [[sp.powsimp(cm) for cm in cent_mom] for cent_mom in out_central_moments]
+        #out_central_moments = [[sp.collect(sp.expand(cm),momvec) for cm in cent_mom] for cent_mom in out_central_moments]
         out_central_moments = [[sp.simplify(cm) for cm in cent_mom] for cent_mom in out_central_moments]
+
+
+
     return out_central_moments
 
 def substitute_ym_with_yx(central_moments, momvec):
@@ -91,7 +102,8 @@ def make_mfk(CentralMoments, yms, M):
     # Reshape to a vector
     for i in range(0,len(MFK1)):
         try:
-            MFK1[i] = simplify(MFK1[i])
+            MFK1[i] = sp.simplify(MFK1[i])
+            #MFK1[i] = sp.collect(sp.expand(MFK1[i]),yms)
         except:
             pass
         MFK.append(MFK1[i])
@@ -105,7 +117,8 @@ def make_mfk(CentralMoments, yms, M):
         # TODO scalar => {len() == 1} so why do we need a loop here ?
         for j in range(0,len(MFK2)):
             try:
-                MFK2[j] = simplify(MFK2[j])
+                MFK2[j] = sp.simplify(MFK2[j])
+                #MFK2[i] = sp.collect(sp.expand(MFK2[i]),yms)
             except:
                 pass
             MFK.append(MFK2[j])
@@ -221,28 +234,23 @@ def MFK_final(model_filename, nMoments):
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
     (mom, momvec) = raw_to_central(counter, ymat, mcounter)
-
-    print time() - time1; a += 1; print a
     # Substitute one for zeroth order raw moments in mom
     symbol_one = sp.S(1)
     x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
     mom = [sp.Subs(m, x_zero, symbol_one).doit() for m in mom]
 
 
-    print time() - time1; a += 1; print a
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
     mom = substitute_mean_with_y(mom,nvariables)
 
-    print time() - time1; a += 1; print a
-    print "here"
     # Substitute raw moment, in CentralMoments, with of central moments
     central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
-    print time() - time1; a += 1; print a
+
     # Use counter index (c) for yx (yxc) instead of moment (ymn) (e.g. ym021)
     central_moments = substitute_ym_with_yx(central_moments, momvec)
 
-    print time() - time1; a += 1; print a
+
     # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
     if len(central_moments) != 0:
         nM = len(central_moments[0])
@@ -252,10 +260,10 @@ def MFK_final(model_filename, nMoments):
     yms = sp.Matrix(nM, 1, lambda i, j : var('yx%i' % i))
     # Set zeroth order central moment to 1
     yms[0] = 1
-    print time() - time1; a += 1; print a
+
     # Get expressions for each central moment, and enter into list MFK
     MFK = make_mfk(central_moments, yms, M)
-    print time() - time1; a += 1; print a
+
     # Write information to output file (and moment names and equations to .tex file)
     write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
 

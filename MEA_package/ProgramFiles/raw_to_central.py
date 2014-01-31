@@ -61,12 +61,6 @@ def raw_to_central(counter, ymat, mcounter):
         # we assume this is just generating the list of possible k values to satisfy ns in the equation.
         m_lower = [c for c in mcounter if all_higher_or_eq(nvec, c)]
 
-
-        ################################################################
-        #  Calculate terms in eq. 8 to sum over for each n1,...,nd combination
-        #  Each entry in Taylorexp corresponds to a k1,...,kd combination
-        ################################################################
-
         # mvec is the vector ::math::`[k_1, ..., k_d]`
 
         # (n k) binomial term in equation 9
