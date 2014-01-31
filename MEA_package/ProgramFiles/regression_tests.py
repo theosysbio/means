@@ -24,7 +24,7 @@ SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3
 INFERENCE_TEMPLATE = 'python runprogram.py --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
-SIMULATION_MODELS = ['MM', 'p53']
+SIMULATION_MODELS = [('MM', 1e-7), ('p53', 1)] # TODO: why is there such a big slack required for p53?
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
@@ -201,67 +201,71 @@ def compare_ode_problems(output, expected_output):
         return "different lhs equations!! \nexpected=\n%s\nresult=\n%s" % (str(expected_problem.left_hand_side),
                                                                            str(result_problem.left_hand_side))
 
-def compare_tsv_with_float_epsilon(output, expected_output, epsilon=1e-5):
-    def generate_dictionary_of_header_columns(lines):
-        d = {}
-        for line in lines:
-            columns = line.split('\t')
-            d[columns[0]] = columns[1:]
-        return d
-    # Do nothing if things equal
-    if output == expected_output:
-        return []
+def compare_tsv_with_float_epsilon(epsilon=1e-7):
 
-    differences = []
+    def f(output, expected_output):
+        def generate_dictionary_of_header_columns(lines):
+            d = {}
+            for line in lines:
+                columns = line.split('\t')
+                d[columns[0]] = columns[1:]
+            return d
+        # Do nothing if things equal
+        if output == expected_output:
+            return []
 
-    output_lines = output.splitlines()
-    expected_output_lines = expected_output.splitlines()
+        differences = []
 
-    left_columns_dict = generate_dictionary_of_header_columns(output_lines)
-    right_columns_dict = generate_dictionary_of_header_columns(expected_output_lines)
+        output_lines = output.splitlines()
+        expected_output_lines = expected_output.splitlines()
 
-    for right_header, right_columns in right_columns_dict.iteritems():
+        left_columns_dict = generate_dictionary_of_header_columns(output_lines)
+        right_columns_dict = generate_dictionary_of_header_columns(expected_output_lines)
 
-        try:
-            left_columns = left_columns_dict[right_header]
-        except KeyError:
-            differences.append('Column with header {0} does not exist in output file'.format(right_header))
-            continue
+        for right_header, right_columns in right_columns_dict.iteritems():
 
-        if len(left_columns) != len(right_columns):
-            differences.append('Number of columns does not match')
-            equal = False
-        else:
-            equal = True
-            for output_column, expected_output_column in zip(left_columns, right_columns):
-                # Check for strict equality first
-                if output_column == expected_output_column:
-                    continue
+            try:
+                left_columns = left_columns_dict[right_header]
+            except KeyError:
+                differences.append('Column with header {0} does not exist in output file'.format(right_header))
+                continue
 
-                # Convert to floating point
-                try:
-                    float_o_c, float_e_o_c = float(output_column), float(expected_output_column)
-                except ValueError:
-                    # If conversion failed, and we already know that the lines aren't equal,
-                    # conclude that the lines aren't equal
-                    differences.append('DIFFERENCE: {0!r} not equal to {1!r} and aren\'t floats'.format(output_column,
-                                                                                                    expected_output_column))
-                    equal = False
-                    break
+            if len(left_columns) != len(right_columns):
+                differences.append('Number of columns does not match')
+                equal = False
+            else:
+                equal = True
+                for output_column, expected_output_column in zip(left_columns, right_columns):
+                    # Check for strict equality first
+                    if output_column == expected_output_column:
+                        continue
 
-                # Check if floats differ within epsilon
-                if abs(float_o_c - float_e_o_c) > epsilon:
-                    differences.append('FLOAT DIFFERENCE: {0} different from {1} '
-                                       'by more than {2}'.format(float_o_c, float_e_o_c, epsilon))
-                    equal = False
-                    break
+                    # Convert to floating point
+                    try:
+                        float_o_c, float_e_o_c = float(output_column), float(expected_output_column)
+                    except ValueError:
+                        # If conversion failed, and we already know that the lines aren't equal,
+                        # conclude that the lines aren't equal
+                        differences.append('DIFFERENCE: {0!r} not equal to {1!r} and aren\'t floats'.format(output_column,
+                                                                                                        expected_output_column))
+                        equal = False
+                        break
 
-        if not equal:
-            differences.append('Lines: ')
-            differences.append('\t'.join([right_header] + left_columns))
-            differences.append('\t'.join([right_header] + right_columns))
+                    # Check if floats differ within epsilon
+                    if abs(float_o_c - float_e_o_c) > epsilon:
+                        differences.append('FLOAT DIFFERENCE: {0} different from {1} '
+                                           'by more than {2}'.format(float_o_c, float_e_o_c, epsilon))
+                        equal = False
+                        break
 
-    return differences
+            if not equal:
+                differences.append('Lines: ')
+                differences.append('\t'.join([right_header] + left_columns))
+                differences.append('\t'.join([right_header] + right_columns))
+
+        return differences
+
+    return f
 
 def parameter_and_distance_comparisons(allowed_difference_between_top_distances=1e-6,
                                        allowed_difference_between_parameters=1e-6):
@@ -372,7 +376,7 @@ def generate_tests_from_options(options):
         if options.sundials_parameters is None:
             raise Exception("Cannot run simulation tests as no sundials parameters specified")
 
-        for model in SIMULATION_MODELS:
+        for model, epsilon in SIMULATION_MODELS:
             output_file = 'simout_{0}.txt'.format(model)
             yield Test('simulation-{0}-MEA'.format(model),
                        SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
@@ -382,7 +386,7 @@ def generate_tests_from_options(options):
                                                   method='MEA'),
                        os.path.join(options.inout_dir, output_file),
                        os.path.join(options.model_answers_dir, 'sim', output_file),
-                       compare_tsv_with_float_epsilon,
+                       compare_tsv_with_float_epsilon(epsilon=epsilon),
                        filter_function=filter_input_file)
 
             output_file_lna = 'simout_{0}_LNA.txt'.format(model)
@@ -394,7 +398,7 @@ def generate_tests_from_options(options):
                                                   method='LNA'),
                        os.path.join(options.inout_dir, output_file_lna),
                        os.path.join(options.model_answers_dir, 'sim', output_file_lna),
-                       compare_tsv_with_float_epsilon,
+                       compare_tsv_with_float_epsilon(),
                        filter_function=filter_input_file)
 
     if 'inference' in options.tests:

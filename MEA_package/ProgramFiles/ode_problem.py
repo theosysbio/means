@@ -39,10 +39,13 @@ class ODEProblem(object):
         Validates whether the particular model is created properly
         """
         if self.left_hand_side.rows != self.right_hand_side.rows:
-            raise ValueError("There is i% left hand side equations and %i right hand side ones. The same number is expected." % (self.left_hand_side.rows, self.right_hand_side.rows))
+            raise ValueError("There are {0} left hand side equations and {0} right hand side equations. "
+                             "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
 
-        if self.left_hand_side.rows != len(self.__moment_dic):
-            raise ValueError("There is i% equations and %i hand side and %i moments. The same number is expected." % (self.left_hand_side.rows, len(self.__moment_dic)))
+        # TODO: Below is true for MEA, but not true for LNA
+        # if self.left_hand_side.rows != len(self.__moment_dic):
+        #     raise ValueError("There are {0} equations and {1} moments. "
+        #                      "The same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
@@ -123,5 +126,5 @@ def parse_model(input_filename, from_string=False):
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
 
-    return ODEProblem(left_hand_side, right_hand_side,constants, moments)
+    return ODEProblem(left_hand_side, right_hand_side, constants, moments)
 
