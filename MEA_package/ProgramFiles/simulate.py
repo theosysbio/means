@@ -8,11 +8,85 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
 
-
 # These are the default values in solver.c but they seem very low
 RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
+
+class Simulation(object):
+    __problem = None
+
+    def __init__(self, problem):
+        """
+        Initialise the simulator object for a given problem
+        :param problem:
+        :type problem: ODEProblem
+        :return:
+        """
+        self.__problem = problem
+
+    def _rhs_function_factory(self, initial_constants):
+        """
+        Creates a rhs function that can be used in `Explicit_Problem`
+        :param initial_constants: np.array of intial values for constant terms
+        :type initial_constants: np.array
+        :return:
+        """
+        rhs_function = self.problem.rhs_as_function
+
+        def rhs(timepoint, variable_values):
+            """
+            Computes the values for right-hand-sides of the equation, used to define model
+            """
+            all_values = np.concatenate((initial_constants, variable_values))
+            return rhs_function(*all_values)
+
+        return rhs
+
+    def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
+        """
+        Creates an instance of `CVode` that will be used to simulate the ODEs.
+
+        :param initial_constants: initial values for constants
+        :param initial_values: initial values for variables
+        :param initial_timepoint: initial timepoint
+        :return: instance of `CVode` solver
+        :rtype: CVode
+        """
+        rhs = self._rhs_function_factory(initial_constants)
+        model = Explicit_Problem(rhs, initial_values, initial_timepoint)
+        solver = CVode(model)
+
+        solver.verbosity = 50  # Verbosity flag suppresses output
+
+        # TODO: Make these customisable
+        solver.iter = 'Newton'
+        solver.discr = 'BDF'
+        solver.atol = ATOL
+        solver.rtol = RTOL
+        solver.linear_solver = 'dense'
+
+        return solver
+
+    def simulate_system(self, initial_constants, initial_values, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+        :param initial_constants:
+        :param initial_values:
+        :param timepoints:
+        :return:
+        """
+        initial_timepoint = timepoints[0]
+        last_timepoint = timepoints[-1]
+
+        solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
+        simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
+
+        return simulated_timepoints, simulated_values
+
+    @property
+    def problem(self):
+        return self.__problem
 
 def simulate_lna(soln, number_of_species, t):
 
@@ -101,27 +175,6 @@ def rhs_factory(rhs_function, constant_values):
 
     return rhs
 
-def simulate_system(rhs, initial_values, timepoints):
-    initial_timepoint = timepoints[0]
-
-    model = Explicit_Problem(rhs, initial_values, initial_timepoint)
-    solver = CVode(model)
-    solver.verbosity = 50  # Verbosity flag suppresses output
-    solver.iter = 'Newton'
-    solver.discr = 'BDF'
-    solver.atol = ATOL
-    solver.rtol = RTOL
-    solver.linear_solver = 'dense'
-
-    number_of_timesteps = len(timepoints)
-    simulated_timepoints = np.empty(number_of_timesteps, dtype=NP_FLOATING_POINT_PRECISION)
-    simulated_values = np.empty((number_of_timesteps,
-                                 len(initial_values)), dtype=NP_FLOATING_POINT_PRECISION)
-    simulated_timepoints, simulated_values = solver.simulate(timepoints[-1], ncp_list=timepoints)
-
-    return simulated_timepoints, simulated_values
-
-
 def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
     """
     :param simulation_type: either "MEA" or "LNA"
@@ -149,9 +202,8 @@ def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constan
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-    rhs_function = rhs_factory(problem.rhs_as_function, initial_constants)
-
-    simulated_timepoints, simulation = simulate_system(rhs_function, initial_variables, timepoints)
+    simulator = Simulation(problem)
+    simulated_timepoints, simulation = simulator.simulate_system(initial_constants, initial_variables, timepoints)
 
     # Interpret the simulation results
     if simulation_type == 'LNA':
