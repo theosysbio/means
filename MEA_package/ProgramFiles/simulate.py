@@ -166,7 +166,7 @@ def simulate_system(rhs, initial_values, timepoints):
     return simulated_timepoints, simulated_values
 
 
-def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
+def simulate(problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
     """
     :param simulation_type: either "MEA" or "LNA"
     :param problem: Parsed problem to simulate
@@ -186,6 +186,7 @@ def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constan
     number_of_species = problem.number_of_species
     lhs = problem.left_hand_side
     moment_list = problem.ordered_moments
+    simulation_type =  problem.method
 
     # If not all intial conditions specified, append zeros to them
     initial_variables = initial_variables[:]  # Make a copy before do

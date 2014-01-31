@@ -18,9 +18,11 @@ class ODEProblem(object):
     __constants = None
     __ordered_moments = None
 
-    def __init__(self, left_hand_side, right_hand_side, constants, moments):
+    def __init__(self, method, left_hand_side, right_hand_side, constants, moments):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
+        :param method: a string describing the method used to generate the problem.
+        Currently, 'MEA' and 'LNA' are supported"
         :param left_hand_side: the left hand side of equations
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
@@ -31,6 +33,7 @@ class ODEProblem(object):
         self.__constants = to_list_of_symbols(constants)
         self.__moment_dic = self.make_moment_dic(moments)
         self.__ordered_moments = moments
+        self.__method = method
 
         self.validate()
 #
@@ -48,11 +51,14 @@ class ODEProblem(object):
         if self.left_hand_side.rows != self.right_hand_side.rows:
             raise ValueError("There are {0} left hand side equations and {0} right hand side equations. "
                              "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
+        if self.__method != "MEA" and self.__method != "LNA":
+            raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
 
-        # TODO: Below is true for MEA, but not true for LNA
-        # if self.left_hand_side.rows != len(self.__moment_dic):
-        #     raise ValueError("There are {0} equations and {1} moments. "
-        #                      "The same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
+        if self.__method == "MEA":
+            if self.left_hand_side.rows != len(self.__moment_dic):
+                 raise ValueError("There are {0} equations and {1} moments. "
+                                  "For MEA problems, the same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
+
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
@@ -77,6 +83,10 @@ class ODEProblem(object):
     @property
     def constants(self):
         return self.__constants
+
+    @property
+    def method(self):
+        return self.__method
 
     @property
     def moment_dic(self):
@@ -119,6 +129,8 @@ def parse_problem(input_filename, from_string=False):
     else:
         lines = input_filename.split("\n")
 
+    method = lines[0].rstrip()
+
     all_fields = dict()
     field = None
    # cut the file into chunks. The lines containing ":" are field headers
@@ -154,5 +166,5 @@ def parse_problem(input_filename, from_string=False):
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
 
-    return ODEProblem(left_hand_side, right_hand_side, constants, moments)
+    return ODEProblem(method, left_hand_side, right_hand_side, constants, moments)
 
