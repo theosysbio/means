@@ -9,19 +9,6 @@ import matplotlib.pyplot as plt
 from sympy import Matrix
 
 
-
-#######################################################################
-# Variables within function:
-# moment_list   Contains the names for each moment (e.g. [1,0,1], where
-#               numbers are the power that each species is raised to
-# soln          Array returned by CVODE, each row is a list of moments/
-#               values at a particular timepoint
-# mu            List where each item is a timecourse (as list) for a
-#               particular moment/value
-#
-# Simulate function returns (mu, moment_list) i.e. trajectories and 
-# corresponding list of names identifying the moments
-########################################################################
 # These are the default values in solver.c but they seem very low
 RTOL = 1e-4
 ATOL = 1e-4
