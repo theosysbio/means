@@ -60,8 +60,7 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
 
     for (xts, sx) in reversed(zip(xs_to_solve, solved_xs)):
         out_central_moments = [[sp.Subs(cm, xts, sx).doit() for cm in cent_mom] for cent_mom in out_central_moments]
-#        out_central_moments = [[sp.powsimp(cm) for cm in cent_mom] for cent_mom in out_central_moments]
-        #out_central_moments = [[sp.collect(sp.expand(cm),momvec) for cm in cent_mom] for cent_mom in out_central_moments]
+#
         out_central_moments = [[sp.simplify(cm) for cm in cent_mom] for cent_mom in out_central_moments]
 
 
@@ -96,12 +95,15 @@ def make_mfk(CentralMoments, yms, M):
     """
 
     # Get expressions for higher order central moments
-    MFK1 = M*yms
 
+    MFK1 = M*yms
+    
     MFK = []
     # Reshape to a vector
     for i in range(0,len(MFK1)):
         try:
+
+            print MFK1[i]
             MFK1[i] = sp.simplify(MFK1[i])
             #MFK1[i] = sp.collect(sp.expand(MFK1[i]),yms)
         except:
@@ -109,8 +111,9 @@ def make_mfk(CentralMoments, yms, M):
         MFK.append(MFK1[i])
 
 
+
     for i in range(0,len(CentralMoments)):
-        rowmat = Matrix(1, len(CentralMoments[i]), CentralMoments[i])
+        rowmat = sp.Matrix(1, len(CentralMoments[i]), CentralMoments[i])
 
         # This should be a scalar
         MFK2 = rowmat * yms
@@ -121,7 +124,8 @@ def make_mfk(CentralMoments, yms, M):
                 #MFK2[i] = sp.collect(sp.expand(MFK2[i]),yms)
             except:
                 pass
-            MFK.append(MFK2[j])
+        MFK.append(MFK2[0])
+
     return MFK
 
 def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
