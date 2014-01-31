@@ -27,37 +27,6 @@ RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
 
-
-def parse_expansion_output(expansion_output_filename):
-    expansion_output_handle = open(expansion_output_filename, 'r')
-    try:
-        lines = expansion_output_handle.readlines()
-    finally:
-        expansion_output_handle.close()
-
-    simulation_type = lines[0].rstrip()
-    index_of_lhs_in_file = lines.index('LHS:\n')
-    index_of_constants_in_file = lines.index('Constants:\n')
-    lhs = []
-    number_of_species = 0
-    for i in range(index_of_lhs_in_file+1,index_of_constants_in_file-1):
-        lhs.append(lines[i].strip())
-        if lines[i].startswith('y_'):
-            number_of_species+=1
-
-
-    # Get list of moment names/IDs from mfkoutput to create labels for output data file
-
-    momlistindex = lines.index('List of moments:\n')
-    moment_list = []
-    for i in range(momlistindex+1, len(lines)):
-        if lines[i].startswith('['):
-            moment_string = str(lines[i].strip('\n[]'))
-            moment_list.append(moment_string)
-
-    return simulation_type, number_of_species, lhs, moment_list
-
-
 def simulate_lna(soln, number_of_species, t):
 
     mu = [0] * number_of_species
@@ -182,7 +151,6 @@ def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constan
 
     # Get required info from the expansion output
 
-    # TODO: Replace this with Quentin's code.
     number_of_species = problem.number_of_species
     lhs = problem.left_hand_side
     moment_list = problem.ordered_moments
@@ -196,13 +164,7 @@ def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constan
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
     rhs_function = rhs_factory(problem.rhs_as_function, initial_constants)
 
-    initial_time = timepoints[0]
-    number_of_timepoints = len(timepoints)
-    last_timepoint = timepoints[-1]
-
     simulated_timepoints, simulation = simulate_system(rhs_function, initial_variables, timepoints)
-
-    # solve with selected parameters
 
     # Interpret the simulation results
     if simulation_type == 'LNA':
