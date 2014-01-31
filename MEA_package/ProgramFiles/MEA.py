@@ -26,6 +26,7 @@ def substitute_mean_with_y(moments, nvariables):
     diag_mat = [["1" if x == y else "0" for x in range(nvariables)] for y in range(nvariables)]
     substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
 
+
     # for 2d lists
     if isinstance(moments[0], list):
         out_moms =[[substitute_all(m, substitutions_pairs) for m in mom ] for mom in moments]
@@ -97,13 +98,11 @@ def make_mfk(CentralMoments, yms, M):
     # Get expressions for higher order central moments
 
     MFK1 = M*yms
-    
+
     MFK = []
     # Reshape to a vector
     for i in range(0,len(MFK1)):
         try:
-
-            print MFK1[i]
             MFK1[i] = sp.simplify(MFK1[i])
             #MFK1[i] = sp.collect(sp.expand(MFK1[i]),yms)
         except:
@@ -210,13 +209,9 @@ def MFK_final(model_filename, nMoments):
     # TODO: make the terms pythonic
     S = model.stoichiometry_matrix
     amat = model.propensities
-    ##todo unused
-    nreactions = model.number_of_reactions
     nvariables = model.number_of_variables
     ymat = model.variables
     c = model.constants
-
-    a = 0
 
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
     (counter, mcounter) = fcount(nMoments, nvariables)
@@ -231,6 +226,7 @@ def MFK_final(model_filename, nMoments):
     #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
     central_moments = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
     #  Substitute means in CentralMoments by y_i (ymat entry)
+
     central_moments = substitute_mean_with_y(central_moments, nvariables)
 
 
@@ -238,6 +234,7 @@ def MFK_final(model_filename, nMoments):
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
     (mom, momvec) = raw_to_central(counter, ymat, mcounter)
+
     # Substitute one for zeroth order raw moments in mom
     symbol_one = sp.S(1)
     x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
@@ -275,6 +272,9 @@ def MFK_final(model_filename, nMoments):
 def get_args():
     model_ = sys.argv[1]
     numMoments = int(sys.argv[2])
+
+    if numMoments < 2:
+        raise ValueError("The number of moments (--nMom) must be greater than one")
 
     return (model_, numMoments)
 
