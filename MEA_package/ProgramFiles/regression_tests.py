@@ -24,7 +24,7 @@ SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3
 INFERENCE_TEMPLATE = 'python runprogram.py --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
-SIMULATION_MODELS = [('MM', 1e-3, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
+SIMULATION_MODELS = [('MM', 1e-2, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     ('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')]
@@ -187,19 +187,19 @@ def compare_ode_problems(output, expected_output):
 
     # ensure we have the same keys
     if len(result_mom_keys - expected_mom_keys) != 0:
-        return "Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_keys),
-                                                                            str(result_mom_keys))
+        return ["Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_keys),
+                                                                            str(result_mom_keys))].split("\n")
 
     expected_rhs = expected_problem.right_hand_side
     result_rhs = result_problem.right_hand_side
 
     for e,r in zip(expected_rhs, result_rhs):
-        if not sympyhelpers.sympy_expressions_equal(e,r):
-            return "different rhs equations!! \nexpected=\n%s\nresult=\n%s" %(str(e),str(r))
+        if not sympyhelpers.sympy_empirical_equal(e,r):
+            return ["different rhs equations!! \nexpected=\n%s\nresult=\n%s" %(str(e),str(r))].split("\n")
 
     if expected_problem.left_hand_side != result_problem.left_hand_side:
-        return "different lhs equations!! \nexpected=\n%s\nresult=\n%s" % (str(expected_problem.left_hand_side),
-                                                                           str(result_problem.left_hand_side))
+        return ["different lhs equations!! \nexpected=\n%s\nresult=\n%s" % (str(expected_problem.left_hand_side),
+                                                                           str(result_problem.left_hand_side))].split("\n")
 
 def compare_tsv_with_float_epsilon(epsilon=1e-2):
 
@@ -367,8 +367,8 @@ def generate_tests_from_options(options):
                            os.path.join(options.inout_dir, 'ODEout.tmp'),
                            os.path.join(options.model_answers_dir, 'MEA{0}'.format(moment), model + '.out'),
                            # todo use new comparison of equations:
-                           #compare_ode_problems,
-                           diff_comparison,
+                           compare_ode_problems,
+                           #diff_comparison,
                            filter_function=filter_time_taken)
 
     if 'lna' in options.tests:

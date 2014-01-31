@@ -134,7 +134,7 @@ def parse_problem(input_filename, from_string=False):
     # now we query all the fields we need
 
     try:
-        right_hand_side = sympy.Matrix([sympy.simplify(l) for l in all_fields[STRING_RIGHT_HAND]])
+        right_hand_side = sympy.Matrix([sympy.sympify(l) for l in all_fields[STRING_RIGHT_HAND]])
     except KeyError:
         print 'The field "' + STRING_RIGHT_HAND + '" is not in the input file "' + input_filename +'"'
         raise
