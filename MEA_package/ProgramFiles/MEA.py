@@ -218,8 +218,11 @@ def MFK_final(model_filename, nMoments):
     # TODO: make the terms pythonic
     S = model.stoichiometry_matrix
     amat = model.propensities
-    nvariables = model.number_of_variables
-    ymat = model.variables
+    ##todo unused
+    nreactions = model.number_of_reactions
+    nvariables = model.number_of_species
+    ymat = model.species
+
     c = model.constants
 
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments

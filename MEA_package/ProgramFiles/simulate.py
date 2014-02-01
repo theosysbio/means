@@ -8,171 +8,131 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
 
-
-
-#######################################################################
-# Variables within function:
-# moment_list   Contains the names for each moment (e.g. [1,0,1], where
-#               numbers are the power that each species is raised to
-# soln          Array returned by CVODE, each row is a list of moments/
-#               values at a particular timepoint
-# mu            List where each item is a timecourse (as list) for a
-#               particular moment/value
-#
-# Simulate function returns (mu, moment_list) i.e. trajectories and 
-# corresponding list of names identifying the moments
-########################################################################
 # These are the default values in solver.c but they seem very low
+from ode_problem import Moment
+
 RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
 
+class Simulation(object):
+    __problem = None
 
-def parse_expansion_output(expansion_output_filename):
-    expansion_output_handle = open(expansion_output_filename, 'r')
-    try:
-        lines = expansion_output_handle.readlines()
-    finally:
-        expansion_output_handle.close()
+    def __init__(self, problem):
+        """
+        Initialise the simulator object for a given problem
+        :param problem:
+        :type problem: ODEProblem
+        :return:
+        """
+        self.__problem = problem
 
-    simulation_type = lines[0].rstrip()
-    index_of_lhs_in_file = lines.index('LHS:\n')
-    index_of_constants_in_file = lines.index('Constants:\n')
-    lhs = []
-    number_of_species = 0
-    for i in range(index_of_lhs_in_file+1,index_of_constants_in_file-1):
-        lhs.append(lines[i].strip())
-        if lines[i].startswith('y_'):
-            number_of_species+=1
+    def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
+        """
+        Creates an instance of `CVode` that will be used to simulate the ODEs.
 
+        :param initial_constants: initial values for constants
+        :param initial_values: initial values for variables
+        :param initial_timepoint: initial timepoint
+        :return: instance of `CVode` solver
+        :rtype: CVode
+        """
+        rhs = self.problem.right_hand_side_as_function(initial_constants)
+        model = Explicit_Problem(lambda t, x: rhs(x), initial_values, initial_timepoint)
+        solver = CVode(model)
 
-    # Get list of moment names/IDs from mfkoutput to create labels for output data file
+        solver.verbosity = 50  # Verbosity flag suppresses output
 
-    momlistindex = lines.index('List of moments:\n')
-    moment_list = []
-    for i in range(momlistindex+1, len(lines)):
-        if lines[i].startswith('['):
-            moment_string = str(lines[i].strip('\n[]'))
-            moment_list.append(moment_string)
+        # TODO: Make these customisable
+        solver.iter = 'Newton'
+        solver.discr = 'BDF'
+        solver.atol = ATOL
+        solver.rtol = RTOL
+        solver.linear_solver = 'dense'
 
-    return simulation_type, number_of_species, lhs, moment_list
+        return solver
 
+    def simulate_system(self, initial_constants, initial_values, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+        :param initial_constants:
+        :param initial_values:
+        :param timepoints:
+        :return:
+        """
+        initial_timepoint = timepoints[0]
+        last_timepoint = timepoints[-1]
 
-def simulate_lna(soln, number_of_species, t):
+        solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
+        simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
 
-    mu = [0] * number_of_species
-    mu_t = [0] * len(t)
-    for i in range(0, number_of_species):
-        mu_i = [0] * len(t)
-        for j in range(len(t)):
-            if i == 0:
+        return simulated_timepoints, simulated_values
+
+    @property
+    def problem(self):
+        return self.__problem
+
+def simulate_lna(soln, number_of_species, timepoints):
+
+    # Answer_buffer
+    answer = np.zeros((number_of_species, len(timepoints)), dtype=NP_FLOATING_POINT_PRECISION)
+
+    mu_t = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
+    for species in range(0, number_of_species):
+
+        mu_i = np.zeros(len(timepoints), dtype=NP_FLOATING_POINT_PRECISION)
+        for timepoint_index in range(len(timepoints)):
+
+            # For each timepoint
+            if species == 0:
+                # Construct a covariance matrix out of the covariance terms in the model
                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
+                # FIXME: Does the hardcoded 2 really work here?
+                # shouldn't it be number_of_species**2
                 for v in range(2 * number_of_species):
-                    V[v] = soln[j, v + number_of_species]
-                mu_t[j] = np.random.multivariate_normal(soln[j, 0:number_of_species], V)
-            mu_i[j] = mu_t[j][i]
-        mu[i] = mu_i
+                    V[v] = soln[timepoint_index, v + number_of_species]
+                print V
+                print
 
-    # write results to output file (Input file name, parameters, initial condtions,
-    # timepoints, and trajectories for each moment)
-    return mu
+                # Sample new values for each species from a multivariate normal
+                mu_t[timepoint_index] = np.random.multivariate_normal(soln[timepoint_index, 0:number_of_species], V)
 
+            mu_i[timepoint_index] = mu_t[timepoint_index][species]
+        answer[species] = mu_i
+    return answer
 
-def output_lna_result(initial_conditions, moment_list, mu, number_of_species, param, t,
-                      trajout):
-    output = open(trajout, 'w')
-
-    try:
-        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format(
-            [round(x, 6) for x in param], [round(y, 6) for y in initial_conditions]))
-        output.write('time')
-        for i in range(0, len(t)):
-            output.write('\t' + str(t[i]))
-        output.write('\n')
-        for m in range(0, number_of_species):
-            output.write(', '.join(map(str, moment_list[m])))
-            for i in range(0, len(t)):
-                output.write('\t' + str(mu[m][i]))
-            output.write('\n')
-    finally:
-        output.close()
-
-
-def print_mea_output(initial_conditions, maxorder, moment_list, mu, number_of_species, param,
-                     t, trajout):
+def print_output(initial_conditions, term_descriptions, mu, number_of_species, param,
+                     t, trajout, maxorder=None):
     # Check maximum order of moments to output to file/plot
-    if maxorder == False:
-        maxorder = max(map(sum, moment_list))
-
-    # Create list of moments as lists of integers
-    # (moment_list is list of strings)
-    moment_list_int = moment_list[:]
+    # TODO: change wherever maxorder comes from for it to be "None" not false.
 
     # write results to output file (Input file name, parameters,
     # initial conditions, data needed for maximum entropy
     # (no.timepoints, no.species, max order of moments),
     # timepoints, and trajectories for each moment)
     output = open(trajout, 'w')
-    initcond_str = ''
-    for i in initial_conditions:
-        initcond_str += (str(i) + ',')
-    initcond_str = '[' + initcond_str.rstrip(',') + ']'
-    output.write('>\tParameters: ' + str(
-        param) + '\n>\tStarting values: ' + initcond_str + '\n')
-    output.write('#\t' + str(len(t)) + '\t' + str(number_of_species) + '\t' + str(maxorder) + '\n')
-    output.write('time')
-    for i in range(0, len(t)):
-        output.write('\t' + str(t[i]))
-    output.write('\n')
-    # write trajectories of moments (up to maxorder) to output file
-    for m in range(0, len(moment_list_int)):
-        if sum(moment_list_int[m]) <= int(maxorder):
-            output.write(', '.join(map(str, moment_list[m])))
-            for i in range(0, len(t)):
-                output.write('\t' + str(mu[m][i]))
-            output.write('\n')
-    output.close()
+    try:
+        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format([round(x, 6) for x in param],
+                                                                            [round(y, 6) for y in initial_conditions]))
 
+        output.write('#\t{0}\t{1}\t{2}\n'.format(len(t), number_of_species, maxorder))
+        output.write('time\t{0}\n'.format('\t'.join(map(str, t))))
 
-def rhs_factory(rhs_function, constant_values):
+        # write trajectories of moments (up to maxorder) to output file
+        for m, term in enumerate(term_descriptions):
+            if not isinstance(term, Moment):
+                continue
+            if maxorder is None or term.order <= maxorder:
+                output.write('{0}\t{1}\n'.format(term, '\t'.join(map(str, mu[m]))))
+    finally:
+        output.close()
 
-    def rhs(t, variable_values):
-        """
-        Computes the values for right-hand-sides of the equation, used to define model
-        """
-        all_values = np.concatenate((constant_values, variable_values))
-        return rhs_function(*all_values)
-
-    return rhs
-
-def simulate_system(rhs, initial_values, timepoints):
-    initial_timepoint = timepoints[0]
-
-    model = Explicit_Problem(rhs, initial_values, initial_timepoint)
-    solver = CVode(model)
-    solver.verbosity = 50  # Verbosity flag suppresses output
-    solver.iter = 'Newton'
-    solver.discr = 'BDF'
-    solver.atol = ATOL
-    solver.rtol = RTOL
-    solver.linear_solver = 'dense'
-
-    number_of_timesteps = len(timepoints)
-    simulated_timepoints = np.empty(number_of_timesteps, dtype=NP_FLOATING_POINT_PRECISION)
-    simulated_values = np.empty((number_of_timesteps,
-                                 len(initial_values)), dtype=NP_FLOATING_POINT_PRECISION)
-    simulated_timepoints, simulated_values = solver.simulate(timepoints[-1], ncp_list=timepoints)
-
-    return simulated_timepoints, simulated_values
-
-
-def simulate(problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
+def simulate(problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
     """
     :param simulation_type: either "MEA" or "LNA"
     :param problem: Parsed problem to simulate
     :type problem: ODEProblem
     :param trajout: Name of output file for this function (where simulated trajectories would be stored, i.e. --simout)
-    :param lib: Name of the C file for solver (i.e. --library)
     :param timepoints: List of timepoints
     :param initial_constants: List of kinetic parameters
     :param initial_variables: List of initial conditions for each moment (in timeparameters file)
@@ -182,11 +142,10 @@ def simulate(problem, trajout, lib, timepoints, initial_constants, initial_varia
 
     # Get required info from the expansion output
 
-    # TODO: Replace this with Quentin's code.
     number_of_species = problem.number_of_species
     lhs = problem.left_hand_side
-    moment_list = problem.ordered_moments
-    simulation_type =  problem.method
+    term_descriptions = problem.ordered_descriptions
+    simulation_type = problem.method
 
     # If not all intial conditions specified, append zeros to them
     initial_variables = initial_variables[:]  # Make a copy before do
@@ -195,29 +154,22 @@ def simulate(problem, trajout, lib, timepoints, initial_constants, initial_varia
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-    rhs_function = rhs_factory(problem.rhs_as_function, initial_constants)
-
-    initial_time = timepoints[0]
-    number_of_timepoints = len(timepoints)
-    last_timepoint = timepoints[-1]
-
-    simulated_timepoints, simulation = simulate_system(rhs_function, initial_variables, timepoints)
-
-    # solve with selected parameters
+    simulator = Simulation(problem)
+    simulated_timepoints, simulation = simulator.simulate_system(initial_constants, initial_variables, timepoints)
 
     # Interpret the simulation results
     if simulation_type == 'LNA':
         # LNA results build a multivariate gaussian model, which is sampled from here:
         mu = simulate_lna(simulation, number_of_species, timepoints)
-        output_lna_result(initial_variables, moment_list, mu, number_of_species, initial_constants, simulated_timepoints,
-                          trajout)
-        return [simulated_timepoints, mu, moment_list]
+        print_output(initial_variables, term_descriptions, mu, number_of_species,
+                     initial_constants, simulated_timepoints, trajout, maxorder)
+        return [simulated_timepoints, mu, term_descriptions]
     elif simulation_type == 'MEA':
         mu = [simulation[:,i] for i in range(0, len(initial_variables))]
-        print_mea_output(initial_variables, maxorder, moment_list, mu, number_of_species,
-                         initial_constants, simulated_timepoints, trajout)
+        print_output(initial_variables, term_descriptions, mu, number_of_species,
+                     initial_constants, simulated_timepoints, trajout, maxorder)
 
-        return simulated_timepoints, simulation, moment_list
+        return simulated_timepoints, simulation, term_descriptions
     
 
 

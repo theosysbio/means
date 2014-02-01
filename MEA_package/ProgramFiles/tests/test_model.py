@@ -78,7 +78,7 @@ class TestModelInitialisation(unittest.TestCase):
                   ['y_0', 'y_1'],
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+        self.assertEqual(m.species, sympy.symbols(['y_0', 'y_1']))
 
 
     def test_initialisation_of_variables_as_list_of_sympy_symbols(self):
@@ -93,7 +93,7 @@ class TestModelInitialisation(unittest.TestCase):
                   sympy.symbols(['y_0', 'y_1']),
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+        self.assertEqual(m.species, sympy.symbols(['y_0', 'y_1']))
 
     def test_initialisation_of_variables_as_list_of_sympy_matrix(self):
         """
@@ -107,14 +107,14 @@ class TestModelInitialisation(unittest.TestCase):
                   sympy.Matrix(['y_0', 'y_1']),
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+        self.assertEqual(m.species, sympy.symbols(['y_0', 'y_1']))
 
         # Row
         m = Model(self.SAMPLE_CONSTANTS,
                   sympy.Matrix([['y_0', 'y_1']]),
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.variables, sympy.symbols(['y_0', 'y_1']))
+        self.assertEqual(m.species, sympy.symbols(['y_0', 'y_1']))
 
     #-- Propensity matrix -------------------------------------------------
 

@@ -3,6 +3,38 @@ import sympy
 import numpy as np
 from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
 
+class ODETermBase(object):
+    pass
+
+class Moment(ODETermBase):
+    __n_vector = None
+
+    def __init__(self, n_vector):
+        """
+        Creates an ODETerm that describes that a particular ODE term is a moment defined by the `n_vector`.
+        Should be a vector of ints.
+
+        TODO: figure out what "n_vector" is in mathematics-speak and use this here
+        :param n_vector: a vector specifying the multidimensional moment
+        """
+        self.__n_vector = np.array(n_vector, dtype=int)
+
+    @property
+    def n_vector(self):
+        return self.__n_vector
+
+    @property
+    def order(self):
+        """
+        Returns the order of the moment
+        """
+        return sum(self.n_vector)
+
+    def __repr__(self):
+        return '{0}({1!r})'.format(self.__class__.__name__, self.n_vector)
+
+    def __str__(self):
+        return ', '.join(map(str, self.n_vector))
 
 class ODEProblem(object):
     """
@@ -12,13 +44,12 @@ class ODEProblem(object):
 
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
     __right_hand_side = None
-    __right_hand_side_as_function = None  # Buffer to cache rhs as function
     __left_hand_side = None
-    __moment_dic = None
+    __descriptions_dict = None
     __constants = None
-    __ordered_moments = None
+    __ordered_descriptions_of_lhs_terms = None
 
-    def __init__(self, method, left_hand_side, right_hand_side, constants, moments):
+    def __init__(self, method, left_hand_side, right_hand_side, constants, description_of_lhs_terms=None):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
@@ -26,23 +57,50 @@ class ODEProblem(object):
         :param left_hand_side: the left hand side of equations
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
-        :param moments: the moments as a list of n-tuple, where n is the number of species
+        :param description_of_lhs_terms: descriptions of the terms in the left hand side of equations.
+                                         Should be a dictionary of symbol -> description pairs
         """
         self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
-        self.__moment_dic = self.make_moment_dic(moments)
-        self.__ordered_moments = moments
         self.__method = method
 
-        self.validate()
-#
-    def make_moment_dic(self, moments):
-        dic_out = dict()
-        for i,m in enumerate(moments):
-            dic_out[m] = i
-        return dic_out
+        self.__initialise_descriptions(description_of_lhs_terms)
 
+        self.validate()
+
+    def __initialise_descriptions(self, description_of_lhs_terms):
+        """
+        Populate self.__descriptions_dict
+        and self._ordered_descriptions_of_lhs_terms
+        :param description_of_lhs_terms:
+        :return:
+        """
+        # NB: getting left hand side from self, rather than passing it from above as
+        # we need to make sure that left_hand_side here is a list of symbols
+        left_hand_side = self.left_hand_side
+
+        if description_of_lhs_terms:
+
+            # Validate the description_of_lhs_terms first:
+            for key in description_of_lhs_terms.keys():
+                symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
+                if symbolic_key not in left_hand_side:
+                    raise KeyError('Provided description key {0!r} '
+                                   'is not in LHS equations {1!r}'.format(key, left_hand_side))
+
+            ordered_descriptions = []
+            for lhs in left_hand_side:
+                try:
+                    lhs_description = description_of_lhs_terms[lhs]
+                except KeyError:
+                    lhs_description = description_of_lhs_terms.get(str(lhs), None)
+                ordered_descriptions.append(lhs_description)
+        else:
+            ordered_descriptions = [None] * len(left_hand_side)
+
+        self.__descriptions_dict = dict(zip(left_hand_side, ordered_descriptions))
+        self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
 
     def validate(self):
         """
@@ -54,10 +112,11 @@ class ODEProblem(object):
         if self.__method != "MEA" and self.__method != "LNA":
             raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
 
-        if self.__method == "MEA":
-            if self.left_hand_side.rows != len(self.__moment_dic):
-                 raise ValueError("There are {0} equations and {1} moments. "
-                                  "For MEA problems, the same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
+        # FIXME: add this validation here or somewhere else if we decide to make ODEProblem method-agnostic
+        # if self.__method == "MEA":
+        #     if self.left_hand_side.rows != len(self.__moment_dic):
+        #          raise ValueError("There are {0} equations and {1} moments. "
+        #                           "For MEA problems, the same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
 
 
     # Expose public interface for the specified instance variables
@@ -70,11 +129,13 @@ class ODEProblem(object):
     def variables(self):
         return to_list_of_symbols(self.__left_hand_side)
 
+    # TODO: I don't think species_* methods should be part of ODEProblem, better for it to be unaware of description meanings
+    @property
+    def species_terms(self):
+        return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self.descriptions_dict.iteritems())
     @property
     def number_of_species(self):
-        # TODO: there must be a better way to do this i.e. without counting in a loop
-        # (this is how it was done in legacy way)
-        return sum([str(x).startswith('y_') for x in self.left_hand_side])
+        return len(self.species_terms)
 
     @property
     def right_hand_side(self):
@@ -89,21 +150,33 @@ class ODEProblem(object):
         return self.__method
 
     @property
-    def moment_dic(self):
-        return self.__moment_dic
+    def descriptions_dict(self):
+        return self.__descriptions_dict
 
     @property
-    def ordered_moments(self):
+    def ordered_descriptions(self):
         # TODO: consider removing this
-        return self.__ordered_moments
+        return self.__ordered_descriptions_of_lhs_terms
 
-    @property
-    def rhs_as_function(self):
-        if self.__right_hand_side_as_function is None:
-            self.__right_hand_side_as_function = sympy.lambdify(self.constants + self.variables,
-                                                                self.right_hand_side)
+    def right_hand_side_as_function(self, values_for_constants):
+        """
+        Returns the right hand side of the model as a callable function with constant terms i.e. `(c_1, c_2, etc.)` set
+        from values_for_constants.
 
-        return self.__right_hand_side_as_function
+        The function returned takes a vector of values for the remaining variables, e.g. `f([1,2,3])`
+
+        :param values_for_constants:
+        :return:
+        """
+        values_for_constants = np.array(values_for_constants)
+        assert(values_for_constants.shape == (len(self.constants),))
+        rhs_function = sympy.lambdify(self.constants + self.variables, self.right_hand_side)
+
+        def f(values_for_variables):
+            all_values = np.concatenate((values_for_constants, values_for_variables))
+            return rhs_function(*all_values)
+
+        return f
 
 def parse_problem(input_filename, from_string=False):
     """
@@ -161,7 +234,7 @@ def parse_problem(input_filename, from_string=False):
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
     try:
-        moments = [tuple(eval(l)) for l in all_fields[STRING_MOM]]
+        moments = dict(zip(left_hand_side, [Moment(list(eval(l))) for l in all_fields[STRING_MOM]]))
     except KeyError:
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
@@ -194,21 +267,22 @@ class ODEProblem_writer(object):
         lines += [str(expr) for expr in self.__problem.constants]
 
         # get info from moments
-        sum_moms = [sum(m) for m in self.__problem.moment_dic.keys()]
-        n_var = len([s for s in sum_moms if s == 1])
-        n_mom = max(sum_moms)
-
-
-        lines += [self.__N_VARIABLE, str(n_var)]
-        lines += [self.__N_MOMENTS, str(n_mom)]
-        lines += [self.__TIME_TAKEN + "  TODO"]
-        lines += [self.__N_EQS, str(self.__problem.left_hand_side)]
-
-
-
-
-        lines += [self.__STRING_MOM]
-        lines += [str(m) for m in self.__problem.moment_dic.keys()]
+        # FIXME: moment_dic does not exist anymore
+        # sum_moms = [sum(m) for m in self.__problem.moment_dic.keys()]
+        # n_var = len([s for s in sum_moms if s == 1])
+        # n_mom = max(sum_moms)
+        #
+        #
+        # lines += [self.__N_VARIABLE, str(n_var)]
+        # lines += [self.__N_MOMENTS, str(n_mom)]
+        # lines += [self.__TIME_TAKEN + "  TODO"]
+        # lines += [self.__N_EQS, str(self.__problem.left_hand_side)]
+        #
+        #
+        #
+        #
+        # lines += [self.__STRING_MOM]
+        # lines += [str(m) for m in self.__problem.moment_dic.keys()]
 
         with open(output_file, 'w') as file:
             for l in lines:
