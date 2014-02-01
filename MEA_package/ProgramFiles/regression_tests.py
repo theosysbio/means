@@ -181,9 +181,6 @@ def compare_ode_problems(output, expected_output):
     expected_mom_dic = expected_problem.moment_dic
     result_mom_dic = result_problem.moment_dic
 
-    expected_mom_keys = set(expected_mom_dic .keys())
-    result_mom_keys = set(result_mom_dic.keys())
-
     result_constants = set(expected_problem.constants)
     expected_constants = set(result_problem.constants)
 
@@ -194,9 +191,9 @@ def compare_ode_problems(output, expected_output):
                                                                             str(result_constants))).split("\n")
 
 
-    if len(result_mom_keys ^ expected_mom_keys) != 0:
-        return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_keys),
-                                                                            str(result_mom_keys))).split("\n")
+    if expected_mom_dic != result_mom_dic:
+        return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_dic),
+                                                                            str(result_mom_dic))).split("\n")
 
     expected_rhs = expected_problem.right_hand_side
     result_rhs = result_problem.right_hand_side

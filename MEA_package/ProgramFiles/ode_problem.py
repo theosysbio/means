@@ -38,10 +38,8 @@ class ODEProblem(object):
         self.validate()
 #
     def make_moment_dic(self, moments):
-        dic_out = dict()
-        for i,m in enumerate(moments):
-            dic_out[m] = i
-        return dic_out
+        dict_out = dict(zip(moments, range(len(moments))))
+        return dict_out
 
 
     def validate(self):
@@ -176,7 +174,17 @@ def parse_problem(input_filename, from_string=False):
 
 
 class ODEProblemWriter(object):
-    def __init__(self, problem, run_time):
+    """
+    A class to write the resulting "ODEProblems" in a text file.
+
+    """
+
+    def __init__(self, problem, run_time="unknown"):
+        """
+
+        :param problem: an ODEProblem object to be written
+        :param run_time: the time taken to formulate the problem (optional)
+        """
         self._problem = problem
         self._run_time = run_time
         self._STRING_RIGHT_HAND = 'RHS of equations:'
@@ -189,6 +197,11 @@ class ODEProblemWriter(object):
         self._TIME_TAKEN = 'Time taken (s):'
 
     def build_out_string_list(self):
+        """
+        Makes a list of strings, one for each line, to be writen to a file later.
+        :return: the list of string to be written
+        """
+
         #empty lines are added in order to mimic the output from the original code
         lines = [self._problem.method]
 
@@ -222,35 +235,52 @@ class ODEProblemWriter(object):
 
         lines += [""]
 
+
+        ordered_moments = sorted([(i,m) for (m,i) in self._problem.moment_dic.items()])
+
         lines += [self._STRING_MOM]
-        lines += [str(list(m)) for m in self._problem.moment_dic.keys()]
+        lines += [str(list(mom)) for (lhs,mom) in ordered_moments]
         return lines
 
     def write_to(self, output_file):
+
+        """
+        Public method to write the problem to a given file
+        :param output_file: the name of the file. It will be created if needed
+        """
         lines = self.build_out_string_list()
         with open(output_file, 'w') as file:
             for l in lines:
                 file.write(l+"\n")
 
-
-
 class ODEProblemLatexWriter(ODEProblemWriter):
+    """
+    A class to write formated LaTeX equations representing a problem
+    """
     def build_out_string_list(self):
 
 
+        """
+        Overrides the default method and provides latex expressions instead of plain text
+        :return: LaTeX formated list of strings
+        """
         preamble = ["\documentclass{article}"]
         preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
         lines += ["\section*{%s}" % self._STRING_RIGHT_HAND]
 
         lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs)), str(sympy.latex(rhs)), r"\\")
-                  for (rhs, lhs) in zip(self._problem.right_hand_side, self._problem.left_hand_side)]
+                    for (rhs, lhs) in zip(self._problem.right_hand_side, self._problem.left_hand_side)]
 
         lines += [r"\\"] * 5
 
         lines += ["\section*{%s}" % self._STRING_MOM]
+        ordered_moments = sorted([(i,m) for (m,i) in self._problem.moment_dic.items()])
+
+
         lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs)), str(list(mom)), r"\\")
-                  for (mom, lhs) in sorted(self._problem.moment_dic.items())]
+                       for (lhs,mom) in ordered_moments]
+
         lines += ["\end{document}"]
 
         return preamble + lines
