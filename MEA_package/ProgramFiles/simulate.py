@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from sympy import Matrix
 
 # These are the default values in solver.c but they seem very low
+from ode_problem import Moment
+
 RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
@@ -36,7 +38,7 @@ class Simulation(object):
         :rtype: CVode
         """
         rhs = self.problem.right_hand_side_as_function(initial_constants)
-        model = Explicit_Problem(rhs, initial_values, initial_timepoint)
+        model = Explicit_Problem(lambda t, x: rhs(x), initial_values, initial_timepoint)
         solver = CVode(model)
 
         solver.verbosity = 50  # Verbosity flag suppresses output
@@ -99,61 +101,31 @@ def simulate_lna(soln, number_of_species, timepoints):
         answer[species] = mu_i
     return answer
 
-
-def output_lna_result(initial_conditions, moment_list, mu, number_of_species, param, t,
-                      trajout):
-    output = open(trajout, 'w')
-
-    try:
-        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format(
-            [round(x, 6) for x in param], [round(y, 6) for y in initial_conditions]))
-        output.write('time')
-        for i in range(0, len(t)):
-            output.write('\t' + str(t[i]))
-        output.write('\n')
-        for m in range(0, number_of_species):
-            output.write(', '.join(map(str, moment_list[m])))
-            for i in range(0, len(t)):
-                output.write('\t' + str(mu[m][i]))
-            output.write('\n')
-    finally:
-        output.close()
-
-
-def print_mea_output(initial_conditions, maxorder, moment_list, mu, number_of_species, param,
-                     t, trajout):
+def print_output(initial_conditions, term_descriptions, mu, number_of_species, param,
+                     t, trajout, maxorder=None):
     # Check maximum order of moments to output to file/plot
-    if maxorder == False:
-        maxorder = max(map(sum, moment_list))
-
-    # Create list of moments as lists of integers
-    # (moment_list is list of strings)
-    moment_list_int = moment_list[:]
+    # TODO: change wherever maxorder comes from for it to be "None" not false.
 
     # write results to output file (Input file name, parameters,
     # initial conditions, data needed for maximum entropy
     # (no.timepoints, no.species, max order of moments),
     # timepoints, and trajectories for each moment)
     output = open(trajout, 'w')
-    initcond_str = ''
-    for i in initial_conditions:
-        initcond_str += (str(i) + ',')
-    initcond_str = '[' + initcond_str.rstrip(',') + ']'
-    output.write('>\tParameters: ' + str(
-        param) + '\n>\tStarting values: ' + initcond_str + '\n')
-    output.write('#\t' + str(len(t)) + '\t' + str(number_of_species) + '\t' + str(maxorder) + '\n')
-    output.write('time')
-    for i in range(0, len(t)):
-        output.write('\t' + str(t[i]))
-    output.write('\n')
-    # write trajectories of moments (up to maxorder) to output file
-    for m in range(0, len(moment_list_int)):
-        if sum(moment_list_int[m]) <= int(maxorder):
-            output.write(', '.join(map(str, moment_list[m])))
-            for i in range(0, len(t)):
-                output.write('\t' + str(mu[m][i]))
-            output.write('\n')
-    output.close()
+    try:
+        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format([round(x, 6) for x in param],
+                                                                            [round(y, 6) for y in initial_conditions]))
+
+        output.write('#\t{0}\t{1}\t{2}\n'.format(len(t), number_of_species, maxorder))
+        output.write('time\t{0}\n'.format('\t'.join(map(str, t))))
+
+        # write trajectories of moments (up to maxorder) to output file
+        for m, term in enumerate(term_descriptions):
+            if not isinstance(term, Moment):
+                continue
+            if maxorder is None or term.order <= maxorder:
+                output.write('{0}\t{1}\n'.format(term, '\t'.join(map(str, mu[m]))))
+    finally:
+        output.close()
 
 def simulate(simulation_type, problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
     """
@@ -172,7 +144,7 @@ def simulate(simulation_type, problem, trajout, timepoints, initial_constants, i
 
     number_of_species = problem.number_of_species
     lhs = problem.left_hand_side
-    moment_list = problem.ordered_moments
+    term_descriptions = problem.ordered_descriptions
 
     # If not all intial conditions specified, append zeros to them
     initial_variables = initial_variables[:]  # Make a copy before do
@@ -188,15 +160,15 @@ def simulate(simulation_type, problem, trajout, timepoints, initial_constants, i
     if simulation_type == 'LNA':
         # LNA results build a multivariate gaussian model, which is sampled from here:
         mu = simulate_lna(simulation, number_of_species, timepoints)
-        output_lna_result(initial_variables, moment_list, mu, number_of_species, initial_constants, simulated_timepoints,
-                          trajout)
-        return [simulated_timepoints, mu, moment_list]
+        print_output(initial_variables, term_descriptions, mu, number_of_species,
+                     initial_constants, simulated_timepoints, trajout, maxorder)
+        return [simulated_timepoints, mu, term_descriptions]
     elif simulation_type == 'MEA':
         mu = [simulation[:,i] for i in range(0, len(initial_variables))]
-        print_mea_output(initial_variables, maxorder, moment_list, mu, number_of_species,
-                         initial_constants, simulated_timepoints, trajout)
+        print_output(initial_variables, term_descriptions, mu, number_of_species,
+                     initial_constants, simulated_timepoints, trajout, maxorder)
 
-        return simulated_timepoints, simulation, moment_list
+        return simulated_timepoints, simulation, term_descriptions
     
 
 

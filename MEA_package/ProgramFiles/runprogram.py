@@ -63,7 +63,7 @@ def run():
     library = 'solver'
     tpfile = None
     solve = False
-    maxorder = False
+    maxorder = None
     plot = False
     plottitle = ''
     trajout = 'traj.txt'
@@ -100,7 +100,7 @@ def run():
             elif option == 'plot' : plot = True
             elif option[0:10] == 'plottitle=' : plottitle = option[10:]
             elif option[0:7] == 'simout=' : trajout = option[7:]
-            elif option[0:9] == 'maxorder=' : maxorder = option[9:]
+            elif option[0:9] == 'maxorder=' : maxorder = int(option[9:])
             elif option == 'infer' : infer = True
             elif option[0:10] == 'inferfile=': inferfile = option[10:]
             elif option[0:5] == 'data=' : exptdata=option[5:]

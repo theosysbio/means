@@ -178,8 +178,8 @@ def compare_ode_problems(output, expected_output):
     expected_problem = ode_problem.parse_problem(expected_output, from_string=True)
     result_problem = ode_problem.parse_problem(output, from_string=True)
 
-    expected_mom_dic = expected_problem.moment_dic
-    result_mom_dic = result_problem.moment_dic
+    expected_mom_dic = expected_problem.descriptions_dict
+    result_mom_dic = result_problem.descriptions_dict
 
     expected_mom_keys = set(expected_mom_dic .keys())
     result_mom_keys = set(result_mom_dic.keys())
