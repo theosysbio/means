@@ -2,18 +2,24 @@
 
 from time import time
 import sys
-import itertools
+
+
+import sympy as sp
+from sympy import latex
 
 from fcount import fcount
-import sympy as sp
-from sympy import Matrix, var
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
 from model import parse_model
 from raw_to_central import raw_to_central
-from sympy import latex
 from sympyhelpers import substitute_all
+
+
 import ode_problem
+from approximation_baseclass import ApproximationBaseClass
+
+
+
 def substitute_mean_with_y(moments, nvariables):
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
@@ -267,7 +273,7 @@ def MFK_final(model_filename, nMoments):
     else:
         nM = 1
 
-    yms = sp.Matrix(nM, 1, lambda i, j : var('yx%i' % i))
+    yms = sp.Matrix(nM, 1, lambda i, j : sp.Symbol('yx%i' % i))
     # Set zeroth order central moment to 1
     yms[0] = 1
 
@@ -289,16 +295,108 @@ def MFK_final(model_filename, nMoments):
     # ode_problem.ODEProblem_writer(problem).write_to(str(sys.argv[3]))
 
 
+
+
+
+class MomentExpansionApproximation(ApproximationBaseClass):
+    
+    def _run(self, parameters):
+
+        # todo dict of params instead
+        n_moments = parameters
+
+        S = self.model.stoichiometry_matrix
+        amat = self.model.propensities
+        nvariables = self.model.number_of_variables
+        ymat = self.model.variables
+
+
+        # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
+        (counter, mcounter) = fcount(n_moments, nvariables)
+        # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
+        TE_matrix = taylor_expansion(ymat, amat, counter)
+
+        # M is the product of the stoichiometry matrix by the Taylor Expansion terms.
+        # one row per species and one col per element of counter
+        M = S * TE_matrix
+
+        #  Calculate expressions to use in central moments equations (eq. 9)
+        #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
+        central_moments = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
+        #  Substitute means in CentralMoments by y_i (ymat entry)
+
+        central_moments = substitute_mean_with_y(central_moments, nvariables)
+
+        #  Substitute higher order raw moments in terms of central moments
+        #  raw_to_central calculates central moments (momvec) in terms
+        #  of raw moment expressions (mom) (eq. 8)
+        (mom, momvec) = raw_to_central(counter, ymat, mcounter)
+
+        # Substitute one for zeroth order raw moments in mom
+        symbol_one = sp.S(1)
+        x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
+        mom = [sp.Subs(m, x_zero, symbol_one).doit() for m in mom]
+
+
+        # Substitute first order raw moments (means) in mom with y_i (ymat entry)
+        mom = substitute_mean_with_y(mom,nvariables)
+
+        # Substitute raw moment, in CentralMoments, with of central moments
+        central_moments = substitute_raw_with_central(central_moments, momvec, mom)
+
+
+        # Use counter index (c) for yx (yxc) instead of moment (ymn) (e.g. ym021)
+        central_moments = substitute_ym_with_yx(central_moments, momvec)
+
+        # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
+        if len(central_moments) != 0:
+            nM = len(central_moments[0])
+        else:
+            nM = 1
+
+        yms = sp.Matrix(nM, 1, lambda i, j : sp.Symbol('yx%i' % i))
+        # Set zeroth order central moment to 1
+        yms[0] = 1
+
+        # Get expressions for each central moment, and enter into list MFK
+        MFK = make_mfk(central_moments, yms, M)
+
+        # build ODEProblem object
+        prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables) ]) for j in range(nvariables)]
+        prob_moments += [tuple(c) for c in counter[1:]]
+        lhs = sp.Matrix([i for i in ymat] + yms[1:])
+
+        out_problem = ode_problem.ODEProblem("MEA", lhs, sp.Matrix(MFK), sp.Matrix(self.model.constants), prob_moments)
+        return out_problem
+
 def get_args():
     model_ = sys.argv[1]
     numMoments = int(sys.argv[2])
-
+    out_file_name = str(sys.argv[3])
     if numMoments < 2:
         raise ValueError("The number of moments (--nMom) must be greater than one")
 
-    return (model_, numMoments)
-
+    return (model_, numMoments, out_file_name)
 
 if __name__ == "__main__":
-    model_, numMoments = get_args()
-    MFK_final(model_, numMoments)
+
+    # get and validate command line arguments
+    model_filename, n_moments, out_file_name = get_args()
+
+    # parse the input file as a Model object
+    model = parse_model(model_filename)
+
+    # set the mea analysis up
+    mea = MomentExpansionApproximation(model)
+
+    # run mea with the defined parameters
+    problem = mea.run_with_params(parameters=n_moments)
+
+    # write result in the specified file
+    ode_writer = ode_problem.ODEProblemWriter(problem, mea.time_last_run)
+    ode_writer.write_to(out_file_name)
+    tex_writer = ode_problem.ODEProblemLatexWriter(problem, mea.time_last_run)
+    tex_writer.write_to(model_filename + ".tex")
+
+
+
