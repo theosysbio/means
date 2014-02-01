@@ -15,7 +15,7 @@ class TestODEProblem(unittest.TestCase):
         """
         lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem(lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
+        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
 
         rhs_as_function = p.right_hand_side_as_function([1, 2, 3])
 
@@ -32,7 +32,7 @@ class TestODEProblem(unittest.TestCase):
         """
         lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem(lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
+        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
 
         for i, symbol in enumerate(lhs):
             self.assertIsNone(p.descriptions_dict[symbol])
@@ -47,7 +47,7 @@ class TestODEProblem(unittest.TestCase):
         lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         descriptions = {'y_1': 'foo', 'y_3': 'bar'}
-        p = ODEProblem(lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
+        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
 
         self.assertEquals(p.descriptions_dict[sympy.Symbol('y_1')], 'foo')
         self.assertIsNone(p.descriptions_dict[sympy.Symbol('y_2')])
@@ -71,7 +71,7 @@ class TestODEProblem(unittest.TestCase):
         y_3 = sympy.Symbol('y_3')
 
         descriptions = {y_1: 'foo', y_3: 'bar'}
-        p = ODEProblem(lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
+        p = ODEProblem('MEA',lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
 
         self.assertEquals(p.descriptions_dict[y_1], 'foo')
         self.assertIsNone(p.descriptions_dict[y_2])
@@ -93,9 +93,9 @@ class TestODEProblem(unittest.TestCase):
         y_4 = sympy.Symbol('y_4')
 
         descriptions = {y_1: 'foo', y_3: 'bar', y_4: 'non-existent'}
-        self.assertRaises(KeyError, ODEProblem, lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
+        self.assertRaises(KeyError, ODEProblem, 'MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
                           description_of_lhs_terms=descriptions)
 
         descriptions = {'y_1': 'foo', 'y_3': 'bar', 'y_4': 'non-existent'}
-        self.assertRaises(KeyError, ODEProblem, lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
+        self.assertRaises(KeyError, ODEProblem, 'MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
                           description_of_lhs_terms=descriptions)
