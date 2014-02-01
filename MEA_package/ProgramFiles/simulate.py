@@ -85,7 +85,7 @@ def simulate_lna(soln, number_of_species, timepoints):
             if species == 0:
                 # Construct a covariance matrix out of the covariance terms in the model
                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
-                # TODO: Does the hardcoded 2 really work here?
+                # FIXME: Does the hardcoded 2 really work here?
                 # shouldn't it be number_of_species**2
                 for v in range(2 * number_of_species):
                     V[v] = soln[timepoint_index, v + number_of_species]
