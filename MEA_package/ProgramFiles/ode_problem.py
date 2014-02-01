@@ -12,7 +12,6 @@ class ODEProblem(object):
 
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
     __right_hand_side = None
-    __right_hand_side_as_function = None  # Buffer to cache rhs as function
     __left_hand_side = None
     __moment_dic = None
     __constants = None
@@ -87,13 +86,25 @@ class ODEProblem(object):
         # TODO: consider removing this
         return self.__ordered_moments
 
-    @property
-    def rhs_as_function(self):
-        if self.__right_hand_side_as_function is None:
-            self.__right_hand_side_as_function = sympy.lambdify(self.constants + self.variables,
-                                                                self.right_hand_side)
+    def right_hand_side_as_function(self, values_for_constants):
+        """
+        Returns the right hand side of the model as a callable function with constant terms i.e. `(c_1, c_2, etc.)` set
+        from values_for_constants.
 
-        return self.__right_hand_side_as_function
+        The function returned takes a vector of values for the remaining variables, e.g. `f([1,2,3])`
+
+        :param values_for_constants:
+        :return:
+        """
+        values_for_constants = np.array(values_for_constants)
+        assert(values_for_constants.shape == (len(self.constants),))
+        rhs_function = sympy.lambdify(self.constants + self.variables, self.right_hand_side)
+
+        def f(values_for_variables):
+            all_values = np.concatenate((values_for_constants, values_for_variables))
+            return rhs_function(*all_values)
+
+        return f
 
 def parse_problem(input_filename, from_string=False):
     """

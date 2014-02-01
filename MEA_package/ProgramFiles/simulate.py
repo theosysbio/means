@@ -25,24 +25,6 @@ class Simulation(object):
         """
         self.__problem = problem
 
-    def _rhs_function_factory(self, initial_constants):
-        """
-        Creates a rhs function that can be used in `Explicit_Problem`
-        :param initial_constants: np.array of intial values for constant terms
-        :type initial_constants: np.array
-        :return:
-        """
-        rhs_function = self.problem.rhs_as_function
-
-        def rhs(timepoint, variable_values):
-            """
-            Computes the values for right-hand-sides of the equation, used to define model
-            """
-            all_values = np.concatenate((initial_constants, variable_values))
-            return rhs_function(*all_values)
-
-        return rhs
-
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
         Creates an instance of `CVode` that will be used to simulate the ODEs.
@@ -53,7 +35,7 @@ class Simulation(object):
         :return: instance of `CVode` solver
         :rtype: CVode
         """
-        rhs = self._rhs_function_factory(initial_constants)
+        rhs = self.problem.right_hand_side_as_function(initial_constants)
         model = Explicit_Problem(rhs, initial_values, initial_timepoint)
         solver = CVode(model)
 
@@ -88,24 +70,34 @@ class Simulation(object):
     def problem(self):
         return self.__problem
 
-def simulate_lna(soln, number_of_species, t):
+def simulate_lna(soln, number_of_species, timepoints):
 
-    mu = [0] * number_of_species
-    mu_t = [0] * len(t)
-    for i in range(0, number_of_species):
-        mu_i = [0] * len(t)
-        for j in range(len(t)):
-            if i == 0:
+    # Answer_buffer
+    answer = np.zeros((number_of_species, len(timepoints)), dtype=NP_FLOATING_POINT_PRECISION)
+
+    mu_t = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
+    for species in range(0, number_of_species):
+
+        mu_i = np.zeros(len(timepoints), dtype=NP_FLOATING_POINT_PRECISION)
+        for timepoint_index in range(len(timepoints)):
+
+            # For each timepoint
+            if species == 0:
+                # Construct a covariance matrix out of the covariance terms in the model
                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
+                # TODO: Does the hardcoded 2 really work here?
+                # shouldn't it be number_of_species**2
                 for v in range(2 * number_of_species):
-                    V[v] = soln[j, v + number_of_species]
-                mu_t[j] = np.random.multivariate_normal(soln[j, 0:number_of_species], V)
-            mu_i[j] = mu_t[j][i]
-        mu[i] = mu_i
+                    V[v] = soln[timepoint_index, v + number_of_species]
+                print V
+                print
 
-    # write results to output file (Input file name, parameters, initial condtions,
-    # timepoints, and trajectories for each moment)
-    return mu
+                # Sample new values for each species from a multivariate normal
+                mu_t[timepoint_index] = np.random.multivariate_normal(soln[timepoint_index, 0:number_of_species], V)
+
+            mu_i[timepoint_index] = mu_t[timepoint_index][species]
+        answer[species] = mu_i
+    return answer
 
 
 def output_lna_result(initial_conditions, moment_list, mu, number_of_species, param, t,
@@ -162,18 +154,6 @@ def print_mea_output(initial_conditions, maxorder, moment_list, mu, number_of_sp
                 output.write('\t' + str(mu[m][i]))
             output.write('\n')
     output.close()
-
-
-def rhs_factory(rhs_function, constant_values):
-
-    def rhs(t, variable_values):
-        """
-        Computes the values for right-hand-sides of the equation, used to define model
-        """
-        all_values = np.concatenate((constant_values, variable_values))
-        return rhs_function(*all_values)
-
-    return rhs
 
 def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
     """
