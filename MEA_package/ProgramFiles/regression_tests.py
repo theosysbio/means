@@ -178,8 +178,8 @@ def compare_ode_problems(output, expected_output):
     expected_problem = ode_problem.parse_problem(expected_output, from_string=True)
     result_problem = ode_problem.parse_problem(output, from_string=True)
 
-    expected_mom_dic = expected_problem.moment_dic
-    result_mom_dic = result_problem.moment_dic
+    expected_mom_dic = expected_problem.descriptions_dict
+    result_mom_dic = result_problem.descriptions_dict
 
     result_constants = set(expected_problem.constants)
     expected_constants = set(result_problem.constants)
@@ -190,8 +190,13 @@ def compare_ode_problems(output, expected_output):
          return ("Difference in the constants: \nexpected=\n%s\nresult=\n%s" % (str(expected_constants),
                                                                             str(result_constants))).split("\n")
 
+    #TODO comparison of moment fails whatever, need to implement = operator in Moment
+    # if expected_mom_dic != result_mom_dic:
+    #     return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_dic),
+    #                                                                         str(result_mom_dic))).split("\n")
 
-    if expected_mom_dic != result_mom_dic:
+    # workaround:
+    if str(expected_mom_dic) != str(result_mom_dic):
         return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_dic),
                                                                             str(result_mom_dic))).split("\n")
 

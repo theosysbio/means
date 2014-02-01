@@ -126,9 +126,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_moments = parameters
         S = self.model.stoichiometry_matrix
         amat = self.model.propensities
-        nvariables = self.model.number_of_variables
-        ymat = self.model.variables
 
+        ymat = self.model.species
+        nvariables = len(ymat)
 
         # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
         (counter, mcounter) = fcount(n_moments, nvariables)
@@ -174,10 +174,13 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         MFK = make_mfk(central_moments, yms, M)
 
         # build ODEProblem object
-        prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables) ]) for j in range(nvariables)]
+        prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables)]) for j in range(nvariables)]
         prob_moments += [tuple(c) for c in counter[1:]]
 
+
         lhs = sp.Matrix([i for i in ymat] + yms[1:])
+
+        prob_moments = dict(zip(lhs,prob_moments))
 
         out_problem = ode_problem.ODEProblem("MEA", lhs, sp.Matrix(MFK), sp.Matrix(self.model.constants), prob_moments)
         return out_problem

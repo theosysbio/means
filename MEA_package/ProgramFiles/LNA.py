@@ -103,6 +103,6 @@ if __name__ == '__main__':
 
     model = parse_model(model_)
 
-    dPdt, dVdt, V, momlist = LNA(model.stoichiometry_matrix, model.propensities, model.variables)
-    print_output(LNAout, dPdt, dVdt, model.variables, V, model.constants, momlist)
+    dPdt, dVdt, V, momlist = LNA(model.stoichiometry_matrix, model.propensities, model.species)
+    print_output(LNAout, dPdt, dVdt, model.species, V, model.constants, momlist)
 
