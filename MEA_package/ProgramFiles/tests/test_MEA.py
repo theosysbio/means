@@ -125,7 +125,7 @@ class MEATestCase(unittest.TestCase):
                 ["yx1 * 3", "yx2 + 32 + x", "yx4 + y_0"]
             ])
 
-        central_moments = substitute_ym_with_yx(central_moments, momvec)
+        central_moments = substitute_ym_with_yx(central_moments, momvec)[1]
 
         self.assertEqual(Matrix(central_moments), Matrix(expected_central_moments))
 
