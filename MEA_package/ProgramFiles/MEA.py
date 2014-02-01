@@ -13,7 +13,7 @@ from model import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
 from sympyhelpers import substitute_all
-
+import ode_problem
 def substitute_mean_with_y(moments, nvariables):
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
@@ -25,7 +25,6 @@ def substitute_mean_with_y(moments, nvariables):
 
     diag_mat = [["1" if x == y else "0" for x in range(nvariables)] for y in range(nvariables)]
     substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
-
 
     # for 2d lists
     if isinstance(moments[0], list):
@@ -95,9 +94,19 @@ def make_mfk(CentralMoments, yms, M):
     :return: MFK ...
     """
 
-    # Get expressions for higher order central moments
+######################################
+    # this is the new code without simplify
+    # this make the tests fail for simulation because of floating point issues.
+    # Implementation postponed
 
+    # MFK =  [i for i in M*yms ]
+    # MFK += [(sp.Matrix(cm).T * yms)[0] for cm in CentralMoments]
+    # return MFK
+#####################################
+    # Get expressions for higher order central moments
     MFK1 = M*yms
+
+
 
     MFK = []
     # Reshape to a vector
@@ -265,8 +274,19 @@ def MFK_final(model_filename, nMoments):
     # Get expressions for each central moment, and enter into list MFK
     MFK = make_mfk(central_moments, yms, M)
 
+
+
+
+
     # Write information to output file (and moment names and equations to .tex file)
     write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
+
+    #todo use dedicated writer
+    # prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables) ]) for j in range(nvariables)]
+    # prob_moments += [tuple(c) for c in counter[1:]]
+    # lhs = sp.Matrix([i for i in ymat] + yms[1:])
+    # problem = ode_problem.ODEProblem("MEA", lhs , sp.Matrix(MFK), sp.Matrix(c), prob_moments)
+    # ode_problem.ODEProblem_writer(problem).write_to(str(sys.argv[3]))
 
 
 def get_args():

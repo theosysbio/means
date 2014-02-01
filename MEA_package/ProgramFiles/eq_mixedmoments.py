@@ -13,10 +13,8 @@ import operator
 
 
 def make_f_of_x(variables, k_vec, e_vec, reaction):
-
     """
     Calculates F() in eq. 12 (see Ale et al. 2013) for a specific reaction , k and e
-
     :param variables: the variables (or species). Typically (y_0, y_1, ...,y_n)
     :param k_vec: the vector k
     :param e_vec: the vector e
@@ -34,10 +32,8 @@ def make_f_of_x(variables, k_vec, e_vec, reaction):
     return product * reaction
 
 def make_f_expectation(variables, expr, counter):
-
     """
     Calculates <F> in eq. 12 (see Ale et al. 2013) to calculate <F> for EACH VARIABLE combination.
-
     :param variables: the name of the variables (typically {y_0, y_1, ..., y_n})
     :param expr: an expression
     :param counter: a list of all possible combination of order of derivation
@@ -57,13 +53,10 @@ def make_f_expectation(variables, expr, counter):
     # return [d*f for (d, f) in zip(derives, factorial_terms)]
 
 def make_k_chose_e(e_vec, k_vec):
-
     """
     Computes the product k chose e
-
     :param e_vec: the vector e
     :param k_vec: the vector k
-
     :return: a scalar
     """
     factorials = [sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)]
@@ -71,10 +64,8 @@ def make_k_chose_e(e_vec, k_vec):
     return product
 
 def make_s_pow_e(S, reac_idx, e_vec):
-
     """
     Compute s^e in equation 11  (see Ale et al. 2013)
-
     :param S: The stoichiometry matrix. Explicitly provided by the model
     :param reac_idx: the index of the reaction to consider
     :param e_vec: the vector e
@@ -105,12 +96,11 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
     if len(ek_counter) == 0:
         return sp.Matrix(1, len(counter), lambda i, j: 0)
 
-
     # compute F(x) for EACH REACTION and EACH entry in the EKCOUNTER (eq. 12)
     f_of_x_vec = [make_f_of_x(ymat, k_vec, c, reac) for (reac, c) in itertools.product(amat, ek_counter)]
 
     # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
-    # vector in which each elemnt relates to an entry of counter
+    # vector in which each element relates to an entry of counter
     f_expectation_vec = [make_f_expectation(ymat, f, counter) for f in f_of_x_vec]
 
     # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars
@@ -120,11 +110,11 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
     # Note that this does not depend on the reaction, so we can just repeat the result for each reaction
     k_choose_e_vec = [make_k_chose_e(e, k_vec) for e in ek_counter] * len(amat)
 
-    # computes the element-wise product of the three entities
+    # compute the element-wise product of the three entities
     product = [f * s * ke for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]
 
     # we have a list of vectors and we want to obtain a list of sums of all nth element together.
-    # to do that we put all the data into a matrix in which each row is a different vector
+    # To do that we put all the data into a matrix in which each row is a different vector
     to_sum = sp.Matrix(product).reshape(len(product),len(product[0]))
 
     # then we sum over the columns

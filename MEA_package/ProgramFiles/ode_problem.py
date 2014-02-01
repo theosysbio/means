@@ -49,7 +49,7 @@ class ODEProblem(object):
         Validates whether the particular model is created properly
         """
         if self.left_hand_side.rows != self.right_hand_side.rows:
-            raise ValueError("There are {0} left hand side equations and {0} right hand side equations. "
+            raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
                              "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
         if self.__method != "MEA" and self.__method != "LNA":
             raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
@@ -167,4 +167,50 @@ def parse_problem(input_filename, from_string=False):
         raise
 
     return ODEProblem(method, left_hand_side, right_hand_side, constants, moments)
+
+
+class ODEProblem_writer(object):
+    def __init__(self, problem):
+        self.__problem = problem
+        self.__STRING_RIGHT_HAND = 'RHS of equations:'
+        self.__STRING_LEFT_HAND = 'LHS:'
+        self.__STRING_CONSTANT = 'Constants:'
+        self.__N_VARIABLE = 'Number of variables:'
+        self.__N_MOMENTS = 'Number of moments:'
+        self.__N_EQS = 'Number of equations:'
+        self.__STRING_MOM = 'List of moments:'
+        self.__TIME_TAKEN = 'Time taken (s):'
+
+    def write_to(self, output_file):
+        lines = [self.__problem.method]
+
+        lines += [self.__STRING_RIGHT_HAND]
+        lines += [str(expr) for expr in self.__problem.right_hand_side]
+
+        lines += [self.__STRING_LEFT_HAND]
+        lines += [str(expr) for expr in self.__problem.left_hand_side]
+
+        lines += [self.__STRING_CONSTANT]
+        lines += [str(expr) for expr in self.__problem.constants]
+
+        # get info from moments
+        sum_moms = [sum(m) for m in self.__problem.moment_dic.keys()]
+        n_var = len([s for s in sum_moms if s == 1])
+        n_mom = max(sum_moms)
+
+
+        lines += [self.__N_VARIABLE, str(n_var)]
+        lines += [self.__N_MOMENTS, str(n_mom)]
+        lines += [self.__TIME_TAKEN + "  TODO"]
+        lines += [self.__N_EQS, str(self.__problem.left_hand_side)]
+
+
+
+
+        lines += [self.__STRING_MOM]
+        lines += [str(m) for m in self.__problem.moment_dic.keys()]
+
+        with open(output_file, 'w') as file:
+            for l in lines:
+                file.write(l+"\n")
 

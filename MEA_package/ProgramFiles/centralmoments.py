@@ -67,13 +67,11 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
 
             dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
 
-
             if len(ekcounter) == 0:
                 B = 1
             else:
                 # Calculate B, dBdt terms in equation 9
                 B = sp.S("x_" + "_".join([str(s) for s in mvec]))
-
 
             Taylorexp[Tm] = (n_choose_k * minus_one_pow_n_minus_k * (A * dBdt + B * dAdt))
 
