@@ -2,6 +2,7 @@
 Simulates data for given model, moments, parameters, initial conditions
 and method (moment expansion or LNA)
 """
+from collections import namedtuple
 from assimulo.problem import Explicit_Problem
 from assimulo.solvers.sundials import CVode
 import numpy as np
@@ -15,17 +16,32 @@ RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
 
+Trajectory = namedtuple('Trajectory', ['timepoints', 'values', 'description'])
+
+
+
 class Simulation(object):
     __problem = None
+    __postprocessing = None
 
-    def __init__(self, problem):
+    def __init__(self, problem, postprocessing=None):
         """
         Initialise the simulator object for a given problem
         :param problem:
         :type problem: ODEProblem
+        :param postprocessing: either None (for no postprocessing),
+                               or a string 'LNA' for the sampling required in LNA model
         :return:
         """
         self.__problem = problem
+
+        if postprocessing == 'LNA':
+            self.__postprocessing = _postprocess_lna_simulation
+        elif postprocessing is None:
+            self.__postprocessing = _postprocess_default
+        else:
+            raise ValueError('Unsupported postprocessing type {0!r}, '
+                             'only None and \'LNA\' supported'.format(postprocessing))
 
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
@@ -66,43 +82,65 @@ class Simulation(object):
         solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
         simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
 
-        return simulated_timepoints, simulated_values
+        trajectories = self.__postprocessing(self.problem, simulated_values, simulated_timepoints)
+
+        return simulated_timepoints, trajectories
 
     @property
     def problem(self):
         return self.__problem
 
-def simulate_lna(soln, number_of_species, timepoints):
+def _postprocess_default(problem, simulated_values, timepoints):
 
+    trajectories = []
+    descriptions = problem.ordered_descriptions
+
+    number_of_timepoints, number_of_simulated_values = simulated_values.shape
+
+    assert(len(descriptions) == number_of_simulated_values)
+    assert(len(timepoints) == number_of_timepoints)
+
+    for description, simulated_value_column in zip(descriptions, simulated_values.T):
+        trajectories.append(Trajectory(timepoints, simulated_value_column, description))
+
+    return trajectories
+
+def _postprocess_lna_simulation(problem, simulated_values, timepoints):
+
+    # TODO: this should be going through the descriptions of LHS fields, rather than number of species
+    # Would make code cleaner
+
+    number_of_species = problem.number_of_species
     # Answer_buffer
-    answer = np.zeros((number_of_species, len(timepoints)), dtype=NP_FLOATING_POINT_PRECISION)
+    answer = []
 
     mu_t = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
-    for species in range(0, number_of_species):
+    for species_id in range(number_of_species):
 
         mu_i = np.zeros(len(timepoints), dtype=NP_FLOATING_POINT_PRECISION)
         for timepoint_index in range(len(timepoints)):
 
             # For each timepoint
-            if species == 0:
+            if species_id == 0:
                 # Construct a covariance matrix out of the covariance terms in the model
                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
                 # FIXME: Does the hardcoded 2 really work here?
                 # shouldn't it be number_of_species**2
                 for v in range(2 * number_of_species):
-                    V[v] = soln[timepoint_index, v + number_of_species]
-                print V
-                print
+                    V[v] = simulated_values[timepoint_index, v + number_of_species]
 
                 # Sample new values for each species from a multivariate normal
-                mu_t[timepoint_index] = np.random.multivariate_normal(soln[timepoint_index, 0:number_of_species], V)
+                mu_t[timepoint_index] = np.random.multivariate_normal(simulated_values[timepoint_index, 0:number_of_species], V)
 
-            mu_i[timepoint_index] = mu_t[timepoint_index][species]
-        answer[species] = mu_i
+            mu_i[timepoint_index] = mu_t[timepoint_index][species_id]
+
+        # TODO: some zipping action should be there below to get the description in a nicer way
+        trajectory = Trajectory(timepoints, mu_i, problem.ordered_descriptions[species_id])
+        answer.append(trajectory)
     return answer
 
-def print_output(initial_conditions, term_descriptions, mu, number_of_species, param,
-                     t, trajout, maxorder=None):
+
+def print_output(output_file, trajectories, initial_conditions, number_of_species, param, timepoints, max_order=None):
     # Check maximum order of moments to output to file/plot
     # TODO: change wherever maxorder comes from for it to be "None" not false.
 
@@ -110,20 +148,21 @@ def print_output(initial_conditions, term_descriptions, mu, number_of_species, p
     # initial conditions, data needed for maximum entropy
     # (no.timepoints, no.species, max order of moments),
     # timepoints, and trajectories for each moment)
-    output = open(trajout, 'w')
+    output = open(output_file, 'w')
     try:
         output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format([round(x, 6) for x in param],
                                                                             [round(y, 6) for y in initial_conditions]))
 
-        output.write('#\t{0}\t{1}\t{2}\n'.format(len(t), number_of_species, maxorder))
-        output.write('time\t{0}\n'.format('\t'.join(map(str, t))))
+        output.write('#\t{0}\t{1}\t{2}\n'.format(len(timepoints), number_of_species, max_order))
+        output.write('time\t{0}\n'.format('\t'.join(map(str, timepoints))))
 
         # write trajectories of moments (up to maxorder) to output file
-        for m, term in enumerate(term_descriptions):
+        for trajectory in trajectories:
+            term = trajectory.description
             if not isinstance(term, Moment):
                 continue
-            if maxorder is None or term.order <= maxorder:
-                output.write('{0}\t{1}\n'.format(term, '\t'.join(map(str, mu[m]))))
+            if max_order is None or term.order <= max_order:
+                output.write('{0}\t{1}\n'.format(term, '\t'.join(map(str, trajectory.values))))
     finally:
         output.close()
 
@@ -154,22 +193,13 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-    simulator = Simulation(problem)
-    simulated_timepoints, simulation = simulator.simulate_system(initial_constants, initial_variables, timepoints)
+    simulator = Simulation(problem, 'LNA' if simulation_type == 'LNA' else None)
+    simulated_timepoints, trajectories = simulator.simulate_system(initial_constants, initial_variables, timepoints)
 
-    # Interpret the simulation results
-    if simulation_type == 'LNA':
-        # LNA results build a multivariate gaussian model, which is sampled from here:
-        mu = simulate_lna(simulation, number_of_species, timepoints)
-        print_output(initial_variables, term_descriptions, mu, number_of_species,
-                     initial_constants, simulated_timepoints, trajout, maxorder)
-        return [simulated_timepoints, mu, term_descriptions]
-    elif simulation_type == 'MEA':
-        mu = [simulation[:,i] for i in range(0, len(initial_variables))]
-        print_output(initial_variables, term_descriptions, mu, number_of_species,
-                     initial_constants, simulated_timepoints, trajout, maxorder)
+    print_output(trajout, trajectories, initial_variables, number_of_species,
+                 initial_constants, simulated_timepoints, maxorder)
 
-        return simulated_timepoints, simulation, term_descriptions
+    return simulated_timepoints, trajectories, term_descriptions
     
 
 
