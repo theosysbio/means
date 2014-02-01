@@ -100,6 +100,12 @@ class ODEProblem(object):
     @property
     def rhs_as_function(self):
         if self.__right_hand_side_as_function is None:
+
+            print self.right_hand_side
+
+            print self.constants + self.variables
+
+
             self.__right_hand_side_as_function = sympy.lambdify(self.constants + self.variables,
                                                                 self.right_hand_side)
 
@@ -169,48 +175,82 @@ def parse_problem(input_filename, from_string=False):
     return ODEProblem(method, left_hand_side, right_hand_side, constants, moments)
 
 
-class ODEProblem_writer(object):
-    def __init__(self, problem):
-        self.__problem = problem
-        self.__STRING_RIGHT_HAND = 'RHS of equations:'
-        self.__STRING_LEFT_HAND = 'LHS:'
-        self.__STRING_CONSTANT = 'Constants:'
-        self.__N_VARIABLE = 'Number of variables:'
-        self.__N_MOMENTS = 'Number of moments:'
-        self.__N_EQS = 'Number of equations:'
-        self.__STRING_MOM = 'List of moments:'
-        self.__TIME_TAKEN = 'Time taken (s):'
+class ODEProblemWriter(object):
+    def __init__(self, problem, run_time):
+        self._problem = problem
+        self._run_time = run_time
+        self._STRING_RIGHT_HAND = 'RHS of equations:'
+        self._STRING_LEFT_HAND = 'LHS:'
+        self._STRING_CONSTANT = 'Constants:'
+        self._N_VARIABLE = 'Number of variables:'
+        self._N_MOMENTS = 'Number of moments:'
+        self._N_EQS = 'Number of equations:'
+        self._STRING_MOM = 'List of moments:'
+        self._TIME_TAKEN = 'Time taken (s):'
 
-    def write_to(self, output_file):
-        lines = [self.__problem.method]
+    def build_out_string_list(self):
+        #empty lines are added in order to mimic the output from the original code
+        lines = [self._problem.method]
 
-        lines += [self.__STRING_RIGHT_HAND]
-        lines += [str(expr) for expr in self.__problem.right_hand_side]
+        lines += [""]
 
-        lines += [self.__STRING_LEFT_HAND]
-        lines += [str(expr) for expr in self.__problem.left_hand_side]
+        lines += [self._STRING_RIGHT_HAND]
+        lines += [str(expr) for expr in self._problem.right_hand_side]
 
-        lines += [self.__STRING_CONSTANT]
-        lines += [str(expr) for expr in self.__problem.constants]
+        lines += [""]
+
+        lines += [self._STRING_LEFT_HAND]
+        lines += [str(expr) for expr in self._problem.left_hand_side]
+
+        lines += [""]
+
+        lines += [self._STRING_CONSTANT]
+        lines += [str(expr) for expr in self._problem.constants]
 
         # get info from moments
-        sum_moms = [sum(m) for m in self.__problem.moment_dic.keys()]
+        sum_moms = [sum(m) for m in self._problem.moment_dic.keys()]
         n_var = len([s for s in sum_moms if s == 1])
         n_mom = max(sum_moms)
 
+        lines += [self._N_VARIABLE, str(n_var)]
+        lines += [self._N_MOMENTS, str(n_mom)]
+        lines += [self._TIME_TAKEN + "  {0}".format(self._run_time)]
 
-        lines += [self.__N_VARIABLE, str(n_var)]
-        lines += [self.__N_MOMENTS, str(n_mom)]
-        lines += [self.__TIME_TAKEN + "  TODO"]
-        lines += [self.__N_EQS, str(self.__problem.left_hand_side)]
+        lines += [""]
 
+        lines += [self._N_EQS, str(self._problem.left_hand_side)]
 
+        lines += [""]
 
+        lines += [self._STRING_MOM]
+        lines += [str(list(m)) for m in self._problem.moment_dic.keys()]
+        return lines
 
-        lines += [self.__STRING_MOM]
-        lines += [str(m) for m in self.__problem.moment_dic.keys()]
-
+    def write_to(self, output_file):
+        lines = self.build_out_string_list()
         with open(output_file, 'w') as file:
             for l in lines:
                 file.write(l+"\n")
 
+
+
+class ODEProblemLatexWriter(ODEProblemWriter):
+    def build_out_string_list(self):
+
+
+        preamble = ["\documentclass{article}"]
+        preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
+        lines = ["\\begin{document}"]
+        lines += ["\section*{%s}" % self._STRING_RIGHT_HAND]
+
+        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs)), str(sympy.latex(rhs)), r"\\")
+                  for (rhs, lhs) in zip(self._problem.right_hand_side, self._problem.left_hand_side)]
+
+        lines += [r"\\"] * 5
+
+        lines += ["\section*{%s}" % self._STRING_MOM]
+        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs)), str(list(mom)), r"\\")
+                  for (mom, lhs) in sorted(self._problem.moment_dic.items())]
+        lines += ["\end{document}"]
+
+        return preamble + lines
