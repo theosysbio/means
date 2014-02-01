@@ -195,8 +195,8 @@ def MFK_final(model_filename, nMoments):
     amat = model.propensities
     ##todo unused
     nreactions = model.number_of_reactions
-    nvariables = model.number_of_variables
-    ymat = model.variables
+    nvariables = model.number_of_species
+    ymat = model.species
     c = model.constants
 
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
