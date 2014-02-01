@@ -231,7 +231,7 @@ class ODEProblemWriter(object):
 
         lines += [""]
 
-        lines += [self._N_EQS, str(self._problem.left_hand_side)]
+        lines += [self._N_EQS, str(len(self._problem.left_hand_side))]
 
         lines += [""]
 

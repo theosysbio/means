@@ -81,8 +81,7 @@ def substitute_ym_with_yx(central_moments, momvec):
     # Any element in "momvec" should be replaced by yxN where N is its index (starting at one)
 
     #substitutions_pairs = [(yx, mom) for yx, mom in zip(momvec, yx_symbols)]
-    substitutions_pairs = zip(momvec, yx_symbols)
-
+    substitutions_pairs = zip(yx_symbols,momvec)
     # apply this to all elements (in list and sub-list)
     out_moms =[[substitute_all(m, substitutions_pairs) for m in mom] for mom in central_moments]
 
