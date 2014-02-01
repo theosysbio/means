@@ -49,9 +49,11 @@ class ODEProblem(object):
     __constants = None
     __ordered_descriptions_of_lhs_terms = None
 
-    def __init__(self, left_hand_side, right_hand_side, constants, description_of_lhs_terms=None):
+    def __init__(self, method, left_hand_side, right_hand_side, constants, description_of_lhs_terms=None):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
+        :param method: a string describing the method used to generate the problem.
+        Currently, 'MEA' and 'LNA' are supported"
         :param left_hand_side: the left hand side of equations
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
@@ -61,6 +63,7 @@ class ODEProblem(object):
         self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
+        self.__method = method
 
         self.__initialise_descriptions(description_of_lhs_terms)
 
@@ -104,13 +107,17 @@ class ODEProblem(object):
         Validates whether the particular model is created properly
         """
         if self.left_hand_side.rows != self.right_hand_side.rows:
-            raise ValueError("There are {0} left hand side equations and {0} right hand side equations. "
+            raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
                              "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
+        if self.__method != "MEA" and self.__method != "LNA":
+            raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
 
-        # TODO: Below is true for MEA, but not true for LNA
-        # if self.left_hand_side.rows != len(self.__moment_dic):
-        #     raise ValueError("There are {0} equations and {1} moments. "
-        #                      "The same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
+        # FIXME: add this validation here or somewhere else if we decide to make ODEProblem method-agnostic
+        # if self.__method == "MEA":
+        #     if self.left_hand_side.rows != len(self.__moment_dic):
+        #          raise ValueError("There are {0} equations and {1} moments. "
+        #                           "For MEA problems, the same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
+
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
@@ -137,6 +144,10 @@ class ODEProblem(object):
     @property
     def constants(self):
         return self.__constants
+
+    @property
+    def method(self):
+        return self.__method
 
     @property
     def descriptions_dict(self):
@@ -191,6 +202,8 @@ def parse_problem(input_filename, from_string=False):
     else:
         lines = input_filename.split("\n")
 
+    method = lines[0].rstrip()
+
     all_fields = dict()
     field = None
    # cut the file into chunks. The lines containing ":" are field headers
@@ -206,7 +219,7 @@ def parse_problem(input_filename, from_string=False):
     # now we query all the fields we need
 
     try:
-        right_hand_side = sympy.Matrix([sympy.simplify(l) for l in all_fields[STRING_RIGHT_HAND]])
+        right_hand_side = sympy.Matrix([sympy.sympify(l) for l in all_fields[STRING_RIGHT_HAND]])
     except KeyError:
         print 'The field "' + STRING_RIGHT_HAND + '" is not in the input file "' + input_filename +'"'
         raise
@@ -226,5 +239,52 @@ def parse_problem(input_filename, from_string=False):
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
 
-    return ODEProblem(left_hand_side, right_hand_side, constants, moments)
+    return ODEProblem(method, left_hand_side, right_hand_side, constants, moments)
+
+
+class ODEProblem_writer(object):
+    def __init__(self, problem):
+        self.__problem = problem
+        self.__STRING_RIGHT_HAND = 'RHS of equations:'
+        self.__STRING_LEFT_HAND = 'LHS:'
+        self.__STRING_CONSTANT = 'Constants:'
+        self.__N_VARIABLE = 'Number of variables:'
+        self.__N_MOMENTS = 'Number of moments:'
+        self.__N_EQS = 'Number of equations:'
+        self.__STRING_MOM = 'List of moments:'
+        self.__TIME_TAKEN = 'Time taken (s):'
+
+    def write_to(self, output_file):
+        lines = [self.__problem.method]
+
+        lines += [self.__STRING_RIGHT_HAND]
+        lines += [str(expr) for expr in self.__problem.right_hand_side]
+
+        lines += [self.__STRING_LEFT_HAND]
+        lines += [str(expr) for expr in self.__problem.left_hand_side]
+
+        lines += [self.__STRING_CONSTANT]
+        lines += [str(expr) for expr in self.__problem.constants]
+
+        # get info from moments
+        # FIXME: moment_dic does not exist anymore
+        # sum_moms = [sum(m) for m in self.__problem.moment_dic.keys()]
+        # n_var = len([s for s in sum_moms if s == 1])
+        # n_mom = max(sum_moms)
+        #
+        #
+        # lines += [self.__N_VARIABLE, str(n_var)]
+        # lines += [self.__N_MOMENTS, str(n_mom)]
+        # lines += [self.__TIME_TAKEN + "  TODO"]
+        # lines += [self.__N_EQS, str(self.__problem.left_hand_side)]
+        #
+        #
+        #
+        #
+        # lines += [self.__STRING_MOM]
+        # lines += [str(m) for m in self.__problem.moment_dic.keys()]
+
+        with open(output_file, 'w') as file:
+            for l in lines:
+                file.write(l+"\n")
 

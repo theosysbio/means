@@ -46,10 +46,10 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
         for Tm in range(0, len(midx)):
             mvec = mcounter[midx[Tm]]   #equivalent to k in paper
 
-            # f_2 is the (n k) binomial term in equation 9
+            # (n k) binomial term in equation 9
             n_choose_k = make_k_chose_e(mvec, nvec)
 
-            # f_3 is (-1)^(n-k) term in equation 9
+            # (-1)^(n-k) term in equation 9
             minus_one_pow_n_minus_k = reduce(operator.mul, [(-1) ** (n - m) for (n,m) in zip(nvec, mvec)])
 
             ##########################################
@@ -67,13 +67,11 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
 
             dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
 
-
             if len(ekcounter) == 0:
                 B = 1
             else:
                 # Calculate B, dBdt terms in equation 9
                 B = sp.S("x_" + "_".join([str(s) for s in mvec]))
-
 
             Taylorexp[Tm] = (n_choose_k * minus_one_pow_n_minus_k * (A * dBdt + B * dAdt))
 

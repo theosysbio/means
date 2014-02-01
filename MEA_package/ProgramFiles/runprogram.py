@@ -183,9 +183,9 @@ def run():
                 [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
                 problem = parse_problem(wd+ODEout)  # TODO: os.path.join
 
-                simulated_timepoints, solution, momlist = simulate('LNA' if LNA else 'MEA', problem,
+                simulated_timepoints, solution, momlist = simulate(problem,
                                              wd+trajout,t,param,initcond, maxorder)
-                
+
                 if plot == True:
                     graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
 

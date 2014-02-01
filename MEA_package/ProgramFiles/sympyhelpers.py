@@ -98,3 +98,57 @@ def _sympy_matrices_equal(matrix_left, matrix_right):
 
     return True
 
+
+
+def _eval_res_equal(expr1, expr2, atoms, vals,threshold=10e-10):
+
+    """
+    Compare two expressions after evaluation of symbols by random expressions
+
+    private function called by `sympy_empirical_equal`
+
+    :param expr1: a first sympy expression
+    :param expr2: a second sympy expression
+    :param atoms: the component symbols (they are assumed to be common)
+    :param vals: the values to subtitute atoms with
+    :return: True if the result is the same
+    """
+    substitution_pairs = zip(vals, atoms)
+
+    eval_1 = substitute_all(expr1, substitution_pairs)
+    eval_2 = substitute_all(expr2, substitution_pairs)
+
+    return (eval_1 - eval_2) < threshold
+
+
+def sympy_empirical_equal(expr1, expr2):
+
+    """
+    Compare long , complex, expressions by replacing all symbols by a set of arbitrary expressions
+
+    :param expr1: first expression
+    :param expr2: second expression
+    :return: True if expressions are empirically equal, false otherwise
+    """
+
+    atoms_1 = expr1.atoms()
+    atoms_1 = [a for a in atoms_1 if isinstance(a,sympy.Symbol)]
+    atoms_2 = expr2.atoms()
+    atoms_2 = [a for a in atoms_2 if isinstance(a,sympy.Symbol)]
+
+
+    # lets us merge symbol in case one equation has more / different symbols
+    atoms = set(atoms_1 + atoms_2)
+
+
+    arbitrary_values = []
+    arbitrary_values.append([i * 7.1 for i in range(1,len(atoms)+1)])
+    arbitrary_values.append([i / 9.3 for i in range(1,len(atoms)+1)])
+    arbitrary_values.append([i ** 2 for i in range(1,len(atoms)+1)])
+
+    # test for arbitrary value. return false at the first failure
+    for av in arbitrary_values:
+        if not _eval_res_equal(expr1, expr2, atoms, av):
+            return False
+
+    return True

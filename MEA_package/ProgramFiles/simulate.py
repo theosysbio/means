@@ -127,7 +127,7 @@ def print_output(initial_conditions, term_descriptions, mu, number_of_species, p
     finally:
         output.close()
 
-def simulate(simulation_type, problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
+def simulate(problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
     """
     :param simulation_type: either "MEA" or "LNA"
     :param problem: Parsed problem to simulate
@@ -145,6 +145,7 @@ def simulate(simulation_type, problem, trajout, timepoints, initial_constants, i
     number_of_species = problem.number_of_species
     lhs = problem.left_hand_side
     term_descriptions = problem.ordered_descriptions
+    simulation_type = problem.method
 
     # If not all intial conditions specified, append zeros to them
     initial_variables = initial_variables[:]  # Make a copy before do

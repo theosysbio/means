@@ -6,15 +6,14 @@ import itertools
 
 from fcount import fcount
 import sympy as sp
-from sympy import Matrix, var, simplify
-from sympy.solvers import solve
+from sympy import Matrix, var
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
 from model import parse_model
 from raw_to_central import raw_to_central
 from sympy import latex
 from sympyhelpers import substitute_all
-
+import ode_problem
 def substitute_mean_with_y(moments, nvariables):
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
@@ -49,12 +48,23 @@ def substitute_raw_with_central(CentralMoments, momvec, mom):
     :param mom:  the expressions of central moments in terms of raw moments
     :return: the substituted central moments
     """
+
     out_central_moments = CentralMoments[:]
-    for (mv, m) in reversed(zip(momvec, mom)):
-        x_to_solve = sp.Symbol('x'+str(mv)[2:])
-        solved_x = solve(m - mv, x_to_solve)
-        out_central_moments = [[sp.Subs(cm, x_to_solve,solved_x).doit() for cm in cent_mom] for cent_mom in out_central_moments]
+
+    #x_to_solve =)
+
+    xs_to_solve = [sp.Symbol('x'+str(mv)[2:]) for mv in momvec]
+    right_hand_sides = [m - mv for (mv, m) in zip(momvec, mom)]
+    solved_xs = [sp.solve(rhs, xts) for (rhs, xts) in zip(right_hand_sides, xs_to_solve)]
+
+
+    for (xts, sx) in reversed(zip(xs_to_solve, solved_xs)):
+        out_central_moments = [[sp.Subs(cm, xts, sx).doit() for cm in cent_mom] for cent_mom in out_central_moments]
+#
         out_central_moments = [[sp.simplify(cm) for cm in cent_mom] for cent_mom in out_central_moments]
+
+
+
     return out_central_moments
 
 def substitute_ym_with_yx(central_moments, momvec):
@@ -84,31 +94,46 @@ def make_mfk(CentralMoments, yms, M):
     :return: MFK ...
     """
 
+######################################
+    # this is the new code without simplify
+    # this make the tests fail for simulation because of floating point issues.
+    # Implementation postponed
+
+    # MFK =  [i for i in M*yms ]
+    # MFK += [(sp.Matrix(cm).T * yms)[0] for cm in CentralMoments]
+    # return MFK
+#####################################
     # Get expressions for higher order central moments
     MFK1 = M*yms
+
+
 
     MFK = []
     # Reshape to a vector
     for i in range(0,len(MFK1)):
         try:
-            MFK1[i] = simplify(MFK1[i])
+            MFK1[i] = sp.simplify(MFK1[i])
+            #MFK1[i] = sp.collect(sp.expand(MFK1[i]),yms)
         except:
             pass
         MFK.append(MFK1[i])
 
 
+
     for i in range(0,len(CentralMoments)):
-        rowmat = Matrix(1, len(CentralMoments[i]), CentralMoments[i])
+        rowmat = sp.Matrix(1, len(CentralMoments[i]), CentralMoments[i])
 
         # This should be a scalar
         MFK2 = rowmat * yms
         # TODO scalar => {len() == 1} so why do we need a loop here ?
         for j in range(0,len(MFK2)):
             try:
-                MFK2[j] = simplify(MFK2[j])
+                MFK2[j] = sp.simplify(MFK2[j])
+                #MFK2[i] = sp.collect(sp.expand(MFK2[i]),yms)
             except:
                 pass
-            MFK.append(MFK2[j])
+        MFK.append(MFK2[0])
+
     return MFK
 
 def write_output(out_file_prefix, nvariables, nMoments, counter, c, yms, ymat, MFK, deltatime):
@@ -197,6 +222,7 @@ def MFK_final(model_filename, nMoments):
     nreactions = model.number_of_reactions
     nvariables = model.number_of_species
     ymat = model.species
+
     c = model.constants
 
     # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
@@ -211,19 +237,21 @@ def MFK_final(model_filename, nMoments):
     #  Calculate expressions to use in central moments equations (eq. 9)
     #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
     central_moments = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
-
     #  Substitute means in CentralMoments by y_i (ymat entry)
+
     central_moments = substitute_mean_with_y(central_moments, nvariables)
+
 
     #  Substitute higher order raw moments in terms of central moments
     #  raw_to_central calculates central moments (momvec) in terms
     #  of raw moment expressions (mom) (eq. 8)
-    (mom, momvec) = raw_to_central(nvariables, counter, ymat, mcounter)
+    (mom, momvec) = raw_to_central(counter, ymat, mcounter)
 
     # Substitute one for zeroth order raw moments in mom
     symbol_one = sp.S(1)
     x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
     mom = [sp.Subs(m, x_zero, symbol_one).doit() for m in mom]
+
 
     # Substitute first order raw moments (means) in mom with y_i (ymat entry)
     mom = substitute_mean_with_y(mom,nvariables)
@@ -231,8 +259,10 @@ def MFK_final(model_filename, nMoments):
     # Substitute raw moment, in CentralMoments, with of central moments
     central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
+
     # Use counter index (c) for yx (yxc) instead of moment (ymn) (e.g. ym021)
     central_moments = substitute_ym_with_yx(central_moments, momvec)
+
 
     # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
     if len(central_moments) != 0:
@@ -247,13 +277,27 @@ def MFK_final(model_filename, nMoments):
     # Get expressions for each central moment, and enter into list MFK
     MFK = make_mfk(central_moments, yms, M)
 
+
+
+
+
     # Write information to output file (and moment names and equations to .tex file)
     write_output(str(sys.argv[3]), nvariables, nMoments, counter, c, yms, ymat, MFK, time() - time1)
+
+    #todo use dedicated writer
+    # prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables) ]) for j in range(nvariables)]
+    # prob_moments += [tuple(c) for c in counter[1:]]
+    # lhs = sp.Matrix([i for i in ymat] + yms[1:])
+    # problem = ode_problem.ODEProblem("MEA", lhs , sp.Matrix(MFK), sp.Matrix(c), prob_moments)
+    # ode_problem.ODEProblem_writer(problem).write_to(str(sys.argv[3]))
 
 
 def get_args():
     model_ = sys.argv[1]
     numMoments = int(sys.argv[2])
+
+    if numMoments < 2:
+        raise ValueError("The number of moments (--nMom) must be greater than one")
 
     return (model_, numMoments)
 
