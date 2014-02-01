@@ -155,13 +155,12 @@ def print_mea_output(initial_conditions, maxorder, moment_list, mu, number_of_sp
             output.write('\n')
     output.close()
 
-def simulate(simulation_type, problem, trajout, lib, timepoints, initial_constants, initial_variables, maxorder):
+def simulate(simulation_type, problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
     """
     :param simulation_type: either "MEA" or "LNA"
     :param problem: Parsed problem to simulate
     :type problem: ODEProblem
     :param trajout: Name of output file for this function (where simulated trajectories would be stored, i.e. --simout)
-    :param lib: Name of the C file for solver (i.e. --library)
     :param timepoints: List of timepoints
     :param initial_constants: List of kinetic parameters
     :param initial_variables: List of initial conditions for each moment (in timeparameters file)
