@@ -16,22 +16,23 @@ def derive_expr_from_counter_entry(expression, variables, counter_entry):
     :return: the derived expression
     """
 
-    assert(len(variables) == len(counter_entry))
-
     # no derivation, we return the unchanged expression
     if sum(counter_entry) == 0:
         return expression
+    # repeat a variable as many time as its value in counter
+    diff_orders = reduce(operator.add, map(lambda v,c :[v] *c , variables, counter_entry))
 
+    return sp.diff(expression, *diff_orders)
 
-    expr_out = expression
-    # we recursively derive the expression with respect to all variables at the degree specified in counter
-    for (var, degree) in zip(variables, counter_entry):
-        expr_out = sp.diff(expr_out, var, degree)
-        # If the expression reaches 0, we can return 0
-        if(expr_out == sp.S(0)):
-            return sp.S(0)
-
-    return expr_out
+    #
+    # # we recursively derive the expression with respect to all variables at the degree specified in counter
+    # for (var, degree) in zip(variables, counter_entry):
+    #     expr_out = sp.diff(expr_out, var, degree)
+    #     # If the expression reaches 0, we can return 0
+    #     if(expr_out == sp.S(0)):
+    #         return sp.S(0)
+    #
+    # return expr_out
 
 def get_factorial_term(counter_entry):
 
