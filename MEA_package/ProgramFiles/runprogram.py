@@ -213,10 +213,11 @@ def run():
         # If no random restarts selected:
         if not restart:
             [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
+            problem = parse_problem(wd+ODEout)
             if not distribution:        # inference using generalised method of moments
                 (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param, vary, initcond, varyic,
                                                                                         limits, wd + exptdata, wd + lib,
-                                                                                        wd + ODEout)
+                                                                                        problem)
             else:      # Use parametric or maxent distribution to approximate likelihood
                 (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param, vary,
                                                                                                     initcond, varyic,
@@ -246,7 +247,7 @@ def run():
                     (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param_n, vary, initcond_n,
                                                                                             varyic, limits,
                                                                                             wd + exptdata, wd + lib,
-                                                                                            wd + ODEout)
+                                                                                            problem)
                 # Else if parametric approximation
                 else:
                     (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n, vary,

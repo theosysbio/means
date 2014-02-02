@@ -159,6 +159,9 @@ class ODEProblem(object):
         # TODO: consider removing this
         return self.__ordered_descriptions_of_lhs_terms
 
+    @property
+    def number_of_equations(self):
+        return len(self.left_hand_side)
 
     def right_hand_side_as_function(self, values_for_constants):
         """
