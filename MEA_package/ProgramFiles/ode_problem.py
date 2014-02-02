@@ -30,6 +30,11 @@ class Moment(ODETermBase):
         """
         return sum(self.n_vector)
 
+    @property
+    def is_mixed(self):
+        # If moment is not mixed, it will be of form [0, ... , k, ..., 0] where k is the max order
+        return self.order not in self.n_vector
+
     def __repr__(self):
         return '{0}({1!r})'.format(self.__class__.__name__, self.n_vector)
 

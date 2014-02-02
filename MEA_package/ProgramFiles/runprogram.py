@@ -219,12 +219,12 @@ def run():
                                                         limits, wd + exptdata,
                                                         problem)
             else:      # Use parametric or maxent distribution to approximate likelihood
-                (result, observed_trajectories, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param, vary,
+                result, t, observed_trajectories, initcond_full = gamma_infer.optimise(
+                                                                                                    problem,
+                                                                                                    param, vary,
                                                                                                     initcond, varyic,
                                                                                                     limits,
                                                                                                     wd + exptdata,
-                                                                                                    wd + lib,
-                                                                                                    wd + ODEout,
                                                                                                     distribution)
             restart_results = [[result, None, param, initcond]]
 
@@ -249,13 +249,13 @@ def run():
                                                                                           problem)
                 # Else if parametric approximation
                 else:
-                    (result, observed_trajectories, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n, vary,
-                                                                                                        initcond_n,
-                                                                                                        varyic, limits,
-                                                                                                        wd + exptdata,
-                                                                                                        wd + lib,
-                                                                                                        wd + ODEout,
-                                                                                                        distribution)
+                    result, t, observed_trajectories, initcond_full = gamma_infer.optimise(
+                        problem,
+                        param_n, vary,
+                        initcond_n,
+                        varyic, limits,
+                        wd + exptdata,
+                        distribution)
                 restart_results.append([result, observed_trajectories, param_n, initcond_n])
 
             restart_results.sort(key=lambda x: x[0][1], reverse=False)

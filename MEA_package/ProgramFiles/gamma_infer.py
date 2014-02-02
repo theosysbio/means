@@ -12,58 +12,17 @@ For each set of parameters (i0), the mean and variance trajectories
 are simulated by solving the MFK equations.  These values are used
 to sum the log likelihood over each time/data point.
 """
+from collections import namedtuple
 import os
 import sys
 from math import sqrt, log, pi, lgamma
 
 from scipy.optimize import fmin
 
-from CVODE import CVODE
+from ode_problem import Moment
+from simulate import Simulation
 from sumsq_infer import make_i0, i0_to_test, parse_experimental_data_file
-
-
-def mv_index(mfkoutput, mom_names):
-    """
-    Get indices for mean/variance data for each species of CVODE output.
-    Return lists `mean_id` and `var_id` where position in list corresponds to species number.
-    Also returns the list `sp_id`, which contains species number for each of the experimental datasets/trajectories
-    :param mfkoutput:
-    :param mom_names:
-
-    """
-    mfkfile = open(mfkoutput)
-    lines = mfkfile.readlines()
-    mfkfile.close()
-
-    # Get list of moments from mfkoutput (i.e. moments returned by CVODE)
-    momlistindex = lines.index('List of moments:\n')
-    moments_list = []
-    for i in range(momlistindex + 1, len(lines)):
-        if lines[i].startswith('['):
-            moment_str = str(lines[i].strip('\n[]'))
-            moment_str_list = moment_str.split(',')
-            moment_int_list = [int(p) for p in moment_str_list]
-            moments_list.append(moment_int_list)
-
-    # Get indices for mean/variance data within the CVODE results
-    mean_id = [moments_list.index(m) for m in moments_list if sum(m) == 1]
-    var_id = [0] * len(mean_id)
-    for m in moments_list:
-        if sum(m) == 2 and 2 in m:
-            var_id[m.index(2)] = moments_list.index(m)
-
-    # Get species id for sample data 
-    sp_id = []
-    for j in range(len(mom_names)):
-        # TODO: The following line silently assumes that `sum(mom_names) == 1`, e.g. `mom_names == [0,1,0]` or similar.
-        # We need to make this assumption explicit
-        sp_id.append(mom_names[j].index(1))
-
-    # Get indices in CVODE solutions for the moments in sample data
-    mom_index_list = [moments_list.index(m) for m in mom_names]
-
-    return sp_id, mean_id, var_id, moments_list, mom_index_list
-
+import numpy as np
 
 def eval_density(mean, var, x, distribution):
     """
@@ -88,34 +47,6 @@ def eval_density(mean, var, x, distribution):
 
     return logpdf
 
-def read_maxent_output():
-    """
-    Function to get output from maximum entropy calculation.
-    Returns list of lists of required data for each timepoint (except t0) in format:
-    `[[t1, mean, logZ, lambda 1, lambda 2, ..., lambda n], [t2 data..],[t3 data..]]`
-    """
-
-    maxent_out = open('maxent_out.txt')  # TODO: Hardcoded filename?
-    lines = maxent_out.readlines()
-    maxent_data = []
-    for i in range(1, len(lines)):
-        line = lines[i].strip()
-        if line != '':
-            line = line.split('\t')
-            float_line = [float(j) for j in line]
-            maxent_data.append(float_line)
-    return maxent_data
-
-
-def eval_maxent_density(x, maxent_data_t):
-    logZ = maxent_data_t[2]
-    lambdas = maxent_data_t[3:]
-    logpdf = -logZ
-    for i in range(0, len(lambdas)):
-        logpdf -= (lambdas[i] * (x ** (i + 1)))
-    return logpdf
-
-
 #####################################################################
 # Optimise function, used for parameter inference (minimizes
 # the distance/cost funtion using a simplex algorithm)
@@ -128,18 +59,43 @@ def eval_maxent_density(x, maxent_data_t):
 # distribution     parametric model (specified by --pdf)
 ######################################################################     
 
+MeanVariance = namedtuple('MeanVariance', ['mean', 'variance'])
+def _compile_mean_variance_lookup(trajectories):
+    means = {}
+    variances = {}
 
-def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, distribution):
+    for trajectory in trajectories:
+        description = trajectory.description
+        if not isinstance(description, Moment):
+            continue
+        moment = description
+        if moment.order == 1:
+            # TODO: np.where looks nasty here maybe we could use something else
+            # Currently there isn't any function in numpy to find first element in the list
+            # see https://github.com/numpy/numpy/issues/2269
+            species_id = np.where(moment.n_vector == 1)[0][0]
+            means[species_id] = trajectory.values
+        elif moment.order == 2 and not moment.is_mixed:
+            species_id = np.where(moment.n_vector == 2)[0][0]
+            variances[species_id] = trajectory.values
+
+    combined_lookup = {}
+    for species, mean in means.iteritems():
+        combined_lookup[species] = MeanVariance(mean, variances[species])
+
+    return combined_lookup
+
+def optimise(problem, param, vary, initcond, varyic, limits, sample, distribution):
     """
     Optimise function, used for parameter inference (minimizes the distance/cost funtion using a simplex algorithm)
+    :param problem:
+    :type problem: ODEProblem
     :param param: kinetic parameters
     :param vary: list which kinetic parameters to infer
     :param initcond: initial conditions
     :param varyic: list of which initial conditions to vary
     :param limits:
     :param sample: name of experimental data file
-    :param cfile: name of C library (i.e. `--library` option)
-    :param mfkoutput: name of file produced by MFK (specified by `--ODEout`)
     :param distribution: parametric model (specified by `--pdf`)
     :return:
     """
@@ -148,15 +104,10 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
     # Get required info from MFK output file, extend initcond with default 
     # value of 0 if only some of the initial moment values are specified
 
-    mfkfile = open(mfkoutput)
-    lines = mfkfile.readlines()
-    mfkfile.close()
-    nSpecies_index = lines.index('Number of variables:\n')
-    nspecies = int(lines[nSpecies_index + 1])
-    nEquationsindex = lines.index('Number of equations:\n')
-    nEquations = int(lines[nEquationsindex + 1].strip())
-    if len(initcond) != nEquations:
-        initcond += ([0] * (nEquations - len(initcond)))
+    number_of_species = problem.number_of_species
+    number_of_equations = problem.number_of_equations
+    if len(initcond) != number_of_equations:
+        initcond += ([0] * (number_of_equations - len(initcond)))
 
     ######################################################################
     # Evaluates distance (cost) function for current set of values in i0
@@ -169,7 +120,7 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
     # time/data points
     #####################################################################
 
-    def distance(i0, param, vary, initcond, varyic, sp_id, mu, t, cfile, mean_id, var_id, distribution):
+    def distance(i0, param, vary, initcond, varyic, observed_trajectories, observed_timepoints, distribution):
 
         # value returned if parameters or means < 0 or outside limits
         max_dist = 1.0e10
@@ -180,10 +131,10 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
         # Check parameters are positive, and within limits (if --limit used)
         if any(i < 0 for i in test_param):     # parameters cannot be negative
             return max_dist
-        if any(j < 0 for j in test_initcond[0:nspecies]):
+        if any(j < 0 for j in test_initcond[0:number_of_species]):
             return max_dist      # disallow negative means
 
-        if limits != None:
+        if limits is not None:
             for a in range(0, len(i0)):
                 l_limit = limits[a][0]
                 u_limit = limits[a][1]
@@ -194,81 +145,44 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
                     if i0[a] > u_limit:
                         return max_dist
 
+
+        simulator = Simulation(problem, postprocessing='LNA' if problem.method=='LNA' else None)
+        simulated_timepoints, simulated_trajectories = simulator.simulate_system(test_param, test_initcond,
+                                                                                 observed_timepoints)
+
+        mean_variance_lookup = _compile_mean_variance_lookup(simulated_trajectories)
+
         # get moment expansion result with current parameters
-        test_soln = CVODE(cfile, t, test_initcond, test_param)
-        tmu = [test_soln[:, i] for i in range(0, len(initcond))]
-        logL = 0
-
-        ##############################################################
-        # Max entropy (1D only)
-        #############################################################
-        if distribution == 'maxent':
-
-            # write 'test' moment results to file to pass to maxent module
-            maxent_in = open('maxent_in.txt', 'w')
-            maxent_in.write('time')
-            for i in range(0, len(t)):
-                maxent_in.write('\t' + str(t[i]))
-            maxent_in.write('\n')
-            for m in range(0, len(initcond)):
-                maxent_in.write(str(m + 1))
-                for i in range(0, len(t)):
-                    maxent_in.write('\t' + str(tmu[m][i]))
-                maxent_in.write('\n')
-            maxent_in.close()
-
-            # run maximum entropy calculations using 'test' moment trajectories
-            os.system('python centralMaxent.py maxent_in.txt maxent_out.txt')
-
-            # read in data for likelihood calculations
-            maxent_data = read_maxent_output()
-
-            # calculate likelihood (only uses timepoints 1 onwards)
-            for i in range(0, len(sp_id)):
-                for j in range(1, len(t)):
-                    data_x = mu[i][j]
-                    try:
-                        logL += eval_maxent_density(data_x, maxent_data[j - 1])
-                    except:
-                        print "Maximum entropy calculation failed."
-                        sys.exit()
-            dist = -logL
-            y_list.append(dist)
-            i0_list.append(i0[0])
-
-            """ (Used during testing of maxent)
-            os_text='cp maxent_out.txt maxent_out_'+str(len(y_list))+'.txt'
-            os.system(os_text)
-	    os.system('cp maxent_in.txt maxent_in_'+str(len(y_list))+'.txt')
-            maxent_file = open('maxent_file.txt','a')
-            maxent_file.write('\nNo. '+str(len(y_list))+'\tCurrent i0:\t'+str(i0[0])+'\nDistance:\t'+str(dist))
-            maxent_file.close()
-            """
-            return dist
-
-
+        log_likelihood = 0
 
         ###############################################################
         # If a parametric distribution used..
         ################################################################
-        for i in range(0, len(sp_id)):
-            species_id = sp_id[i]
-            for j in range(0, len(t)):    # var at t=0 often set to 0 therefore can't calculate likelihood here
-                if mu[i][j] == 'N':
-                    logL += 0
-                else:
-                    xt = mu[i][j]
-                    mean = tmu[mean_id[species_id]][j]
-                    var = tmu[var_id[species_id]][j]
 
-                    if mean < 0 or var < 0:
-                        return max_dist  # mean,var must be positive
-                    elif var == 0:   # can't calculate parametric likelihoods for zero variance, so pass
-                        logL += 0
-                    else:
-                        logL += eval_density(mean, var, xt, distribution)
+        for trajectory in observed_trajectories:
+            moment = trajectory.description
+            assert(isinstance(moment, Moment))
+            assert(moment.order == 1)
 
-        dist = -logL
+            species = np.where(moment.n_vector == 1)[0][0]
+            mean_variance = mean_variance_lookup[species]
+            if (mean_variance.mean < 0).any() or (mean_variance.variance < 0).any():
+                return max_dist
+
+            for tp, value in enumerate(trajectory.values):
+                if np.isnan(value):
+                    continue
+
+                mean = mean_variance.mean[tp]
+                variance = mean_variance.variance[tp]
+
+                # can't calculate parametric likelihoods for zero variance, so pass
+                if variance == 0:
+                    continue
+
+                log_likelihood += eval_density(mean, variance, value, distribution)
+
+        dist = -log_likelihood
         y_list.append(dist)
         i0_list.append(i0[0])
         return dist
@@ -280,11 +194,6 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
     def my_callback(x):
         it_param.append(x[0])
         it_no.append(len(it_param))
-        """ Used during testing
-        it_dist.append(y_list[-1])
-        maxent_file = open('maxent_file.txt','a')
-        maxent_file.write('\nCallback\n'+str(x[0])+'\n')
-        """
 
     # create lists to collect data at each iteration (used during testing)
     y_list = []
@@ -294,15 +203,14 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
     it_dist = []
 
     # read sample data from file and get indices for mean/variances in CVODE output
-    (mu, t, mom_names) = parse_experimental_data_file(sample)
-    (sp_id, mean_id, var_id, moments_list, mom_index_list) = mv_index(mfkoutput, mom_names)
+    (observed_timepoints, observed_trajectories) = parse_experimental_data_file(sample)
     #(mom_index_list,moments_list) = mom_indices(mfkoutput, mom_names)
 
     # minimise defined distance function, with provided starting parameters
     result = fmin(distance, i0,
-                  args=(param, vary, initcond, varyic, sp_id, mu, t, cfile, mean_id, var_id, distribution),
+                  args=(param, vary, initcond, varyic, observed_trajectories, observed_timepoints,distribution),
                   ftol=0.000001, disp=0, full_output=True, callback=my_callback)
 
-    return result, mu, t, initcond, mom_index_list, moments_list
+    return result, observed_timepoints, observed_trajectories, initcond
 
 
