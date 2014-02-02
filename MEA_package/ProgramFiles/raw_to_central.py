@@ -81,4 +81,5 @@ def raw_to_central(counter, ymat, mcounter):
         # and store the product
         mom.append(sum(product))
 
-    return (mom, momvec)
+
+    return (sp.Matrix(mom), sp.Matrix(momvec))

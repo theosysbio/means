@@ -152,3 +152,11 @@ def sympy_empirical_equal(expr1, expr2):
             return False
 
     return True
+
+def sum_of_rows(mat):
+    out = sympy.Matrix([sum(r)for r in mat.tolist()])
+    return out
+
+def sum_of_cols(mat):
+    out = sympy.Matrix([sum(r)for r in (mat.T).tolist()])
+    return out

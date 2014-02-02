@@ -109,6 +109,7 @@ class ODEProblem(object):
         if self.left_hand_side.rows != self.right_hand_side.rows:
             raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
                              "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
+
         if self.__method != "MEA" and self.__method != "LNA":
             raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
 
@@ -292,7 +293,7 @@ class ODEProblemWriter(object):
 
         # get info from moments
         mom_dict = self._problem.descriptions_dict
-        moment_tuples = [p[1] for p in mom_dict.items()]
+        moment_tuples = [p[1] for p in mom_dict.items() if p[1]]
 
         sum_moms = [sum(m) for m in moment_tuples]
         n_var = len([s for s in sum_moms if s == 1])
@@ -300,7 +301,11 @@ class ODEProblemWriter(object):
 
 
         lines += [self._N_VARIABLE, str(n_var)]
-        lines += [self._N_MOMENTS, str(n_mom)]
+
+        # number of mom only relevant for MEA
+        if(self._problem.method == "MEA"):
+            lines += [self._N_MOMENTS, str(n_mom)]
+
         lines += [self._TIME_TAKEN + "  {0}".format(self._run_time)]
 
         lines += [""]
@@ -310,7 +315,7 @@ class ODEProblemWriter(object):
         lines += [""]
 
         lines += [self._STRING_MOM]
-        lines += [str(list(mom_dict[l])) for l in lhs]
+        lines += [str(list(mom_dict[l])) for l in lhs if mom_dict[l]]
         return lines
 
 
@@ -355,7 +360,7 @@ class ODEProblemLatexWriter(ODEProblemWriter):
 
 
         lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs)), str(list(mom)), r"\\")
-                       for (lhs,mom) in mom_tuples]
+                       for (lhs,mom) in mom_tuples if mom]
 
         lines += ["\end{document}"]
 

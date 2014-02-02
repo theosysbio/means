@@ -1,5 +1,6 @@
 import sympy as sp
 import operator
+import sympyhelpers as sph
 from eq_mixedmoments import eq_mixedmoments
 from eq_mixedmoments import make_k_chose_e
 
@@ -21,15 +22,14 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
             (i.e. each value of counter)
             This list contains sum of the terms `f2*f3*(AdB/dt + B dA/dt)` in eq. 9 for each n1,...,nd combination in eq. 9
     """
-    centralmoments = []
+    central_moments = []
 
     ###############################################################
     # Loops through required combinations of moments (n1,...,nd)
     # (does not include 0th order central moment as this is 1,
     # or 1st order central moment as this is 0
 
-
-    # copy matrix as a list of rows vectors (1/species)
+    # copy M matrix as a list of rows vectors (1/species)
     m_mat = [M[nv, :] for nv in range(M.rows)]
 
     for nvec in counter:
@@ -85,8 +85,12 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
         # for each n1,..,nd combination in equation 9
         #################################################
         Taylorexp1 = sp.Matrix(Taylorexp)
+
         centralmomentsTn = [sum(Taylorexp1[:, j]) for j in range(len(counter))]
 
-        centralmoments.append(centralmomentsTn)
+        #row = sph.sum_of_cols(Taylorexp1)
+        central_moments.append(centralmomentsTn)
 
-    return centralmoments
+
+
+    return sp.Matrix(central_moments)

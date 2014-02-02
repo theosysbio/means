@@ -1,108 +1,92 @@
-from sympy import Matrix, Symbol, diff, latex
+import operator
+import sympy as sp
+from sympy import Matrix, latex
+from model import parse_model
+from approximation_baseclass import ApproximationBaseClass
+import ode_problem
 
-def LNA(S, a, ymat):
+class LinearNoiseApproximation(ApproximationBaseClass):
+    """
+    Performs Linear Noise Approximation of a model. todo add ref here
+    """
+    def _wrapped_run(self):
+        """
+        Overrides the default _run() private method.
+        Performs the complete analysis
+        :return: an ODEProblem which can be further used in inference and simulation
+        """
 
-    # dPdt is matrix of each species differentiated w.r.t. time
-    # The code below literally multiplies the stoichiometry matrix to a column vector of propensities
-    # from the right (::math::`\frac{dP}{dt} = \mathbf{Sa}`)
-    dPdt = Matrix(len(ymat), 1, lambda i, j: 0)
-    for i in range(len(ymat)):
-        dPidt = S[i, 0] * a[0]
-        for j in range(1, len(a)):
-            dPidt += S[i, j] * a[j]
-        dPdt[i] = dPidt
+        S = self.model.stoichiometry_matrix
+        amat = self.model.propensities
+        ymat = self.model.species
+        n_species = len(ymat)
 
-    # A Is a matrix of each species (rows) and the derivatives of their stoichiometry matrix rows
-    # against each other species
-    # Code below computes the matrix A, that is of size `len(ymat) x len(ymat)`, for which each entry
-    # ::math::`A_{ik} = \sum_j S_{ij} \frac{\partial a_j}{\partial y_k} = \mathfb{S_i} \frac{\partial \mathbf{a}}{\partial y_k}`
-    A = Matrix(len(ymat), len(ymat), lambda i, j: 0)
-    for i in range(A.rows):
-        for k in range(A.cols):
-            Aik = S[i, 0] * diff(a[0], ymat[k])
-            for j in range(1, len(a)):
-                Aik += S[i, j] * diff(a[j], ymat[k])
-            A[i, k] = Aik
+        # dPdt is matrix of each species differentiated w.r.t. time
+        # The code below literally multiplies the stoichiometry matrix to a column vector of propensities
+        # from the right (::math::`\frac{dP}{dt} = \mathbf{Sa}`)
+        dPdt =  S * amat
 
-        #    E = Matrix(len(ymat),len(a),lambda i,j:0)
-        #    for i in range(len(ymat)):
-        #        for k in range(len(a)):
-        #            E[i,k] = S[i,k]*(a[k]**(-0.5))
 
-    # `diagA` is a matrix that has values sqrt(a[i]) on the diagonal
-    diagA = Matrix(len(a), len(a), lambda i, j: 0)
-    for i in range(len(a)):
-        for j in range(len(a)):
-            if i == j:
-                diagA[i, j] = a[i] ** 0.5
+        # A Is a matrix of each species (rows) and the derivatives of their stoichiometry matrix rows
+        # against each other species
+        # Code below computes the matrix A, that is of size `len(ymat) x len(ymat)`, for which each entry
+        # ::math::`A_{ik} = \sum_j S_{ij} \frac{\partial a_j}{\partial y_k} = \mathfb{S_i} \frac{\partial \mathbf{a}}{\partial y_k}`
+        A = Matrix(len(ymat), len(ymat), lambda i, j: 0)
+        for i in range(A.rows):
+            for k in range(A.cols):
+                A[i, k] = reduce(operator.add, [S[i, j] * sp.diff(amat[j], ymat[k])  for j in range(len(amat))])
 
-    # E is stoichiometry matrix times diagA
-    E = S * diagA
 
-    # V is a matrix of symbols V_ij for all i and j (TODO: this won't work for more than 10 species)
-    V = Matrix(len(ymat), len(ymat), lambda i, j: 'V_' + str(i) + str(j))  # TODO: (from original authors) Make V_ij equal to V_ji
+        # `diagA` is a matrix that has values sqrt(a[i]) on the diagonal (0 elsewhere)
+        diagA = Matrix(len(amat), len(amat), lambda i, j: amat[i] ** 0.5 if i==j else 0)
 
-    # Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time.
-    # I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
-    dVdt = A * V + V * (A.T) + E * (E.T)
+        # E is stoichiometry matrix times diagA
+        E = S * diagA
 
-    # Generate moments list
-    # This just returns all possible vectors with only first-order moments
-    # (e.g. [1,0,0], [0,1,0], [0,0,1] in three species case)
-    momlist = [0] * len(ymat)
-    for i in range(len(ymat)):
-        momlist_i = [0] * len(ymat)
-        momlist_i[i] = 1
-        momlist[i] = momlist_i
+        # V is a matrix of symbols V_ij for all i and j (TODO: this won't work for more than 10 species)
+        V = Matrix(len(ymat), len(ymat), lambda i, j: 'V_' + str(i) + str(j))  # TODO: (from original authors) Make V_ij equal to V_ji
 
-    return dPdt, dVdt, V, momlist
+        # Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time.
+        # I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
+        dVdt = A * V + V * (A.T) + E * (E.T)
 
-def print_output(LNAout, dPdt, dVdt, ymat, V, c, momlist):
-    output = open(LNAout, 'w')
-    output.write('LNA\n\nRHS of equations:\n')
-    for i in dPdt:
-        output.write(str(i) + '\n')
-    for i in dVdt:
-        output.write(str(i) + '\n')
-    output.write('\nLHS:\n')
-    for i in ymat:
-        output.write(str(i) + '\n')
-    for i in V:
-        output.write(str(i) + '\n')
-    output.write('\nConstants:\n')
-    for i in c:
-        output.write(str(i) + '\n')
-    output.write('Number of variables:\n' + str(len(ymat)))
-    output.write('\n\nNumber of equations:\n' + str(len(dPdt) + len(dVdt)) + '\n')
-    output.write('\nList of moments:')
-    for i in range(len(momlist)):
-        output.write('\n' + str(momlist[i]))
-    output.close()
 
-    out_tex = open(LNAout + '.tex', 'w')
-    out_tex.write(
-        '\documentclass{article}\n\usepackage[landscape, margin=0.5in, a3paper]{geometry}\n\\begin{document}\n\section*{RHS of equations}\n')
-    for i in range(len(dPdt)):
-        out_tex.write('$\dot ' + str(latex(ymat[i])) + ' = ' + str(latex(dPdt[i])) + '$\\\\')
-    for i in range(len(dVdt)):
-        out_tex.write('$\dot ' + str(latex(V[i])) + ' = ' + str(latex(dVdt[i])) + '$\\\\')
-    out_tex.write('\n\section*{Moments}\n')
-    for i in range(len(momlist)):
-        out_tex.write('\n$' + str(latex(ymat[i])) + '$: {' + str(momlist[i]) + '}\\\\')
-    out_tex.write('\n\n\end{document}')
-    out_tex.close()
+        # build ODEProblem object
+
+        # Generate moments list
+        # (e.g. [1,0,0], [0,1,0], [0,0,1] in three species case)
+        #todo use Moment and not tuples
+        prob_moments = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
+
+        lhs = sp.Matrix([i for i in ymat] + [i for i in V])
+        rhs = sp.Matrix([i for i in dPdt] + [i for i in dVdt])
+
+        prob_moments = dict(zip(lhs,prob_moments))
+
+        out_problem = ode_problem.ODEProblem("LNA", lhs, rhs, sp.Matrix(self.model.constants), prob_moments)
+        return out_problem
+
+
+def get_args():
+    import sys
+    model_ = sys.argv[1]
+    out_file_name = str(sys.argv[2])
+    return (model_, out_file_name)
 
 if __name__ == '__main__':
+    model_filename, out_file_name = get_args()
+    # parse the input file as a Model object
+    model = parse_model(model_filename)
 
-    import sys
+    # set the mea analysis up
+    lna = LinearNoiseApproximation(model)
 
-    model_ = sys.argv[1]
-    LNAout = sys.argv[2]
+    # run mea with the defined parameters
+    problem = lna.run()
 
-    from model import parse_model
+    # write result in the specified file
+    ode_writer = ode_problem.ODEProblemWriter(problem, lna.time_last_run)
+    ode_writer.write_to(out_file_name)
 
-    model = parse_model(model_)
-
-    dPdt, dVdt, V, momlist = LNA(model.stoichiometry_matrix, model.propensities, model.species)
-    print_output(LNAout, dPdt, dVdt, model.species, V, model.constants, momlist)
-
+    tex_writer = ode_problem.ODEProblemLatexWriter(problem)
+    tex_writer.write_to(out_file_name + ".tex")

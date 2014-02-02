@@ -200,8 +200,6 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
                  initial_constants, simulated_timepoints, maxorder)
 
     return simulated_timepoints, trajectories, term_descriptions
-    
-
 
 def graphbuilder(soln,momexpout,title,t,momlist):
     """

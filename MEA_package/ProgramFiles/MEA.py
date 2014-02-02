@@ -2,8 +2,6 @@
 
 from time import time
 import sys
-
-
 import sympy as sp
 
 from fcount import fcount
@@ -16,16 +14,16 @@ import ode_problem
 from approximation_baseclass import ApproximationBaseClass
 
 
-def substitute_mean_with_y(moments, nvariables):
+def substitute_mean_with_y(moments, n_species):
     """
     Replaces first order raw moments(e.g. x01, x10) by explicit means (e.g. y_0, y_1)
 
     :param moments: the list of expressions (moments)
-    :param nvariables: the number of species
+    :param n_species: the number of species
     :return: the substituted expressions
     """
 
-    diag_mat = [["1" if x == y else "0" for x in range(nvariables)] for y in range(nvariables)]
+    diag_mat = [["1" if x == y else "0" for x in range(n_species)] for y in range(n_species)]
     substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
 
     # for 2d lists
@@ -33,14 +31,15 @@ def substitute_mean_with_y(moments, nvariables):
         out_moms =[[substitute_all(m, substitutions_pairs) for m in mom ] for mom in moments]
     # 1d lists
     else:
-        out_moms =[substitute_all(m, substitutions_pairs) for m in moments]
+        #out_moms =sp.Matrix([substitute_all(m, substitutions_pairs) for m in moments])
+        out_moms = moments.applyfunc(lambda x: substitute_all(x, substitutions_pairs))
 
     return out_moms
 
 def substitute_raw_with_central(central_moments, momvec, mom):
     #todo describe CentralMoments
     """
-    Substitute raw moment terms in CentralMoments in terms of central moments
+    Substitute raw moment terms in central_moments in terms of central moments
     (need to iterate in reverse from highest to lowest order moments to ensure all
     raw moments are replaced as some higher order raw moments are expressed in terms
     of central and lower order raw moments)
@@ -51,7 +50,7 @@ def substitute_raw_with_central(central_moments, momvec, mom):
     :return: the substituted central moments
     """
 
-    out_central_moments = central_moments[:]
+    out_central_moments = central_moments.tolist()
     xs_to_solve = [sp.Symbol('x'+str(mv)[2:]) for mv in momvec]
     right_hand_sides = [m - mv for (mv, m) in zip(momvec, mom)]
     solved_xs = [sp.solve(rhs, xts) for (rhs, xts) in zip(right_hand_sides, xs_to_solve)]
@@ -66,7 +65,7 @@ def substitute_raw_with_central(central_moments, momvec, mom):
 
 
 
-    return out_central_moments
+    return sp.Matrix(out_central_moments)
 
 def substitute_ym_with_yx(central_moments, momvec):
     """
@@ -74,7 +73,7 @@ def substitute_ym_with_yx(central_moments, momvec):
     with yxi where i indicates index in counter for that n1,...,nd
 
     :param CentralMoments:
-    :param momvec: the symbols for central moments ()
+    :param momvec: the symbols for central moments()
     :return: the symbols for central moments (e.g. yx1, yx2, ...)
     """
     yx_symbols = ['yx{0}'.format(i+1) for i in range(len(momvec))]
@@ -83,13 +82,13 @@ def substitute_ym_with_yx(central_moments, momvec):
     #substitutions_pairs = [(yx, mom) for yx, mom in zip(momvec, yx_symbols)]
     substitutions_pairs = zip(yx_symbols,momvec)
     # apply this to all elements (in list and sub-list)
-    out_moms =[[substitute_all(m, substitutions_pairs) for m in mom] for mom in central_moments]
+    #out_moms =sp.Matrix([[substitute_all(m, substitutions_pairs) for m in mom] for mom in central_moments.tolist()])
+    out_moms = central_moments.applyfunc(lambda x: substitute_all(x, substitutions_pairs))
 
     return (yx_symbols, out_moms)
 
 
-
-def make_mfk(CentralMoments, yms, M):
+def make_mfk(central_moments , yms, M):
     """
     :param CentralMoments:
     :param yms:
@@ -105,33 +104,39 @@ def make_mfk(CentralMoments, yms, M):
         except:
             pass
         return expr
-    # todo eventually, we want to remove the simplify calls
+
+    # todo eventually, we want to remove the simplify calls#
+
     MFK = [try_to_simplify(e) for e in M*yms ]
-    MFK += [try_to_simplify((sp.Matrix(cm).T * yms)[0]) for cm in CentralMoments]
+    MFK += [try_to_simplify((sp.Matrix(cm).T * yms)[0]) for cm in central_moments.tolist()]
     return MFK
 
 class MomentExpansionApproximation(ApproximationBaseClass):
+
     """
     Performs moment expansion approximation (Ale et al. 2013) up to a given order of moment.
     """
-    def _run(self, parameters):
+
+    def __init__(self, model, n_moments):
+        super(MomentExpansionApproximation, self).__init__(model)
+        self.__n_moments = n_moments
+
+    def _wrapped_run(self):
         """
         Overrides the default _run() private method.
         Performs the complete analysis
-        :param parameters: TODO
         :return: an ODEProblem which can be further used in inference and simulation
         """
 
-        # todo dict of params instead of implicit int (discuss the best way to do that with team)
-        n_moments = parameters
+        n_moments = self.__n_moments
         S = self.model.stoichiometry_matrix
         amat = self.model.propensities
 
         ymat = self.model.species
-        nvariables = len(ymat)
+        n_species = len(ymat)
 
         # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
-        (counter, mcounter) = fcount(n_moments, nvariables)
+        (counter, mcounter) = fcount(n_moments, n_species)
         # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
         TE_matrix = taylor_expansion(ymat, amat, counter)
 
@@ -142,9 +147,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #  Calculate expressions to use in central moments equations (eq. 9)
         #  CentralMoments is a list with entry for each moment (n1,...,nd) combination.
         central_moments = eq_centralmoments(counter, mcounter, M, ymat, amat, S)
-        #  Substitute means in CentralMoments by y_i (ymat entry)
 
-        central_moments = substitute_mean_with_y(central_moments, nvariables)
+        #  Substitute means in CentralMoments by y_i (ymat entry)
+        central_moments = substitute_mean_with_y(central_moments, n_species)
 
         #  Substitute higher order raw moments in terms of central moments
         #  raw_to_central calculates central moments (momvec) in terms
@@ -152,18 +157,20 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         (mom, momvec) = raw_to_central(counter, ymat, mcounter)
 
         # Substitute one for zeroth order raw moments in mom
-        x_zero = sp.Symbol("x_" + "_".join(["0"] * nvariables))
-        mom = [sp.Subs(m, x_zero, sp.S(1)).doit() for m in mom]
+        x_zero = sp.Symbol("x_" + "_".join(["0"] * n_species))
 
+        mom = mom.applyfunc(lambda x : sp.Subs(x, x_zero, sp.S(1)).doit() )
 
         # Substitute first order raw moments (means) in mom with y_i (ymat entry)
-        mom = substitute_mean_with_y(mom,nvariables)
+        mom = substitute_mean_with_y(mom, n_species)
 
         # Substitute raw moment, in central_moments, with of central moments
         central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
+
         # Use symbols for central moments (ymn) as yxN where N is a counter from one (e.g. ym_0_0_2 -> yx1)
         yx_symbols, central_moments = substitute_ym_with_yx(central_moments, momvec)
+
 
         # Make yms; (yx1, yx2, yx3,...,yxn) where n is the number of elements in counter
 
@@ -174,9 +181,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         MFK = make_mfk(central_moments, yms, M)
 
         # build ODEProblem object
-        prob_moments = [tuple([1 if i==j else 0 for i in range(nvariables)]) for j in range(nvariables)]
+        prob_moments = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
         prob_moments += [tuple(c) for c in counter[1:]]
-
 
         lhs = sp.Matrix([i for i in ymat] + yms[1:])
 
@@ -203,10 +209,10 @@ if __name__ == "__main__":
     model = parse_model(model_filename)
 
     # set the mea analysis up
-    mea = MomentExpansionApproximation(model)
+    mea = MomentExpansionApproximation(model, n_moments)
 
     # run mea with the defined parameters
-    problem = mea.run_with_params(parameters=n_moments)
+    problem = mea.run()
 
     # write result in the specified file
     ode_writer = ode_problem.ODEProblemWriter(problem, mea.time_last_run)
