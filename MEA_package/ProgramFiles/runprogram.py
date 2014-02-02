@@ -189,58 +189,82 @@ def run():
                 if plot == True:
                     graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
 
-    if infer == True:
-        if tpfile == None:
-            print "\n No timepoints/parameters/initial conditions given for inference.\n Please provide a file in the format of paramtimetemp.txt."
-            sys.exit()
+    if infer:
+        if not tpfile:
+            print "\n No timepoints/parameters/initial conditions given for inference.\n " \
+                  "Please provide a file in the format of paramtimetemp.txt."
+            sys.exit(1)
+        if not os.path.exists(wd+tpfile):
+            print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  " \
+                                          "Please try again with correct " \
+                                          "timepoint/parameter/initial conditions filename.\n"
+            sys.exit(1)
+        if exptdata is None:
+            print "\n No experimental data provided for inference.\n " \
+                  "Please try again specifying your data file with the --data option."
+            sys.exit(1)
+        if not os.path.exists(wd+exptdata):
+            print "\n  Error:\n  "+exptdata+"  does not exist in working directory.\n  " \
+                                            "Please try again with correct experimental data filename.\n"
+            sys.exit(1)
+
+        lib = library+'.so.1.0'
+
+        # If no random restarts selected:
+        if not restart:
+            [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
+            if not distribution:        # inference using generalised method of moments
+                (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param, vary, initcond, varyic,
+                                                                                        limits, wd + exptdata, wd + lib,
+                                                                                        wd + ODEout)
+            else:      # Use parametric or maxent distribution to approximate likelihood
+                (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param, vary,
+                                                                                                    initcond, varyic,
+                                                                                                    limits,
+                                                                                                    wd + exptdata,
+                                                                                                    wd + lib,
+                                                                                                    wd + ODEout,
+                                                                                                    distribution)
+            restart_results = [[result, mu, param, initcond]]
+
+        # Else if random restarts selected
         else:
-            if not os.path.exists(wd+tpfile):
-                print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter/initial conditions filename.\n"
+            try:
+                [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
+            except ValueError:
+                print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
+                      'for all parameter values.'.format(tpfile)
                 sys.exit(1)
-            if exptdata is None:
-                print "\n No experimental data provided for inference.\n Please try again specifying your data file with the --data option."
-                sys.exit(1)
-            if not os.path.exists(wd+exptdata):
-                print "\n  Error:\n  "+exptdata+"  does not exist in working directory.\n  Please try again with correct experimental data filename.\n"
-                sys.exit(1)
+            all_params = hypercube(int(nRestart), param[:] + initcond[:])
+            restart_results = []
+            for n in all_params:
+                param_n = n[0:len(param)]
+                initcond_n = n[len(param):]
 
-            lib = library+'.so.1.0'
+                # if distance function used for inference
+                if not distribution:
+                    (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param_n, vary, initcond_n,
+                                                                                            varyic, limits,
+                                                                                            wd + exptdata, wd + lib,
+                                                                                            wd + ODEout)
+                # Else if parametric approximation
+                else:
+                    (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n, vary,
+                                                                                                        initcond_n,
+                                                                                                        varyic, limits,
+                                                                                                        wd + exptdata,
+                                                                                                        wd + lib,
+                                                                                                        wd + ODEout,
+                                                                                                        distribution)
+                restart_results.append([result, mu, param_n, initcond_n])
 
-            # If no random restarts selected:
-            if restart == False:
-                [t,param,initcond,vary,varyic, limits]=paramtime(wd+tpfile,restart, limit)
-                if distribution == False:        # inference using generalised method of moments
-                    (result, mu, t, initcond_full, mom_index_list,moments_list) = optimise(param,vary,initcond, varyic,limits,wd+exptdata,wd+lib,wd+ODEout)
-                else:      # Use parametric or maxent distribution to approximate likelihood
-                    (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param,vary,initcond, varyic,limits,wd+exptdata,wd+lib,wd+ODEout, distribution)
-                restart_results = [[result,mu,param, initcond]]
+            restart_results.sort(key=lambda x: x[0][1], reverse=False)
 
-            # Else if random restarts selected
-            else:
-                try:
-                    [t,param,initcond,vary,varyic, limits]=paramtime(wd+tpfile,restart, limit)
-                except ValueError:
-                    print tpfile+' is not in correct format. Ensure you have entered upper and lower bounds for all parameter values.'
-                all_params = hypercube(int(nRestart),param[:]+initcond[:])
-                restart_results = []
-                for n in all_params:
-                    param_n = n[0:len(param)]
-                    initcond_n = n[len(param):]
+        # write results to file (default name 'inference.txt') and plot graph if selected
+        infer_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
+        if plot:
+            graph(restart_results[0], t, wd + lib, initcond_full, vary, varyic, wd + ODEout, plottitle, mom_index_list,
+                  moments_list)
 
-                    # if distance function used for inference
-                    if distribution == False:
-                        (result, mu, t, initcond_full, mom_index_list,moments_list) = optimise(param_n,vary,initcond_n, varyic,limits,wd+exptdata,wd+lib,wd+ODEout)
-                    # Else if parametric approximation
-                    else:
-                        (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n,vary,initcond_n, varyic,limits,wd+exptdata,wd+lib,wd+ODEout, distribution)
-                    restart_results.append([result, mu, param_n, initcond_n])
-
-                restart_results.sort(key=lambda x: x[0][1], reverse=False)
-
-
-            # write results to file (default name 'inference.txt') and plot graph if selected
-            infer_results(restart_results, t, vary, initcond_full,varyic, wd+inferfile)
-            if plot == True:
-                graph(restart_results[0], t, wd+lib, initcond_full, vary,varyic, wd+ODEout, plottitle, mom_index_list,moments_list)
 
 run()
