@@ -14,6 +14,8 @@ from scipy.optimize import fmin
 from CVODE import CVODE
 import re
 from math import factorial
+from simulate import Simulation
+
 
 def make_i0(param, vary, initcond, varyic):
     """
@@ -109,36 +111,34 @@ def sample_data(sample):
     return (mu, t, mom_names)
 
 
-def mom_indices(mfkoutput, mom_names):
+def _mom_indices(problem, mom_names):
     """
     From list of moments in sample file (`mom_names`), identify the indices of the corresponding moments
     in simulated trajectories produced by CVODE. Returns these indices as a list (`mom_index_list`).
 
     Also returns a list of moments produced by MFK/CVODE (`moments_list)
-    :param mfkoutput: MFK output file
+    :param problem: ODEProblem
+    :type problem: ODEProblem
     :param mom_names: List of moments in sample file
     :return: `mom_index_list, moments_list`
     """
-    mfkfile = open(mfkoutput)
-    lines = mfkfile.readlines()
-    mfkfile.close()
 
     # Get list of moments from mfkoutput to create labels for output data file
-    momlistindex = lines.index('List of moments:\n')
-    moments_list = []
-    for i in range(momlistindex + 1, len(lines)):
-        if lines[i].startswith('['):
-            moment_str = str(lines[i].strip('\n[]'))
-            moment_str_list = moment_str.split(',')
-            moment_int_list = [int(p) for p in moment_str_list]
-            moments_list.append(moment_int_list)
+    moments_list = [moment.n_vector for moment in problem.ordered_descriptions]
 
     # Get indices in CVODE solutions for the moments in sample data
-    mom_index_list = [moments_list.index(m) for m in mom_names]
-    return (mom_index_list, moments_list)
+    # TODO: terribly inefficient but to be replaced by Trajectories
+    mom_index_list = []
+    for mom_name in mom_names:
+        for i, moment in enumerate(moments_list):
+            if (mom_name == moment).all():
+                mom_index_list.append(i)
+                break
+
+    return mom_index_list, moments_list
 
 
-def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
+def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
     """
     Optimise function, that is used for parameter inference.
 
@@ -152,26 +152,23 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
                    for each parameter/initial condition set in `timeparam` file.
     :param sample: name of the experimental data file
     :param cfile: name of the c library (specified by --library)
-    :param mfkoutput: name of the file produced by MFK (--ODEout)
+    :param problem: The specified ODE problem to optimise
+    :type problem: ODEProblem
     :return:
     """
     i0 = make_i0(param, vary, initcond, varyic)        # create initial i0
 
     # Get required information from the MFK or LNA output file 
 
-    mfkfile = open(mfkoutput)
-    lines = mfkfile.readlines()
-    mfkfile.close()
-    simtype = lines[0].rstrip()            # simtype = MFK or LNA
-    nSpecies_index = lines.index('Number of variables:\n')
-    nspecies = int(lines[nSpecies_index + 1])
+    simulation_type = problem.method            # simtype = MFK or LNA
+    number_of_species = problem.number_of_species
+
+
+    number_of_equations = problem.number_of_equations
 
     # If starting values not specified for all moments, set remainder to 0
-
-    nEquation_index = lines.index('Number of equations:\n')
-    nEquations = int(lines[nEquation_index + 1].strip())
-    if len(initcond) != nEquations:
-        initcond += ([0] * (nEquations - len(initcond)))
+    if len(initcond) != number_of_equations:
+        initcond += ([0] * (number_of_equations - len(initcond)))
 
     def distance(i0, param, vary, initcond, varyic, mu, t, cfile, mom_index_list):
         """
@@ -221,14 +218,14 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
         # If MFK used, distance summed over all timepoints/moments contained 
         # in sample data file
 
-        if simtype == 'MEA':
+        if simulation_type == 'MEA':
             if any(i < 0 for i in test_param):   # disallow negative kinetic parameters
                 return max_dist
 
             # calculate number of var/covar terms
             #nVar_Covar = factorial(nspecies+1)/(factorial(2)*factorial(nspecies-2))
             #if any(j<0 for j in test_initcond[0:nspecies+nVar_Covar]):
-            if any(j < 0 for j in test_initcond[0:nspecies]):
+            if any(j < 0 for j in test_initcond[0:number_of_species]):
                 return max_dist              # disallow negative means/variance/covariance
 
             tmu = [test_soln[:, i] for i in range(0, len(initcond))]
@@ -244,17 +241,17 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
 
         # If LNA used...
 
-        if simtype == 'LNA':
-            tmu = [0] * nspecies
+        if simulation_type == 'LNA':
+            tmu = [0] * number_of_species
             mu_t = [0] * len(t)
-            for i in range(0, nspecies):
+            for i in range(0, number_of_species):
                 mu_i = [0] * len(t)
                 for j in range(len(t)):
                     if i == 0:
-                        V = Matrix(nspecies, nspecies, lambda k, l: 0)
-                        for v in range(2 * nspecies):
-                            V[v] = test_soln[j, v + nspecies]
-                        mu_t[j] = np.random.multivariate_normal(test_soln[j, 0:nspecies], V)
+                        V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
+                        for v in range(2 * number_of_species):
+                            V[v] = test_soln[j, v + number_of_species]
+                        mu_t[j] = np.random.multivariate_normal(test_soln[j, 0:number_of_species], V)
                     mu_i[j] = mu_t[j][i]
                 tmu[i] = mu_i
             dist = 0
@@ -290,7 +287,7 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput):
 
     # read sample data from file to get required information to pass to fmin
     (mu, t, mom_names) = sample_data(sample)
-    (mom_index_list, moments_list) = mom_indices(mfkoutput, mom_names)
+    (mom_index_list, moments_list) = _mom_indices(problem, mom_names)
 
     # minimise defined distance function, with provided starting parameters
     result = fmin(distance, i0,
