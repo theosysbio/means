@@ -15,37 +15,54 @@ to sum the log likelihood over each time/data point.
 from collections import namedtuple
 import os
 import sys
-from math import sqrt, log, pi, lgamma
 
 from scipy.optimize import fmin
+from scipy.special import gammaln
 
 from ode_problem import Moment
-from simulate import Simulation
+from simulate import Simulation, NP_FLOATING_POINT_PRECISION
 from sumsq_infer import make_i0, i0_to_test, parse_experimental_data_file
 import numpy as np
 
-def eval_density(mean, var, x, distribution):
+def eval_density(means, variances,observed_values, distribution):
     """
     Calculates gamma/lognormal/normal pdf given mean variance, x
     where x is the experimental species number measured at a particular timepoint. Returns ln(pdf)
     :param mean: mean
     :param var: variance
-    :param x: experimental species number measured at a particular timepoint
+    :param observed_values: experimental species number measured at a particular timepoint
     :param distribution: distribution to consider. Either 'gamma', 'normal' and 'lognormal'
     :return: normal log of the pdf
     """
-    if distribution == 'gamma':
-        b = var / mean
-        a = mean / b
-        logpdf = (a - 1) * log(x) - (x / b) - a * log(b) - lgamma(a)
+    means = np.array(means, dtype=NP_FLOATING_POINT_PRECISION)
+    variances = np.array(variances, dtype=NP_FLOATING_POINT_PRECISION)
+    observed_values = np.array(observed_values, dtype=NP_FLOATING_POINT_PRECISION)
 
+    # Remove data about unobserved datapoints
+    means = means[~np.isnan(observed_values)]
+    variances = variances[~np.isnan(observed_values)]
+    observed_values = observed_values[~np.isnan(observed_values)]
+
+    # Remove data for when variance is zero as we cannot estimate distributions that way
+    non_zero_varianes = ~(variances == 0)
+    means = means[non_zero_varianes]
+    variances = variances[~(variances == 0)]
+    observed_values = observed_values[non_zero_varianes]
+
+    if distribution == 'gamma':
+        b = variances / means
+        a = means / b
+
+        log_observed_values = np.log(observed_values)
+        log_density = (a - 1.0) * log_observed_values - (observed_values / b) - a * np.log(b) - gammaln(a)
     elif distribution == 'normal':
-        logpdf = -(x - mean) ** 2 / (2 * var) - log(sqrt(2 * pi * var))
+        log_density = -(observed_values - means) ** 2 / (2 * variances) - np.log(np.sqrt(2 * np.pi * variances))
 
     elif distribution == 'lognormal':
-        logpdf = -(log(x) - mean) ** 2 / (2 * var) - log(x * sqrt(2 * pi * var))
+        log_density = -(np.log(observed_values) - means) ** 2 / (2 * variances) - np.log(observed_values * np.sqrt(2 * np.pi * variances))
 
-    return logpdf
+    total_log_density = np.sum(log_density)
+    return total_log_density
 
 #####################################################################
 # Optimise function, used for parameter inference (minimizes
@@ -169,18 +186,8 @@ def optimise(problem, param, vary, initcond, varyic, limits, sample, distributio
             if (mean_variance.mean < 0).any() or (mean_variance.variance < 0).any():
                 return max_dist
 
-            for tp, value in enumerate(trajectory.values):
-                if np.isnan(value):
-                    continue
-
-                mean = mean_variance.mean[tp]
-                variance = mean_variance.variance[tp]
-
-                # can't calculate parametric likelihoods for zero variance, so pass
-                if variance == 0:
-                    continue
-
-                log_likelihood += eval_density(mean, variance, value, distribution)
+            term = eval_density(mean_variance.mean, mean_variance.variance, trajectory.values, distribution)
+            log_likelihood += term
 
         dist = -log_likelihood
         y_list.append(dist)
