@@ -24,7 +24,7 @@ def substitute_mean_with_y(moments, n_species):
     """
 
     diag_mat = [["1" if x == y else "0" for x in range(n_species)] for y in range(n_species)]
-    substitutions_pairs = [('y_%i' % i, "x_" + "_".join(vec)) for (i,vec) in enumerate(diag_mat)]
+    substitutions_pairs = [("x_" + "_".join(vec),'y_{0}'.format(i)) for (i,vec) in enumerate(diag_mat)]
 
     # for 2d lists
     if isinstance(moments[0], list):
@@ -80,7 +80,7 @@ def substitute_ym_with_yx(central_moments, momvec):
     # Any element in "momvec" should be replaced by yxN where N is its index (starting at one)
 
     #substitutions_pairs = [(yx, mom) for yx, mom in zip(momvec, yx_symbols)]
-    substitutions_pairs = zip(yx_symbols,momvec)
+    substitutions_pairs = zip(momvec, yx_symbols)
     # apply this to all elements (in list and sub-list)
     #out_moms =sp.Matrix([[substitute_all(m, substitutions_pairs) for m in mom] for mom in central_moments.tolist()])
     out_moms = central_moments.applyfunc(lambda x: substitute_all(x, substitutions_pairs))
