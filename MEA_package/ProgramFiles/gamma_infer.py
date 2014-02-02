@@ -19,7 +19,7 @@ from math import sqrt, log, pi, lgamma
 from scipy.optimize import fmin
 
 from CVODE import CVODE
-from sumsq_infer import make_i0, i0_to_test, sample_data
+from sumsq_infer import make_i0, i0_to_test, parse_experimental_data_file
 
 
 def mv_index(mfkoutput, mom_names):
@@ -294,7 +294,7 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, mfkoutput, di
     it_dist = []
 
     # read sample data from file and get indices for mean/variances in CVODE output
-    (mu, t, mom_names) = sample_data(sample)
+    (mu, t, mom_names) = parse_experimental_data_file(sample)
     (sp_id, mean_id, var_id, moments_list, mom_index_list) = mv_index(mfkoutput, mom_names)
     #(mom_index_list,moments_list) = mom_indices(mfkoutput, mom_names)
 

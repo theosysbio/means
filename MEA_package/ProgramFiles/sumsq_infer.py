@@ -14,7 +14,8 @@ from scipy.optimize import fmin
 from CVODE import CVODE
 import re
 from math import factorial
-from simulate import Simulation
+from ode_problem import Moment
+from simulate import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
 
 def make_i0(param, vary, initcond, varyic):
@@ -69,46 +70,46 @@ def i0_to_test(i0, param, vary, initcond, varyic):
     return (test_param, test_initcond)
 
 
-def sample_data(sample):
+def parse_experimental_data_file(sample):
     """
-    Reads sample data and returns three lists:
-        - `t` - timepoints
-        - `mu` - each entry is a timecourse from the sample data file
-        - `mom_names` - each entry identifies the moment in `mu`
-                        (given as list of powers that each species is raised to
-                        e.g. if 3 species, variance of 2nd species given by [0,2,0].
-                        NB: for parametric likelihoods, use e.g. [1,0,0] to indicate
-                        a timecourse of e.g. number of molecules of 1st species)
+    Reads sample data and returns a list of timepoints and the trajectories
     :param sample: file containing the sample data
-    :return: `(mu, t, mom_names)`
+    :return: `timepoints, trajectories`
     """
-    data_RE = re.compile('>|\n|#')
-    datafile = open(sample)
-    mu = []
-    mom_names = []
-    for l in datafile:
-        if not data_RE.match(l):
-            l = l.rstrip()
-            data = l.split('\t')
-            #data[-1] = data[-1].rstrip()
-            # get timepoints
-            if data[0] == 'time':
-                t = [float(data[i]) for i in range(1, len(data))]
-            # get trajectory and name of moment
+    def _parse_data_point(data_point):
+        try:
+            return NP_FLOATING_POINT_PRECISION(data_point)
+        except ValueError:
+            if data_point == 'N':
+                return np.nan
             else:
-                traj = []
-                for j in range(1, len(data)):
-                    if data[j].strip() == 'N':
-                        traj.append(data[j].strip())
-                    else:
-                        traj.append(float(data[j]))
-                    #traj = [float(data[j]) for j in range(1,len(data))]
-                mu.append(traj)
-                moment_str_list = data[0].split(',')
-                moment_int_list = [int(p) for p in moment_str_list]
-                mom_names.append(moment_int_list)
-    datafile.close()
-    return (mu, t, mom_names)
+                raise
+
+    datafile = open(sample,'r')
+    trajectories = []
+    timepoints = None
+    try:
+        for l in datafile:
+            l = l.strip()
+            if not l or l.startswith('>') or l.startswith('#'):
+                continue
+
+            data = l.split('\t')
+            header = data.pop(0)
+            if header == 'time':
+                timepoints = np.array(map(NP_FLOATING_POINT_PRECISION, data), dtype=NP_FLOATING_POINT_PRECISION)
+            else:
+                data = np.array(map(_parse_data_point, data), dtype=NP_FLOATING_POINT_PRECISION)
+                moment_str_list = header.split(',')
+                n_vec = map(int, moment_str_list)
+                moment = Moment(n_vec)
+                assert(timepoints is not None)
+                assert(timepoints.shape == data.shape)
+                trajectories.append(Trajectory(timepoints, data, moment))
+    finally:
+        datafile.close()
+
+    return timepoints, trajectories
 
 
 def _mom_indices(problem, mom_names):
@@ -138,7 +139,7 @@ def _mom_indices(problem, mom_names):
     return mom_index_list, moments_list
 
 
-def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
+def optimise(param, vary, initcond, varyic, limits, sample, problem):
     """
     Optimise function, that is used for parameter inference.
 
@@ -151,7 +152,6 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
     :param limits: constrains allowed values for parameters and initial conditions (list with entry in form lower,upper)
                    for each parameter/initial condition set in `timeparam` file.
     :param sample: name of the experimental data file
-    :param cfile: name of the c library (specified by --library)
     :param problem: The specified ODE problem to optimise
     :type problem: ODEProblem
     :return:
@@ -170,7 +170,7 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
     if len(initcond) != number_of_equations:
         initcond += ([0] * (number_of_equations - len(initcond)))
 
-    def distance(i0, param, vary, initcond, varyic, mu, t, cfile, mom_index_list):
+    def distance(i0, param, vary, initcond, varyic, observed_trajectories_lookup, observed_timepoint):
         """
         Evaluates distance (cost) function for current set of values in i0.
 
@@ -185,10 +185,10 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
         :param vary:
         :param initcond:
         :param varyic:
-        :param mu: each entry is a timecourse from the sample data file
-        :param t: timepoints (from sample data file)
-        :param cfile:
-        :param mom_index_list: the indices of the corresponding moments in simulated trajectories produced by CVODE
+        :param observed_trajectories_lookup: a dictionary in form {Moment: trajectory}
+                                             where trajectory is the observed trajectories
+        :param observed_timepoints: timepoints (from sample data file)
+        :param observed_moments_index_list: the indices of the corresponding moments in simulated trajectories produced by CVODE
         :return:
         """
 
@@ -198,13 +198,16 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
         # creates lists of parameters (test_param and test_initcond) for that iteration
 
         (test_param, test_initcond) = i0_to_test(i0, param, vary, initcond, varyic)
-        test_soln = CVODE(cfile, t, test_initcond, test_param)
+
+        simulator = Simulation(problem, postprocessing='LNA' if simulation_type=='LNA' else None)
+        simulated_timepoints, simulated_trajectories = simulator.simulate_system(test_param, test_initcond,
+                                                                                 observed_timepoints)
 
         # Check if parameters/initconds are within allowed bounds (if --limit used)
         # and return max_dist if outside these ranges
-        # TODO: Maybe worth solving the ODEs (i.e. obtaining `test_soln` *after* checking for limits ?
+        # FIXME: Maybe worth solving the ODEs (i.e. obtaining `test_soln` *after* checking for limits ?
 
-        if limits != None:
+        if limits is not None:
             for a in range(0, len(i0)):
                 l_limit = limits[a][0]
                 u_limit = limits[a][1]
@@ -225,39 +228,43 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
             # calculate number of var/covar terms
             #nVar_Covar = factorial(nspecies+1)/(factorial(2)*factorial(nspecies-2))
             #if any(j<0 for j in test_initcond[0:nspecies+nVar_Covar]):
+            # Fixme: these should probably be in LNA?
             if any(j < 0 for j in test_initcond[0:number_of_species]):
                 return max_dist              # disallow negative means/variance/covariance
 
-            tmu = [test_soln[:, i] for i in range(0, len(initcond))]
-            # tmu - list of values for each of the initcond
-            dist = 0
-            for sp in range(0, len(mu)):
-                for tp in range(0, len(t)):
-                    if mu[sp][tp] == 'N':     # account for missing datapoints ('N' in datafile)
-                        dist += 0
-                    else:
-                        # This should be something among the lines of adding the squared difference
-                        dist += (mu[sp][tp] - tmu[mom_index_list[sp]][tp]) ** 2
+        dist = 0
+        for simulated_trajectory in simulated_trajectories:
+            observed_trajectory = None
+            try:
+                observed_trajectory = observed_trajectories_lookup[simulated_trajectory.description]
+            except KeyError:
+                continue
+
+            deviations = observed_trajectory.values - simulated_trajectory.values
+            # Drop NaNs arising from missing datapoints
+            deviations = deviations[~np.isnan(deviations)]
+
+            dist += np.sum(np.square(deviations))
 
         # If LNA used...
 
-        if simulation_type == 'LNA':
-            tmu = [0] * number_of_species
-            mu_t = [0] * len(t)
-            for i in range(0, number_of_species):
-                mu_i = [0] * len(t)
-                for j in range(len(t)):
-                    if i == 0:
-                        V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
-                        for v in range(2 * number_of_species):
-                            V[v] = test_soln[j, v + number_of_species]
-                        mu_t[j] = np.random.multivariate_normal(test_soln[j, 0:number_of_species], V)
-                    mu_i[j] = mu_t[j][i]
-                tmu[i] = mu_i
-            dist = 0
-            for sp in range(0, len(mu)):
-                for tp in range(0, len(t)):
-                    dist += (mu[sp][tp] - tmu[sp][tp]) ** 2
+        # if simulation_type == 'LNA':
+        #     tmu = [0] * number_of_species
+        #     mu_t = [0] * len(observed_timepoints)
+        #     for i in range(0, number_of_species):
+        #         mu_i = [0] * len(observed_timepoints)
+        #         for j in range(len(observed_timepoints)):
+        #             if i == 0:
+        #                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
+        #                 for v in range(2 * number_of_species):
+        #                     V[v] = simulated_trajectories[j, v + number_of_species]
+        #                 mu_t[j] = np.random.multivariate_normal(simulated_trajectories[j, 0:number_of_species], V)
+        #             mu_i[j] = mu_t[j][i]
+        #         tmu[i] = mu_i
+        #     dist = 0
+        #     for species in range(0, len(observed_trajectories)):
+        #         for i_timepoint in range(0, len(observed_timepoints)):
+        #             dist += (observed_trajectories[species][i_timepoint] - tmu[species][i_timepoint]) ** 2
 
         # Returns distance (dist), (and saves current i0 and dist to list)
         y_list.append(dist)
@@ -286,17 +293,17 @@ def optimise(param, vary, initcond, varyic, limits, sample, cfile, problem):
     it_dist = []
 
     # read sample data from file to get required information to pass to fmin
-    (mu, t, mom_names) = sample_data(sample)
-    (mom_index_list, moments_list) = _mom_indices(problem, mom_names)
+    observed_timepoints, observed_trajectories = parse_experimental_data_file(sample)
+    observed_trajectories_lookup = {trajectory.description: trajectory for trajectory in observed_trajectories}
 
     # minimise defined distance function, with provided starting parameters
-    result = fmin(distance, i0,
-                  args=(param, vary, initcond, varyic, mu, t, cfile, mom_index_list), ftol=0.000001, disp=0,
-                        full_output=True, callback=my_callback)
+    result = fmin(distance, i0, args=(param, vary, initcond, varyic, observed_trajectories_lookup,
+                                      observed_timepoints),
+                  ftol=0.000001, disp=0, full_output=True, callback=my_callback)
 
-    return (result, mu, t, initcond, mom_index_list, moments_list)
+    return result, observed_timepoints, observed_trajectories, initcond
 
-def infer_results(restart_results, t, vary, initcond_full, varyic, inferfile):
+def write_inference_results(restart_results, t, vary, initcond_full, varyic, inferfile):
     """
     Writes inference results to output file (default name = inference.txt)
 
@@ -337,7 +344,7 @@ def infer_results(restart_results, t, vary, initcond_full, varyic, inferfile):
             outfile.write('\tDistance at minimum: ' + str(restart_results[i][0][1]) + '\n\n')
 
 
-def graph(opt_results, t, lib, initcond_full, vary, varyic, mfkoutput, plottitle, mom_index_list, moments_list):
+def graph(opt_results, mu, t, lib, initcond_full, vary, varyic, mfkoutput, plottitle, mom_index_list, moments_list):
     """
     Plots graph of data vs inferred trajectories (max of 9 subplots created)
 
@@ -357,7 +364,6 @@ def graph(opt_results, t, lib, initcond_full, vary, varyic, mfkoutput, plottitle
     :return:
     """
     (opt_param, opt_initcond) = i0_to_test(list(opt_results[0][0]), opt_results[2], vary, initcond_full, varyic)
-    mu = opt_results[1]
 
     # get trajectories for optimised parameters
     opt_soln = CVODE(lib, t, opt_initcond, opt_param)

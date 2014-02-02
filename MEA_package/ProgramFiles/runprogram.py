@@ -4,7 +4,7 @@ from create_cfile import create_c
 from ode_problem import parse_problem
 from paramtime import paramtime
 from simulate import simulate, graphbuilder
-from sumsq_infer import optimise, infer_results, graph
+from sumsq_infer import optimise, write_inference_results, graph
 from hypercube import hypercube
 import gamma_infer
 
@@ -215,18 +215,18 @@ def run():
             [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
             problem = parse_problem(wd+ODEout)
             if not distribution:        # inference using generalised method of moments
-                (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param, vary, initcond, varyic,
-                                                                                        limits, wd + exptdata, wd + lib,
-                                                                                        problem)
+                result, t, observed_trajectories, initcond_full = optimise(param, vary, initcond, varyic,
+                                                        limits, wd + exptdata,
+                                                        problem)
             else:      # Use parametric or maxent distribution to approximate likelihood
-                (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param, vary,
+                (result, observed_trajectories, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param, vary,
                                                                                                     initcond, varyic,
                                                                                                     limits,
                                                                                                     wd + exptdata,
                                                                                                     wd + lib,
                                                                                                     wd + ODEout,
                                                                                                     distribution)
-            restart_results = [[result, mu, param, initcond]]
+            restart_results = [[result, None, param, initcond]]
 
         # Else if random restarts selected
         else:
@@ -241,30 +241,31 @@ def run():
             for n in all_params:
                 param_n = n[0:len(param)]
                 initcond_n = n[len(param):]
-
+                problem = parse_problem(wd+ODEout)
                 # if distance function used for inference
                 if not distribution:
-                    (result, mu, t, initcond_full, mom_index_list, moments_list) = optimise(param_n, vary, initcond_n,
-                                                                                            varyic, limits,
-                                                                                            wd + exptdata, wd + lib,
-                                                                                            problem)
+                    result, t, observed_trajectories, initcond_full = optimise(param_n, vary, initcond_n,
+                                                                                          varyic, limits,
+                                                                                          wd + exptdata,
+                                                                                          problem)
                 # Else if parametric approximation
                 else:
-                    (result, mu, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n, vary,
+                    (result, observed_trajectories, t, initcond_full, mom_index_list, moments_list) = gamma_infer.optimise(param_n, vary,
                                                                                                         initcond_n,
                                                                                                         varyic, limits,
                                                                                                         wd + exptdata,
                                                                                                         wd + lib,
                                                                                                         wd + ODEout,
                                                                                                         distribution)
-                restart_results.append([result, mu, param_n, initcond_n])
+                restart_results.append([result, observed_trajectories, param_n, initcond_n])
 
             restart_results.sort(key=lambda x: x[0][1], reverse=False)
 
         # write results to file (default name 'inference.txt') and plot graph if selected
-        infer_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
+        write_inference_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
         if plot:
-            graph(restart_results[0], t, wd + lib, initcond_full, vary, varyic, wd + ODEout, plottitle, mom_index_list,
+            # FIXME: this is broken, baby
+            graph(restart_results[0], observed_trajectories, t, wd + lib, initcond_full, vary, varyic, wd + ODEout, plottitle, mom_index_list,
                   moments_list)
 
 

@@ -36,6 +36,17 @@ class Moment(ODETermBase):
     def __str__(self):
         return ', '.join(map(str, self.n_vector))
 
+    def __hash__(self):
+        # Allows moment objects to be stored as keys to dictionaries
+        return hash(repr(self.n_vector))
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return (self.n_vector == other.n_vector).all()
+
+
+
 class ODEProblem(object):
     """
     Stores the left and right hand side equations to be simulated
