@@ -79,6 +79,9 @@ def create_options_parser():
     parser.add_argument('--xunit', help='Return output in xunit format (parseable by Jenkins)',
                         default=False, action='store_true')
 
+    parser.add_argument('--no-stop', help='do not stop on test failure (default: false)', default=False,
+                        action='store_true')
+
     return parser
 
 class NoOutputGeneratedException(Exception):
@@ -475,6 +478,8 @@ def generate_tests_from_options(options):
 def main():
     parser = create_options_parser()
     options = parser.parse_args()
+    if options.xunit:
+        options.no_stop = True
 
     tests_to_run = list(generate_tests_from_options(options))
     number_of_tests = len(tests_to_run)
@@ -524,6 +529,7 @@ def main():
                 print '> Test Failed with exception {0!r}'.format(e)
                 print 'STDOUT:\n{out}------------\nSTDERR:\n{err}------------\n'.format(out=out, err=err)
                 print traceback_
+            if not options.no_stop:
                 break
         else:
             if not differences:
@@ -541,7 +547,8 @@ def main():
                 else:
                     print '> Test FAILED, here are the differences between files:'
                     print string_differences
-                    break
+            if not options.no_stop:
+                break
         if options.xunit:
             print '</testcase>'
 
