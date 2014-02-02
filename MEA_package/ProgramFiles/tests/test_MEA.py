@@ -5,8 +5,9 @@ from MEA import substitute_ym_with_yx
 from MEA import make_mfk
 
 import unittest
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S, sympify
-import re
+from sympy import Matrix, simplify, S, sympify
+import sympy
+
 from sympyhelpers import assert_sympy_expressions_equal
 
 
@@ -23,12 +24,12 @@ class MEATestCase(unittest.TestCase):
         """
 
         nvar = 2
-        mom = simplify([
+        mom = sympy.Matrix([
         "-2*x_0_1*y_1 + x_0_2 + y_1**2",
         " -x_0_1*y_0 - x_1_0*y_1 + x_1_1 + y_0*y_1",
         " -2*x_1_0*y_0 + x_2_0 + y_0**2"])
 
-        expected_mom = simplify([
+        expected_mom = sympy.Matrix([
         "-2*y_1*y_1 + x_0_2 + y_1**2",
         " -y_1*y_0 - y_0*y_1 + x_1_1 + y_0*y_1",
         "-2*y_0*y_0 + x_2_0 + y_0**2"])
@@ -49,14 +50,14 @@ class MEATestCase(unittest.TestCase):
         """
 
         nvar = 2
-        mom = simplify([
+        mom =  sympy.Matrix([
             ["-2*c_2*x_0_1*(-y_0 - y_1 + 301)", "-2*c_2"],
             ["c_2*x_1_0*(-y_0 - y_1 + 301)- x_0_1", "x_0_1 - c_0*y_0 - c_0*y_1"],
             ["0","2 * x_1_0 * (-c_0 * y_0 * (y_0 + y_1 - 181))"]
             ])
 
 
-        expected_mom = simplify([
+        expected_mom =  sympy.Matrix([
             ["-2*c_2*y_1*(-y_0 - y_1 + 301)", "-2*c_2"],
             ["c_2*y_0*(-y_0 - y_1 + 301)- y_1", "y_1 - c_0*y_0 - c_0*y_1"],
             ["0", "2*y_0*(-c_0*y_0*(y_0 + y_1 - 181))"]
@@ -79,22 +80,22 @@ class MEATestCase(unittest.TestCase):
         :return:
         """
 
-        central_moments = sympify([
+        central_moments =  sympy.Matrix([
             ["c_2*(-y_0 - y_1 + 301)", "-2*c_2", "-2*c_2", "0"],
             ["-c_0*y_0*y_1*(y_0 + y_1 - 181) + c_1*y_1*(-y_0 - y_1 + 301) - y_1*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "-c_0*y_0 - c_1", "-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1 - c_2", "-c_2"],
             ["-2*c_0*y_0**2*(y_0 + y_1 - 181) + c_0*y_0*(y_0 + y_1 - 181) + 2*c_1*y_0*(-y_0 - y_1 + 301) + c_1*(-y_0 - y_1 + 301) - 2*y_0*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "0", "-2*c_0*y_0 + c_0 - 2*c_1", "-2*c_0*y_0 - 2*c_0*(y_0 + y_1 - 181) + c_0 - 2*c_1"]
-        ])
+            ])
 
-        expected_central_moments = sympify([
+        expected_central_moments =  sympy.Matrix([
             ["c_2*(-y_0 - y_1 + 301)", "-2*c_2", "-2*c_2", "0"],
             ["-c_0*y_0*y_1*(y_0 + y_1 - 181) + c_1*y_1*(-y_0 - y_1 + 301) - y_1*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "-c_0*y_0 - c_1", "-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1 - c_2", "-c_2"],
             ["-2*c_0*y_0**2*(y_0 + y_1 - 181) + c_0*y_0*(y_0 + y_1 - 181) + 2*c_1*y_0*(-y_0 - y_1 + 301) + c_1*(-y_0 - y_1 + 301) - 2*y_0*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))", "0", "-2*c_0*y_0 + c_0 - 2*c_1", "-2*c_0*y_0 - 2*c_0*(y_0 + y_1 - 181) + c_0 - 2*c_1"]
-        ])
+            ])
 
 
-        mom = simplify(["x_0_2 - y_1**2", "x_1_1 - y_0*y_1", "x_2_0 - y_0**2"])
+        mom =  sympy.Matrix(["x_0_2 - y_1**2", "x_1_1 - y_0*y_1", "x_2_0 - y_0**2"])
 
-        momvec = simplify(["ym_0_2", "ym_1_1", "ym_2_0"])
+        momvec =  sympy.Matrix(["ym_0_2", "ym_1_1", "ym_2_0"])
 
         central_moments = substitute_raw_with_central(central_moments, momvec, mom)
 
@@ -109,16 +110,15 @@ class MEATestCase(unittest.TestCase):
         :return:
         """
 
-        momvec = simplify(["ym_0_2", "ym_1_1", "ym_2_0", "ym_0_3"])
-        central_moments = simplify(
-            [
+        momvec =  sympy.Matrix(["ym_0_2", "ym_1_1", "ym_2_0", "ym_0_3"])
+        central_moments =  sympy.Matrix([
                 ["ym_0_2 * 3", "ym_1_1 + 32 + x", "ym_2_0 + y_0"],
                 ["ym_0_1 * 3", "ym_1_1 + 32 + x", "ym_2_0 + y_0"],
                 ["ym_0_2 * 3", "ym_1_1 + 32 + x", "ym_0_3 + y_0"]
             ])
 
 
-        expected_central_moments = simplify(
+        expected_central_moments = sympy.Matrix(
             [
                 ["yx1 * 3", "yx2 + 32 + x", "yx3 + y_0"],
                 ["ym_0_1 * 3", "yx2 + 32 + x", "yx3 + y_0"],
@@ -141,24 +141,23 @@ class MEATestCase(unittest.TestCase):
         """
 
 
-        M = Matrix(simplify([["-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301)", "0", "-c_0", "-c_0"],
-                    [ "c_2*(-y_0 - y_1 + 301)", "0",    "0",    "0"]]))
+        M =  sympy.Matrix([["-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301)", "0", "-c_0", "-c_0"],
+                    [ "c_2*(-y_0 - y_1 + 301)", "0",    "0",    "0"]])
 
         yms = Matrix(["1", "yx1", "yx2", "yx3"])
 
-        central_moments = simplify(
-            [
+        central_moments = sympy.Matrix([
                 ["c_2*(-y_0 - y_1 + 301)", "-2*c_2", "-2*c_2", "0"],
                 ["0", "-c_0*y_0 - c_1", "-2*c_0*y_0 - c_0*y_1 + 181*c_0 - c_1 - c_2", "-c_2"],
                 ["c_0*y_0**2 + c_0*y_0*y_1 - 181*c_0*y_0 - c_1*y_0 - c_1*y_1 + 301*c_1", "0", "-2*c_0*y_0 + c_0 - 2*c_1", "-4*c_0*y_0 - 2*c_0*y_1 + 363*c_0 - 2*c_1"]
-            ])
+                ])
 
         mfk = make_mfk(central_moments, yms, M)
-        expected_mfk = simplify(
+        expected_mfk =  sympy.Matrix(
             ["-c_0*y_0*(y_0 + y_1 - 181) - c_0*yx2 - c_0*yx3 - c_1*(y_0 + y_1 - 301)",
              "c_2*(-y_0 - y_1 + 301)", "c_2*(-y_0 - y_1 - 2*yx1 - 2*yx2 + 301)",
              "-c_2*yx3 - yx1*(c_0*y_0 + c_1) - yx2*(2*c_0*y_0 + c_0*y_1 - 181*c_0 + c_1 + c_2)",
-             "c_0*y_0**2 + c_0*y_0*y_1 - 181*c_0*y_0 - c_1*y_0 - c_1*y_1 + 301*c_1 - yx2*(2*c_0*y_0 - c_0 + 2*c_1) - yx3*(4*c_0*y_0 + 2*c_0*y_1 - 363*c_0 + 2*c_1)"]
-        )
+             "c_0*y_0**2 + c_0*y_0*y_1 - 181*c_0*y_0 - c_1*y_0 - c_1*y_1 + 301*c_1 - yx2*(2*c_0*y_0 - c_0 + 2*c_1) - yx3*(4*c_0*y_0 + 2*c_0*y_1 - 363*c_0 + 2*c_1)"])
+
 
         self.assertEqual(Matrix(mfk), Matrix(expected_mfk))
