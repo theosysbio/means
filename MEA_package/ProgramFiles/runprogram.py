@@ -209,11 +209,11 @@ def run():
             sys.exit(1)
 
         lib = library+'.so.1.0'
-
+        problem = parse_problem(wd+ODEout)
         # If no random restarts selected:
         if not restart:
             [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
-            problem = parse_problem(wd+ODEout)
+
             if not distribution:        # inference using generalised method of moments
                 result, t, observed_trajectories, initcond_full = optimise(param, vary, initcond, varyic,
                                                         limits, wd + exptdata,
@@ -241,7 +241,6 @@ def run():
             for n in all_params:
                 param_n = n[0:len(param)]
                 initcond_n = n[len(param):]
-                problem = parse_problem(wd+ODEout)
                 # if distance function used for inference
                 if not distribution:
                     result, t, observed_trajectories, initcond_full = optimise(param_n, vary, initcond_n,
@@ -265,8 +264,8 @@ def run():
         write_inference_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
         if plot:
             # FIXME: this is broken, baby
-            graph(restart_results[0], observed_trajectories, t, wd + lib, initcond_full, vary, varyic, wd + ODEout, plottitle, mom_index_list,
-                  moments_list)
+
+            graph(problem, restart_results[0], observed_trajectories, t, initcond_full, vary, varyic, plottitle)
 
 
 run()

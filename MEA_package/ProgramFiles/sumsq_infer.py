@@ -13,7 +13,7 @@ from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
 from CVODE import CVODE
 import re
-from math import factorial
+from math import factorial, sqrt
 from ode_problem import Moment
 from simulate import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
@@ -344,7 +344,7 @@ def write_inference_results(restart_results, t, vary, initcond_full, varyic, inf
             outfile.write('\tDistance at minimum: ' + str(restart_results[i][0][1]) + '\n\n')
 
 
-def graph(opt_results, mu, t, lib, initcond_full, vary, varyic, mfkoutput, plottitle, mom_index_list, moments_list):
+def graph(problem, opt_results, observed_trajectories, timepoints, initcond_full, vary, varyic, plottitle):
     """
     Plots graph of data vs inferred trajectories (max of 9 subplots created)
 
@@ -352,8 +352,7 @@ def graph(opt_results, mu, t, lib, initcond_full, vary, varyic, mfkoutput, plott
     with the experiment data as black circles.
 
     :param opt_results:
-    :param t:
-    :param lib:
+    :param timepoints:
     :param initcond_full:
     :param vary:
     :param varyic:
@@ -366,50 +365,37 @@ def graph(opt_results, mu, t, lib, initcond_full, vary, varyic, mfkoutput, plott
     (opt_param, opt_initcond) = i0_to_test(list(opt_results[0][0]), opt_results[2], vary, initcond_full, varyic)
 
     # get trajectories for optimised parameters
-    opt_soln = CVODE(lib, t, opt_initcond, opt_param)
-    opt_mu = [opt_soln[:, i] for i in range(0, len(initcond_full))]
+    simulator = Simulation(problem, postprocessing='LNA' if problem.method == 'LNA' else None)
+    __, starting_trajectories = simulator.simulate_system(opt_results[2], opt_results[3], timepoints)
+    __, optimal_trajectories = simulator.simulate_system(opt_param, opt_initcond, timepoints)
 
-    # get trajectories for starting parameters
-    start_soln = CVODE(lib, t, opt_results[3], opt_results[2])
-    start_mu = [start_soln[:, i] for i in range(0, len(initcond_full))]
-
+    trajectory_lookup = { start_trajectory.description: (start_trajectory, optimal_trajectory)
+                          for start_trajectory, optimal_trajectory in zip(starting_trajectories, optimal_trajectories)}
     # Plot figure (starting vs optimised trajectories, plus experimental data)
     fig = plt.figure()
-    plot_list = []
 
-    # Allow for missing timepoints in experimental data
-    def check_partial_data(times, traj):
-        t_list = []
-        traj_list = []
-        for a in range(len(traj)):
-            if traj[a] != 'N':
-                t_list.append(times[a])
-                traj_list.append(traj[a])
-        return (t_list, traj_list)
+    # Try to guess the best way to split the plot
+    rows = int(sqrt(len(observed_trajectories)))
+    columns = int(sqrt(len(observed_trajectories)))
+    while rows*columns < len(observed_trajectories):
+        rows += 1
 
-    for i in mom_index_list:
-        new_plot = False
-        if i not in plot_list:
-            plot_list.append(i)
-            new_plot = True
+    for i, observed_trajectory in enumerate(observed_trajectories):
+        ax = plt.subplot(rows, columns, i+1)
 
-        if len(plot_list) < 10:
-            j = plot_list.index(i)
-            ax = plt.subplot(4, 3, j + 1)
-            (t_list, traj_list) = check_partial_data(t, mu[i])
+        ax.plot(observed_trajectory.timepoints, observed_trajectory.values, color='k', linestyle='None', marker='.',
+                label='Observed')
+        plt.xlabel('time')
+        plt.ylabel(observed_trajectory.description)
 
-            # if no plot exists for that moment create subplot, else add to existing subplot 
-            if new_plot == True:
-                ax.plot(t_list, traj_list, color='k', linestyle='None', marker='.', label='data')
-                plt.xlabel('t')
-                plt.ylabel(moments_list[mom_index_list[i]])
-                ax.plot(t, opt_mu[mom_index_list[i]], color='r', label='optimised')
-                ax.plot(t, start_mu[mom_index_list[i]], color='g', label='starting values')
-            else:
-                ax.plot(t_list, traj_list, color='k', linestyle='None', marker='.')
-            ax.yaxis.set_major_locator(MaxNLocator(5))
+        starting_trajectory, optimal_trajectory = trajectory_lookup[observed_trajectory.description]
 
-    ax.legend(bbox_to_anchor=(1.0, -0.5))
+        ax.plot(starting_trajectory.timepoints, starting_trajectory.values, color='g', label='Starting')
+        ax.plot(optimal_trajectory.timepoints, optimal_trajectory.values, color='r', label='Optimal')
+        ax.yaxis.set_major_locator(MaxNLocator(5))
+
+
+    plt.legend(bbox_to_anchor=(1.0, -0.5))
     plt.tight_layout()
     fig.suptitle(plottitle)
     plt.show()
