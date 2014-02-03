@@ -6,14 +6,12 @@
 # differences) between the sample data moments and moments 
 # calculated using MFK at each of the specified timepoints.
 #################################################################
+from math import sqrt
+
 import numpy as np
-from sympy import Matrix
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
-from CVODE import CVODE
-import re
-from math import factorial, sqrt
 from ode_problem import Moment
 from simulate import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 

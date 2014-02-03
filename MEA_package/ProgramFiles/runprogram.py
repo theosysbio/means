@@ -1,6 +1,5 @@
 import os
 import sys
-from create_cfile import create_c
 from ode_problem import parse_problem
 from paramtime import paramtime
 from simulate import simulate, graphbuilder
@@ -91,7 +90,8 @@ def run():
             elif option[0:6] == 'model=':model = option[6:]
             elif option[0:5] == 'nMom=':nMoments = option[5:]
             elif option[0:7] == 'ODEout=':ODEout = option[7:]
-            elif option == 'compile' : createcfile = True
+            elif option == 'compile' : createcfile = True # TODO: this is not used any more, the only reason we keep this
+                                                          # is because I do nt want to change all regression tests just now
             elif option[0:8] == 'library=':library = option[8:]
             elif option[0:10]=='timeparam=':tpfile=option[10:]
             elif option[0:4]=='sd1=':sundials_1=option[4:]
@@ -153,41 +153,23 @@ def run():
             else:
                 os.system('python LNA.py '+wd+model+' '+wd+ODEout)
 
-    if createcfile == True:
-        if tpfile == None:
-            print "\n No time points given for compiling ODE solver.\n Use --timeparam option to specify correct file."
-            sys.exit()
-        else:
-            if os.path.exists(wd+tpfile)==False:
-                print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
-                sys.exit()
-            else:
-                [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
-
-                create_c(wd+ODEout,wd+library,t, sundials_1, sundials_2)
-             
-    if (solve==True)and(infer==True):
+    if solve and infer:
         print "\n  Error:\n  Please choose EITHER --solve or --infer.\n"
         sys.exit()
 
-    if solve == True:
-        lib = library+'.so.1.0'
-        if os.path.exists(wd+lib)==False:
-            print "\n Error:\n  "+lib+"  does not exist in working directory.\n  Please try again with correct solver name.\n  "
-            sys.exit()
-        else:
-            if os.path.exists(wd+tpfile)==False:
-                print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
-                sys.exit()
-            else:
-                [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
-                problem = parse_problem(wd+ODEout)  # TODO: os.path.join
+    if solve:
+        if not os.path.exists(wd+tpfile):
+            print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
+            sys.exit(1)
 
-                simulated_timepoints, solution, momlist = simulate(problem,
-                                             wd+trajout,t,param,initcond, maxorder)
+        [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
+        problem = parse_problem(wd+ODEout)  # TODO: os.path.join
 
-                if plot == True:
-                    graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
+        simulated_timepoints, solution, momlist = simulate(problem,
+                                         wd+trajout,t,param,initcond, maxorder)
+
+        if plot:
+            graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
 
     if infer:
         if not tpfile:
@@ -208,7 +190,6 @@ def run():
                                             "Please try again with correct experimental data filename.\n"
             sys.exit(1)
 
-        lib = library+'.so.1.0'
         problem = parse_problem(wd+ODEout)
         # If no random restarts selected:
         if not restart:
@@ -263,8 +244,6 @@ def run():
         # write results to file (default name 'inference.txt') and plot graph if selected
         write_inference_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
         if plot:
-            # FIXME: this is broken, baby
-
             graph(problem, restart_results[0], observed_trajectories, t, initcond_full, vary, varyic, plottitle)
 
 
