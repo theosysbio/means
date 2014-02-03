@@ -5,12 +5,12 @@ def substitute_all(expr, pairs):
     """
     Performs multiple substitutions in an expression
     :param expr: a sympy expression
-    :param pairs: a list of pairs (a,b) where each b_i is to be substituted with a_i
+    :param pairs: a list of pairs (a,b) where each a_i is to be substituted with b_i
     :return: the substituted expression
     """
     out = expr
     for (a,b) in pairs:
-        out = sympy.Subs(out, b, a)
+        out = sympy.Subs(out, a, b)
     to_ret = out.doit()
     return to_ret
 
@@ -113,12 +113,12 @@ def _eval_res_equal(expr1, expr2, atoms, vals,threshold=10e-10):
     :param vals: the values to subtitute atoms with
     :return: True if the result is the same
     """
-    substitution_pairs = zip(vals, atoms)
+    substitution_pairs = zip(atoms, vals)
 
     eval_1 = substitute_all(expr1, substitution_pairs)
     eval_2 = substitute_all(expr2, substitution_pairs)
 
-    return (eval_1 - eval_2) < threshold
+    return abs(eval_1 - eval_2) < threshold
 
 
 def sympy_empirical_equal(expr1, expr2):
