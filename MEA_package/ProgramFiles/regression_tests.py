@@ -288,8 +288,8 @@ def compare_tsv_with_float_epsilon(epsilon=1e-2):
 
     return f
 
-def parameter_and_distance_comparisons(allowed_difference_between_top_distances=1e-3,
-                                       allowed_difference_between_parameters=1e-6):
+def parameter_and_distance_comparisons(allowed_difference_between_top_distances=5e-3,
+                                       allowed_difference_between_parameters=1e-5):
 
     def f(output, expected_output):
 
