@@ -2,6 +2,9 @@
 import sympy
 import numpy as np
 from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
+from sympy.utilities.autowrap import autowrap
+from decorators import memoised_property
+
 
 class ODETermBase(object):
     pass
@@ -179,6 +182,12 @@ class ODEProblem(object):
     def number_of_equations(self):
         return len(self.left_hand_side)
 
+    @memoised_property
+    def _right_hand_side_as_numeric_functions(self):
+        all_symbols = self.constants + self.variables
+        wrapping_func = lambda x: autowrap(x, args=all_symbols, language='C', backend='Cython')
+        return map(wrapping_func, self.right_hand_side)
+
     def right_hand_side_as_function(self, values_for_constants):
         """
         Returns the right hand side of the model as a callable function with constant terms i.e. `(c_1, c_2, etc.)` set
@@ -191,11 +200,11 @@ class ODEProblem(object):
         """
         values_for_constants = np.array(values_for_constants)
         assert(values_for_constants.shape == (len(self.constants),))
-        rhs_function = sympy.lambdify(self.constants + self.variables, self.right_hand_side)
+        wrapped_functions = self._right_hand_side_as_numeric_functions
 
         def f(values_for_variables):
             all_values = np.concatenate((values_for_constants, values_for_variables))
-            return rhs_function(*all_values)
+            return np.array([[w_f(*all_values)] for w_f in wrapped_functions])
 
         return f
 
