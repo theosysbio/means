@@ -33,18 +33,20 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
     m_mat = [M[nv, :] for nv in range(M.rows)]
     #todo : tolist()
 
-    for nvec in counter:
+    for count in counter:
         # skip zeroth moment
-        if sum(nvec) == 0:
+        if count.order == 0:
             continue
+        nvec = count.n_vector
 
         # Find all moments in mcounter that are smaller than `nvec`.
-        midx = [i for i,c in enumerate(mcounter) if all_higher_or_eq(nvec, c)]
+        midx = [i for i,c in enumerate(mcounter) if all_higher_or_eq(nvec, c.n_vector)]
 
         Taylorexp = [[0] * len(counter)] * len(mcounter)
 
         for (Tm, midx_val) in enumerate(midx):
-            mvec = mcounter[midx_val]   #equivalent to k in paper
+            mc = mcounter[midx_val]
+            mvec = mcounter[midx_val].n_vector
 
             # (n k) binomial term in equation 9
             n_choose_k = make_k_chose_e(mvec, nvec)
@@ -59,7 +61,7 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
             A = reduce(operator.mul,  [y ** (n - m) for y,n,m in zip(ymat, nvec, mvec)])
             dAdt = reduce(operator.add, [(n - m) * (y ** (-1)) * A * vec for y,n,m,vec in zip(ymat, nvec, mvec, m_mat)])
 
-            ekcounter = [c for c in mcounter if all_higher_or_eq(mvec, c) if sum(c) > 0]
+            ekcounter = [c for c in mcounter if all_higher_or_eq(mvec, c.n_vector) if c.order > 0]
 
             dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
 
@@ -67,7 +69,9 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
                 B = 1
             else:
                 # Calculate B, dBdt terms in equation 9
-                B = sp.S("x_" + "_".join([str(s) for s in mvec]))
+                B = mc.raw_symbol
+
+
 
             Taylorexp[Tm] = (n_choose_k * minus_one_pow_n_minus_k * (A * dBdt + B * dAdt))
 
