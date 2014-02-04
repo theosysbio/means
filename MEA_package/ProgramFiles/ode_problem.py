@@ -12,7 +12,7 @@ class ODETermBase(object):
 class Moment(ODETermBase):
     __n_vector = None
 
-    def __init__(self, n_vector, raw_symbol=None, central_symbol=None):
+    def __init__(self, n_vector, symbol = None):
         """
         Creates an ODETerm that describes that a particular ODE term is a moment defined by the `n_vector`.
         Should be a vector of ints.
@@ -22,20 +22,15 @@ class Moment(ODETermBase):
         """
         self.__n_vector = np.array(n_vector, dtype=int)
         self.__order = sum(self.n_vector)
-        self.__raw_symbol = raw_symbol
-        self.__central_symbol = central_symbol
-
+        self.__symbol = symbol
     @property
     def n_vector(self):
         return self.__n_vector
 
-    @property
-    def raw_symbol(self):
-        return self.__raw_symbol
 
     @property
-    def central_symbol(self):
-        return self.__central_symbol
+    def symbol(self):
+        return self.__symbol
 
     @property
     def order(self):

@@ -47,7 +47,6 @@ def raw_to_central(counter, ymat, mcounter):
     #momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c.n_vector])) for c in counter if c.order != 0]
 
     mom = []        #create empty list for mom
-    used_moments = [count for count in counter if count.order != 0]
 
 
     # This loop loops through the ::math::`[n_1, ..., n_d]` vectors of the sums in the beginning of the equation
@@ -65,7 +64,6 @@ def raw_to_central(counter, ymat, mcounter):
         # where lower than and equal is defined as ::math::`n_i^a \le n_i^b ~ \textrm{for all i}`
         # we assume this is just generating the list of possible k values to satisfy ns in the equation.
         m_lower = [c for c in mcounter if all_higher_or_eq(nvec, c.n_vector)]
-
         # mvec is the vector ::math::`[k_1, ..., k_d]`
 
         # (n k) binomial term in equation 9
@@ -78,8 +76,7 @@ def raw_to_central(counter, ymat, mcounter):
         alpha_vec = [make_alpha(nvec, mvec.n_vector, ymat) for mvec in m_lower]
 
         # beta term in equation 9
-        beta_vec = [mvec.raw_symbol for mvec in m_lower]
-
+        beta_vec = [mvec.symbol for mvec in m_lower]
         # let us multiply all terms
         product = [(n * m * a * b) for (n, m, a, b) in zip(n_choose_k_vec, minus_one_pow_n_min_k_vec, alpha_vec, beta_vec)]
 
@@ -87,4 +84,4 @@ def raw_to_central(counter, ymat, mcounter):
         mom.append(sum(product))
 
 
-    return (sp.Matrix(mom), used_moments)
+    return sp.Matrix(mom)

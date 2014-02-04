@@ -48,7 +48,7 @@ class TestRawToCentral(unittest.TestCase):
                              [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
         means_of_species = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
 
-        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
+        right_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
 
         self.assertEqual(len(right_hand_sides), 1, "Was expecting to get back only one equation")
 
@@ -74,7 +74,7 @@ class TestRawToCentral(unittest.TestCase):
         possible_k_values = n_values + [[1, 0], [0, 1]]
         means_of_species = [sympy.var('y_0'), sympy.var('y_1')]
 
-        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
+        right_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
         self.assertEqual(len(right_hand_sides), 3, "Was expecting to get back three equations, one for each n_value except for zero vector")
 
         beta_terms = {'00': sympy.Symbol('x_0_0'),

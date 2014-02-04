@@ -49,30 +49,31 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         #  raw_to_central calculates central moments (symbolised by central_moments_symbols) in terms
         #  of raw moment expressions (raw_moment_exprs) (eq. 8)
-        central_from_raw_exprs, used_moments = raw_to_central(counter, species, mcounter)
+        central_from_raw_exprs = raw_to_central(counter, species, mcounter)
 
         # Substitute raw moment, in central_moments, with of central moments
-        central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, used_moments, central_from_raw_exprs)
+        central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, counter, mcounter)
 
         # Get expressions for each central moment, and enter into list MFK
         MFK = self.make_mfk(central_moments_exprs, counter, M)
 
 
-        #TODO problem should use moment
-        # build ODEProblem object
-        prob_moments = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
-        prob_moments += [tuple(c.n_vector) for c in counter[1:]]
+        # concatenate the firt order raw moments (means) and the
+        # higher order central moments (variances, covariances,...)
+        #fixme
+        #the `reversed` is a hack to make the output similar to the original program
+        prob_moments = [m for m in reversed(mcounter) if m.order == 1]
+        prob_moments += [c for c in counter if c.order > 1]
 
-        #symbols for the left hand side equations.. first order raw moments followed by higher order moments
-        lhs = sp.Matrix([i for i in species] + [i.central_symbol for i in used_moments])
+        problem_moment_nvecs = [tuple(pm.n_vector) for pm in prob_moments]
+        lhs = sp.Matrix([pm.symbol for pm in prob_moments])
+        prob_dic = dict(zip(lhs, problem_moment_nvecs))
 
-        prob_moments = dict(zip(lhs,prob_moments))
-
-        #out_problem = ode_problem.ODEProblem("MEA", mcounter, MFK, sp.Matrix(self.model.constants))
-        out_problem = ode_problem.ODEProblem("MEA", lhs, MFK, sp.Matrix(self.model.constants), prob_moments)
+        #TODO problem should use Moments in the constructor of ODEProblem
+        out_problem = ode_problem.ODEProblem("MEA", lhs, MFK, sp.Matrix(self.model.constants), prob_dic)
         return out_problem
 
-    def substitute_raw_with_central(self, central_moments_exprs, used_moments, central_from_raw_exprs):
+    def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, counter, mcounter):
         """
         Substitute raw moment terms in central_moments in terms of central moments
         (need to iterate in reverse from highest to lowest order moments to ensure all
@@ -84,15 +85,19 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: the substituted central moments
         """
 
-        xs_to_solve = [um.raw_symbol for um in used_moments]
-        right_hand_sides = [m - um.central_symbol for (um, m) in zip(used_moments, central_from_raw_exprs)]
-        solved_xs = [sp.solve(rhs, xts) for (rhs, xts) in zip(right_hand_sides, xs_to_solve)]
+        # here we assume the same order. it would be better to ensure the moments n_vectors match
+        raw_lhs = [um.symbol for um in mcounter if um.order > 1]
+        central_lhs = [um.symbol for um in counter if um.order > 1]
+
+        right_hand_sides = [m - clhs for (clhs, m) in zip(central_lhs, central_from_raw_exprs)]
+
+        solved_xs = [sp.solve(rhs, rlhs) for (rhs, rlhs) in zip(right_hand_sides, raw_lhs)]
 
         # note the "reversed":
         # we start the substitutions by higher order moments and propagate to the lower order moments
         out_exprs = central_moments_exprs.clone()
-        for (xts, sx) in reversed(zip(xs_to_solve, solved_xs)):
-            out_exprs = out_exprs.applyfunc(lambda x : sp.Subs(x, xts, sx).doit())
+        for (rlhs, sx) in reversed(zip(raw_lhs, solved_xs)):
+            out_exprs = out_exprs.applyfunc(lambda x : sp.Subs(x, rlhs, sx).doit())
             #todo eventually, remove simplify (slow)
             out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
@@ -105,8 +110,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: MFK ...
         """
 
-        yms = sp.Matrix([c.central_symbol for c in counter])
-
+        yms = sp.Matrix([c.symbol for c in counter])
         # try to simplify an expression. returns the original expression if fail
         # todo remove this when we do not need it anymore
         def try_to_simplify(expr):
@@ -121,8 +125,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         MFK += [try_to_simplify((sp.Matrix(cm).T * yms)[0]) for cm in central_moments.tolist()]
         return sp.Matrix(MFK)
 
-
-
     def fcount(self, n_moments,n_vars):
         """
         :param n_moments: the maximal order of moment to be computer
@@ -130,31 +132,33 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: a pair of tuples. the first element contains the all the permutations,
         whilst the second element does not have the first order (e.g. {0,0,1})
         """
-        m_counter = [i for i in itertools.product(range(n_moments + 1), repeat=n_vars) if sum(i) <= n_moments]
+        #fixme clean this ugly function
+        m_counter_tuples = [i for i in itertools.product(range(n_moments + 1), repeat=n_vars) if sum(i) <= n_moments]
+        m_counter_tuples = sorted(m_counter_tuples, cmp=lambda x, y: sum(y) - sum(x))
 
-        m_counter = sorted(m_counter, cmp=lambda x, y: sum(x) - sum(y))
-        # build symbols for raw moments
-
-        raw_symbols = [None] * len(m_counter)
-        # builds symbols for central moments
-
-        central_symbols = [None] * len(m_counter)
-        k = 0
-
-        for i,count in enumerate(m_counter):
+        raw_symbols = [None] * len(m_counter_tuples)
+        for i,count in enumerate(m_counter_tuples):
             if sum(count) == 0:
                 raw_symbols[i] = sp.Integer(1)
-                central_symbols[i] = sp.Integer(1)
             elif sum(count) == 1:
                 idx = [j for j, c in enumerate(count) if c == 1][0]
                 raw_symbols[i] = sp.Symbol("y_{0}".format(idx))
             else:
                 raw_symbols[i] = sp.S("x_" + "_".join([str(s) for s in count]))
-                central_symbols[i] = sp.S('yx{0}'.format(k+1))
+
+
+        m_counter = [Moment(c, s) for c,s in zip(m_counter_tuples, raw_symbols)]
+
+        counter_tuples = [m for m in m_counter_tuples if sum(m) != 1]
+        counter_symbols = [None] * len(counter_tuples)
+        k = 0
+        for i,count in enumerate(counter_tuples):
+            if sum(count) == 0:
+                counter_symbols[i] = sp.Integer(1)
+            else:
+                counter_symbols[i] = sp.S('yx{0}'.format(k+1))
                 k += 1
 
-        m_counter = [Moment(c, rs, cs) for c,rs,cs in zip(m_counter, raw_symbols, central_symbols)]
-
-        counter = [i for i in m_counter if i.order != 1]
+        counter = [Moment(c, s) for c,s in zip(counter_tuples, counter_symbols)]
         return (counter, m_counter)
 

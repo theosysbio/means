@@ -1,6 +1,5 @@
-from fcount import fcount
 import unittest
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S
+from sympy import Matrix, diff, Symbol, simplify, S
 import sympy as sp
 from TaylorExpansion import taylor_expansion
 from TaylorExpansion import get_factorial_term
@@ -94,8 +93,8 @@ class TaylorExpansionTestCase(unittest.TestCase):
         amat = Matrix(nMoments, 1, lambda i, j : simplify(a_strings[i]))
 
         counter = fcount(nMoments, nvariables)[0]
+        print counter
 
-        #te_result = taylor_expansion(nreactions, nvariables, damat, amat, counter, nMoments)
         te_result = taylor_expansion(variables, amat, counter)
 
         # hard codding the expected matrix:
