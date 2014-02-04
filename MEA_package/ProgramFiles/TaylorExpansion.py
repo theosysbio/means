@@ -53,19 +53,19 @@ def get_factorial_term(counter_entry):
     return sp.S(1)/sp.S(prod)
 
 
-def taylor_expansion(variables, propensity, counter):
+def taylor_expansion(species, propensity, counter):
     """
     Creates terms used in eq. 6 (see Ale et al. 2013) to calculate dmu/dt for EACH VARIABLE combination,
     and EACH REACTION.
 
-    :param variables: the name of the variables (typically {y_0, y_1, ..., y_n})
+    :param species: the name of the variables (typically {y_0, y_1, ..., y_n})
     :param propensity: the reactions describes by the model
     :param counter: a list of all possible combination of order of derivation
     :return: a matrix in which each row corresponds to a reaction, and each column to an element of counter.
     """
 
     # compute derivatives for EACH REACTION and EACH entry in COUNTER
-    derives =[derive_expr_from_counter_entry(reac, variables, c) for (reac, c) in itertools.product(propensity, counter)]
+    derives =[derive_expr_from_counter_entry(reac, species, c) for (reac, c) in itertools.product(propensity, counter)]
 
     # Computes the factorial terms for EACH REACTION and EACH entry in COUNTER
     # this does not depend of the reaction, so we just repeat the result for each reaction

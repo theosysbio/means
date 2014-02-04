@@ -40,7 +40,7 @@ def make_f_expectation(variables, expr, counter):
     :return: a column vector (as a sympy matrix). Each row correspond to an element of counter
     """
 
-    # compute derivatives for  EACH ENTRY in COUNTER
+    # compute derivatives for EACH ENTRY in COUNTER
     derives = [derive_expr_from_counter_entry(expr, variables, c) for c in counter]
 
     # Computes the factorial terms for EACH entry in COUNTER
@@ -119,8 +119,10 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
 
     # then we sum over the columns
     summed = [reduce(operator.add, to_sum[:,i]) for i in range(to_sum.cols)]
+    # todo sum_of_cols
 
     # let us return it as a column vector
     mixed_moments = sp.Matrix(1, len(summed), summed)
+    #todo  use M.T
 
     return mixed_moments

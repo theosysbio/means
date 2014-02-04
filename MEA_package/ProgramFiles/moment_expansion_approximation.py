@@ -1,5 +1,3 @@
-####python MFK_final.py <model> <nMoments> <outputfile>
-
 import itertools
 import sympy as sp
 from approximation_baseclass import ApproximationBaseClass
@@ -35,6 +33,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
         (counter, mcounter) = self.fcount(n_moments, n_species)
+
         # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
         taylor_expansion_matrix = taylor_expansion(species, propensities, counter)
 
@@ -54,9 +53,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #  of raw moment expressions (raw_moment_exprs) (eq. 8)
         (central_from_raw_exprs, central_moments_symbols) = raw_to_central(counter, species, mcounter)
 
+
         # Substitute one for zeroth order raw moments in mom
         x_zero = sp.Symbol("x_" + "_".join(["0"] * n_species))
-        central_from_raw_exprs = central_from_raw_exprs.applyfunc(lambda x : sp.Subs(x, x_zero, sp.Integer(1)).doit() )
+        central_from_raw_exprs = central_from_raw_exprs.applyfunc(lambda x : sp.Subs(x, x_zero, sp.Integer(1)).doit())
 
         # Substitute first order raw moments (means) in mom with y_i (ymat entry)
         central_from_raw_exprs = self.substitute_mean_with_y(central_from_raw_exprs, n_species)
@@ -140,7 +140,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # apply this to all elements (in list and sub-list)
         out_moms = central_moments_exprs.applyfunc(lambda x: substitute_all(x, substitutions_pairs))
         return (yx_symbols, out_moms)
-
 
     def make_mfk(self, central_moments , yms, M):
         """

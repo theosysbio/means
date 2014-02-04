@@ -4,8 +4,8 @@ import sympyhelpers as sph
 from eq_mixedmoments import eq_mixedmoments
 from eq_mixedmoments import make_k_chose_e
 
-def all_higher_or_eq(a, b):
-    return all([a >= b for a, b in zip(a, b)])
+def all_higher_or_eq(vec_a, vec_b):
+    return all([a >= b for a, b in zip(vec_a, vec_b)])
 
 def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
     """
@@ -18,9 +18,9 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
     :param ymat: species matrix: y0, y1,..., yd
     :param amat: propensities
     :param S: stoichiometry matrix
-    :return: centralmoments list of size `(len(counter)-1)` containing an entry for each n1,...,nd combination
-            (i.e. each value of counter)
-            This list contains sum of the terms `f2*f3*(AdB/dt + B dA/dt)` in eq. 9 for each n1,...,nd combination in eq. 9
+    :return: central_moments matrix with `(len(counter)-1)` rows and one column per entry in counter
+            This list contains sum of the terms `n_choose_k*minus_one_pow_n_minus_k*(AdB/dt + B dA/dt)` in eq. 9 for each
+             n1,...,nd combination in eq. 9 where ... is ... #todo
     """
     central_moments = []
 
@@ -31,9 +31,9 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
 
     # copy M matrix as a list of rows vectors (1/species)
     m_mat = [M[nv, :] for nv in range(M.rows)]
+    #todo : tolist()
 
     for nvec in counter:
-
         # skip zeroth moment
         if sum(nvec) == 0:
             continue
@@ -43,26 +43,22 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
 
         Taylorexp = [[0] * len(counter)] * len(mcounter)
 
-        for Tm in range(0, len(midx)):
-            mvec = mcounter[midx[Tm]]   #equivalent to k in paper
+        for (Tm, midx_val) in enumerate(midx):
+            mvec = mcounter[midx_val]   #equivalent to k in paper
 
             # (n k) binomial term in equation 9
             n_choose_k = make_k_chose_e(mvec, nvec)
 
             # (-1)^(n-k) term in equation 9
-            minus_one_pow_n_minus_k = reduce(operator.mul, [(-1) ** (n - m) for (n,m) in zip(nvec, mvec)])
+            minus_one_pow_n_minus_k = reduce(operator.mul, [sp.Integer(-1) ** (n - m) for (n,m) in zip(nvec, mvec)])
 
             ##########################################
             # Calculate A, dAdt terms in equation 9
             # (equivalent to fA_counter in Angelique's code)
             # ymat used in place of means - these will be replaced later
-
             A = reduce(operator.mul,  [y ** (n - m) for y,n,m in zip(ymat, nvec, mvec)])
-
             dAdt = reduce(operator.add, [(n - m) * (y ** (-1)) * A * vec for y,n,m,vec in zip(ymat, nvec, mvec, m_mat)])
 
-
-            # this is different from before, because it uses mvec i.e. k
             ekcounter = [c for c in mcounter if all_higher_or_eq(mvec, c) if sum(c) > 0]
 
             dBdt = eq_mixedmoments(amat, counter, S, ymat, mvec, ekcounter)
@@ -87,8 +83,8 @@ def eq_centralmoments(counter, mcounter, M, ymat, amat, S):
         Taylorexp1 = sp.Matrix(Taylorexp)
 
         centralmomentsTn = [sum(Taylorexp1[:, j]) for j in range(len(counter))]
+        #todo row = sph.sum_of_cols(Taylorexp1)
 
-        #row = sph.sum_of_cols(Taylorexp1)
         central_moments.append(centralmomentsTn)
 
 
