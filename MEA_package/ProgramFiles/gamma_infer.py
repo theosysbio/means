@@ -13,16 +13,14 @@ are simulated by solving the MFK equations.  These values are used
 to sum the log likelihood over each time/data point.
 """
 from collections import namedtuple
-import os
-import sys
 
-from scipy.optimize import fmin
 from scipy.special import gammaln
+import numpy as np
 
 from ode_problem import Moment
-from simulate import Simulation, NP_FLOATING_POINT_PRECISION
-from sumsq_infer import make_i0, i0_to_test, parse_experimental_data_file
-import numpy as np
+from simulate import NP_FLOATING_POINT_PRECISION
+
+SUPPORTED_DISTRIBUTIONS = {'gamma', 'normal', 'lognormal'}
 
 def eval_density(means, variances,observed_values, distribution):
     """
@@ -60,23 +58,13 @@ def eval_density(means, variances,observed_values, distribution):
 
     elif distribution == 'lognormal':
         log_density = -(np.log(observed_values) - means) ** 2 / (2 * variances) - np.log(observed_values * np.sqrt(2 * np.pi * variances))
+    else:
+        raise ValueError('Unsupported distribution {0!r}'.format(distribution))
 
     total_log_density = np.sum(log_density)
     return total_log_density
 
-#####################################################################
-# Optimise function, used for parameter inference (minimizes
-# the distance/cost funtion using a simplex algorithm)
-# Arguments: 
-# param, vary      kinetic parameters, and list to indicate which to infer
-# initcond,varyic  initial conditions, " "
-# sample           name of experimental data file
-# cfile            name of C library (specified by --library)
-# mfkoutput        name of file produced by MFK (specified by --ODEout)
-# distribution     parametric model (specified by --pdf)
-######################################################################     
-
-MeanVariance = namedtuple('MeanVariance', ['mean', 'variance'])
+_MeanVariance = namedtuple('_MeanVariance', ['mean', 'variance'])
 def _compile_mean_variance_lookup(trajectories):
     means = {}
     variances = {}
@@ -98,126 +86,35 @@ def _compile_mean_variance_lookup(trajectories):
 
     combined_lookup = {}
     for species, mean in means.iteritems():
-        combined_lookup[species] = MeanVariance(mean, variances[species])
+        combined_lookup[species] = _MeanVariance(mean, variances[species])
 
     return combined_lookup
 
-def optimise(problem, param, vary, initcond, varyic, limits, sample, distribution):
-    """
-    Optimise function, used for parameter inference (minimizes the distance/cost funtion using a simplex algorithm)
-    :param problem:
-    :type problem: ODEProblem
-    :param param: kinetic parameters
-    :param vary: list which kinetic parameters to infer
-    :param initcond: initial conditions
-    :param varyic: list of which initial conditions to vary
-    :param limits:
-    :param sample: name of experimental data file
-    :param distribution: parametric model (specified by `--pdf`)
-    :return:
-    """
-    i0 = make_i0(param, vary, initcond, varyic)    # create initial i0
+def _distribution_distance(simulated_trajectories, observed_trajectories_lookup, distribution):
 
-    # Get required info from MFK output file, extend initcond with default 
-    # value of 0 if only some of the initial moment values are specified
+    mean_variance_lookup = _compile_mean_variance_lookup(simulated_trajectories)
 
-    number_of_species = problem.number_of_species
-    number_of_equations = problem.number_of_equations
-    if len(initcond) != number_of_equations:
-        initcond += ([0] * (number_of_equations - len(initcond)))
+    # get moment expansion result with current parameters
+    log_likelihood = 0
 
-    ######################################################################
-    # Evaluates distance (cost) function for current set of values in i0
-    #
-    # At each iteration, this function is called by fmin and calculated 
-    # using the current values in i0.  Returned value (dist) is minimised
-    # by varying i0
-    #
-    # Distance is sum of -log(likelihood) assuming independence between
-    # time/data points
-    #####################################################################
+    ###############################################################
+    # If a parametric distribution used..
+    ################################################################
 
-    def distance(i0, param, vary, initcond, varyic, observed_trajectories, observed_timepoints, distribution):
+    for trajectory in observed_trajectories_lookup.itervalues():
+        moment = trajectory.description
+        assert(isinstance(moment, Moment))
+        assert(moment.order == 1)
 
-        # value returned if parameters or means < 0 or outside limits
-        max_dist = 1.0e10
+        species = np.where(moment.n_vector == 1)[0][0]
+        mean_variance = mean_variance_lookup[species]
+        if (mean_variance.mean < 0).any() or (mean_variance.variance < 0).any():
+            return float('inf')
 
-        # parameters to solve for
-        (test_param, test_initcond) = i0_to_test(i0, param, vary, initcond, varyic)
+        term = eval_density(mean_variance.mean, mean_variance.variance, trajectory.values, distribution)
+        log_likelihood += term
 
-        # Check parameters are positive, and within limits (if --limit used)
-        if any(i < 0 for i in test_param):     # parameters cannot be negative
-            return max_dist
-        if any(j < 0 for j in test_initcond[0:number_of_species]):
-            return max_dist      # disallow negative means
-
-        if limits is not None:
-            for a in range(0, len(i0)):
-                l_limit = limits[a][0]
-                u_limit = limits[a][1]
-                if l_limit != 'N':
-                    if i0[a] < l_limit:
-                        return max_dist
-                if u_limit != 'N':
-                    if i0[a] > u_limit:
-                        return max_dist
-
-
-        simulator = Simulation(problem, postprocessing='LNA' if problem.method=='LNA' else None)
-        simulated_timepoints, simulated_trajectories = simulator.simulate_system(test_param, test_initcond,
-                                                                                 observed_timepoints)
-
-        mean_variance_lookup = _compile_mean_variance_lookup(simulated_trajectories)
-
-        # get moment expansion result with current parameters
-        log_likelihood = 0
-
-        ###############################################################
-        # If a parametric distribution used..
-        ################################################################
-
-        for trajectory in observed_trajectories:
-            moment = trajectory.description
-            assert(isinstance(moment, Moment))
-            assert(moment.order == 1)
-
-            species = np.where(moment.n_vector == 1)[0][0]
-            mean_variance = mean_variance_lookup[species]
-            if (mean_variance.mean < 0).any() or (mean_variance.variance < 0).any():
-                return max_dist
-
-            term = eval_density(mean_variance.mean, mean_variance.variance, trajectory.values, distribution)
-            log_likelihood += term
-
-        dist = -log_likelihood
-        y_list.append(dist)
-        i0_list.append(i0[0])
-        return dist
-
-    # callback: function called after each iteration (each iteration will involve several
-    # distance function evaluations).  Use this to save data after each iteration if wanted.
-    # x is the current i0 returned after that iteration.    
-
-    def my_callback(x):
-        it_param.append(x[0])
-        it_no.append(len(it_param))
-
-    # create lists to collect data at each iteration (used during testing)
-    y_list = []
-    i0_list = []
-    it_no = []
-    it_param = []
-    it_dist = []
-
-    # read sample data from file and get indices for mean/variances in CVODE output
-    (observed_timepoints, observed_trajectories) = parse_experimental_data_file(sample)
-    #(mom_index_list,moments_list) = mom_indices(mfkoutput, mom_names)
-
-    # minimise defined distance function, with provided starting parameters
-    result = fmin(distance, i0,
-                  args=(param, vary, initcond, varyic, observed_trajectories, observed_timepoints,distribution),
-                  ftol=0.000001, disp=0, full_output=True, callback=my_callback)
-
-    return result, observed_timepoints, observed_trajectories, initcond
+    dist = -log_likelihood
+    return dist
 
 

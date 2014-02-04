@@ -3,7 +3,7 @@ import sys
 from ode_problem import parse_problem
 from paramtime import paramtime
 from simulate import simulate, graphbuilder
-from sumsq_infer import optimise, write_inference_results, graph
+from sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
 from hypercube import hypercube
 import gamma_infer
 
@@ -191,55 +191,47 @@ def run():
             sys.exit(1)
 
         problem = parse_problem(wd+ODEout)
-        # If no random restarts selected:
-        if not restart:
+        # read sample data from file and get indices for mean/variances in CVODE output
+        (observed_timepoints, observed_trajectories) = parse_experimental_data_file(wd+exptdata)
+
+        try:
             [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
-
-            if not distribution:        # inference using generalised method of moments
-                result, t, observed_trajectories, initcond_full = optimise(param, vary, initcond, varyic,
-                                                        limits, wd + exptdata,
-                                                        problem)
-            else:      # Use parametric or maxent distribution to approximate likelihood
-                result, t, observed_trajectories, initcond_full = gamma_infer.optimise(
-                                                                                                    problem,
-                                                                                                    param, vary,
-                                                                                                    initcond, varyic,
-                                                                                                    limits,
-                                                                                                    wd + exptdata,
-                                                                                                    distribution)
-            restart_results = [[result, None, param, initcond]]
-
-        # Else if random restarts selected
-        else:
-            try:
-                [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
-            except ValueError:
-                print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
-                      'for all parameter values.'.format(tpfile)
-                sys.exit(1)
+        except ValueError:
+            print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
+                  'for all parameter values.'.format(tpfile)
+            sys.exit(1)
+        if restart:
             all_params = hypercube(int(nRestart), param[:] + initcond[:])
-            restart_results = []
-            for n in all_params:
-                param_n = n[0:len(param)]
-                initcond_n = n[len(param):]
-                # if distance function used for inference
-                if not distribution:
-                    result, t, observed_trajectories, initcond_full = optimise(param_n, vary, initcond_n,
-                                                                                          varyic, limits,
-                                                                                          wd + exptdata,
-                                                                                          problem)
-                # Else if parametric approximation
-                else:
-                    result, t, observed_trajectories, initcond_full = gamma_infer.optimise(
-                        problem,
-                        param_n, vary,
-                        initcond_n,
-                        varyic, limits,
-                        wd + exptdata,
-                        distribution)
-                restart_results.append([result, observed_trajectories, param_n, initcond_n])
+            # TODO: hypercube is a bit funny in how it returns stuff
+            all_params = [(x[:len(param)], x[len(param):]) for x in all_params]
+        else:
+            all_params = [(param, initcond)]
 
-            restart_results.sort(key=lambda x: x[0][1], reverse=False)
+        restart_results = []
+        for param_n, initcond_n in all_params:
+             # FIXME: this should not be here
+            if len(initcond_n) != problem.number_of_equations:
+                # This just applies padding of [0, False] to unspecified initconditions
+                # consider moving it to appropriate parse function instead
+                diff = problem.number_of_equations - len(initcond_n)
+                initcond_n += [0] * diff
+                initcond_full = initcond_n
+                varyic += [False] * diff
+
+            params_with_variability = zip(param_n, vary)
+            initcond_with_variability = zip(initcond_n, varyic)
+
+            optimiser_method = distribution if distribution else 'sum_of_squares'
+            optimiser = ParameterInference(problem, params_with_variability,
+                                           initcond_with_variability, limits,
+                                           observed_timepoints,
+                                           observed_trajectories,
+                                           method=optimiser_method)
+            result = optimiser.infer()
+
+            restart_results.append([result, observed_trajectories, param_n, initcond_n])
+
+        restart_results.sort(key=lambda x: x[0][1], reverse=False)
 
         # write results to file (default name 'inference.txt') and plot graph if selected
         write_inference_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)

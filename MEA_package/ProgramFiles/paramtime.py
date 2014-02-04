@@ -1,13 +1,20 @@
+import numpy as np
 def param_limits(line):
-    upper_p_ = line.rstrip()
-    upper_p_ = upper_p_.split()
-    upper_p = []
-    for j in upper_p_:
-        if j.strip() == 'N':
-            upper_p.append(j.strip())
-        else:
-            upper_p.append(float(j))
-    return upper_p
+    limit_strings = line.rstrip()
+    limit_strings = limit_strings.split()
+
+    limits = []
+    for j in limit_strings:
+
+        try:
+            limit = float(j)
+        except ValueError:
+            if j.strip() == 'N':
+                limit = None
+            else:
+                raise
+        limits.append(limit)
+    return limits
 
 
 def paramtime(tpfile, restart, limit):
@@ -45,7 +52,8 @@ def paramtime(tpfile, restart, limit):
 
             # Or, if random restarts are used, two lines signifying upper and lower limits for starting values respectively
             # TODO: what happens when two lines given but restart not used?
-            if restart == True:
+            # We would take the first line, but maybe we should raise an error?
+            if restart:
                 params = lines[i + 2].rstrip()
                 params = params.split()
                 param1 = [float(p) for p in params]
@@ -84,7 +92,7 @@ def paramtime(tpfile, restart, limit):
             if varys != '':
                 varys = varys.split()
                 # Not sure why this is converted to float here. TODO: boolean seems more appropriate
-                vary = [float(x) for x in varys]
+                vary = [bool(x) for x in varys]
 
         # Fixed versus variable initial conditions
         if lines[i].startswith('Fixed(0)/variable(1) initial conditions'):
@@ -92,25 +100,23 @@ def paramtime(tpfile, restart, limit):
                 varysic = lines[i + 1].rstrip()
                 if varysic != '':
                     varysic = varysic.split()
-                    varyic = [float(x) for x in varysic]
+                    varyic = [bool(x) for x in varysic]
 
         # If limit option is set, try reading the parameter limits
-        if limit == True:
+        if limit:
             # Set bounds for allowed parameter values if constrained optimisation is used during inference
             # --limit option. Upper and lower bounds are set by the first and second lines respectively, 'N' indicating
             # that a particular bound does not exist.
             if lines[i].startswith('Set parameter limits:'):
                 upper_p = param_limits(lines[i + 1])
                 lower_p = param_limits(lines[i + 2])
-                for j in range(0, len(upper_p)):
-                    limits.append((lower_p[j], upper_p[j]))
+                limits = zip(lower_p, upper_p)
                 # Used to set bounds for allowed initial condition values if running constrained optimisation.
             # Set upper and lower bounds for the allowed ranges as described by 'Set parameter limits'
             if lines[i].startswith('Set initial conditions limits:'):
                 upper_ic = param_limits(lines[i + 1])
                 lower_ic = param_limits(lines[i + 2])
-                for k in range(0, len(upper_ic)):
-                    limits.append((lower_ic[k], upper_ic[k]))
+                limits.extend(zip(lower_ic, upper_ic))
 
     return [t, param, initcond, vary, varyic, limits]
 
