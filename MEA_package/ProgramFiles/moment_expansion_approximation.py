@@ -33,7 +33,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_species = len(species)
 
         # compute counter and mcounter; the "k" and "n" vectors in equations. counter = mcounter - first_order_moments
-        (counter, mcounter) = self.fcount(n_moments, n_species)
+        counter, mcounter = self.fcount(n_moments, n_species)
 
         # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
         taylor_expansion_matrix = taylor_expansion(species, propensities, counter)
@@ -49,27 +49,26 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         #  raw_to_central calculates central moments (symbolised by central_moments_symbols) in terms
         #  of raw moment expressions (raw_moment_exprs) (eq. 8)
-        (central_from_raw_exprs, used_moments) = raw_to_central(counter, species, mcounter)
+        central_from_raw_exprs, used_moments = raw_to_central(counter, species, mcounter)
 
         # Substitute raw moment, in central_moments, with of central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, used_moments, central_from_raw_exprs)
 
-
-        yx_symbols = [i.central_symbol for i in used_moments]
-        # prepend with zeroth order central moment (which is one)
-        yx_symbols = sp.Matrix([sp.Integer("1")] + yx_symbols)
         # Get expressions for each central moment, and enter into list MFK
-        MFK = self.make_mfk(central_moments_exprs, yx_symbols, M)
+        MFK = self.make_mfk(central_moments_exprs, counter, M)
 
+
+        #TODO problem should use moment
         # build ODEProblem object
         prob_moments = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
         prob_moments += [tuple(c.n_vector) for c in counter[1:]]
 
         #symbols for the left hand side equations.. first order raw moments followed by higher order moments
-        lhs = sp.Matrix([i for i in species] + yx_symbols[1:])
+        lhs = sp.Matrix([i for i in species] + [i.central_symbol for i in used_moments])
 
         prob_moments = dict(zip(lhs,prob_moments))
 
+        #out_problem = ode_problem.ODEProblem("MEA", mcounter, MFK, sp.Matrix(self.model.constants))
         out_problem = ode_problem.ODEProblem("MEA", lhs, MFK, sp.Matrix(self.model.constants), prob_moments)
         return out_problem
 
@@ -98,13 +97,15 @@ class MomentExpansionApproximation(ApproximationBaseClass):
             out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
-    def make_mfk(self, central_moments , yms, M):
+    def make_mfk(self, central_moments, counter, M):
         """
         :param CentralMoments:
-        :param yms:
+        :param counter:
         :param M:
         :return: MFK ...
         """
+
+        yms = sp.Matrix([c.central_symbol for c in counter])
 
         # try to simplify an expression. returns the original expression if fail
         # todo remove this when we do not need it anymore
@@ -116,9 +117,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
             return expr
 
         # todo eventually, we want to remove the simplify calls#
-        MFK = [try_to_simplify(e) for e in M*yms ]
+        MFK = [try_to_simplify(e) for e in M*yms]
         MFK += [try_to_simplify((sp.Matrix(cm).T * yms)[0]) for cm in central_moments.tolist()]
         return sp.Matrix(MFK)
+
 
 
     def fcount(self, n_moments,n_vars):
@@ -128,20 +130,21 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: a pair of tuples. the first element contains the all the permutations,
         whilst the second element does not have the first order (e.g. {0,0,1})
         """
-        #todo discus the new status of Moment, counter...
-
-
         m_counter = [i for i in itertools.product(range(n_moments + 1), repeat=n_vars) if sum(i) <= n_moments]
 
         m_counter = sorted(m_counter, cmp=lambda x, y: sum(x) - sum(y))
         # build symbols for raw moments
+
         raw_symbols = [None] * len(m_counter)
+        # builds symbols for central moments
+
         central_symbols = [None] * len(m_counter)
         k = 0
 
         for i,count in enumerate(m_counter):
             if sum(count) == 0:
                 raw_symbols[i] = sp.Integer(1)
+                central_symbols[i] = sp.Integer(1)
             elif sum(count) == 1:
                 idx = [j for j, c in enumerate(count) if c == 1][0]
                 raw_symbols[i] = sp.Symbol("y_{0}".format(idx))

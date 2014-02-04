@@ -62,7 +62,6 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         rhs = sp.Matrix([i for i in dPdt] + [i for i in dVdt])
 
         prob_moments = dict(zip(lhs,prob_moments))
-
         out_problem = ode_problem.ODEProblem("LNA", lhs, rhs, sp.Matrix(self.model.constants), prob_moments)
         return out_problem
 

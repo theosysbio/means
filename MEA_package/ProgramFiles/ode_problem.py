@@ -80,6 +80,7 @@ class ODEProblem(object):
     __ordered_descriptions_of_lhs_terms = None
 
     def __init__(self, method, left_hand_side, right_hand_side, constants, description_of_lhs_terms=None):
+    #def __init__(self, method, left_hand_side, right_hand_side, constants):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
@@ -90,6 +91,7 @@ class ODEProblem(object):
         :param description_of_lhs_terms: descriptions of the terms in the left hand side of equations.
                                          Should be a dictionary of symbol -> description pairs
         """
+
         self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
@@ -98,6 +100,9 @@ class ODEProblem(object):
         self.__initialise_descriptions(description_of_lhs_terms)
 
         self.validate()
+        #print self.__descriptions_dict
+
+        #print self.ordered_descriptions
 
     def __initialise_descriptions(self, description_of_lhs_terms):
         """
