@@ -92,7 +92,6 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
 
     :return: dB/dt
     """
-
     if len(ek_counter) == 0:
         return sp.Matrix(1, len(counter), lambda i, j: 0)
 

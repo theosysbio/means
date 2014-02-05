@@ -1,4 +1,3 @@
-
 import sympy
 import numpy as np
 from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
