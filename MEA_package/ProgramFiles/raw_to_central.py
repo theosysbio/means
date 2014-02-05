@@ -44,37 +44,39 @@ def raw_to_central(counter, ymat, mcounter):
 
     # This block of code just traces back the values from counter that were used to generate mom
     # and then returns them as list of symbols ym_{n_values}
-    momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c])) for c in counter if sum(c) != 0]
+    #momvec = [sp.Symbol("ym_" + "_".join([str(i) for i in c.n_vector])) for c in counter if c.order != 0]
 
     mom = []        #create empty list for mom
+
 
     # This loop loops through the ::math::`[n_1, ..., n_d]` vectors of the sums in the beginning of the equation
     # i.e. ::math::`\sum_{k1=0}^n_1 ... \sum_{kd=0}^n_d` part of the equation.
     # Note, this is not the sum over k's in that equation, or at least I think its not
-    for nvec in counter:  #loop through all n1,...,nd combinations
-        # nvec is the vector ::math::`[n_1, ... n_d]` in equation 8
-        if sum(nvec) == 0:
+    for count in counter:  #loop through all n1,...,nd combinations
+
+        if count.order == 0:
             continue
+
+        # nvec is the vector ::math::`[n_1, ... n_d]` in equation 8
+        nvec = count.n_vector
 
         # m_lower contains the elements of `mcounter` that are lower than or equal to the current nvec
         # where lower than and equal is defined as ::math::`n_i^a \le n_i^b ~ \textrm{for all i}`
         # we assume this is just generating the list of possible k values to satisfy ns in the equation.
-        m_lower = [c for c in mcounter if all_higher_or_eq(nvec, c)]
-
+        m_lower = [c for c in mcounter if all_higher_or_eq(nvec, c.n_vector)]
         # mvec is the vector ::math::`[k_1, ..., k_d]`
 
         # (n k) binomial term in equation 9
-        n_choose_k_vec = [make_k_chose_e(mvec, nvec) for mvec in m_lower]
+        n_choose_k_vec = [make_k_chose_e(mvec.n_vector, nvec) for mvec in m_lower]
 
         # (-1)^(n-k) term in equation 9
-        minus_one_pow_n_min_k_vec = [make_min_one_pow_n_minus_k(nvec,mvec)  for mvec in m_lower ]
+        minus_one_pow_n_min_k_vec = [make_min_one_pow_n_minus_k(nvec, mvec.n_vector)  for mvec in m_lower ]
 
         # alpha term in equation 9
-        alpha_vec = [ make_alpha(nvec,mvec, ymat) for mvec in m_lower]
+        alpha_vec = [make_alpha(nvec, mvec.n_vector, ymat) for mvec in m_lower]
 
         # beta term in equation 9
-        beta_vec = [ make_beta(mvec) for mvec in m_lower]
-
+        beta_vec = [mvec.symbol for mvec in m_lower]
         # let us multiply all terms
         product = [(n * m * a * b) for (n, m, a, b) in zip(n_choose_k_vec, minus_one_pow_n_min_k_vec, alpha_vec, beta_vec)]
 
@@ -82,4 +84,4 @@ def raw_to_central(counter, ymat, mcounter):
         mom.append(sum(product))
 
 
-    return (sp.Matrix(mom), sp.Matrix(momvec))
+    return sp.Matrix(mom)

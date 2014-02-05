@@ -1,4 +1,3 @@
-
 import sympy
 import numpy as np
 from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
@@ -7,12 +6,23 @@ from decorators import memoised_property
 
 
 class ODETermBase(object):
-    pass
+    @property
+    def descriptor(self):
+        return None
+class VarianceTerm(ODETermBase):
+
+    def __init__(self, symbol):
+        self.__symbol = symbol
+    @property
+    def symbol(self):
+        return self.__symbol
+
+
 
 class Moment(ODETermBase):
     __n_vector = None
 
-    def __init__(self, n_vector):
+    def __init__(self, n_vector, symbol = None):
         """
         Creates an ODETerm that describes that a particular ODE term is a moment defined by the `n_vector`.
         Should be a vector of ints.
@@ -21,17 +31,29 @@ class Moment(ODETermBase):
         :param n_vector: a vector specifying the multidimensional moment
         """
         self.__n_vector = np.array(n_vector, dtype=int)
+        self.__order = sum(self.n_vector)
+        self.__symbol = symbol
+        self.__descriptor = self.n_vector
+
+    @property
+    def descriptor(self):
+        return self.__n_vector
 
     @property
     def n_vector(self):
         return self.__n_vector
+
+
+    @property
+    def symbol(self):
+        return self.__symbol
 
     @property
     def order(self):
         """
         Returns the order of the moment
         """
-        return sum(self.n_vector)
+        return self.__order
 
     @property
     def is_mixed(self):
@@ -39,7 +61,7 @@ class Moment(ODETermBase):
         return self.order not in self.n_vector
 
     def __repr__(self):
-        return '{0}({1!r})'.format(self.__class__.__name__, self.n_vector)
+        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector,self.symbol)
 
     def __str__(self):
         return ', '.join(map(str, self.n_vector))
@@ -51,9 +73,13 @@ class Moment(ODETermBase):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return (self.n_vector == other.n_vector).all()
+        elif (self.n_vector != other.n_vector).any():
+            return False
+        elif (self.symbol != self.symbol):
 
-
+            return False
+        else:
+            return True
 
 class ODEProblem(object):
     """
@@ -68,58 +94,37 @@ class ODEProblem(object):
     __constants = None
     __ordered_descriptions_of_lhs_terms = None
 
-    def __init__(self, method, left_hand_side, right_hand_side, constants, description_of_lhs_terms=None):
+    def __init__(self, method, ode_lhs_terms, right_hand_side, constants):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
         Currently, 'MEA' and 'LNA' are supported"
-        :param left_hand_side: the left hand side of equations
+        :param ode_lhs_terms: the left hand side of equations as a list of `ODETerms` (e.g. `Moments`)
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
-        :param description_of_lhs_terms: descriptions of the terms in the left hand side of equations.
-                                         Should be a dictionary of symbol -> description pairs
         """
-        self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
+
+        self.__ode_lhs_terms = ode_lhs_terms
+        self.__left_hand_side = to_sympy_column_matrix(sympy.Matrix([plhs.symbol for plhs in ode_lhs_terms]))
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
+        self.__initialise_descriptions(ode_lhs_terms)
 
-        self.__initialise_descriptions(description_of_lhs_terms)
+    #todo
+    # def __eq__(self, other):
+    #    return True
 
-        self.validate()
-
-    def __initialise_descriptions(self, description_of_lhs_terms):
+    def __initialise_descriptions(self, ode_lhs_terms):
         """
         Populate self.__descriptions_dict
         and self._ordered_descriptions_of_lhs_terms
-        :param description_of_lhs_terms:
+        :param ode_lhs_terms:
         :return:
         """
-        # NB: getting left hand side from self, rather than passing it from above as
-        # we need to make sure that left_hand_side here is a list of symbols
-        left_hand_side = self.left_hand_side
-
-        if description_of_lhs_terms:
-            #print description_of_lhs_terms
-            # Validate the description_of_lhs_terms first:
-            for key in description_of_lhs_terms.keys():
-                symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
-                if symbolic_key not in left_hand_side:
-                    raise KeyError('Provided description key {0!r} '
-                                   'is not in LHS equations {1!r}'.format(key, left_hand_side))
-
-            ordered_descriptions = []
-            for lhs in left_hand_side:
-                try:
-                    lhs_description = description_of_lhs_terms[lhs]
-                except KeyError:
-                    lhs_description = description_of_lhs_terms.get(str(lhs), None)
-                ordered_descriptions.append(lhs_description)
-        else:
-            ordered_descriptions = [None] * len(left_hand_side)
-
-        self.__descriptions_dict = dict(zip(left_hand_side, ordered_descriptions))
-        self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
+        descriptions_dict = dict([(odet.symbol, odet)  for odet in ode_lhs_terms])
+        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in ode_lhs_terms if isinstance(plhs, Moment)]
+        self.__descriptions_dict = descriptions_dict
 
     def validate(self):
         """
@@ -141,6 +146,10 @@ class ODEProblem(object):
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
+    @property
+    def ode_lhs_terms(self):
+        return self.__ode_lhs_terms
+
     @property
     def left_hand_side(self):
         return self.__left_hand_side
@@ -208,6 +217,7 @@ class ODEProblem(object):
 
         return f
 
+
 def parse_problem(input_filename, from_string=False):
     """
     Parses model from the `input_filename` file and returns it
@@ -264,12 +274,16 @@ def parse_problem(input_filename, from_string=False):
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
     try:
-        moments = dict(zip(left_hand_side, [Moment(list(eval(l))) for l in all_fields[STRING_MOM]]))
+        n_vecs = [list(eval(l)) for l in all_fields[STRING_MOM]]
     except KeyError:
         print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
         raise
 
-    return ODEProblem(method, left_hand_side, right_hand_side, constants, moments)
+    moment_terms = [Moment(nv,lhs) for (nv,lhs) in zip(n_vecs, left_hand_side)]
+    variance_terms = [VarianceTerm(lhs) for lhs in left_hand_side[len(moment_terms):]]
+    ode_terms = moment_terms + variance_terms
+
+    return ODEProblem(method, ode_terms, right_hand_side, constants)
 
 
 class ODEProblemWriter(object):
@@ -302,48 +316,39 @@ class ODEProblemWriter(object):
         """
 
         #empty lines are added in order to mimic the output from the original code
+
+        left_hand_side = self._problem.ode_lhs_terms
+
         lines = [self._problem.method]
-
         lines += [""]
-
         lines += [self._STRING_RIGHT_HAND]
         lines += [str(expr) for expr in self._problem.right_hand_side]
 
         lines += [""]
-        lhs = self._problem.left_hand_side
+
         lines += [self._STRING_LEFT_HAND]
-        lines += [str(expr) for expr in lhs]
+        lines += [str(lhs.symbol) for lhs in left_hand_side]
 
         lines += [""]
 
         lines += [self._STRING_CONSTANT]
         lines += [str(expr) for expr in self._problem.constants]
 
-        # get info from moments
-        mom_dict = self._problem.descriptions_dict
-        moment_tuples = [p[1] for p in mom_dict.items() if p[1]]
-
-        sum_moms = [sum(m) for m in moment_tuples]
-        n_var = len([s for s in sum_moms if s == 1])
-        n_mom = max(sum_moms)
-
+        n_var = self._problem.number_of_species
 
         lines += [self._N_VARIABLE, str(n_var)]
 
         # number of mom only relevant for MEA
         if(self._problem.method == "MEA"):
+            n_mom = max([lhs.order for lhs in left_hand_side])
             lines += [self._N_MOMENTS, str(n_mom)]
 
         lines += [self._TIME_TAKEN + "  {0}".format(self._run_time)]
-
         lines += [""]
-
-        lines += [self._N_EQS, str(len(self._problem.left_hand_side))]
-
+        lines += [self._N_EQS, str(self._problem.number_of_equations)]
         lines += [""]
-
         lines += [self._STRING_MOM]
-        lines += [str(list(mom_dict[l])) for l in lhs if mom_dict[l]]
+        lines += ["[" + str(lhs) + "]" for lhs in left_hand_side if isinstance(lhs, Moment)]
         return lines
 
 
@@ -369,26 +374,23 @@ class ODEProblemLatexWriter(ODEProblemWriter):
         Overrides the default method and provides latex expressions instead of plain text
         :return: LaTeX formated list of strings
         """
+        left_hand_side = self._problem.ode_lhs_terms
         preamble = ["\documentclass{article}"]
         preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
         lines += ["\section*{%s}" % self._STRING_RIGHT_HAND]
 
-        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs)), str(sympy.latex(rhs)), r"\\")
-                    for (rhs, lhs) in zip(self._problem.right_hand_side, self._problem.left_hand_side)]
+        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
+                    for (rhs, lhs) in zip(self._problem.right_hand_side, left_hand_side)]
 
         lines += [r"\\"] * 5
-
-        #todo sort
-        mom_tuples = self._problem.descriptions_dict.items()
-
 
         lines += ["\section*{%s}" % self._STRING_MOM]
         #ordered_moments = sorted([(i,m) for (m,i) in self._problem.moment_dic.items()])
 
 
-        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs)), str(list(mom)), r"\\")
-                       for (lhs,mom) in mom_tuples if mom]
+        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
+                       for lhs in left_hand_side if isinstance(lhs, Moment)]
 
         lines += ["\end{document}"]
 

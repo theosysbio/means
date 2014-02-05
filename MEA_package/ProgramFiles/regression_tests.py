@@ -184,8 +184,6 @@ def compare_ode_problems(output, expected_output):
     expected_problem = ode_problem.parse_problem(expected_output, from_string=True)
     result_problem = ode_problem.parse_problem(output, from_string=True)
 
-    expected_mom_dic = expected_problem.descriptions_dict
-    result_mom_dic = result_problem.descriptions_dict
 
     result_constants = set(expected_problem.constants)
     expected_constants = set(result_problem.constants)
@@ -196,15 +194,12 @@ def compare_ode_problems(output, expected_output):
          return ("Difference in the constants: \nexpected=\n%s\nresult=\n%s" % (str(expected_constants),
                                                                             str(result_constants))).split("\n")
 
-    #TODO comparison of moment fails whatever, need to implement = operator in Moment
-    # if expected_mom_dic != result_mom_dic:
-    #     return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_dic),
-    #                                                                         str(result_mom_dic))).split("\n")
-
-    # workaround:
-    if str(expected_mom_dic) != str(result_mom_dic):
-        return ("Difference in the moments: \nexpected=\n%s\nresult=\n%s" % (str(expected_mom_dic),
-                                                                            str(result_mom_dic))).split("\n")
+    expected_ode_terms = expected_problem.ode_lhs_terms
+    result_ode_terms = result_problem.ode_lhs_terms
+    for e,r in zip(expected_ode_terms, result_ode_terms):
+            if not e == r:
+                msg = "different lhs!! \nexpected= {0} (symbol = {1})\nresult= {2} (symbol = {3})"
+                return (msg.format(str(e),str(e.symbol),str(r),str(r.symbol))).split("\n")
 
     expected_rhs = expected_problem.right_hand_side
     result_rhs = result_problem.right_hand_side
@@ -212,10 +207,6 @@ def compare_ode_problems(output, expected_output):
     for e,r in zip(expected_rhs, result_rhs):
         if not sympyhelpers.sympy_empirical_equal(e,r):
             return ("different rhs equations!! \nexpected=\n%s\nresult=\n%s" %(str(e),str(r))).split("\n")
-
-    if expected_problem.left_hand_side != result_problem.left_hand_side:
-        return ("different lhs equations!! \nexpected=\n%s\nresult=\n%s" % (str(expected_problem.left_hand_side),
-                                                                           str(result_problem.left_hand_side))).split("\n")
 
 def compare_tsv_with_float_epsilon(epsilon=1e-2):
 

@@ -65,11 +65,11 @@ def taylor_expansion(species, propensity, counter):
     """
 
     # compute derivatives for EACH REACTION and EACH entry in COUNTER
-    derives =[derive_expr_from_counter_entry(reac, species, c) for (reac, c) in itertools.product(propensity, counter)]
+    derives =[derive_expr_from_counter_entry(reac, species, c.n_vector) for (reac, c) in itertools.product(propensity, counter)]
 
     # Computes the factorial terms for EACH REACTION and EACH entry in COUNTER
     # this does not depend of the reaction, so we just repeat the result for each reaction
-    factorial_terms = [get_factorial_term(c) for (c) in counter] * len(propensity)
+    factorial_terms = [get_factorial_term(c.n_vector) for (c) in counter] * len(propensity)
 
     # we make a matrix in which every element is the entry-wise multiplication of `derives` and factorial_terms
     te_matrix = sp.Matrix(len(propensity), len(counter), [d*f for (d, f) in zip(derives, factorial_terms)])
