@@ -78,6 +78,13 @@ class Simulation(object):
         :param timepoints:
         :return:
         """
+
+        # If not all intial conditions specified, append zeros to them
+        # TODO: is this really the best way to do this?
+        if len(initial_values) < self.problem.number_of_equations:
+            initial_values = initial_values[:]  # Make a copy before do
+            initial_values.extend([0.0] * (self.problem.number_of_equations - len(initial_values)))
+
         initial_timepoint = timepoints[0]
         last_timepoint = timepoints[-1]
 
@@ -184,14 +191,9 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
     # Get required info from the expansion output
 
     number_of_species = problem.number_of_species
-    lhs = problem.left_hand_side
+
     term_descriptions = problem.ordered_descriptions
     simulation_type = problem.method
-
-    # If not all intial conditions specified, append zeros to them
-    initial_variables = initial_variables[:]  # Make a copy before do
-    if len(initial_variables) < len(lhs):
-        initial_variables.extend([0.0] * (len(lhs) - len(initial_variables)))
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
