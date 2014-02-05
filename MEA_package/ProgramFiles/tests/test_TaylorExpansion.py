@@ -1,11 +1,11 @@
-from fcount import fcount
 import unittest
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S
+
 import sympy as sp
 from TaylorExpansion import taylor_expansion
+from moment_expansion_approximation import MomentExpansionApproximation
 from TaylorExpansion import get_factorial_term
 from TaylorExpansion import derive_expr_from_counter_entry
-
+from ode_problem import Moment
 
 class TaylorExpansionTestCase(unittest.TestCase):
 
@@ -70,40 +70,21 @@ class TaylorExpansionTestCase(unittest.TestCase):
         :return:
         """
 
+        mea = MomentExpansionApproximation(None,3)
+        species = sp.Matrix(["a","b","c"])
+        propensities = sp.Matrix(["a*2 +w * b**3","b - a*x /c","c + a*b /32"])
+        counter = [
+            Moment([0,0,2],sp.Symbol("q1")),
+            Moment([0,2,0],sp.Symbol("q2")),
+            Moment([0,0,2],sp.Symbol("q3")),
+            Moment([2,0,0],sp.Symbol("q4")),
+            Moment([1,1,0],sp.Symbol("q5")),
+            Moment([0,1,1],sp.Symbol("q6")),
+            Moment([1,0,1],sp.Symbol("q7"))]
 
-        nMoments = 3
-        nvariables = 2
-        variables = ["y_0","y_1"]
+        result =  taylor_expansion(species,propensities,counter)
+        expected = sp.Matrix([  ["        0", "3*b*w",         "0", "0",    "0", "0",     "0"],
+                                ["-a*x/c**3",     "0", "-a*x/c**3", "0",    "0", "0", "x/c**2"],
+                                [        "0",     "0",         "0", "0", "1/32", "0",      "0"]])
 
-        a_strings = ["c_0*y_0*(120-301+y_0+y_1)", "c_1*(301-(y_0+y_1))", "c_2*(301-(y_0+y_1))"]
-        z = S(0)
-
-        damat = Matrix(nMoments, 1, lambda i, j : 0)
-
-        damat[0,0] = [[diff(simplify(a_strings[0]), Symbol("y_0")), simplify("c_0*y_0")],
-                                [simplify("-c_1"), simplify("-c_1")],
-                                [simplify("-c_2"), simplify("-c_2")]]
-
-        damat[1,0] = [[simplify("2*c_0"), simplify("c_0"), simplify("c_0"), z],
-                                [z] * 4,
-                                [z] * 4]
-        damat[2,0] = [[z]*8] * 3
-
-        nreactions = len(a_strings)
-
-        amat = Matrix(nMoments, 1, lambda i, j : simplify(a_strings[i]))
-
-        counter = fcount(nMoments, nvariables)[0]
-
-        #te_result = taylor_expansion(nreactions, nvariables, damat, amat, counter, nMoments)
-        te_result = taylor_expansion(variables, amat, counter)
-
-        # hard codding the expected matrix:
-        expected_te_mat = Matrix(nreactions, len(counter), lambda i, j : 0)
-
-        expected_te_mat[0,0] = simplify("c_0*y_0*(y_0 + y_1 - 181)")
-        expected_te_mat[1,0] = simplify("c_1*(-y_0 - y_1 + 301)")
-        expected_te_mat[2,0] = simplify("c_2*(-y_0 - y_1 + 301)")
-        expected_te_mat[0, 3],expected_te_mat[0, 5] = (Symbol("c_0"),Symbol("c_0"))
-
-        self.assertEqual(expected_te_mat, te_result)
+        self.assertEqual(result, expected)

@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
 import sympy
-from ode_problem import ODEProblem
+from ode_problem import ODEProblem, Moment, VarianceTerm
 
 class TestODEProblem(unittest.TestCase):
 
@@ -13,9 +13,10 @@ class TestODEProblem(unittest.TestCase):
         rhs evaluated for these params.
         :return:
         """
-        lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
+        lhs = [Moment(np.ones(3),i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
+
+        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
         rhs_as_function = p.right_hand_side_as_function([1, 2, 3])
 
@@ -24,78 +25,32 @@ class TestODEProblem(unittest.TestCase):
         actual_ans = np.array(rhs_as_function(params))
         assert_array_equal(actual_ans, expected_ans)
 
-
-    def test_ode_moment_description_generation_none_should_generate_no_descriptions(self):
+    def test_ode_moment_no_description_from_variance_terms(self):
         """
-        Given None for description of left hand side terms, the generated descriptions dict should have nones
+        Given  Variance terms as left hand side terms, the generated descriptions
+        dict should have nones
         for each of the symbols
         """
-        lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
+        lhs = [VarianceTerm(i) for i in ['V34', 'V32', 'V11']]
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=None)
+        p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
-        for i, symbol in enumerate(lhs):
-            self.assertIsNone(p.descriptions_dict[symbol])
-            self.assertIsNone(p.ordered_descriptions[i])
+        for i,l in enumerate(lhs):
+            self.assertIsNone(p.descriptions_dict[l.symbol].descriptor)
 
-    def test_ode_moment_description_generation_from_string_keys(self):
+
+    def test_ode_moment_getting_n_vector_from_dict_and_key(self):
         """
-        Given string keys in the description dict, the generated moment descriptions should have appropriate
-        descriptions generated.
+        Given a list of descriptor and a list of symbols used to create Moment,
+        Then problem description_dict should return a numpy array equal to the descriptor
+        for each corresponding symbol
+        :return:
         """
-
-        lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
+        symbs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
+        desc = [[0,0,1],[1,0,432],[21,43,34]]
+        lhs = [Moment(d,s) for d,s in zip(desc,symbs)]
         rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        descriptions = {'y_1': 'foo', 'y_3': 'bar'}
-        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
+        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        for i,l in enumerate(lhs):
+            self.assertEqual((p.descriptions_dict[l.symbol].descriptor == np.array(desc[i])).all(), True )
 
-        self.assertEquals(p.descriptions_dict[sympy.Symbol('y_1')], 'foo')
-        self.assertIsNone(p.descriptions_dict[sympy.Symbol('y_2')])
-        self.assertEquals(p.descriptions_dict[sympy.Symbol('y_3')], 'bar')
-
-        self.assertEquals(p.ordered_descriptions[0], 'foo')
-        self.assertIsNone(p.ordered_descriptions[1])
-        self.assertEquals(p.ordered_descriptions[2], 'bar')
-
-
-    def test_ode_moment_description_generation_from_symbol_keys(self):
-        """
-        Given symbol keys in the description dict, the generated moment descriptions should have appropriate
-        descriptions generated.
-        """
-
-        lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
-        rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        y_1 = sympy.Symbol('y_1')
-        y_2 = sympy.Symbol('y_2')
-        y_3 = sympy.Symbol('y_3')
-
-        descriptions = {y_1: 'foo', y_3: 'bar'}
-        p = ODEProblem('MEA',lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']), description_of_lhs_terms=descriptions)
-
-        self.assertEquals(p.descriptions_dict[y_1], 'foo')
-        self.assertIsNone(p.descriptions_dict[y_2])
-        self.assertEquals(p.descriptions_dict[y_3], 'bar')
-
-        self.assertEquals(p.ordered_descriptions[0], 'foo')
-        self.assertIsNone(p.ordered_descriptions[1])
-        self.assertEquals(p.ordered_descriptions[2], 'bar')
-
-    def test_ode_moment_description_generation_non_existent_key(self):
-        """
-        Given a key in the specification dict that does not exist, the ODE moment should raise a KeyError
-        """
-
-        lhs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
-        rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        y_1 = sympy.Symbol('y_1')
-        y_3 = sympy.Symbol('y_3')
-        y_4 = sympy.Symbol('y_4')
-
-        descriptions = {y_1: 'foo', y_3: 'bar', y_4: 'non-existent'}
-        self.assertRaises(KeyError, ODEProblem, 'MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
-                          description_of_lhs_terms=descriptions)
-
-        descriptions = {'y_1': 'foo', 'y_3': 'bar', 'y_4': 'non-existent'}
-        self.assertRaises(KeyError, ODEProblem, 'MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']),
-                          description_of_lhs_terms=descriptions)
