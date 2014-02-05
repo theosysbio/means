@@ -9,8 +9,7 @@ import sympy as sp
 from TaylorExpansion import derive_expr_from_counter_entry
 from TaylorExpansion import get_factorial_term
 import itertools
-import operator
-
+from sympyhelpers import sum_of_cols, product
 
 def make_f_of_x(variables, k_vec, e_vec, reaction):
     """
@@ -22,14 +21,10 @@ def make_f_of_x(variables, k_vec, e_vec, reaction):
     :return:
     """
 
-    # all values of {x ^ (k - e)} for all combination of e and k
-    all_xs = [var ** (k_vec[i] - e_vec[i]) for i,var in enumerate(variables)]
-
-    # The product of all values
-    product = reduce(operator.mul, all_xs)
-
+    # product of all values of {x ^ (k - e)} for all combination of e and k
+    prod = product([var ** (k_vec[i] - e_vec[i]) for i,var in enumerate(variables)])
     # multiply the product by the propensity {a(x)}
-    return product * reaction
+    return prod * reaction
 
 def make_f_expectation(variables, expr, counter):
     """
@@ -59,9 +54,8 @@ def make_k_chose_e(e_vec, k_vec):
     :param k_vec: the vector k
     :return: a scalar
     """
-    factorials = [sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)]
-    product = reduce(operator.mul, factorials)
-    return product
+    return  product([sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)])
+
 
 def make_s_pow_e(S, reac_idx, e_vec):
     """
@@ -71,57 +65,50 @@ def make_s_pow_e(S, reac_idx, e_vec):
     :param e_vec: the vector e
     :return: a scalar (s^e)
     """
+    return product([S[i, reac_idx] ** e for i,e in enumerate(e_vec)])
 
-    vec = [S[i, reac_idx] ** e for i,e in enumerate(e_vec)]
-    product = reduce(operator.mul, vec)
-    return product
 
-def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
+def eq_mixedmoments(propensities, n_counter, S, species , k_iter, e_counter):
 
     """
     Provides the terms needed for equation 11 (see Ale et al. 2013).
     This gives the expressions for dB/dt in equation 9, these are the
     time dependencies of the mixed moments
 
-    :param amat:    propensities
-    :param counter: a list of all possible combination of order of derivation
+    :param propensities:    propensities
+    :param n_counter: a list of all possible combination of order of derivation
     :param S: The stoichiometry matrix. Explicitly provided by the model
-    :param ymat: the names of the variables/species
+    :param species: the names of the variables/species
     :param k_vec: k in eq. 11
-    :param ek_counter: e in eq. 11
+    :param e_counter: e in eq. 11
 
     :return: dB/dt
     """
-    if len(ek_counter) == 0:
-        return sp.Matrix(1, len(counter), lambda i, j: 0)
+    if len(e_counter) == 0:
+        return sp.Matrix(1, len(n_counter), lambda i, j: 0)
 
     # compute F(x) for EACH REACTION and EACH entry in the EKCOUNTER (eq. 12)
-    f_of_x_vec = [make_f_of_x(ymat, k_vec, ek.n_vector, reac) for (reac, ek) in itertools.product(amat, ek_counter)]
+    f_of_x_vec = [make_f_of_x(species, k_iter.n_vector, ek.n_vector, reac) for (reac, ek) in itertools.product(propensities, e_counter)]
 
     # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
     # vector in which each element relates to an entry of counter
-    f_expectation_vec = [make_f_expectation(ymat, f, counter) for f in f_of_x_vec]
+    f_expectation_vec = [make_f_expectation(species, f, n_counter) for f in f_of_x_vec]
 
     # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars
-    s_pow_e_vec = [make_s_pow_e(S, reac_idx, ek.n_vector) for (reac_idx, ek) in itertools.product(range(len(amat)), ek_counter)]
+    s_pow_e_vec = [make_s_pow_e(S, reac_idx, ek.n_vector) for (reac_idx, ek) in itertools.product(range(len(propensities)), e_counter)]
 
     # compute (k choose e) for EACH REACTION and EACH entry in the EKCOUNTER . This is a list of scalars.
     # Note that this does not depend on the reaction, so we can just repeat the result for each reaction
-    k_choose_e_vec = [make_k_chose_e(ek.n_vector, k_vec) for ek in ek_counter] * len(amat)
+    k_choose_e_vec = [make_k_chose_e(ek.n_vector, k_iter.n_vector) for ek in e_counter] * len(propensities)
 
     # compute the element-wise product of the three entities
-    product = [f * s * ke for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]
+    prod = [f * s * ke for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]
 
     # we have a list of vectors and we want to obtain a list of sums of all nth element together.
     # To do that we put all the data into a matrix in which each row is a different vector
-    to_sum = sp.Matrix(product).reshape(len(product),len(product[0]))
+    to_sum = sp.Matrix(prod).reshape(len(prod),len(prod[0]))
 
-    # then we sum over the columns
-    summed = [reduce(operator.add, to_sum[:,i]) for i in range(to_sum.cols)]
-    # todo sum_of_cols
-
-    # let us return it as a column vector
-    mixed_moments = sp.Matrix(1, len(summed), summed)
-    #todo  use M.T
+    # then we sum over the columns -> row vector
+    mixed_moments = sum_of_cols(to_sum)
 
     return mixed_moments

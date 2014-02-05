@@ -47,7 +47,7 @@ class TestEqMixedMoments(unittest.TestCase):
         ]
 
         species = sympy.Matrix(["y_0", "y_1", "y_2"])
-        k_vec = [1, 0, 0]
+        k_vec = Moment([1, 0, 0], None)
         ek_counter = [Moment([1, 0, 0], sympy.Symbol("y_0"))]
         answer = eq_mixedmoments(propensities,counter,stoichio,species,k_vec,ek_counter).T
         result = sympy.Matrix(["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"," 0"," 0"," 0"," c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"," 0"," -c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2"])
