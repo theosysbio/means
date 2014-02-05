@@ -2,7 +2,7 @@
 import os
 import sys
 
-from means.approximation.lna.LNA import LinearNoiseApproximation
+from means.approximation.lna.lna import LinearNoiseApproximation
 from means.inference.hypercube import hypercube
 from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime

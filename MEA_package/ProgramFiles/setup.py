@@ -5,8 +5,17 @@ setup(
     version='trunk',
     author='Theoretical Systems Biology Group',
     author_email=None, # TODO: author email
-    packages=['means', 'means.approximation', 'means.inference', 'means.model', 'means.simulation', 'means.util'],
-    scripts=['bin/means.py'],
+    packages=['means',
+              'means.approximation',
+              'means.approximation.lna',
+              'means.approximation.mea',
+              'means.inference',
+              'means.model',
+              'means.simulation',
+              'means.util',
+              'means.tests'],
+    package_src={'means' : 'means'},
+    scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
     description='Moment Expansion Approximation method implementation with simulation and inference packages',

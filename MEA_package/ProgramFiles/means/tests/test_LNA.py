@@ -3,7 +3,7 @@ import unittest
 import sympy
 
 from means.model.model import Model
-from means.approximation.lna.LNA import LinearNoiseApproximation
+from means.approximation.lna.lna import LinearNoiseApproximation
 
 
 class TestLNA(unittest.TestCase):
