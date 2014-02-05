@@ -1,1 +1,1 @@
-__author__ = 'saulius'
+from lna import LinearNoiseApproximation

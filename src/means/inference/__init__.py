@@ -1,1 +1,1 @@
-__author__ = 'saulius'
+from sumsq_infer import ParameterInference

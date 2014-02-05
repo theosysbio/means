@@ -1,1 +1,1 @@
-__author__ = 'saulius'
+from moment_expansion_approximation import MomentExpansionApproximation

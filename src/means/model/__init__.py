@@ -1,1 +1,1 @@
-__author__ = 'saulius'
+from model import *
