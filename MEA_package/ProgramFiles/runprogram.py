@@ -8,7 +8,6 @@ from paramtime import paramtime
 from simulate import simulate, graphbuilder
 from sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
 from hypercube import hypercube
-import gamma_infer
 
 def printOptions():
     print "\nList of possible options:"
