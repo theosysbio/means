@@ -27,7 +27,8 @@ class TestODEProblem(unittest.TestCase):
 
     def test_ode_moment_no_description_from_variance_terms(self):
         """
-        Given None for description of left hand side terms, the generated descriptions dict should have nones
+        Given  Variance terms as left hand side terms, the generated descriptions
+        dict should have nones
         for each of the symbols
         """
         lhs = [VarianceTerm(i) for i in ['V34', 'V32', 'V11']]
@@ -41,7 +42,7 @@ class TestODEProblem(unittest.TestCase):
     def test_ode_moment_getting_n_vector_from_dict_and_key(self):
         """
         Given a list of descriptor and a list of symbols used to create Moment,
-        Then problem descrption_dict should return a numpy array equal to the descriptor
+        Then problem description_dict should return a numpy array equal to the descriptor
         for each corresponding symbol
         :return:
         """

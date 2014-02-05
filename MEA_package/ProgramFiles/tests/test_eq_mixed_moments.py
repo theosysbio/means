@@ -1,6 +1,5 @@
 import unittest
 import sympy
-from TaylorExpansion import taylor_expansion
 from eq_mixedmoments import eq_mixedmoments
 from eq_mixedmoments import make_f_of_x
 from eq_mixedmoments import make_f_expectation
@@ -10,7 +9,18 @@ from test_ode_problem import Moment
 
 
 class TestEqMixedMoments(unittest.TestCase):
+
     def test_for_p53(self):
+        """
+        Given the preopensities,
+        Given the soichiometry matrix,
+        Given the counter (list of Moments),
+        Given the species list,
+        Given k_vector and
+        Given ek_counter (list of moment)
+        The answer should match exactly the expected result
+        :return:
+        """
 
         stoichio = sympy.Matrix([
             [1, -1, -1, 0,  0,  0],
