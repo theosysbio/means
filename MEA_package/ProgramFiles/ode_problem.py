@@ -65,7 +65,7 @@ class Moment(ODETermBase):
         return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector,self.symbol)
 
     def __str__(self):
-        return '[' + ', '.join(map(str, self.n_vector)) + ']'
+        return ', '.join(map(str, self.n_vector))
 
     def __hash__(self):
         # Allows moment objects to be stored as keys to dictionaries
@@ -111,19 +111,6 @@ class ODEProblem(object):
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
         self.__initialise_descriptions(ode_lhs_terms)
-
-
-        #self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
-        #self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
-
-        self.validate()
-        print "================================"
-        print self.left_hand_side
-        print "------------"
-        print self.descriptions_dict
-        print "------------"
-        print self.ordered_descriptions
-
 
     #todo
     # def __eq__(self, other):
@@ -362,7 +349,7 @@ class ODEProblemWriter(object):
         lines += [self._N_EQS, str(self._problem.number_of_equations)]
         lines += [""]
         lines += [self._STRING_MOM]
-        lines += [str(lhs) for lhs in left_hand_side if isinstance(lhs, Moment)]
+        lines += ["[" + str(lhs) + "]" for lhs in left_hand_side if isinstance(lhs, Moment)]
         return lines
 
 

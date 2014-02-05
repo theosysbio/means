@@ -141,7 +141,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         """
         #fixme clean this ugly function
         m_counter_tuples = [i for i in itertools.product(range(n_moments + 1), repeat=n_vars) if sum(i) <= n_moments]
-        m_counter_tuples = sorted(m_counter_tuples, cmp=lambda x, y: sum(x) - sum(y))
+        #m_counter_tuples = sorted(m_counter_tuples, cmp=lambda x, y: sum(x) - sum(y))
 
         raw_symbols = [None] * len(m_counter_tuples)
         for i,count in enumerate(m_counter_tuples):
