@@ -1,10 +1,12 @@
-from fcount import fcount
 import unittest
-from sympy import Matrix, diff, Symbol, Subs, Eq, var, simplify, S
+
+from sympy import Matrix, diff, Symbol, simplify, S
 import sympy as sp
-from TaylorExpansion import taylor_expansion
-from TaylorExpansion import get_factorial_term
-from TaylorExpansion import derive_expr_from_counter_entry
+
+from fcount import fcount
+from means.approximation.mea.TaylorExpansion import taylor_expansion
+from means.approximation.mea.TaylorExpansion import get_factorial_term
+from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
 
 
 class TaylorExpansionTestCase(unittest.TestCase):

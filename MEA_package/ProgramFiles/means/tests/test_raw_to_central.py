@@ -1,6 +1,9 @@
 import unittest
+
 import sympy
-from raw_to_central import raw_to_central
+
+from means.approximation.mea.raw_to_central import raw_to_central
+
 
 class TestRawToCentral(unittest.TestCase):
 

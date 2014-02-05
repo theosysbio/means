@@ -1,9 +1,9 @@
-
 import sympy
 import numpy as np
-from sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
 from sympy.utilities.autowrap import autowrap
-from decorators import memoised_property
+
+from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
+from means.util.decorators import memoised_property
 
 
 class ODETermBase(object):

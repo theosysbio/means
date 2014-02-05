@@ -1,7 +1,10 @@
 import unittest
+
 import sympy
 import numpy as np
-from model import Model
+
+from means.model.model import Model
+
 
 class TestModelInitialisation(unittest.TestCase):
 

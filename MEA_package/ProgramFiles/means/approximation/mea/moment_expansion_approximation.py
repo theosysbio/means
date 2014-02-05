@@ -1,12 +1,14 @@
 import itertools
-import sympy as sp
-from approximation_baseclass import ApproximationBaseClass
-from sympyhelpers import substitute_all
-import ode_problem
 
+import sympy as sp
+
+from means.approximation.approximation_baseclass import ApproximationBaseClass
+from means.approximation.mea.raw_to_central import raw_to_central
+from means.simulation import ode_problem
+from means.util.sympyhelpers import substitute_all
 from TaylorExpansion import taylor_expansion
 from centralmoments import eq_centralmoments
-from raw_to_central import raw_to_central
+
 
 class MomentExpansionApproximation(ApproximationBaseClass):
 

@@ -1,9 +1,11 @@
 import operator
+
 import sympy as sp
-from sympy import Matrix, latex
-from model import parse_model
-from approximation_baseclass import ApproximationBaseClass
-import ode_problem
+from sympy import Matrix
+
+from means.approximation.approximation_baseclass import ApproximationBaseClass
+from means.simulation import ode_problem
+
 
 class LinearNoiseApproximation(ApproximationBaseClass):
     """

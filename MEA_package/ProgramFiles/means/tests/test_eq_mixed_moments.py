@@ -1,13 +1,12 @@
 import unittest
+
 import sympy
-from eq_mixedmoments import eq_mixedmoments
-from eq_mixedmoments import make_f_of_x
-from eq_mixedmoments import make_f_expectation
-from eq_mixedmoments import make_k_chose_e
-from eq_mixedmoments import make_s_pow_e
 
-
-
+from means.approximation.mea.eq_mixedmoments import make_f_of_x
+from means.approximation.mea.eq_mixedmoments import make_f_expectation
+from means.approximation.mea.eq_mixedmoments import make_k_chose_e
+from means.approximation.mea.eq_mixedmoments import make_s_pow_e
+from means.approximation.mea.eq_mixedmoments import eq_mixedmoments
 
 
 class AbstractTestEqMixedMoments(unittest.TestCase):

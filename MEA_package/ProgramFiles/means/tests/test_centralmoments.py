@@ -1,6 +1,9 @@
 import unittest
+
 import sympy
-from centralmoments import eq_centralmoments
+
+from means.approximation.mea.centralmoments import eq_centralmoments
+
 
 class CentralMomentsTestCase(unittest.TestCase):
     def test_centralmoments_using_p53model(self):

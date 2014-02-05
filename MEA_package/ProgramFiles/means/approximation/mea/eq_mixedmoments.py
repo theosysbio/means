@@ -5,11 +5,13 @@
 # time dependencies of the mixed moments
 ####################################################################
 
-import sympy as sp
-from TaylorExpansion import derive_expr_from_counter_entry
-from TaylorExpansion import get_factorial_term
 import itertools
 import operator
+
+import sympy as sp
+
+from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
+from means.approximation.mea.TaylorExpansion import get_factorial_term
 
 
 def make_f_of_x(variables, k_vec, e_vec, reaction):

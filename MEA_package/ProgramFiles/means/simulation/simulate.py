@@ -3,14 +3,16 @@ Simulates data for given model, moments, parameters, initial conditions
 and method (moment expansion or LNA)
 """
 from collections import namedtuple
+
 from assimulo.problem import Explicit_Problem
 from assimulo.solvers.sundials import CVode
 import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
 
+
 # These are the default values in solver.c but they seem very low
-from ode_problem import Moment
+from means.simulation.ode_problem import Moment
 
 RTOL = 1e-4
 ATOL = 1e-4

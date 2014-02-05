@@ -5,9 +5,11 @@ import os
 import difflib
 import subprocess
 import traceback
+
 import numpy as np
-import ode_problem
-import sympyhelpers
+
+from means.simulation import ode_problem
+from means.util import sympyhelpers
 
 
 ALLOWED_TESTS = ['mea', 'lna',

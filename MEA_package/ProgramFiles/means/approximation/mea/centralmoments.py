@@ -1,8 +1,9 @@
-import sympy as sp
 import operator
-import sympyhelpers as sph
-from eq_mixedmoments import eq_mixedmoments
-from eq_mixedmoments import make_k_chose_e
+
+import sympy as sp
+
+from means.approximation.mea.eq_mixedmoments import make_k_chose_e, eq_mixedmoments
+
 
 def all_higher_or_eq(vec_a, vec_b):
     return all([a >= b for a, b in zip(vec_a, vec_b)])

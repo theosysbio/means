@@ -1,7 +1,9 @@
-import sympy as sp
-from sympyhelpers import substitute_all
-import itertools
 import operator
+
+import sympy as sp
+
+from means.util.sympyhelpers import substitute_all
+
 
 def gamma_factorial(expr, n):
     if n == 0:

@@ -1,8 +1,11 @@
 import unittest
+
 import numpy as np
 from numpy.testing import assert_array_equal
 import sympy
-from ode_problem import ODEProblem
+
+from means.simulation.ode_problem import ODEProblem
+
 
 class TestODEProblem(unittest.TestCase):
 

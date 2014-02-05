@@ -1,5 +1,5 @@
-import model
 from time import time
+
 
 class ApproximationBaseClass(object):
     """

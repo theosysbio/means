@@ -4,10 +4,13 @@
 #  equivalent expressions in terms of raw moments) (see eq. 8)
 #######################################################################
 
-import sympy as sp
-from centralmoments import all_higher_or_eq
-from eq_mixedmoments import make_k_chose_e
 import operator
+
+import sympy as sp
+
+from means.approximation.mea.centralmoments import all_higher_or_eq
+from eq_mixedmoments import make_k_chose_e
+
 
 def make_beta(k_vec):
     return sp.Symbol('x_' + "_".join([str(k) for k in k_vec]))
