@@ -62,7 +62,7 @@ class Moment(ODETermBase):
         return self.order not in self.n_vector
 
     def __repr__(self):
-        return '{0}({1!r})'.format(self.__class__.__name__, self.n_vector)
+        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector,self.symbol)
 
     def __str__(self):
         return '[' + ', '.join(map(str, self.n_vector)) + ']'
