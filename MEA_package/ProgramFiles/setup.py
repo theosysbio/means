@@ -12,10 +12,10 @@ setup(
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
     long_description=None, # TODO: readme.txt
     install_requires=[
-        "numpy==1.8.0",
-        "sympy==0.7.2",
-        "matplotlib==1.1.1",
-        "scipy==0.13.2",
+        "numpy>=1.8.0",
+        "sympy>=0.7.2",
+        "matplotlib>=1.1.1",
+        "scipy>=0.13.2",
         "Assimulo==trunk"
     ],
 )
