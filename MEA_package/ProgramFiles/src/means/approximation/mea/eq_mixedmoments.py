@@ -43,10 +43,10 @@ def make_f_expectation(variables, expr, counter):
     """
 
     # compute derivatives for EACH ENTRY in COUNTER
-    derives = [derive_expr_from_counter_entry(expr, variables, c) for c in counter]
+    derives = [derive_expr_from_counter_entry(expr, variables, c.n_vector) for c in counter]
 
     # Computes the factorial terms for EACH entry in COUNTER
-    factorial_terms = [get_factorial_term(c) for (c) in counter]
+    factorial_terms = [get_factorial_term(c.n_vector) for (c) in counter]
 
     # Element wise product of the two vectors
     te_matrix = sp.Matrix(len(counter), 1, [d*f for (d, f) in zip(derives, factorial_terms)])
@@ -94,23 +94,22 @@ def eq_mixedmoments(amat, counter, S, ymat , k_vec, ek_counter):
 
     :return: dB/dt
     """
-
     if len(ek_counter) == 0:
         return sp.Matrix(1, len(counter), lambda i, j: 0)
 
     # compute F(x) for EACH REACTION and EACH entry in the EKCOUNTER (eq. 12)
-    f_of_x_vec = [make_f_of_x(ymat, k_vec, c, reac) for (reac, c) in itertools.product(amat, ek_counter)]
+    f_of_x_vec = [make_f_of_x(ymat, k_vec, ek.n_vector, reac) for (reac, ek) in itertools.product(amat, ek_counter)]
 
     # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
     # vector in which each element relates to an entry of counter
     f_expectation_vec = [make_f_expectation(ymat, f, counter) for f in f_of_x_vec]
 
     # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars
-    s_pow_e_vec = [make_s_pow_e(S, reac_idx, c) for (reac_idx, c) in itertools.product(range(len(amat)), ek_counter)]
+    s_pow_e_vec = [make_s_pow_e(S, reac_idx, ek.n_vector) for (reac_idx, ek) in itertools.product(range(len(amat)), ek_counter)]
 
     # compute (k choose e) for EACH REACTION and EACH entry in the EKCOUNTER . This is a list of scalars.
     # Note that this does not depend on the reaction, so we can just repeat the result for each reaction
-    k_choose_e_vec = [make_k_chose_e(e, k_vec) for e in ek_counter] * len(amat)
+    k_choose_e_vec = [make_k_chose_e(ek.n_vector, k_vec) for ek in ek_counter] * len(amat)
 
     # compute the element-wise product of the three entities
     product = [f * s * ke for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]

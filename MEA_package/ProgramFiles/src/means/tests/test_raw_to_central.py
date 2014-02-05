@@ -3,96 +3,63 @@ import unittest
 import sympy
 
 from means.approximation.mea.raw_to_central import raw_to_central
-
+from means.simulation.ode_problem import Moment
 
 class TestRawToCentral(unittest.TestCase):
 
-    def test_a_single_calculation_of_MXn_is_correct_for_mixed_moment(self):
+    def test_a_two_species_problem(self):
         """
-        Given a single n vector - a single mixed moment to compute values for,
-        the function should return a single correct equation for that moment's value
-
+        Given two vectors of Moments: counter and mcounter (up to second moment) and
+        Given a vector of two species ymat,
+        Then, the answer should match exactlty the expected result
         :return:
         """
+        ymat = sympy.Matrix(["y_0","y_1"])
+        counter_nvecs = [[0, 0], [0, 2], [1, 1], [2, 0]]
+        mcounter_nvecs = [[0, 0], [0, 1], [1, 0], [0, 2], [1, 1], [2, 0]]
 
-        # Since I do not want to deal with whole matrix here, I provide only one set of possible values
-        # Note that the function removes the first zero vector as of current code base, thus the leading zero vector
-        n_values = [[0, 0, 0], [1, 0, 1]]
-
-        # This is the unchanged result of the `mcounter` returned by `fcount(2,3)`
-        possible_k_values = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0],
-                             [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
-        means_of_species = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
-
-        right_hand_sides, _left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
-
-        self.assertEqual(len(right_hand_sides), 1, "Was expecting to get back only one equation")
-
-        # TODO: these symbols should not be hardcoded here as they may change provided change in other parts of code
-        # I am not sure how to avoid this now though, so they stay.
-        beta_terms = [sympy.Symbol('x_0_0_0'), sympy.Symbol('x_0_0_1'), sympy.Symbol('x_1_0_0'), sympy.Symbol('x_1_0_1')]
-
-        # This is what the code should return: x_0_0_0*y_0*y_2 - x_0_0_1*y_0 - x_1_0_0*y_2 + x_1_0_1
-        correct_answer = beta_terms[0] * means_of_species[0] * means_of_species[2] \
-                         - beta_terms[1] * means_of_species[0] \
-                         - beta_terms[2] * means_of_species[2] \
-                         + beta_terms[3]
-
-        self.assertEqual(right_hand_sides[0], correct_answer)
-
-    def test_a_single_calculation_of_MXn_is_correct_for_mixed_moment_of_order_two(self):
-
-        # Since I do not want to deal with whole matrix here, I provide only one set of possible values
-        # Note that the function removes the first zero vector as of current code base, thus the leading zero vector
-        n_values = [[0, 0, 0], [2, 0, 0]]
-
-        # This is the unchanged result of the `mcounter` returned by `fcount(2,3)`
-        possible_k_values = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0],
-                             [0, 0, 2], [0, 1, 1], [0, 2, 0], [1, 0, 1], [1, 1, 0], [2, 0, 0]]
-        means_of_species = [sympy.var('y_0'), sympy.var('y_1'), sympy.var('y_2')]
-
-        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
-
-        self.assertEqual(len(right_hand_sides), 1, "Was expecting to get back only one equation")
-
-        # TODO: these symbols should not be hardcoded here as they may change provided change in other parts of code
-        # I am not sure how to avoid this now though, so they stay.
-        beta_terms = [sympy.Symbol('x_0_0_0'), sympy.Symbol('x_1_0_0'), sympy.Symbol('x_2_0_0')]
-
-        # This is what the code should return: x_0_0_0*y_0**2 - 2*x_1_0_0*y_0 + x_2_0_0
-        correct_answer = beta_terms[0] * (means_of_species[0]**2) \
-                         - 2 * beta_terms[1] * means_of_species[0] \
-                         + beta_terms[2]
-        self.assertEqual(right_hand_sides[0], correct_answer)
+        counter = [Moment(c,sympy.Symbol("YU{0}".format(i))) for i,c in enumerate(counter_nvecs)]
+        mcounter = [Moment(c,sympy.Symbol("y_{0}".format(i))) for i,c in enumerate(mcounter_nvecs)]
 
 
-    def test_whole_calculation_of_second_order_moments_of_two_species(self):
+        answer = raw_to_central(counter, ymat, mcounter)
+
+        expected =  sympy.Matrix([
+            ["y_0*y_1**2 - 2*y_1**2 + y_3"],
+            ["y_0**2*y_1 - y_0*y_1 - y_1*y_2 + y_4"],
+            ["y_0**3 - 2*y_0*y_2 + y_5"]])
+        self.assertEqual(answer, expected)
+
+
+
+    def test_a_three_species_third_order_problem(self):
         """
-        Given a run configuration of n and k variable posibilities as in model_NN.txt the output of the
-        function should return the correct equations
+        Given two vectors of Moments: counter and mcounter (up to third moment) and
+        Given a vector of three species ymat,
+        Then, the answer should match exactlty the expected result
         :return:
         """
+        counter = [Moment([0, 0, 0] ,  sympy.Integer(1)), Moment([0, 0, 2] ,  sympy.Symbol("yx1")), Moment([0, 0, 3] ,  sympy.Symbol("yx2")), Moment([0, 1, 1] ,  sympy.Symbol("yx3")), Moment([0, 1, 2] ,  sympy.Symbol("yx4")), Moment([0, 2, 0] ,  sympy.Symbol("yx5")), Moment([0, 2, 1] ,  sympy.Symbol("yx6")), Moment([0, 3, 0] ,  sympy.Symbol("yx7")), Moment([1, 0, 1] ,  sympy.Symbol("yx8")), Moment([1, 0, 2] ,  sympy.Symbol("yx9")), Moment([1, 1, 0] ,  sympy.Symbol("yx10")), Moment([1, 1, 1] ,  sympy.Symbol("yx11")), Moment([1, 2, 0] ,  sympy.Symbol("yx12")), Moment([2, 0, 0] ,  sympy.Symbol("yx13")), Moment([2, 0, 1] ,  sympy.Symbol("yx14")), Moment([2, 1, 0] ,  sympy.Symbol("yx15")), Moment([3, 0, 0] ,  sympy.Symbol("yx16"))]
+        ymat = sympy.Matrix(["y_0","y_1","y_2"])
+        mcounter = [Moment([0, 0, 0] ,  sympy.Integer(1)), Moment([0, 0, 1] ,  sympy.Symbol("y_2")), Moment([0, 0, 2] ,  sympy.Symbol("x_0_0_2")), Moment([0, 0, 3] ,  sympy.Symbol("x_0_0_3")), Moment([0, 1, 0] ,  sympy.Symbol("y_1")), Moment([0, 1, 1] ,  sympy.Symbol("x_0_1_1")), Moment([0, 1, 2] ,  sympy.Symbol("x_0_1_2")), Moment([0, 2, 0] ,  sympy.Symbol("x_0_2_0")), Moment([0, 2, 1] ,  sympy.Symbol("x_0_2_1")), Moment([0, 3, 0] ,  sympy.Symbol("x_0_3_0")), Moment([1, 0, 0] ,  sympy.Symbol("y_0")), Moment([1, 0, 1] ,  sympy.Symbol("x_1_0_1")), Moment([1, 0, 2] ,  sympy.Symbol("x_1_0_2")), Moment([1, 1, 0] ,  sympy.Symbol("x_1_1_0")), Moment([1, 1, 1] ,  sympy.Symbol("x_1_1_1")), Moment([1, 2, 0] ,  sympy.Symbol("x_1_2_0")), Moment([2, 0, 0] ,  sympy.Symbol("x_2_0_0")), Moment([2, 0, 1] ,  sympy.Symbol("x_2_0_1")), Moment([2, 1, 0] ,  sympy.Symbol("x_2_1_0")), Moment([3, 0, 0] ,  sympy.Symbol("x_3_0_0"))]
 
-        n_values = [[0, 0], [0, 2], [1, 1], [2, 0]]
-        possible_k_values = n_values + [[1, 0], [0, 1]]
-        means_of_species = [sympy.var('y_0'), sympy.var('y_1')]
+        answer = sympy.Matrix(raw_to_central(counter, ymat, mcounter))
+        expected = sympy.Matrix(
+        [["                                                     1*y_2**2 + x_0_0_2 - 2*y_2**2"],
+        ["                                    -1*y_2**3 - 3*x_0_0_2*y_2 + x_0_0_3 + 3*y_2**3"],
+        ["                                                   1*y_1*y_2 + x_0_1_1 - 2*y_1*y_2"],
+        ["              -1*y_1*y_2**2 - x_0_0_2*y_1 - 2*x_0_1_1*y_2 + x_0_1_2 + 3*y_1*y_2**2"],
+        ["                                                     1*y_1**2 + x_0_2_0 - 2*y_1**2"],
+        ["              -1*y_1**2*y_2 - 2*x_0_1_1*y_1 - x_0_2_0*y_2 + x_0_2_1 + 3*y_1**2*y_2"],
+        ["                                    -1*y_1**3 - 3*x_0_2_0*y_1 + x_0_3_0 + 3*y_1**3"],
+        ["                                                   1*y_0*y_2 + x_1_0_1 - 2*y_0*y_2"],
+        ["              -1*y_0*y_2**2 - x_0_0_2*y_0 - 2*x_1_0_1*y_2 + x_1_0_2 + 3*y_0*y_2**2"],
+        ["                                                   1*y_0*y_1 + x_1_1_0 - 2*y_0*y_1"],
+        ["-1*y_0*y_1*y_2 - x_0_1_1*y_0 - x_1_0_1*y_1 - x_1_1_0*y_2 + x_1_1_1 + 3*y_0*y_1*y_2"],
+        ["              -1*y_0*y_1**2 - x_0_2_0*y_0 - 2*x_1_1_0*y_1 + x_1_2_0 + 3*y_0*y_1**2"],
+        ["                                                     1*y_0**2 + x_2_0_0 - 2*y_0**2"],
+        ["              -1*y_0**2*y_2 - 2*x_1_0_1*y_0 - x_2_0_0*y_2 + x_2_0_1 + 3*y_0**2*y_2"],
+        ["              -1*y_0**2*y_1 - 2*x_1_1_0*y_0 - x_2_0_0*y_1 + x_2_1_0 + 3*y_0**2*y_1"],
+        ["                                    -1*y_0**3 - 3*x_2_0_0*y_0 + x_3_0_0 + 3*y_0**3"]])
 
-        right_hand_sides, left_hand_sides = raw_to_central( n_values, means_of_species, possible_k_values)
-        self.assertEqual(len(right_hand_sides), 3, "Was expecting to get back three equations, one for each n_value except for zero vector")
-
-        beta_terms = {'00': sympy.Symbol('x_0_0'),
-                      '01': sympy.Symbol('x_0_1'),
-                      '10': sympy.Symbol('x_1_0'),
-                      '11': sympy.Symbol('x_1_1'),
-                      '02': sympy.Symbol('x_0_2'),
-                      '20': sympy.Symbol('x_2_0')}
-
-        correct_answers = [
-            beta_terms['00'] * means_of_species[1]**2 - 2 * beta_terms['01'] * means_of_species[1] + beta_terms['02'],
-            beta_terms['00'] * means_of_species[0] * means_of_species[1] \
-                - beta_terms['01'] * means_of_species[0] - beta_terms['10'] * means_of_species[1] + beta_terms['11'],
-            beta_terms['00'] * means_of_species[0]**2 - 2 * beta_terms['10'] * means_of_species[0] + beta_terms['20']
-        ]
-
-        for correct_answer, actual_answer in zip(correct_answers, right_hand_sides):
-            self.assertEqual(correct_answer, actual_answer)
+        self.assertEqual(answer, expected)
