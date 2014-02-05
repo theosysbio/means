@@ -82,8 +82,8 @@ class Simulation(object):
         # If not all intial conditions specified, append zeros to them
         # TODO: is this really the best way to do this?
         if len(initial_values) < self.problem.number_of_equations:
-            initial_values = initial_values[:]  # Make a copy before do
-            initial_values.extend([0.0] * (self.problem.number_of_equations - len(initial_values)))
+            initial_values = np.concatenate((initial_values,
+                                             [0.0] * (self.problem.number_of_equations - len(initial_values))))
 
         initial_timepoint = timepoints[0]
         last_timepoint = timepoints[-1]
