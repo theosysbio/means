@@ -102,50 +102,45 @@ class ODEProblem(object):
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
-
-        #self.__initialise_descriptions(description_of_lhs_terms)
+        self.__initialise_descriptions([plhs.n_vector for plhs in ode_lhs_terms])
 
         self.validate()
     #todo
     # def __eq__(self, other):
     #    return True
 
-        #print self.__descriptions_dict
+    def __initialise_descriptions(self, description_of_lhs_terms):
+        """
+        Populate self.__descriptions_dict
+        and self._ordered_descriptions_of_lhs_terms
+        :param description_of_lhs_terms:
+        :return:
+        """
+        # NB: getting left hand side from self, rather than passing it from above as
+        # we need to make sure that left_hand_side here is a list of symbols
+        left_hand_side = self.left_hand_side
 
-        #print self.ordered_descriptions
+        if description_of_lhs_terms:
+            #print description_of_lhs_terms
+            # Validate the description_of_lhs_terms first:
+            for key in description_of_lhs_terms.keys():
+                symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
+                if symbolic_key not in left_hand_side:
+                    raise KeyError('Provided description key {0!r} '
+                                   'is not in LHS equations {1!r}'.format(key, left_hand_side))
 
-    # def __initialise_descriptions(self, description_of_lhs_terms):
-    #     """
-    #     Populate self.__descriptions_dict
-    #     and self._ordered_descriptions_of_lhs_terms
-    #     :param description_of_lhs_terms:
-    #     :return:
-    #     """
-    #     # NB: getting left hand side from self, rather than passing it from above as
-    #     # we need to make sure that left_hand_side here is a list of symbols
-    #     left_hand_side = self.left_hand_side
-    #
-    #     if description_of_lhs_terms:
-    #         #print description_of_lhs_terms
-    #         # Validate the description_of_lhs_terms first:
-    #         for key in description_of_lhs_terms.keys():
-    #             symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
-    #             if symbolic_key not in left_hand_side:
-    #                 raise KeyError('Provided description key {0!r} '
-    #                                'is not in LHS equations {1!r}'.format(key, left_hand_side))
-    #
-    #         ordered_descriptions = []
-    #         for lhs in left_hand_side:
-    #             try:
-    #                 lhs_description = description_of_lhs_terms[lhs]
-    #             except KeyError:
-    #                 lhs_description = description_of_lhs_terms.get(str(lhs), None)
-    #             ordered_descriptions.append(lhs_description)
-    #     else:
-    #         ordered_descriptions = [None] * len(left_hand_side)
-    #
-    #     self.__descriptions_dict = dict(zip(left_hand_side, ordered_descriptions))
-    #     self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
+            ordered_descriptions = []
+            for lhs in left_hand_side:
+                try:
+                    lhs_description = description_of_lhs_terms[lhs]
+                except KeyError:
+                    lhs_description = description_of_lhs_terms.get(str(lhs), None)
+                ordered_descriptions.append(lhs_description)
+        else:
+            ordered_descriptions = [None] * len(left_hand_side)
+
+        self.__descriptions_dict = dict(zip(left_hand_side, ordered_descriptions))
+        self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
 
     def validate(self):
         """
@@ -211,7 +206,7 @@ class ODEProblem(object):
 
     @property
     def number_of_equations(self):
-        return len(self.left_hand_side_terms)
+        return len(self.ode_lhs_terms)
 
     @memoised_property
     def _right_hand_side_as_numeric_functions(self):
@@ -338,7 +333,7 @@ class ODEProblemWriter(object):
 
         #empty lines are added in order to mimic the output from the original code
 
-        left_hand_side = self._problem.left_hand_side_terms
+        left_hand_side = self._problem.ode_lhs_terms
 
         lines = [self._problem.method]
         lines += [""]
@@ -395,7 +390,7 @@ class ODEProblemLatexWriter(ODEProblemWriter):
         Overrides the default method and provides latex expressions instead of plain text
         :return: LaTeX formated list of strings
         """
-        left_hand_side = self._problem.left_hand_side_terms
+        left_hand_side = self._problem.ode_lhs_terms
         preamble = ["\documentclass{article}"]
         preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
