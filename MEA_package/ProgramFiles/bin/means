@@ -8,7 +8,7 @@ from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
 from means.model.model import parse_model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.simulation.ode_problem import parse_problem, ODEProblemWriter, ODEProblemLatexWriter
+from means.approximation.ode_problem import parse_problem, ODEProblemWriter, ODEProblemLatexWriter
 from means.simulation.simulate import graphbuilder
 from means.inference.sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
 

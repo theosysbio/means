@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import sympy
 
-from means.simulation.ode_problem import ODEProblem, Moment, VarianceTerm
+from means.approximation.ode_problem import ODEProblem, Moment, VarianceTerm
 
 
 class TestODEProblem(unittest.TestCase):

@@ -3,7 +3,7 @@ import unittest
 import sympy
 
 from means.approximation.mea.raw_to_central import raw_to_central
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
 
 class TestRawToCentral(unittest.TestCase):
 

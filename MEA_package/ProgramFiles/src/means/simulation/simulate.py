@@ -12,7 +12,7 @@ from sympy import Matrix
 
 
 # These are the default values in solver.c but they seem very low
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
 
 RTOL = 1e-4
 ATOL = 1e-4

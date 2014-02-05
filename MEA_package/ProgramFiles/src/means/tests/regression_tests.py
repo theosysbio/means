@@ -8,7 +8,7 @@ import traceback
 
 import numpy as np
 
-from means.simulation import ode_problem
+from means.approximation import ode_problem
 from means.util import sympyhelpers
 
 

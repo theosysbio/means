@@ -1,10 +1,10 @@
 import operator
-import sympy as sp
-from sympy import Matrix
 
+import sympy as sp
+
+from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.simulation import ode_problem
-from means.simulation.ode_problem import Moment, VarianceTerm
+from means.approximation.ode_problem import Moment, VarianceTerm
 
 
 class LinearNoiseApproximation(ApproximationBaseClass):

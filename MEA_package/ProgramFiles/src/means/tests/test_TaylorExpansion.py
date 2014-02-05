@@ -5,7 +5,7 @@ import sympy as sp
 from means.approximation.mea.TaylorExpansion import taylor_expansion
 from means.approximation.mea.TaylorExpansion import get_factorial_term
 from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 
 class TaylorExpansionTestCase(unittest.TestCase):

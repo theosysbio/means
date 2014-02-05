@@ -1,7 +1,10 @@
 import unittest
+
 import sympy
+
 from means.approximation.mea.eq_mixedmoments import eq_mixedmoments
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
+
 
 class TestEqMixedMoments(unittest.TestCase):
 

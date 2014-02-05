@@ -17,7 +17,7 @@ from collections import namedtuple
 from scipy.special import gammaln
 import numpy as np
 
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
 from means.simulation.simulate import NP_FLOATING_POINT_PRECISION
 
 SUPPORTED_DISTRIBUTIONS = {'gamma', 'normal', 'lognormal'}

@@ -3,7 +3,7 @@ import unittest
 import sympy
 
 from means.approximation.mea.centralmoments import eq_centralmoments
-from means.simulation.ode_problem import Moment
+from means.approximation.ode_problem import Moment
 
 class CentralMomentsTestCase(unittest.TestCase):
     def test_centralmoments_using_p53model(self):
