@@ -12,33 +12,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
+from decorators import memoised_property
+from gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
 from ode_problem import Moment
 from simulate import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
+# value returned if parameters, means or variances < 0
+FTOL = 0.000001
+MAX_DIST = float('inf')
 
-def make_i0(param, vary, initcond, varyic):
+def to_guess(parameters_with_variability, initial_conditions_with_variability):
     """
     Creates a list of variables to infer, based on the values in vary/varyic (0=fixed, 1=optimised).
 
     This should contain all variables that are varied as it would be passed to optimisation method.
 
     :param param: list of starting values for kinetic parameters
-    :param vary: list to identify which values in `param` to vary during inference (0=fixed, 1=optimise)
     :param initcond: list of starting values (i.e. at t0) for moments
-    :param varyic: list to identify which values in `initcond` to vary (0=fixed, 1=optimise)
     :return: i0 (which is passed to the fmin minimisation function)
     """
-    i0 = []
-    for i in range(0, len(vary)):
-        if vary[i] == 1:
-            i0.append(param[i])
-    for j in range(0, len(varyic)):
-        if varyic[j] == 1:
-            i0.append(initcond[j])
-    return i0
+    # Return all the items that have variable=True
+    return [x[0] for x in parameters_with_variability + initial_conditions_with_variability if x[1]]
 
 
-def i0_to_test(i0, param, vary, initcond, varyic):
+
+def i0_to_test(only_variable_parameters, parameters_with_variability, initial_conditions_with_variability):
     """
     Used within the distance/cost function to create the current kinetic parameter and initial condition vectors
     to be used during that interaction, using current values in i0.
@@ -46,26 +44,34 @@ def i0_to_test(i0, param, vary, initcond, varyic):
     This function takes i0 and complements it with additional information from variables that we do not want to vary
     so the simulation function could be run and values compared.
 
-    :param i0: `i0` list returned from `make_i0`
+    :param only_variable_parameters: `i0` list returned from `make_i0`
     :param param: list of starting values for kinetic parameters
     :param vary: list to identify which values in `param` to vary during inference (0=fixed, 1=optimise)
     :param initcond: list of starting values (i.e. at t0) for moments
     :param varyic: list to identify which values in `initcond` to vary (0=fixed, 1=optimise)
     :return:
     """
-    test_param = param[:]
-    test_initcond = initcond[:]
-    i0_index = 0
-    for i in range(0, len(vary)):
-        if vary[i] == 1:
-            test_param[i] = i0[i0_index]
-            i0_index += 1
-    for j in range(0, len(varyic)):
-        if varyic[j] == 1:
-            test_initcond[j] = i0[i0_index]
-            i0_index += 1
 
-    return (test_param, test_initcond)
+    complete_params = []
+    counter = 0
+    for param, is_variable in parameters_with_variability:
+        # If param not variable, add it from param list
+        if not is_variable:
+            complete_params.append(param)
+        else:
+            # Otherwise add it from variable parameters list
+            complete_params.append(only_variable_parameters[counter])
+            counter += 1
+
+    complete_initial_conditions = []
+    for initial_condition, is_variable in initial_conditions_with_variability:
+        if not is_variable:
+            complete_initial_conditions.append(initial_condition)
+        else:
+            complete_initial_conditions.append(only_variable_parameters[counter])
+            counter += 1
+
+    return complete_params, complete_initial_conditions
 
 
 def parse_experimental_data_file(sample):
@@ -136,170 +142,196 @@ def _mom_indices(problem, mom_names):
 
     return mom_index_list, moments_list
 
+def sum_of_squares_distance(simulated_trajectories, observed_trajectories_lookup):
+    dist = 0
+    for simulated_trajectory in simulated_trajectories:
+        observed_trajectory = None
+        try:
+            observed_trajectory = observed_trajectories_lookup[simulated_trajectory.description]
+        except KeyError:
+            continue
 
-def optimise(param, vary, initcond, varyic, limits, sample, problem):
-    """
-    Optimise function, that is used for parameter inference.
+        deviations = observed_trajectory.values - simulated_trajectory.values
+        # Drop NaNs arising from missing datapoints
+        deviations = deviations[~np.isnan(deviations)]
 
-    This function minimises the distance/cost function using simplex algorithm.
+        dist += np.sum(np.square(deviations))
 
-    :param param: kinetic parameters
-    :param vary: list of parameters which are to be infered
-    :param initcond: initial conditions
-    :param varyic: " " TODO: this is the original test, does this mean empty?
-    :param limits: constrains allowed values for parameters and initial conditions (list with entry in form lower,upper)
-                   for each parameter/initial condition set in `timeparam` file.
-    :param sample: name of the experimental data file
-    :param problem: The specified ODE problem to optimise
-    :type problem: ODEProblem
-    :return:
-    """
-    i0 = make_i0(param, vary, initcond, varyic)        # create initial i0
+    return dist
 
-    # Get required information from the MFK or LNA output file 
+def constraints_are_satisfied(current_guess, limits):
+    if limits is not None:
+        for value, limit in zip(current_guess, limits):
+            lower_limit = limit[0]
+            upper_limit = limit[1]
+            if lower_limit:
+                if value < lower_limit:
+                    return False
+            if upper_limit:
+                if value > upper_limit:
+                    return False
 
-    simulation_type = problem.method            # simtype = MFK or LNA
+    return True
+
+def some_params_are_negative(problem, parameters, initial_conditions):
     number_of_species = problem.number_of_species
+    if any(i < 0 for i in parameters):     # parameters cannot be negative
+        return True
+    # disallow negative numbers for raw moments (i.e. cannot have -1.5 molecules on avg)
+    # TODO: it is questionable whether we should hardcode this or create a similar interface as in limits
+    if any(j < 0 for j in initial_conditions[0:number_of_species]):
+        return True
 
+    return False
 
-    number_of_equations = problem.number_of_equations
+class ParameterInference(object):
 
-    # If starting values not specified for all moments, set remainder to 0
-    if len(initcond) != number_of_equations:
-        initcond += ([0] * (number_of_equations - len(initcond)))
+    __problem = None
+    __starting_parameters_with_variability = None
+    __starting_conditions_with_variability = None
+    __constraints = None
+    __observed_timepoints = None
+    __observed_trajectories = None
+    _method = None
 
-    def distance(i0, param, vary, initcond, varyic, observed_trajectories_lookup, observed_timepoint):
+    def __init__(self, problem, starting_parameters_with_variability, starting_conditions_with_variability,
+                 constraints, observed_timepoints, observed_trajectories, method='sum_of_squares'):
         """
-        Evaluates distance (cost) function for current set of values in i0.
-
-        At each iteration, this function is called by fmin and calculated using the current values in i0.
-        Returned value (dist) is minimised by varying i0.
-
-        Distance is the sum of squared differences between the sample data, and the corresponding values
-        simulated using either MFK or LNA with the current parameter sets.
-
-        :param i0:
-        :param param:
-        :param vary:
-        :param initcond:
-        :param varyic:
-        :param observed_trajectories_lookup: a dictionary in form {Moment: trajectory}
-                                             where trajectory is the observed trajectories
-        :param observed_timepoints: timepoints (from sample data file)
-        :param observed_moments_index_list: the indices of the corresponding moments in simulated trajectories produced by CVODE
-        :return:
+        :param problem: ODEProblem to infer data for
+        :type problem: ODEProblem
+        :param starting_parameters_with_variability: List of tuples (value, is_variable) for each parameter in ODEProblem
+                                     specification.
+                                    - value is the starting value for that parameter
+                                    - is_variable is a boolean True/False signifying whether the constant can be varied
+                                      during inference
+        :param starting_conditions_with_variability: similar list of tuples as `starting_parameters`,
+                                    but for each of the LHS equations in the problem
+        :param constraints:         List of tuples (lower_bound, upper_bound) for each of the variable parameters.
+                                    TODO:  Maybe a better way exists to specify these constraints.
+                                    This is a bit weird way: we specify only variable ones.
+                                    I am thinking somewhat about a container class Parameter(value, variable, constraints)
+                                    Can be none if no constraints present, similarly each of the bounds can be None,
+                                    if unspecified
+        :param observed_timepoints:   Timepoints for which we have data for
+        :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
+        :param method: Method of calculating the data fit. Currently supported values are
+              - 'sum_of_squares' -  min sum of squares optimisation
+              - 'gamma' - maximum likelihood optimisation assuming gamma distribution
+              - 'normal'- maximum likelihood optimisation assuming normal distribution
+              - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
         """
+        self.__problem = problem
 
-        # value returned if parameters, means or variances < 0
-        max_dist = 1.0e10
+        assert(len(starting_parameters_with_variability) == len(problem.constants))
+        assert(len(starting_conditions_with_variability) == problem.number_of_equations)
 
-        # creates lists of parameters (test_param and test_initcond) for that iteration
+        self.__starting_parameters_with_variability = starting_parameters_with_variability
+        self.__starting_conditions_with_variability = starting_conditions_with_variability
 
-        (test_param, test_initcond) = i0_to_test(i0, param, vary, initcond, varyic)
+        assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
+                                                                     starting_parameters_with_variability +
+                                                                     starting_conditions_with_variability)))
+        self.__constraints = constraints
 
-        simulator = Simulation(problem, postprocessing='LNA' if simulation_type=='LNA' else None)
-        simulated_timepoints, simulated_trajectories = simulator.simulate_system(test_param, test_initcond,
-                                                                                 observed_timepoints)
+        self.__observed_timepoints = observed_timepoints
+        self.__observed_trajectories = observed_trajectories
 
-        # Check if parameters/initconds are within allowed bounds (if --limit used)
-        # and return max_dist if outside these ranges
-        # FIXME: Maybe worth solving the ODEs (i.e. obtaining `test_soln` *after* checking for limits ?
+        self._method = method
 
-        if limits is not None:
-            for a in range(0, len(i0)):
-                l_limit = limits[a][0]
-                u_limit = limits[a][1]
-                if l_limit != 'N':
-                    if i0[a] < l_limit:
-                        return max_dist
-                if u_limit != 'N':
-                    if i0[a] > u_limit:
-                        return max_dist
+    @memoised_property
+    def _distance_between_trajectories_function(self):
+        if self.method == 'sum_of_squares':
+            return sum_of_squares_distance
+        elif self.method in SUPPORTED_DISTRIBUTIONS:
+            return lambda x, y: _distribution_distance(x, y, self.method)
+        else:
+            raise ValueError('Unsupported method {0!r}'.format(self.method))
 
-        # If MFK used, distance summed over all timepoints/moments contained 
-        # in sample data file
+    def infer(self):
 
-        if simulation_type == 'MEA':
-            if any(i < 0 for i in test_param):   # disallow negative kinetic parameters
-                return max_dist
+        initial_guess = to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
+        observed_trajectories_lookup = self.observed_trajectories_lookup
 
-            # calculate number of var/covar terms
-            #nVar_Covar = factorial(nspecies+1)/(factorial(2)*factorial(nspecies-2))
-            #if any(j<0 for j in test_initcond[0:nspecies+nVar_Covar]):
-            # Fixme: these should probably be in LNA?
-            if any(j < 0 for j in test_initcond[0:number_of_species]):
-                return max_dist              # disallow negative means/variance/covariance
+        problem = self.problem
+        starting_conditions_with_variability = self.starting_conditions_with_variability
+        starting_parameters_with_variability = self.starting_parameters_with_variability
+        simulation_type = problem.method
 
-        dist = 0
-        for simulated_trajectory in simulated_trajectories:
-            observed_trajectory = None
-            try:
-                observed_trajectory = observed_trajectories_lookup[simulated_trajectory.description]
-            except KeyError:
-                continue
+        timepoints_to_simulate = self.observed_timepoints
 
-            deviations = observed_trajectory.values - simulated_trajectory.values
-            # Drop NaNs arising from missing datapoints
-            deviations = deviations[~np.isnan(deviations)]
+        _distance_between_trajectories_function = self._distance_between_trajectories_function
+        def distance(current_guess):
+            if not self._constraints_are_satisfied(current_guess):
+                return MAX_DIST
 
-            dist += np.sum(np.square(deviations))
+            current_parameters, current_initial_conditions = i0_to_test(current_guess,
+                                                                        starting_parameters_with_variability,
+                                                                        starting_conditions_with_variability)
 
-        # If LNA used...
+            if some_params_are_negative(problem, current_parameters, current_initial_conditions):
+                return MAX_DIST
 
-        # if simulation_type == 'LNA':
-        #     tmu = [0] * number_of_species
-        #     mu_t = [0] * len(observed_timepoints)
-        #     for i in range(0, number_of_species):
-        #         mu_i = [0] * len(observed_timepoints)
-        #         for j in range(len(observed_timepoints)):
-        #             if i == 0:
-        #                 V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
-        #                 for v in range(2 * number_of_species):
-        #                     V[v] = simulated_trajectories[j, v + number_of_species]
-        #                 mu_t[j] = np.random.multivariate_normal(simulated_trajectories[j, 0:number_of_species], V)
-        #             mu_i[j] = mu_t[j][i]
-        #         tmu[i] = mu_i
-        #     dist = 0
-        #     for species in range(0, len(observed_trajectories)):
-        #         for i_timepoint in range(0, len(observed_timepoints)):
-        #             dist += (observed_trajectories[species][i_timepoint] - tmu[species][i_timepoint]) ** 2
+            simulator = Simulation(self.problem, postprocessing='LNA' if simulation_type == 'LNA' else None)
+            simulated_timepoints, simulated_trajectories = simulator.simulate_system(current_parameters,
+                                                                                     current_initial_conditions,
+                                                                                     timepoints_to_simulate)
 
-        # Returns distance (dist), (and saves current i0 and dist to list)
-        y_list.append(dist)
-        i0_list.append(i0[0])
-        return dist
+            dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
+            return dist
 
-    def my_callback(x):
+        result = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True)
+
+        return result
+
+    @property
+    def problem(self):
         """
-        Callback function called after each iteration (each iteration will involve several distance function
-        evaluations). Use this to save data after each iteration if wanted.
-        :param x: Current i0 returned after that iteration
-        :return:
+        :rtype: ODEProblem
         """
-        it_param.append(x)
-        it_no.append(len(it_param))
-        #it_dist.append(y_list[-1])
-        #print x
-        #print y_list[-1]
+        return self.__problem
+
+    @property
+    def starting_parameters_with_variability(self):
+        return self.__starting_parameters_with_variability
+
+    @property
+    def starting_parameters(self):
+        return [x[0] for x in self.starting_conditions_with_variability]
+
+    @property
+    def starting_conditions_with_variability(self):
+        return self.__starting_conditions_with_variability
+
+    @property
+    def starting_conditions(self):
+        return [x[0] for x in self.starting_conditions_with_variability]
+
+    @property
+    def constraints(self):
+        return self.__constraints
+
+    def _constraints_are_satisfied(self, current_guess):
+        return constraints_are_satisfied(current_guess, self.constraints)
 
 
-    # create lists to collect data at each iteration (use with my_callback if wanted)
-    y_list = []
-    i0_list = []
-    it_no = []
-    it_param = []
-    it_dist = []
+    @property
+    def observed_timepoints(self):
+        return self.__observed_timepoints
 
-    # read sample data from file to get required information to pass to fmin
-    observed_timepoints, observed_trajectories = parse_experimental_data_file(sample)
-    observed_trajectories_lookup = {trajectory.description: trajectory for trajectory in observed_trajectories}
+    @property
+    def observed_trajectories(self):
+        return self.__observed_trajectories
 
-    # minimise defined distance function, with provided starting parameters
-    result = fmin(distance, i0, args=(param, vary, initcond, varyic, observed_trajectories_lookup,
-                                      observed_timepoints),
-                  ftol=0.000001, disp=0, full_output=True, callback=my_callback)
+    @memoised_property
+    def observed_trajectories_lookup(self):
+        """
+        Similar to observed_trajectories, but returns a dictionary of {description:trajectory}
+        """
+        return {trajectory.description: trajectory for trajectory in self.observed_trajectories}
 
-    return result, observed_timepoints, observed_trajectories, initcond
+    @property
+    def method(self):
+        return self._method
 
 def write_inference_results(restart_results, t, vary, initcond_full, varyic, inferfile):
     """
@@ -325,8 +357,8 @@ def write_inference_results(restart_results, t, vary, initcond_full, varyic, inf
     outfile = open(inferfile, 'w')
     for i in range(len(restart_results)):
         outfile.write('Starting parameters:\t' + str(restart_results[i][2]) + '\n')
-        (opt_param, opt_initconds) = i0_to_test(list(restart_results[i][0][0]), restart_results[i][2], vary,
-                                                initcond_full, varyic)
+        (opt_param, opt_initconds) = i0_to_test(list(restart_results[i][0][0]), zip(restart_results[i][2], vary),
+                                                zip(initcond_full, varyic))
         outfile.write('Optimised parameters:\t' + str(opt_param) + '\n')
         outfile.write('Starting initial conditions:\t' + str(restart_results[i][3]) + '\n')
         outfile.write('Optimised initial conditions:\t' + str(opt_initconds) + '\n')

@@ -16,7 +16,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
     def __init__(self, model, n_moments):
         super(MomentExpansionApproximation, self).__init__(model)
-        self.__n_moments = n_moments
+        self.__n_moments = int(n_moments)
 
     def _wrapped_run(self):
         """
