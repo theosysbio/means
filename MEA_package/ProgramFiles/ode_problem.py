@@ -66,7 +66,14 @@ class Moment(ODETermBase):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return (self.n_vector == other.n_vector).all()
+        elif (self.n_vector != other.n_vector).any():
+            return False
+        elif (self.symbol != self.symbol):
+
+            return False
+        else:
+            return True
+
 
 
 
@@ -102,6 +109,10 @@ class ODEProblem(object):
         #self.__initialise_descriptions(description_of_lhs_terms)
 
         self.validate()
+    #todo
+    # def __eq__(self, other):
+    #    return True
+
         #print self.__descriptions_dict
 
         #print self.ordered_descriptions
