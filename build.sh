@@ -28,7 +28,12 @@ cd $WORKSPACE
 
 pip install --quiet nosexcover
 pip install --quiet pylint
+
+# Uninstall previous version of our script
+pip uninstall means
+# Install current version of our script
 pip install $CODE_DIR
+
 nosetests --with-xcoverage --with-xunit --cover-erase -cover-package=means $CODE_DIR 
 pylint -f parseable $CODE_DIR/src/means | tee pylint.out
 cd $CODE_DIR
