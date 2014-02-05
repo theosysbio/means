@@ -113,15 +113,13 @@ class ODEProblem(object):
         self.__initialise_descriptions(ode_lhs_terms)
 
         self.validate()
-        print "------------"
+        print "================================"
         print self.left_hand_side
         print "------------"
         print self.descriptions_dict
         print "------------"
         print self.ordered_descriptions
-        print "------------"
-        print "------------"
-        print "------------"
+
 
     #todo
     # def __eq__(self, other):
