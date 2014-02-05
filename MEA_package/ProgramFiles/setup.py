@@ -14,7 +14,7 @@ setup(
               'means.simulation',
               'means.util',
               'means.tests'],
-    package_src={'means' : 'src/means'},
+    package_dir={'' : 'src/'},
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
