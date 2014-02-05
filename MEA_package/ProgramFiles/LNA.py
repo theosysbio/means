@@ -65,28 +65,3 @@ class LinearNoiseApproximation(ApproximationBaseClass):
 
         out_problem = ode_problem.ODEProblem("LNA", lhs, rhs, sp.Matrix(self.model.constants), prob_moments)
         return out_problem
-
-
-def get_args():
-    import sys
-    model_ = sys.argv[1]
-    out_file_name = str(sys.argv[2])
-    return (model_, out_file_name)
-
-if __name__ == '__main__':
-    model_filename, out_file_name = get_args()
-    # parse the input file as a Model object
-    model = parse_model(model_filename)
-
-    # set the mea analysis up
-    lna = LinearNoiseApproximation(model)
-
-    # run mea with the defined parameters
-    problem = lna.run()
-
-    # write result in the specified file
-    ode_writer = ode_problem.ODEProblemWriter(problem, lna.time_last_run)
-    ode_writer.write_to(out_file_name)
-
-    tex_writer = ode_problem.ODEProblemLatexWriter(problem)
-    tex_writer.write_to(out_file_name + ".tex")

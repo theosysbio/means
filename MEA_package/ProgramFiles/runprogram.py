@@ -1,6 +1,9 @@
 import os
 import sys
-from ode_problem import parse_problem
+from LNA import LinearNoiseApproximation
+from model import parse_model
+from moment_expansion_approximation import MomentExpansionApproximation
+from ode_problem import parse_problem, ODEProblemWriter, ODEProblemLatexWriter
 from paramtime import paramtime
 from simulate import simulate, graphbuilder
 from sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
@@ -55,7 +58,7 @@ def printOptions():
 def run():
     
     MFK = False
-    model = False
+    model_file = False
     nMoments = 2
     ODEout = 'ODEout'
     createcfile = False
@@ -87,7 +90,7 @@ def run():
                 printOptions()
                 sys.exit()
             elif option == 'MEA': MFK = True
-            elif option[0:6] == 'model=':model = option[6:]
+            elif option[0:6] == 'model=':model_file = option[6:]
             elif option[0:5] == 'nMom=':nMoments = option[5:]
             elif option[0:7] == 'ODEout=':ODEout = option[7:]
             elif option == 'compile' : createcfile = True # TODO: this is not used any more, the only reason we keep this
@@ -127,34 +130,38 @@ def run():
             printOptions()
             sys.exit()
 
-    if (MFK == True) and (LNA == True):
+    if MFK and LNA:
         print "\n  Error:\n  Please choose EITHER --MEA or --LNA.\n"
-        sys.exit()
+        sys.exit(1)
 
-    if MFK == True:
-        if model == False:
-            print "\n No input model file given for moment expansion.\n Try:\n\t--model=modelname.txt\n"
-            sys.exit()
-        else:
-            if os.path.exists(wd+model)==False:
-                print "\n  Error:\n  "+model+"  does not exist in working directory.\n  Please try again with correct model filename.\n"
-                sys.exit()
-            else:
-                os.system('python MEA.py '+wd+model+' '+str(nMoments)+' '+wd+ODEout)
+    if MFK or LNA:
+        if not model_file:
+            print "\n No input model file given.\n Try:\n\t--model=modelname.txt\n"
+            sys.exit(1)
 
-    if LNA == True:
-        if model == False:
-            print "\n No input model file given LNA.\n Try:\n\t--model=modelname.txt\n"
-            sys.exit()
+        model = None
+        try:
+            model = parse_model(os.path.join(wd, model_file))
+        except IOError as e:
+            print "\n  Error:\n  Cannot open {0!r}. Got {1!r}\n" \
+                  "Please try again with correct model filename.\n".format(model_file, e)
+            sys.exit(1)
+
+        approximation = None
+        if MFK:
+            approximation = MomentExpansionApproximation(model, nMoments)
         else:
-            if os.path.exists(wd+model)==False:
-                print "\n  Error:\n  "+model+"  does not exist in working directory.\n  Please try again with correct model filename.\n"
-                sys.exit()
-            else:
-                os.system('python LNA.py '+wd+model+' '+wd+ODEout)
+            approximation = LinearNoiseApproximation(model)
+
+        problem = approximation.run()
+
+        ode_writer = ODEProblemWriter(problem, approximation.time_last_run)
+        ode_writer.write_to(os.path.join(wd, ODEout))
+        tex_writer = ODEProblemLatexWriter(problem)
+        tex_writer.write_to(os.path.join(wd, '.'.join([ODEout, "tex"])))
 
     if solve and infer:
-        print "\n  Error:\n  Please choose EITHER --solve or --infer.\n"
+        print "\n  Error:\n  Please choose EITHER --solve or --infer but not both.\n"
         sys.exit()
 
     if solve:
