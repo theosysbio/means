@@ -132,8 +132,8 @@ class ODEProblem(object):
         :param description_of_lhs_terms:
         :return:
         """
-        descriptions_dict = dict([(odet.symbol, odet.descriptor)  for odet in ode_lhs_terms])
-        self.__ordered_descriptions_of_lhs_terms = [plhs.n_vector for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
+        descriptions_dict = dict([(odet.symbol, odet)  for odet in ode_lhs_terms])
+        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
         self.__descriptions_dict = descriptions_dict
         # NB: getting left hand side from self, rather than passing it from above as
         # we need to make sure that left_hand_side here is a list of symbols
