@@ -194,8 +194,8 @@ def compare_ode_problems(output, expected_output):
          return ("Difference in the constants: \nexpected=\n%s\nresult=\n%s" % (str(expected_constants),
                                                                             str(result_constants))).split("\n")
 
-    expected_ode_terms = expected_problem.left_hand_side_terms
-    result_ode_terms = result_problem.left_hand_side_terms
+    expected_ode_terms = expected_problem.ode_lhs_terms
+    result_ode_terms = result_problem.ode_lhs_terms
     for e,r in zip(expected_ode_terms, result_ode_terms):
             if not e == r:
                 msg = "different lhs!! \nexpected= {0} (symbol = {1})\nresult= {2} (symbol = {3})"

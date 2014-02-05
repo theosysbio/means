@@ -74,9 +74,6 @@ class Moment(ODETermBase):
         else:
             return True
 
-
-
-
 class ODEProblem(object):
     """
     Stores the left and right hand side equations to be simulated
@@ -90,7 +87,7 @@ class ODEProblem(object):
     __constants = None
     __ordered_descriptions_of_lhs_terms = None
 
-    def __init__(self, method, left_hand_side_term, right_hand_side, constants):
+    def __init__(self, method, ode_lhs_terms, right_hand_side, constants):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
@@ -100,8 +97,8 @@ class ODEProblem(object):
         :param constants: the constants of the model
         """
 
-        self.__left_hand_side_terms = left_hand_side_term
-        #self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
+        self.__ode_lhs_terms = ode_lhs_terms
+        self.__left_hand_side = sympy.Matrix([plhs.symbol for plhs in ode_lhs_terms])
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
@@ -171,17 +168,17 @@ class ODEProblem(object):
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
     @property
-    def left_hand_side_terms(self):
-        return self.__left_hand_side_terms
+    def ode_lhs_terms(self):
+        return self.__ode_lhs_terms
 
     @property
     def variables(self):
-        return [lhs.symbol for lhs in self.left_hand_side_terms]
+        return [lhs.symbol for lhs in self.ode_lhs_terms]
 
     # TODO: I don't think species_* methods should be part of ODEProblem, better for it to be unaware of description meanings
     @property
     def species_terms(self):
-        return filter(lambda x: isinstance(x, Moment) and x.order == 1, self.left_hand_side_terms)
+        return filter(lambda x: isinstance(x, Moment) and x.order == 1, self.ode_lhs_terms)
 
     @property
     def number_of_species(self):
@@ -203,10 +200,14 @@ class ODEProblem(object):
     # def descriptions_dict(self):
     #     return self.__descriptions_dict
     #
-    # @property
-    # def ordered_descriptions(self):
-    #     # TODO: consider removing this
-    #     return self.__ordered_descriptions_of_lhs_terms
+    @property
+    def ordered_descriptions(self):
+        # TODO: consider removing this
+        return [plhs.n_vector for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
+        #return self.__ordered_descriptions_of_lhs_terms
+    @property
+    def left_hand_side(self):
+        return self.ode_lhs_terms
 
     @property
     def number_of_equations(self):
