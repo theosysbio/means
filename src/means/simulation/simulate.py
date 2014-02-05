@@ -6,6 +6,7 @@ from collections import namedtuple
 
 from assimulo.problem import Explicit_Problem
 from assimulo.solvers.sundials import CVode
+from assimulo.solvers.sundials import CVodeError
 import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
@@ -89,7 +90,21 @@ class Simulation(object):
         last_timepoint = timepoints[-1]
 
         solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
-        simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
+        try:
+            simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
+        except CVodeError as e:
+            # assimulo masks the error that occurs in RHS function
+            # by it's CVodeError exception
+            # Let's try to call that function ourselves and see if we could cause that error
+            # and not mask it
+            try:
+                self.problem.right_hand_side_as_function(initial_constants)(initial_values)
+            except:
+                raise
+            else:
+                # If the right_hand_side_as_function above did not raise any exceptions, re-raise CVode error
+                raise e
+
 
         trajectories = self.__postprocessing(self.problem, simulated_values, simulated_timepoints)
 
