@@ -7,16 +7,18 @@ from decorators import memoised_property
 
 
 class ODETermBase(object):
-    pass
-
+    @property
+    def descriptor(self):
+        return None
 class VarianceTerm(ODETermBase):
 
     def __init__(self, symbol):
         self.__symbol = symbol
-
     @property
     def symbol(self):
         return self.__symbol
+
+
 
 class Moment(ODETermBase):
     __n_vector = None
@@ -32,6 +34,12 @@ class Moment(ODETermBase):
         self.__n_vector = np.array(n_vector, dtype=int)
         self.__order = sum(self.n_vector)
         self.__symbol = symbol
+        self.__descriptor = self.n_vector
+
+    @property
+    def descriptor(self):
+        return self.__n_vector
+
     @property
     def n_vector(self):
         return self.__n_vector
@@ -92,7 +100,7 @@ class ODEProblem(object):
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
         Currently, 'MEA' and 'LNA' are supported"
-        :param left_hand_side: the left hand side of equations as a list of `ODETerms` (e.g. `Moments`)
+        :param ode_lhs_terms: the left hand side of equations as a list of `ODETerms` (e.g. `Moments`)
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
         """
@@ -102,45 +110,48 @@ class ODEProblem(object):
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
-        self.__initialise_descriptions([plhs.n_vector for plhs in ode_lhs_terms])
+        self.__initialise_descriptions(ode_lhs_terms)
 
         self.validate()
     #todo
     # def __eq__(self, other):
     #    return True
 
-    def __initialise_descriptions(self, description_of_lhs_terms):
+    def __initialise_descriptions(self, ode_lhs_terms):
         """
         Populate self.__descriptions_dict
         and self._ordered_descriptions_of_lhs_terms
         :param description_of_lhs_terms:
         :return:
         """
+        descriptions_dict = dict([(odet.symbol, odet.descriptor)  for odet in ode_lhs_terms])
+
         # NB: getting left hand side from self, rather than passing it from above as
         # we need to make sure that left_hand_side here is a list of symbols
-        left_hand_side = self.left_hand_side
+        # left_hand_side = self.left_hand_side
+        #
+        # if description_of_lhs_terms:
+        #     #print description_of_lhs_terms
+        #     # Validate the description_of_lhs_terms first:
+        #     for key in description_of_lhs_terms.keys():
+        #         symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
+        #         if symbolic_key not in left_hand_side:
+        #             raise KeyError('Provided description key {0!r} '
+        #                            'is not in LHS equations {1!r}'.format(key, left_hand_side))
+        #
+        #     ordered_descriptions = []
+        #     for lhs in left_hand_side:
+        #         try:
+        #             lhs_description = description_of_lhs_terms[lhs]
+        #         except KeyError:
+        #             lhs_description = description_of_lhs_terms.get(str(lhs), None)
+        #         ordered_descriptions.append(lhs_description)
+        # else:
+        #     ordered_descriptions = [None] * len(left_hand_side)
 
-        if description_of_lhs_terms:
-            #print description_of_lhs_terms
-            # Validate the description_of_lhs_terms first:
-            for key in description_of_lhs_terms.keys():
-                symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
-                if symbolic_key not in left_hand_side:
-                    raise KeyError('Provided description key {0!r} '
-                                   'is not in LHS equations {1!r}'.format(key, left_hand_side))
-
-            ordered_descriptions = []
-            for lhs in left_hand_side:
-                try:
-                    lhs_description = description_of_lhs_terms[lhs]
-                except KeyError:
-                    lhs_description = description_of_lhs_terms.get(str(lhs), None)
-                ordered_descriptions.append(lhs_description)
-        else:
-            ordered_descriptions = [None] * len(left_hand_side)
-
-        self.__descriptions_dict = dict(zip(left_hand_side, ordered_descriptions))
-        self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
+        print descriptions_dict
+        self.__descriptions_dict = descriptions_dict
+        #self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
 
     def validate(self):
         """
@@ -197,7 +208,6 @@ class ODEProblem(object):
     #
     @property
     def ordered_descriptions(self):
-        # TODO: consider removing this
         return [plhs.n_vector for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
         #return self.__ordered_descriptions_of_lhs_terms
     @property
