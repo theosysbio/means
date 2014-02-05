@@ -129,46 +129,20 @@ class ODEProblem(object):
         """
         Populate self.__descriptions_dict
         and self._ordered_descriptions_of_lhs_terms
-        :param description_of_lhs_terms:
+        :param ode_lhs_terms:
         :return:
         """
         descriptions_dict = dict([(odet.symbol, odet)  for odet in ode_lhs_terms])
-        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
+        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in ode_lhs_terms if isinstance(plhs, Moment)]
         self.__descriptions_dict = descriptions_dict
-        # NB: getting left hand side from self, rather than passing it from above as
-        # we need to make sure that left_hand_side here is a list of symbols
-        # left_hand_side = self.left_hand_side
-        #
-        # if description_of_lhs_terms:
-        #     #print description_of_lhs_terms
-        #     # Validate the description_of_lhs_terms first:
-        #     for key in description_of_lhs_terms.keys():
-        #         symbolic_key = sympy.Symbol(key) if isinstance(key, basestring) else key
-        #         if symbolic_key not in left_hand_side:
-        #             raise KeyError('Provided description key {0!r} '
-        #                            'is not in LHS equations {1!r}'.format(key, left_hand_side))
-        #
-        #     ordered_descriptions = []
-        #     for lhs in left_hand_side:
-        #         try:
-        #             lhs_description = description_of_lhs_terms[lhs]
-        #         except KeyError:
-        #             lhs_description = description_of_lhs_terms.get(str(lhs), None)
-        #         ordered_descriptions.append(lhs_description)
-        # else:
-        #     ordered_descriptions = [None] * len(left_hand_side)
-
-        #print descriptions_dict
-
-        #self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
 
     def validate(self):
         """
         Validates whether the particular model is created properly
         """
-        if self.number_of_equations != self.right_hand_side.rows:
+        if self.left_hand_side.rows != self.right_hand_side.rows:
             raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
-                             "The same number is expected.".format(self.number_of_equations, self.right_hand_side.rows))
+                             "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
 
         if self.__method != "MEA" and self.__method != "LNA":
             raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
@@ -187,14 +161,17 @@ class ODEProblem(object):
         return self.__ode_lhs_terms
 
     @property
+    def left_hand_side(self):
+        return self.__left_hand_side
+
+    @property
     def variables(self):
-        return [lhs.symbol for lhs in self.ode_lhs_terms]
+        return to_list_of_symbols(self.__left_hand_side)
 
     # TODO: I don't think species_* methods should be part of ODEProblem, better for it to be unaware of description meanings
     @property
     def species_terms(self):
-        return filter(lambda x: isinstance(x, Moment) and x.order == 1, self.ode_lhs_terms)
-
+        return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self.descriptions_dict.iteritems())
     @property
     def number_of_species(self):
         return len(self.species_terms)
@@ -217,15 +194,12 @@ class ODEProblem(object):
 
     @property
     def ordered_descriptions(self):
+        # TODO: consider removing this
         return self.__ordered_descriptions_of_lhs_terms
 
     @property
-    def left_hand_side(self):
-        return self.__left_hand_side
-
-    @property
     def number_of_equations(self):
-        return len(self.ode_lhs_terms)
+        return len(self.left_hand_side)
 
     @memoised_property
     def _right_hand_side_as_numeric_functions(self):
@@ -252,6 +226,7 @@ class ODEProblem(object):
             return np.array([[w_f(*all_values)] for w_f in wrapped_functions])
 
         return f
+
 
 def parse_problem(input_filename, from_string=False):
     """
