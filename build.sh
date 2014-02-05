@@ -1,3 +1,4 @@
+PYENV_HOME=$WORKSPACE/.pyenv/
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
 CODE_DIR=$WORKSPACE/MEA_package/ProgramFiles
 REQUIREMENTS_TXT=$WORKSPACE/MEA_package/requirements.txt
