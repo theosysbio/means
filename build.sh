@@ -30,7 +30,7 @@ pip install --quiet nosexcover
 pip install --quiet pylint
 
 # Uninstall previous version of our script
-pip uninstall means
+pip uninstall means || echo "Means not yet installed"
 # Install current version of our script
 pip install $CODE_DIR
 
