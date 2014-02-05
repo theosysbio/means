@@ -113,6 +113,16 @@ class ODEProblem(object):
         self.__initialise_descriptions(ode_lhs_terms)
 
         self.validate()
+        print "------------"
+        print self.left_hand_side
+        print "------------"
+        print self.descriptions_dict
+        print "------------"
+        print self.ordered_descriptions
+        print "------------"
+        print "------------"
+        print "------------"
+
     #todo
     # def __eq__(self, other):
     #    return True
@@ -125,7 +135,8 @@ class ODEProblem(object):
         :return:
         """
         descriptions_dict = dict([(odet.symbol, odet.descriptor)  for odet in ode_lhs_terms])
-
+        self.__ordered_descriptions_of_lhs_terms = [plhs.n_vector for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
+        self.__descriptions_dict = descriptions_dict
         # NB: getting left hand side from self, rather than passing it from above as
         # we need to make sure that left_hand_side here is a list of symbols
         # left_hand_side = self.left_hand_side
@@ -149,8 +160,8 @@ class ODEProblem(object):
         # else:
         #     ordered_descriptions = [None] * len(left_hand_side)
 
-        print descriptions_dict
-        self.__descriptions_dict = descriptions_dict
+        #print descriptions_dict
+
         #self.__ordered_descriptions_of_lhs_terms = ordered_descriptions
 
     def validate(self):
@@ -202,17 +213,17 @@ class ODEProblem(object):
     def method(self):
         return self.__method
 
-    # @property
-    # def descriptions_dict(self):
-    #     return self.__descriptions_dict
-    #
+    @property
+    def descriptions_dict(self):
+        return self.__descriptions_dict
+
     @property
     def ordered_descriptions(self):
-        return [plhs.n_vector for plhs in self.ode_lhs_terms if isinstance(plhs, Moment)]
-        #return self.__ordered_descriptions_of_lhs_terms
+        return self.__ordered_descriptions_of_lhs_terms
+
     @property
     def left_hand_side(self):
-        return self.ode_lhs_terms
+        return self.__left_hand_side
 
     @property
     def number_of_equations(self):
