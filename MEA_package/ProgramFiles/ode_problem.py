@@ -106,11 +106,15 @@ class ODEProblem(object):
         """
 
         self.__ode_lhs_terms = ode_lhs_terms
-        self.__left_hand_side = sympy.Matrix([plhs.symbol for plhs in ode_lhs_terms])
+        self.__left_hand_side = to_sympy_column_matrix(sympy.Matrix([plhs.symbol for plhs in ode_lhs_terms]))
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
         self.__initialise_descriptions(ode_lhs_terms)
+
+
+        #self.__left_hand_side = to_sympy_column_matrix(left_hand_side)
+        #self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
 
         self.validate()
         print "================================"
