@@ -24,7 +24,7 @@ SIMULATION_TEMPLATE = 'python runprogram.py --random-seed=42 --{method} --nMom=3
 INFERENCE_TEMPLATE = 'python runprogram.py --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
 INFERENCE_WITH_RESTARTS_TEMPLATE = 'python runprogram.py --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
 INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'python runprogram.py --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
-SIMULATION_MODELS = [('MM', 1e-2, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
+SIMULATION_MODELS = [('MM', 1e-2, 1e-3), ('p53', {1: 1e-2, 2: 5.0e-1}, 1e-3)]
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
                     #('Hes1', 'data_Hes1.txt', 'infer_Hes1.txt')
