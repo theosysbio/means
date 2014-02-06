@@ -18,7 +18,7 @@ setup(
     url=None, # TODO: url
     license=None, # TODO: license
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
-    long_description=None, # TODO: readme.txt
+    long_description=open('README.txt').read(),
     install_requires=[
         "numpy>=1.8.0",
         "sympy>=0.7.2",
