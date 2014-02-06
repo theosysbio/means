@@ -12,7 +12,6 @@ dist
 build
 eggs
 parts
-bin
 var
 sdist
 develop-eggs
@@ -48,3 +47,4 @@ model*.tex
 
 .DS_Store
 .texpadtmp
+coverage.xml
