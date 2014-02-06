@@ -1,6 +1,7 @@
 PYENV_HOME=$WORKSPACE/.pyenv/
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
 CODE_DIR=$WORKSPACE/MEA_package/ProgramFiles
+INOUT_DIR=$WORKSPACE/MEA_package/Inoutput
 REQUIREMENTS_TXT=$WORKSPACE/MEA_package/requirements.txt
 
 # Delete previously built virtualenv
@@ -37,5 +38,5 @@ pip install $CODE_DIR
 
 nosetests --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR 
 pylint -f parseable $CODE_DIR/src/means | tee pylint.out
-cd $CODE_DIR
+cd $INOUT_DIR
 python -m means.tests.regression_tests --xunit | tee $WORKSPACE/regression_tests.xml
