@@ -16,9 +16,6 @@ from means.inference.sumsq_infer import write_inference_results, graph, parse_ex
 def printOptions():
     print "\nList of possible options:"
 
-    print "\n House-keeping:"
-    print "  --wd\t\tSpecify the working directory. This will contain all input and\n\t\toutput files. Default Inoutput folder provided."
-
     print "\n Moment expansion approximation:"
     print "  --MEA\t\tCreate a system of ODEs using moment expansion from the model\n\t\tspecified with --model."
     print "  --model\tSpecify the model input file. Use format in modeltemplate.txt.\n\t\tE.g. --model=yourmodel.txt."
@@ -78,7 +75,6 @@ def run():
     restart = False
     nRestart=4
     limit = False
-    wd = '.'
     distribution = False
     LNA = False
 
@@ -111,7 +107,6 @@ def run():
             elif option == 'restart':restart=True
             elif option[0:9] == 'nRestart=':nRestart=option[9:]
             elif option[0:5] == 'limit':limit=True
-            elif option[0:3] == 'wd=': wd = option[3:]
             elif option[0:4] == 'pdf=': distribution = option[4:]
             elif option[0:6] == 'maxent': distribution = 'maxent'
             elif option[0:3] == 'LNA' : LNA = True
@@ -142,7 +137,7 @@ def run():
 
         model = None
         try:
-            model = parse_model(os.path.join(wd, model_file))
+            model = parse_model(model_file)
         except IOError as e:
             print "\n  Error:\n  Cannot open {0!r}. Got {1!r}\n" \
                   "Please try again with correct model filename.\n".format(model_file, e)
@@ -157,34 +152,34 @@ def run():
         problem = approximation.run()
 
         ode_writer = ODEProblemWriter(problem, approximation.time_last_run)
-        ode_writer.write_to(os.path.join(wd, ODEout))
+        ode_writer.write_to(ODEout)
         tex_writer = ODEProblemLatexWriter(problem)
-        tex_writer.write_to(os.path.join(wd, '.'.join([ODEout, "tex"])))
+        tex_writer.write_to('.'.join([ODEout, "tex"]))
 
     if solve and infer:
         print "\n  Error:\n  Please choose EITHER --solve or --infer but not both.\n"
         sys.exit()
 
     if solve:
-        if not os.path.exists(wd+tpfile):
+        if not os.path.exists(tpfile):
             print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
             sys.exit(1)
 
-        [t,param,initcond,vary, varyic, limits] = paramtime(wd+tpfile,restart, limit)
-        problem = parse_problem(wd+ODEout)  # TODO: os.path.join
+        [t,param,initcond,vary, varyic, limits] = paramtime(tpfile,restart, limit)
+        problem = parse_problem(ODEout)  # TODO: os.path.join
 
         simulated_timepoints, solution, momlist = simulate(problem,
-                                         wd+trajout,t,param,initcond, maxorder)
+                                         trajout,t,param,initcond, maxorder)
 
         if plot:
-            graphbuilder(solution,wd+ODEout,plottitle,simulated_timepoints,momlist)
+            graphbuilder(solution,ODEout,plottitle,simulated_timepoints,momlist)
 
     if infer:
         if not tpfile:
             print "\n No timepoints/parameters/initial conditions given for inference.\n " \
                   "Please provide a file in the format of paramtimetemp.txt."
             sys.exit(1)
-        if not os.path.exists(wd+tpfile):
+        if not os.path.exists(tpfile):
             print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  " \
                                           "Please try again with correct " \
                                           "timepoint/parameter/initial conditions filename.\n"
@@ -193,17 +188,17 @@ def run():
             print "\n No experimental data provided for inference.\n " \
                   "Please try again specifying your data file with the --data option."
             sys.exit(1)
-        if not os.path.exists(wd+exptdata):
+        if not os.path.exists(exptdata):
             print "\n  Error:\n  "+exptdata+"  does not exist in working directory.\n  " \
                                             "Please try again with correct experimental data filename.\n"
             sys.exit(1)
 
-        problem = parse_problem(wd+ODEout)
+        problem = parse_problem(ODEout)
         # read sample data from file and get indices for mean/variances in CVODE output
-        (observed_timepoints, observed_trajectories) = parse_experimental_data_file(wd+exptdata)
+        (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
 
         try:
-            [t, param, initcond, vary, varyic, limits] = paramtime(wd + tpfile, restart, limit)
+            [t, param, initcond, vary, varyic, limits] = paramtime(tpfile, restart, limit)
         except ValueError:
             print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
                   'for all parameter values.'.format(tpfile)
@@ -242,7 +237,7 @@ def run():
         restart_results.sort(key=lambda x: x[0][1], reverse=False)
 
         # write results to file (default name 'inference.txt') and plot graph if selected
-        write_inference_results(restart_results, t, vary, initcond_full, varyic, wd + inferfile)
+        write_inference_results(restart_results, t, vary, initcond_full, varyic, inferfile)
         if plot:
             graph(problem, restart_results[0], observed_trajectories, t, initcond_full, vary, varyic, plottitle)
 

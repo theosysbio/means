@@ -1,3 +1,4 @@
+#!/bin/sh
 PYENV_HOME=$WORKSPACE/.pyenv/
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
 CODE_DIR=$WORKSPACE/MEA_package/ProgramFiles
