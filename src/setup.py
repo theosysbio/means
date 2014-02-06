@@ -9,6 +9,7 @@ setup(
               'means.approximation',
               'means.approximation.lna',
               'means.approximation.mea',
+              'means.examples',
               'means.inference',
               'means.model',
               'means.simulation',
