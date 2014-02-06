@@ -1,9 +1,8 @@
 #!/bin/sh
 PYENV_HOME=$WORKSPACE/.pyenv/
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
-CODE_DIR=$WORKSPACE/MEA_package/ProgramFiles
+CODE_DIR=$WORKSPACE/MEA_package/src
 INOUT_DIR=$WORKSPACE/MEA_package/Inoutput
-REQUIREMENTS_TXT=$WORKSPACE/MEA_package/requirements.txt
 
 # Delete previously built virtualenv
 #if [ -d $PYENV_HOME ]; then
