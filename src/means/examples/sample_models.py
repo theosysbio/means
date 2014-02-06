@@ -2,10 +2,15 @@ from means.model import Model
 
 MODEL_MICHAELIS_MENTEN = Model(constants=['c_0', 'c_1', 'c_2'],
                                species=['y_0', 'y_1'],
+                               # TODO: 120-301 below are hardcoded because those are the `initial_values` for parameters
+                               # for that model. I.e. these represent y0 and y1 at time zero, y0(0) and y1(0),
+                               # we might want to handle this explicitly as when the initial parameters are different
+                               # the model becomes less meaningful
                                propensities=['c_0*y_0*(120-301+y_0+y_1)',
                                              'c_1*(301-(y_0+y_1))',
                                              'c_2*(301-(y_0+y_1))'],
-                               stoichiometry_matrix=[[-1, 1, 0], [0, 0, 1]])
+                               stoichiometry_matrix=[[-1, 1, 0],
+                                                     [0, 0, 1]])
 
 MODEL_DIMERISATION = Model(constants=['c_0', 'c_1', 'c_2'],
                            species=['y_0'],
