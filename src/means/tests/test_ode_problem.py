@@ -50,7 +50,7 @@ class TestODEProblem(unittest.TestCase):
         p1_expected_ans = np.array([[11], [14], [7]])
         p2_expected_ans = np.array([[4], [1], [6+5]])
         p1_actual_ans = np.array(p1_rhs_as_function(params))
-        p2_actual_ans = np.array(p1_rhs_as_function(params))
+        p2_actual_ans = np.array(p2_rhs_as_function(params))
 
         assert_array_equal(p1_actual_ans, p1_expected_ans)
         assert_array_equal(p2_actual_ans, p2_expected_ans)
