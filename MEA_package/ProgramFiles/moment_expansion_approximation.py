@@ -145,7 +145,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         #fixme
         # substitute_raw_with_central assumes to have the lower order moment first
-        k_counter_tuples = sorted(k_counter_tuples, cmp=lambda x, y: sum(x) - sum(y))
+        #k_counter_tuples = sorted(k_counter_tuples, cmp=lambda x, y: sum(x) - sum(y))
 
         raw_symbols = [None] * len(k_counter_tuples)
         for i,count in enumerate(k_counter_tuples):
