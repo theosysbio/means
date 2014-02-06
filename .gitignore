@@ -47,3 +47,4 @@ model*.tex
 
 .DS_Store
 .texpadtmp
+coverage.xml
