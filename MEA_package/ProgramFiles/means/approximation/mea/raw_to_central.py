@@ -21,7 +21,8 @@ def make_alpha(n_vec, k_vec, ymat):
 def make_min_one_pow_n_minus_k(n_vec, k_vec):
     return reduce(operator.mul, [(-1) ** (n - k) for (n,k) in zip(n_vec, k_vec)])
 
-def raw_to_central(counter, ymat, mcounter):
+def raw_to_central(n_counter, species, k_counter):
+    #todo, fix docstring
     """
     Expresses higher (2+) order raw moments in terms of central moments.
     Returns `momvec` (list of central moments, `ymi`) and `mom` (list of equivalent expressions in terms of raw moments).
@@ -39,9 +40,9 @@ def raw_to_central(counter, ymat, mcounter):
     The last term, the beta term, ::math::`\langle \mathbf{x^n} \rangle` is named as `xstr(k)` in the resulting
     symbolic expression, where k is the vector of ks (or an element of `mcounter` if you like)
 
-    :param counter: The first list output by fcount - all moments minus the first order moments
-    :param ymat: the list of species/variables
-    :param mcounter: The second list output by fcount - all moments including the first order moments
+    :param n_counter: The first list output by fcount - all moments minus the first order moments
+    :param species: the list of species/variables
+    :param k_counter: The second list output by fcount - all moments including the first order moments
     :return:
     """
 
@@ -55,31 +56,31 @@ def raw_to_central(counter, ymat, mcounter):
     # This loop loops through the ::math::`[n_1, ..., n_d]` vectors of the sums in the beginning of the equation
     # i.e. ::math::`\sum_{k1=0}^n_1 ... \sum_{kd=0}^n_d` part of the equation.
     # Note, this is not the sum over k's in that equation, or at least I think its not
-    for count in counter:  #loop through all n1,...,nd combinations
+    for n_iter in n_counter:  #loop through all n1,...,nd combinations
 
-        if count.order == 0:
+        if n_iter.order == 0:
             continue
 
-        # nvec is the vector ::math::`[n_1, ... n_d]` in equation 8
-        nvec = count.n_vector
+        # n_vec is the vector ::math::`[n_1, ... n_d]` in equation 8
+        n_vec = n_iter.n_vector
 
-        # m_lower contains the elements of `mcounter` that are lower than or equal to the current nvec
-        # where lower than and equal is defined as ::math::`n_i^a \le n_i^b ~ \textrm{for all i}`
-        # we assume this is just generating the list of possible k values to satisfy ns in the equation.
-        m_lower = [c for c in mcounter if all_higher_or_eq(nvec, c.n_vector)]
-        # mvec is the vector ::math::`[k_1, ..., k_d]`
+        # k_lower contains the elements of `k_counter` that are lower than or equal to the current n_vec
+        # This generates the list of possible k values to satisfy ns in the equation.
+        k_lower = [k for k in k_counter if n_iter >= k]
+
+        # k_vec bellow is the vector ::math::`[k_1, ..., k_d]`
 
         # (n k) binomial term in equation 9
-        n_choose_k_vec = [make_k_chose_e(mvec.n_vector, nvec) for mvec in m_lower]
+        n_choose_k_vec = [make_k_chose_e(k_vec.n_vector, n_vec) for k_vec in k_lower]
 
         # (-1)^(n-k) term in equation 9
-        minus_one_pow_n_min_k_vec = [make_min_one_pow_n_minus_k(nvec, mvec.n_vector)  for mvec in m_lower ]
+        minus_one_pow_n_min_k_vec = [make_min_one_pow_n_minus_k(n_vec, k_vec.n_vector)  for k_vec in k_lower ]
 
         # alpha term in equation 9
-        alpha_vec = [make_alpha(nvec, mvec.n_vector, ymat) for mvec in m_lower]
+        alpha_vec = [make_alpha(n_vec, k_vec.n_vector, species) for k_vec in k_lower]
 
         # beta term in equation 9
-        beta_vec = [mvec.symbol for mvec in m_lower]
+        beta_vec = [k_vec.symbol for k_vec in k_lower]
         # let us multiply all terms
         product = [(n * m * a * b) for (n, m, a, b) in zip(n_choose_k_vec, minus_one_pow_n_min_k_vec, alpha_vec, beta_vec)]
 

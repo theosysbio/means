@@ -158,5 +158,13 @@ def sum_of_rows(mat):
     return out
 
 def sum_of_cols(mat):
-    out = sympy.Matrix([sum(r)for r in (mat.T).tolist()])
+    out = sympy.Matrix([sum(r)for r in (mat.T).tolist()]).T
     return out
+
+import operator
+
+def product(list):
+    return reduce(operator.mul, list)
+
+def sympy_sum_list(list):
+    return reduce(operator.add, list)

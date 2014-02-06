@@ -82,6 +82,18 @@ class Moment(ODETermBase):
         else:
             return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __ge__(self, other):
+        """
+        A moment is said greater or equal than another iff all the values of n_vec are greater or equal.
+        Mathematically: ::math::`n_i^a \ge n_i^b ~ \textrm{for all i}`
+        """
+        return (self.n_vector >= other.n_vector).all()
+        #return all([a >= b for a, b in zip])
+
+
 class ODEProblem(object):
     """
     Stores the left and right hand side equations to be simulated
