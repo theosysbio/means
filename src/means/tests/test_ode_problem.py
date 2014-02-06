@@ -28,6 +28,35 @@ class TestODEProblem(unittest.TestCase):
         actual_ans = np.array(rhs_as_function(params))
         assert_array_equal(actual_ans, expected_ans)
 
+    def test_ode_rhs_as_function_cache_does_not_persist_between_instances(self):
+        """
+        Given two ODEProblems, the cache should not persist between these objects.
+        :return:
+        """
+        p1_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
+        p1_rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+
+        p2_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
+        p2_rhs = sympy.Matrix(['y_1', 'c_1', 'y_2+y_3'])
+
+        p1 = ODEProblem('MEA', p1_lhs, p1_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p1_rhs_as_function = p1.right_hand_side_as_function([1, 2, 3])
+
+        params = [4, 5, 6]  # y_1, y_2, y_3 in that order
+
+        p2 = ODEProblem('MEA', p2_lhs, p2_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p2_rhs_as_function = p2.right_hand_side_as_function([1, 2, 3])
+
+        p1_expected_ans = np.array([[11], [14], [7]])
+        p2_expected_ans = np.array([[4], [1], [6+5]])
+        p1_actual_ans = np.array(p1_rhs_as_function(params))
+        p2_actual_ans = np.array(p2_rhs_as_function(params))
+
+        assert_array_equal(p1_actual_ans, p1_expected_ans)
+        assert_array_equal(p2_actual_ans, p2_expected_ans)
+
+
+
     def test_ode_moment_no_description_from_variance_terms(self):
         """
         Given  Variance terms as left hand side terms, the generated descriptions
