@@ -2,7 +2,7 @@
 Means
 ==========
 
-Dependancies
+Dependencies
 ==============
 
 Sundials
@@ -36,7 +36,7 @@ checkout the development version of the code::
 
 Navigate to recently checked out directory `assimulo-trunk` and install the package::
 
-    cd assimulo-trink
+    cd assimulo-trunk
     python setup.py install --sundials-home=/usr/local
 
 Verify whether the installation succeeded by trying out one of the examples in the package, i.e.::
@@ -48,7 +48,7 @@ Verify whether the installation succeeded by trying out one of the examples in t
 Installation (Development version)
 ============
 
-The development version of this package can be installed by checking out the code, navigating to `ProgramFiles`
+The development version of this package can be installed by checking out the code, navigating to `src`
 directory and typing::
 
     pip install -e .
@@ -60,4 +60,4 @@ In order to run regression tests type::
 
     python -m means.tests.regression_tests
 
-From `ProgramFiles` directory (or any other directory with access to `InOutput` dir)
+From `src` directory (or any other directory with access to `InOutput` dir)
