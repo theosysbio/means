@@ -78,11 +78,9 @@ def run():
     restart = False
     nRestart=4
     limit = False
-    wd = '../Inoutput/'
+    wd = '.'
     distribution = False
     LNA = False
-    sundials_1 = '/cluster/soft/Linux_2.6_64/include/'
-    sundials_2 = '/cluster/soft/Linux_2.6_64/lib/'
 
 
     for i in range(1,len(sys.argv)):

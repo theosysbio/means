@@ -62,9 +62,9 @@ def create_options_parser():
 
     group = parser.add_argument_group('Working directory', 'Location of working directories')
     group.add_argument('--inout-dir', help='Location of input/output directory',
-                        default='../Inoutput')
+                        default='.')
     group.add_argument('--model-answers-dir', help="Location of model answers directory",
-                        default='../Inoutput/model_answers')
+                        default='model_answers')
 
 
     parser.add_argument('--build-reference-answers', action='store_true',
