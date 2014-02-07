@@ -29,15 +29,16 @@ def raw_to_central(n_counter, species, k_counter):
 
     Based on equation 8 in the paper:
 
-    ::math::`\mathbf{M_{x^n}} = \sum_{k_1=0}^{n_1} ... \sum_{k_d=0}^{n_d} \mathbf{{n \choose k}} (-1)^{\mathbf{n-k}} \mu^{\mathbf{n-k}} \langle \mathbf{x^k} \rangle`
+    .. math::
+         \mathbf{M_{x^n}} = \sum_{k_1=0}^{n_1} ... \sum_{k_d=0}^{n_d} \mathbf{{n \choose k}} (-1)^{\mathbf{n-k}} \mu^{\mathbf{n-k}} \langle \mathbf{x^k} \\rangle
 
-    The term ::math::`\mathbf{M_{x^n}}` is named `ym{str(n)}` in the output, where `{str(n)}` is string representation
+    The term :math:`\mathbf{M_{x^n}}` is named `ym{str(n)}` in the output, where `{str(n)}` is string representation
     of vector n.
 
-    The term ::math::`\mu^{\mathbf{n-k}}`, so called alpha term is expressed with respect to `ymat` values that
-    are equivalent to ::math::`\mu_i` in the paper.
+    The term :math:`\mu^{\mathbf{n-k}}`, so called alpha term is expressed with respect to `ymat` values that
+    are equivalent to :math:`\mu_i` in the paper.
 
-    The last term, the beta term, ::math::`\langle \mathbf{x^n} \rangle` is named as `xstr(k)` in the resulting
+    The last term, the beta term, :math:`\langle \mathbf{x^n} \\rangle` is named as `xstr(k)` in the resulting
     symbolic expression, where k is the vector of ks (or an element of `mcounter` if you like)
 
     :param n_counter: The first list output by fcount - all moments minus the first order moments
