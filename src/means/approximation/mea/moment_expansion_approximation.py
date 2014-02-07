@@ -36,7 +36,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # compute n_counter and k_counter; the "n" and "k" vectors in equations, respectively.
         # n_counter = k_counter - first_order_moments
         n_counter, k_counter = self.generate_n_and_k_counters(n_moments, species)
-        print n_counter,k_counter
+        #n_counter, k_counter = self.generate_n_and_k_counters(n_moments, len(species))
 
         # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
         taylor_expansion_matrix = taylor_expansion(species, propensities, n_counter)
@@ -78,7 +78,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: expression of central moments without raw moment
         """
 
-        # Here we assume the same order. it would be better to ensure the moments n_vectors match
+        # Here we assume the n and k counters to be in same order.
+        # It would be better to ensure the moments n_vectors match
+
         # The symbols for raw moment symbols
         raw_lhs = [raw.symbol for raw in k_counter if raw.order > 1]
         # The symbols for the corresponding central moment
@@ -145,7 +147,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
             descriptors.append(row)
 
         # first central moment = 0
-        k_counter = [Moment([0] * len(species), sp.Integer(0))]
+        k_counter = [Moment([0] * len(species), sp.Integer(1))]
         # Expectations
         k_counter += [Moment(d, s) for d,s in zip(descriptors, species)]
         # higher order raw moment
@@ -160,3 +162,4 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter += [Moment(c, s) for c,s in zip(n_counter_tuples, n_counter_symbols)]
 
         return n_counter, k_counter
+
