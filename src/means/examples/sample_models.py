@@ -43,5 +43,11 @@ MODEL_HES1 = Model(constants=['c_0', 'c_1', 'c_2', 'c_3'],
                                          [0, -1, 0, -1, 1, 0],
                                          [0, 0, -1, 1, 0, 0]])
 
-
-
+MODEL_LOTKA_VOLTERRA  =  Model(
+                               constants=['k_1', 'k_2', 'k_3'],
+                               species=['Pred', 'Prey'],
+                               propensities=['k_1 * Prey',
+                                             'k_2 * Pred * Prey',
+                                             'k_3 * Pred'],
+                               stoichiometry_matrix=[[0, +1, -1],
+                                                     [+1, -1, 0]])
