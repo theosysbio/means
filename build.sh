@@ -31,6 +31,7 @@ cd $WORKSPACE
 
 pip install --quiet nosexcover
 pip install --quiet pylint
+pip install --quiet sphinx
 
 # Uninstall previous version of our script
 pip uninstall -y means || echo "Means not yet installed"
