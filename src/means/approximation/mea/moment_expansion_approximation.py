@@ -1,14 +1,11 @@
 import itertools
-
 import sympy as sp
-
 from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
-
 
 class MomentExpansionApproximation(ApproximationBaseClass):
     """
@@ -58,31 +55,24 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :param k_counter:
         :return: expression of central moments without raw moment
         """
-
+        #fixme:
         # Here we assume the n and k counters to be in same order.
         # It would be better to ensure the moments n_vectors match
-
         # The symbols for raw moment symbols
         raw_lhs = [raw.symbol for raw in k_counter if raw.order > 1]
         # The symbols for the corresponding central moment
         central_symbols= [central.symbol for central in n_counter if central.order > 1]
-
         # Now we state (central_symbols - central_from_raw_exprs) == 0
         eq_to_solve = [cfr - cs for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
-
-        # And we solve this for the symbol of the corresponding raw moment
-        # This gives an expression of the symbol for raw moment in terms of central moments
-        # and lower order raw moment
+        # And we solve this for the symbol of the corresponding raw moment. This gives an expression
+        #  of the symbol for raw moment in terms of central moments and lower order raw moment
         solved_xs = [sp.solve(rhs, rlhs) for (rhs, rlhs) in zip(eq_to_solve, raw_lhs)]
-
         out_exprs = central_moments_exprs.clone()
-        # note the "reversed":
-        # we start the substitutions by higher order moments and propagate to the lower order moments
+        # "reversed" since we start the substitutions by higher order moments and propagate to the lower order moments
         for rlhs, sx in reversed(zip(raw_lhs, solved_xs)):
             out_exprs = out_exprs.applyfunc(lambda x : sp.Subs(x, rlhs, sx).doit())
-
-            #todo eventually, remove simplify (slow)
-            out_exprs = out_exprs.applyfunc(sp.simplify)
+        #todo eventually, remove simplify (slow)
+        out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
     def generate_mass_fluctuation_kinetics(self, central_moments, n_counter, dmu_over_dt):
