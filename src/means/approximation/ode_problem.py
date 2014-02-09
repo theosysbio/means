@@ -172,16 +172,6 @@ class ODEProblem(object):
             raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
                              "The same number is expected.".format(self.left_hand_side.rows, self.right_hand_side.rows))
 
-        if self.__method != "MEA" and self.__method != "LNA":
-            raise ValueError("Only MEA or LNA methods are supported. The method '{0}' is unknown".format(self.__method))
-
-        # FIXME: add this validation here or somewhere else if we decide to make ODEProblem method-agnostic
-        # if self.__method == "MEA":
-        #     if self.left_hand_side.rows != len(self.__moment_dic):
-        #          raise ValueError("There are {0} equations and {1} moments. "
-        #                           "For MEA problems, the same number is expected.".format(self.left_hand_side.rows, len(self.__moment_dic)))
-
-
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
     @property
@@ -200,6 +190,7 @@ class ODEProblem(object):
     @property
     def species_terms(self):
         return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self.descriptions_dict.iteritems())
+
     @property
     def number_of_species(self):
         return len(self.species_terms)

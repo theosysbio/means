@@ -21,30 +21,39 @@ NP_FLOATING_POINT_PRECISION = np.double
 
 Trajectory = namedtuple('Trajectory', ['timepoints', 'values', 'description'])
 
+def validate_problem(problem):
+
+    problem.validate()
+
+    if problem.method == "MEA":
+        moments = filter(lambda x: isinstance(x, Moment), problem.ordered_descriptions)
+        if problem.left_hand_side.rows != len(moments):
+            raise ValueError("There are {0} equations and {1} moments. "
+                             "For MEA problems, the same number is expected.".format(problem.left_hand_side.rows,
+                                                                                     len(moments)))
+    elif problem.method == 'LNA':
+        # FIXME: do some validation for LNA here
+        pass
 
 
 class Simulation(object):
     __problem = None
     __postprocessing = None
 
-    def __init__(self, problem, postprocessing=None):
+    def __init__(self, problem):
         """
         Initialise the simulator object for a given problem
         :param problem:
         :type problem: ODEProblem
-        :param postprocessing: either None (for no postprocessing),
-                               or a string 'LNA' for the sampling required in LNA model
         :return:
         """
         self.__problem = problem
+        validate_problem(problem)
 
-        if postprocessing == 'LNA':
+        if problem.method == 'LNA':
             self.__postprocessing = _postprocess_lna_simulation
-        elif postprocessing is None:
-            self.__postprocessing = _postprocess_default
         else:
-            raise ValueError('Unsupported postprocessing type {0!r}, '
-                             'only None and \'LNA\' supported'.format(postprocessing))
+            self.__postprocessing = _postprocess_default
 
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
@@ -212,7 +221,7 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-    simulator = Simulation(problem, 'LNA' if simulation_type == 'LNA' else None)
+    simulator = Simulation(problem)
     simulated_timepoints, trajectories = simulator.simulate_system(initial_constants, initial_variables, timepoints)
 
     print_output(trajout, trajectories, initial_variables, number_of_species,

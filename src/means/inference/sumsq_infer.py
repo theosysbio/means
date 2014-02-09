@@ -272,7 +272,7 @@ class ParameterInference(object):
             if some_params_are_negative(problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
-            simulator = Simulation(self.problem, postprocessing='LNA' if simulation_type == 'LNA' else None)
+            simulator = Simulation(self.problem)
             simulated_timepoints, simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                                      current_initial_conditions,
                                                                                      timepoints_to_simulate)
@@ -396,7 +396,7 @@ def graph(problem, opt_results, observed_trajectories, timepoints, initcond_full
     (opt_param, opt_initcond) = i0_to_test(list(opt_results[0][0]), opt_results[2], vary, initcond_full, varyic)
 
     # get trajectories for optimised parameters
-    simulator = Simulation(problem, postprocessing='LNA' if problem.method == 'LNA' else None)
+    simulator = Simulation(problem)
     __, starting_trajectories = simulator.simulate_system(opt_results[2], opt_results[3], timepoints)
     __, optimal_trajectories = simulator.simulate_system(opt_param, opt_initcond, timepoints)
 
