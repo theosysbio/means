@@ -44,6 +44,9 @@ nosetests.xml
 ODEout
 ODEout.*
 model*.tex
+*.tmp
+simout_*
+
 
 .DS_Store
 .texpadtmp
