@@ -78,6 +78,11 @@ def run():
     distribution = False
     LNA = False
 
+    if len(sys.argv) < 2:
+        print "Please provide options.\n\n"
+        printOptions()
+        sys.exit(1)
+
 
     for i in range(1,len(sys.argv)):
         if sys.argv[i].startswith('--'):
