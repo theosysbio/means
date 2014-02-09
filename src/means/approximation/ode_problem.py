@@ -329,14 +329,12 @@ class ODEProblemWriter(object):
     A file writer for :class:`~means.approximation.ode_problem.ODEProblem` objects.
     """
 
-    def __init__(self, problem, run_time="unknown"):
+    def __init__(self, problem):
         """
         :param problem: the problem to be written
         :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
-        :param run_time: the time taken to formulate the problem (optional)
         """
         self._problem = problem
-        self._run_time = run_time
         self._STRING_RIGHT_HAND = 'RHS of equations:'
         self._STRING_LEFT_HAND = 'LHS:'
         self._STRING_CONSTANT = 'Constants:'
@@ -344,7 +342,6 @@ class ODEProblemWriter(object):
         self._N_MOMENTS = 'Number of moments:'
         self._N_EQS = 'Number of equations:'
         self._STRING_MOM = 'List of moments:'
-        self._TIME_TAKEN = 'Time taken (s):'
 
     def build_out_string_list(self):
         """
@@ -380,7 +377,6 @@ class ODEProblemWriter(object):
             n_mom = max([lhs.order for lhs in left_hand_side])
             lines += [self._N_MOMENTS, str(n_mom)]
 
-        lines += [self._TIME_TAKEN + "  {0}".format(self._run_time)]
         lines += [""]
         lines += [self._N_EQS, str(self._problem.number_of_equations)]
         lines += [""]

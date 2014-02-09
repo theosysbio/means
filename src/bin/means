@@ -151,7 +151,7 @@ def run():
 
         problem = approximation.run()
 
-        ode_writer = ODEProblemWriter(problem, approximation.time_last_run)
+        ode_writer = ODEProblemWriter(problem)
         ode_writer.write_to(ODEout)
         tex_writer = ODEProblemLatexWriter(problem)
         tex_writer.write_to('.'.join([ODEout, "tex"]))

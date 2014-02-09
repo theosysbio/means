@@ -11,7 +11,7 @@ class LinearNoiseApproximation(ApproximationBaseClass):
     """
     Performs Linear Noise Approximation of a model. TODO: add ref here
     """
-    def _wrapped_run(self):
+    def run(self):
         """
         Overrides the default _run() private method.
         Performs the complete analysis

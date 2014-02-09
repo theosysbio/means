@@ -20,7 +20,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         super(MomentExpansionApproximation, self).__init__(model)
         self.__n_moments = int(n_moments)
 
-    def _wrapped_run(self):
+    def run(self):
         """
         Overrides the default _run() private method.
         Performs the complete analysis
