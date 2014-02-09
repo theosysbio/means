@@ -2,7 +2,7 @@ import unittest
 
 import sympy as sp
 
-from means.approximation.mea.TaylorExpansion import taylor_expansion
+from means.approximation.mea.TaylorExpansion import generate_dmu_over_dt
 from means.approximation.mea.TaylorExpansion import get_factorial_term
 from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
 from means.approximation.ode_problem import Moment
@@ -74,6 +74,12 @@ class TaylorExpansionTestCase(unittest.TestCase):
         mea = MomentExpansionApproximation(None,3)
         species = sp.Matrix(["a","b","c"])
         propensities = sp.Matrix(["a*2 +w * b**3","b - a*x /c","c + a*b /32"])
+        stoichiometry_matrix = sp.Matrix([
+                        [1, 0, 1],
+                        [-1, -1, 0],
+                        [0, 1, -1]
+                                      ])
+
         counter = [
             Moment([0,0,2],sp.Symbol("q1")),
             Moment([0,2,0],sp.Symbol("q2")),
@@ -83,8 +89,8 @@ class TaylorExpansionTestCase(unittest.TestCase):
             Moment([0,1,1],sp.Symbol("q6")),
             Moment([1,0,1],sp.Symbol("q7"))]
 
-        result =  taylor_expansion(species,propensities,counter)
-        expected = sp.Matrix([  ["        0", "3*b*w",         "0", "0",    "0", "0",     "0"],
+        result =  generate_dmu_over_dt(species,propensities,counter, stoichiometry_matrix)
+        expected = stoichiometry_matrix * sp.Matrix([  ["        0", "3*b*w",         "0", "0",    "0", "0",     "0"],
                                 ["-a*x/c**3",     "0", "-a*x/c**3", "0",    "0", "0", "x/c**2"],
                                 [        "0",     "0",         "0", "0", "1/32", "0",      "0"]])
 

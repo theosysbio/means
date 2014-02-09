@@ -53,14 +53,14 @@ def get_factorial_term(counter_entry):
     return sp.S(1)/sp.S(prod)
 
 
-def taylor_expansion(species, propensity, counter):
+def generate_dmu_over_dt(species, propensity, counter, stoichiometry_matrix):
     """
-    Creates terms used in eq. 6 (see Ale et al. 2013) to calculate dmu/dt for EACH VARIABLE combination,
-    and EACH REACTION.
+    Calculate dmu/dt in eq. 6 (see Ale et al. 2013).
 
     :param species: the name of the variables (typically {y_0, y_1, ..., y_n})
     :param propensity: the reactions describes by the model
     :param counter: a list of all possible combination of order of derivation
+    :param stoichiometry_matrix: the stoichiometry matrix
     :return: a matrix in which each row corresponds to a reaction, and each column to an element of counter.
     """
 
@@ -73,6 +73,8 @@ def taylor_expansion(species, propensity, counter):
 
     # we make a matrix in which every element is the entry-wise multiplication of `derives` and factorial_terms
     te_matrix = sp.Matrix(len(propensity), len(counter), [d*f for (d, f) in zip(derives, factorial_terms)])
-    return te_matrix
+
+    # dmu_over_dt is the product of the stoichiometry matrix by the taylor expansion matrix
+    return stoichiometry_matrix * te_matrix
 
 

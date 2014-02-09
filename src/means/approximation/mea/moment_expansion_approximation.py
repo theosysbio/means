@@ -5,7 +5,7 @@ import sympy as sp
 from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment
-from TaylorExpansion import taylor_expansion
+from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
 
@@ -36,14 +36,12 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # compute n_counter and k_counter; the "n" and "k" vectors in equations, respectively.
         # n_counter = k_counter - first_order_moments
         n_counter, k_counter = self.generate_n_and_k_counters(n_moments, species)
-        #n_counter, k_counter = self.generate_n_and_k_counters(n_moments, len(species))
-
-        # Calculate TaylorExpansion terms to use in dmu/dt (eq. 6)
-        taylor_expansion_matrix = taylor_expansion(species, propensities, n_counter)
 
         # dmu_over_dt is the product of the stoichiometry matrix by the Taylor Expansion terms.
         # one row per species and one col per element of n_counter
-        dmu_over_dt = stoichiometry_matrix * taylor_expansion_matrix
+        dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
+
+
 
         #  Calculate expressions to use in central moments equations (eq. 9)
         #  central_moments_exprs is a  matrix in which TODO  moment (n1,...,nd) combination.
