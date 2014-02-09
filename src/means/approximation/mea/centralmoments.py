@@ -19,9 +19,9 @@ def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, 
     :param species: species matrix: y_0, y_1,..., y_d
     :param propensities: propensities matrix
     :param stoichiometry_matrix: stoichiometry matrix
-    :return: central_moments matrix with `(len(counter)-1)` rows and one column per entry in counter
-            This list contains sum of the terms `n_choose_k*minus_one_pow_n_minus_k*(AdB/dt + beta dA/dt)` in eq. 9 for each
-             n1,...,nd combination in eq. 9 where ... is ... #todo
+    :return: central_moments matrix with `(len(n_counter)-1)` rows and one column per entry in n_counter
+            This list contains sum of the terms `n_choose_k * minus_one_pow_n_minus_k*(AdB/dt + beta dA/dt)` in eq. 9 for each
+            n1,...,nd combination in eq. 9 where ... is ... #todo
     """
     central_moments = []
 
@@ -30,7 +30,7 @@ def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, 
     # (does not include 0th order central moment as this is 1,
     # or 1st order central moment as this is 0
 
-    # copy M matrix as a list of rows vectors (1/species)
+    # copy dmu_mat matrix as a list of rows vectors (1/species)
     dmu_mat = [sp.Matrix(l).T for l in dmu_over_dt.tolist()]
     #todo : tolist()
 
