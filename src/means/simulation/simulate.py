@@ -83,9 +83,11 @@ class Simulation(object):
     def simulate_system(self, initial_constants, initial_values, timepoints):
         """
         Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
-        :param initial_constants:
-        :param initial_values:
-        :param timepoints:
+        :param initial_constants: list of the initial values for the constants in the model. Must be in the same order
+        as in the model
+        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
+        these equations occur. If not all values specified, the remaining ones will be assumed to be 0.
+        :param timepoints: A list of time points to simulate the system for
         :return:
         """
 
@@ -208,7 +210,7 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
     :param initial_constants: List of kinetic parameters
     :param initial_variables: List of initial conditions for each moment (in timeparameters file)
     :param maxorder: Maximum order of moments to output to either plot or datafile. (Defaults to maximum order of moments)
-    :return:
+    :return: a list of trajectories resulting from simulation
     """
 
     # Get required info from the expansion output
@@ -216,7 +218,6 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
     number_of_species = problem.number_of_species
 
     term_descriptions = problem.ordered_descriptions
-    simulation_type = problem.method
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
