@@ -7,33 +7,49 @@ from means.util.decorators import memoised_property
 
 
 class ODETermBase(object):
+    """
+    Base class for explaining terms in the ODE expressions.
+    Instances of this class allow providing a description for each of the equations in the generated ODE system.
+    """
+
+    _symbol = None
+
+    def __init__(self, symbol):
+        self._symbol = symbol
+
+    @property
+    def symbol(self):
+        return self._symbol
+
     @property
     def descriptor(self):
         return None
+
+
 class VarianceTerm(ODETermBase):
-
-    def __init__(self, symbol):
-        self.__symbol = symbol
-    @property
-    def symbol(self):
-        return self.__symbol
-
+    """
+    Signifies that a particular equation generated from the model is part of a Variance Term
+    """
+    pass
 
 
 class Moment(ODETermBase):
     __n_vector = None
 
-    def __init__(self, n_vector, symbol = None):
+    def __init__(self, n_vector, symbol=None):
         """
         Creates an ODETerm that describes that a particular ODE term is a moment defined by the `n_vector`.
         Should be a vector of ints.
 
         TODO: figure out what "n_vector" is in mathematics-speak and use this here
+        FIXME: can symbol really be optional None?????
+        FIXME: symbol should be first argument to make it consistent with ODETermBase
         :param n_vector: a vector specifying the multidimensional moment
         """
+        super(self, Moment).__init__(symbol=symbol)
+
         self.__n_vector = np.array(n_vector, dtype=int)
         self.__order = sum(self.n_vector)
-        self.__symbol = symbol
         self.__descriptor = self.n_vector
 
     @property
@@ -43,11 +59,6 @@ class Moment(ODETermBase):
     @property
     def n_vector(self):
         return self.__n_vector
-
-
-    @property
-    def symbol(self):
-        return self.__symbol
 
     @property
     def order(self):
@@ -62,7 +73,7 @@ class Moment(ODETermBase):
         return self.order not in self.n_vector
 
     def __repr__(self):
-        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector,self.symbol)
+        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector, self.symbol)
 
     def __str__(self):
         return ', '.join(map(str, self.n_vector))
@@ -76,8 +87,7 @@ class Moment(ODETermBase):
             return False
         elif (self.n_vector != other.n_vector).any():
             return False
-        elif (self.symbol != self.symbol):
-
+        elif self.symbol != self.symbol:
             return False
         else:
             return True
