@@ -273,9 +273,9 @@ class ParameterInference(object):
                 return MAX_DIST
 
             simulator = Simulation(self.problem)
-            simulated_timepoints, simulated_trajectories = simulator.simulate_system(current_parameters,
-                                                                                     current_initial_conditions,
-                                                                                     timepoints_to_simulate)
+            simulated_trajectories = simulator.simulate_system(current_parameters,
+                                                               current_initial_conditions,
+                                                               timepoints_to_simulate)
 
             dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
             return dist
@@ -397,8 +397,8 @@ def graph(problem, opt_results, observed_trajectories, timepoints, initcond_full
 
     # get trajectories for optimised parameters
     simulator = Simulation(problem)
-    __, starting_trajectories = simulator.simulate_system(opt_results[2], opt_results[3], timepoints)
-    __, optimal_trajectories = simulator.simulate_system(opt_param, opt_initcond, timepoints)
+    starting_trajectories = simulator.simulate_system(opt_results[2], opt_results[3], timepoints)
+    optimal_trajectories = simulator.simulate_system(opt_param, opt_initcond, timepoints)
 
     trajectory_lookup = { start_trajectory.description: (start_trajectory, optimal_trajectory)
                           for start_trajectory, optimal_trajectory in zip(starting_trajectories, optimal_trajectories)}

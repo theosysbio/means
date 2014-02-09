@@ -114,10 +114,9 @@ class Simulation(object):
                 # If the right_hand_side_as_function above did not raise any exceptions, re-raise CVode error
                 raise e
 
-
         trajectories = self.__postprocessing(self.problem, simulated_values, simulated_timepoints)
 
-        return simulated_timepoints, trajectories
+        return trajectories
 
     @property
     def problem(self):
@@ -222,12 +221,12 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
     simulator = Simulation(problem)
-    simulated_timepoints, trajectories = simulator.simulate_system(initial_constants, initial_variables, timepoints)
+    trajectories = simulator.simulate_system(initial_constants, initial_variables, timepoints)
 
     print_output(trajout, trajectories, initial_variables, number_of_species,
-                 initial_constants, simulated_timepoints, maxorder)
+                 initial_constants, timepoints, maxorder)
 
-    return simulated_timepoints, trajectories, term_descriptions
+    return trajectories, term_descriptions
 
 def graphbuilder(soln,momexpout,title,t,momlist):
     """

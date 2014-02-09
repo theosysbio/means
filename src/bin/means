@@ -168,11 +168,11 @@ def run():
         [t,param,initcond,vary, varyic, limits] = paramtime(tpfile,restart, limit)
         problem = parse_problem(ODEout)  # TODO: os.path.join
 
-        simulated_timepoints, solution, momlist = simulate(problem,
+        solution, momlist = simulate(problem,
                                          trajout,t,param,initcond, maxorder)
 
         if plot:
-            graphbuilder(solution,ODEout,plottitle,simulated_timepoints,momlist)
+            graphbuilder(solution,ODEout,plottitle,t,momlist)
 
     if infer:
         if not tpfile:
