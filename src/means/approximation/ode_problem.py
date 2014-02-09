@@ -53,7 +53,7 @@ class Moment(ODETermBase):
         FIXME: symbol should be first argument to make it consistent with ODETermBase
         :param n_vector: a vector specifying the multidimensional moment
         """
-        super(self, Moment).__init__(symbol=symbol)
+        super(Moment, self).__init__(symbol=symbol)
 
         self.__n_vector = np.array(n_vector, dtype=int)
         self.__order = sum(self.n_vector)
