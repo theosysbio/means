@@ -9,13 +9,14 @@ from means.approximation.ode_problem import Moment, VarianceTerm
 
 class LinearNoiseApproximation(ApproximationBaseClass):
     """
-    Performs Linear Noise Approximation of a model. todo add ref here
+    Performs Linear Noise Approximation of a model. TODO: add ref here
     """
     def _wrapped_run(self):
         """
         Overrides the default _run() private method.
         Performs the complete analysis
-        :return: an ODEProblem which can be further used in inference and simulation
+        :return: A fully computed set of Ordinary Differential Equations that can be used for further simulation
+        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
         """
 
         S = self.model.stoichiometry_matrix

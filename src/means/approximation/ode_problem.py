@@ -23,6 +23,9 @@ class ODETermBase(object):
 
     @property
     def descriptor(self):
+        """
+        Returns an uniquely identifying descriptor for this particular ODE term.
+        """
         return None
 
 
@@ -34,6 +37,10 @@ class VarianceTerm(ODETermBase):
 
 
 class Moment(ODETermBase):
+    """
+    An annotator for ODE expressions that describes that a particular expression in a set of ODEs corresponds to a Moment
+    of the probability distribution. The particular moment is described by :attr:`Moment.n_vector`.
+    """
     __n_vector = None
 
     def __init__(self, n_vector, symbol=None):
@@ -58,17 +65,24 @@ class Moment(ODETermBase):
 
     @property
     def n_vector(self):
+        """
+        The n_vector this moment represents
+        """
         return self.__n_vector
 
     @property
     def order(self):
         """
-        Returns the order of the moment
+        The order of the moment
         """
         return self.__order
 
     @property
     def is_mixed(self):
+        """
+        Returns whether the moment is a mixed moment, i.e. has a non-zero power to more than one species,
+        or a raw moment (non-zero power to only one species).
+        """
         # If moment is not mixed, it will be of form [0, ... , k, ..., 0] where k is the max order
         return self.order not in self.n_vector
 
@@ -151,7 +165,8 @@ class ODEProblem(object):
 
     def validate(self):
         """
-        Validates whether the particular model is created properly
+        Validates whether the ODE equations provided make sense  i.e. the number of right-hand side equations
+        match the number of left-hand side equations.
         """
         if self.left_hand_side.rows != self.right_hand_side.rows:
             raise ValueError("There are {0} left hand side equations and {1} right hand side equations. "
@@ -311,14 +326,13 @@ def parse_problem(input_filename, from_string=False):
 
 class ODEProblemWriter(object):
     """
-    A class to write the resulting "ODEProblems" in a text file.
-
+    A file writer for :class:`~means.approximation.ode_problem.ODEProblem` objects.
     """
 
     def __init__(self, problem, run_time="unknown"):
         """
-
-        :param problem: an ODEProblem object to be written
+        :param problem: the problem to be written
+        :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
         :param run_time: the time taken to formulate the problem (optional)
         """
         self._problem = problem

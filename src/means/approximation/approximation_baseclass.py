@@ -3,9 +3,7 @@ from time import time
 
 class ApproximationBaseClass(object):
     """
-    A base class providing a framework to generate an :class:`~means.approximation.ode_problem.ODEProblem`
-    from an explicit :class:`~means.model.model.Model`
-    (and, possibly, parameters)
+    A class of explicit generators for ordinary differential equations required to simulate the model provided.
     """
     def __init__(self, model):
         """
