@@ -25,15 +25,8 @@ def printOptions():
     print "\n Linear noise approximation:"
     print "  --LNA\t\tCreate a system of ODEs using LNA. Use --model and --ODEout\n\t\toptions as above."
 
-    print "\n Compiling the ODE solver:"
-    print "  --compile\tCreate and compile the file needed for the ODE solver, use\n\t\t--ODEout and --timeparam to specify model and timepoints."
-    print "  --library\tSpecify name for the C library with no file type extension.\n\t\tDefault --library=solver."
-    print "  --timeparam\tName of file containing timepoints using format in\n\t\tparamtimetemp.txt. Required for --compile. Later used to input\n\t\tother parameters for inference or simulation."
-    print "  --sd1\t\tPath to directory containing sundials header files.\n\t\tDefault --sd1=/cluster/soft/Linux_2.6_64/include/."
-    print "  --sd2\t\tPath to directory containing sundials libraries.\n\t\tDefault --sd2=/cluster/soft/Linux_2.6_64/lib/."
-
     print "\n Simulation:"
-    print "  --sim\t\tSimulate moment trajectories for a given set of parameters.\n\t\tUse --library, --timeparam and --ODEout to specify required\n\t\tinformation."
+    print "  --sim\t\tSimulate moment trajectories for a given set of parameters.\n\t\tUse --timeparam and --ODEout to specify required\n\t\tinformation."
     print "  --simout\tSpecify filename for simulated trajectory data output."
     print "  --maxorder\tSpecify the maximum order of moments to simulate (only for\n\t\t--MEA).  Default = maxorder of MEA model used"
 
@@ -61,8 +54,6 @@ def run():
     model_file = False
     nMoments = 2
     ODEout = 'ODEout'
-    createcfile = False
-    library = 'solver'
     tpfile = None
     solve = False
     maxorder = None
@@ -95,12 +86,7 @@ def run():
             elif option[0:6] == 'model=':model_file = option[6:]
             elif option[0:5] == 'nMom=':nMoments = option[5:]
             elif option[0:7] == 'ODEout=':ODEout = option[7:]
-            elif option == 'compile' : createcfile = True # TODO: this is not used any more, the only reason we keep this
-                                                          # is because I do nt want to change all regression tests just now
-            elif option[0:8] == 'library=':library = option[8:]
             elif option[0:10]=='timeparam=':tpfile=option[10:]
-            elif option[0:4]=='sd1=':sundials_1=option[4:]
-            elif option[0:4]=='sd2=':sundials_2=option[4:]
             elif option == 'sim' : solve = True
             elif option == 'plot' : plot = True
             elif option[0:10] == 'plottitle=' : plottitle = option[10:]
