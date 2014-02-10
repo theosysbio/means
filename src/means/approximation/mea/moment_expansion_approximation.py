@@ -67,7 +67,13 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # And we solve this for the symbol of the corresponding raw moment. This gives an expression
         #  of the symbol for raw moment in terms of central moments and lower order raw moment
         solved_xs = [sp.solve(rhs, rlhs) for (rhs, rlhs) in zip(eq_to_solve, raw_lhs)]
-        out_exprs = central_moments_exprs.clone()
+
+        #sympy 0.7.4 compatibility
+        try:
+            out_exprs = central_moments_exprs.clone()
+        except:
+            out_exprs = central_moments_exprs.copy()
+
         # "reversed" since we start the substitutions by higher order moments and propagate to the lower order moments
         for rlhs, sx in reversed(zip(raw_lhs, solved_xs)):
             out_exprs = out_exprs.applyfunc(lambda x : sp.Subs(x, rlhs, sx).doit())

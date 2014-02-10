@@ -125,7 +125,8 @@ def parse_model(input_filename):
             stoichiometry_matrix = sympy.Matrix(stoichiometry_components)
         elif STIRNG_PROPENSITIES in line:
             propensity_components = lines[i+1:i+1+number_of_reactions]
-            propensities = sympy.Matrix(map(index_to_symbol, propensity_components))
+            propensities = sympy.Matrix(sympy.sympify(map(index_to_symbol, propensity_components)))
+
 
     constants = sympy.symbols(['c_{0}'.format(i) for i in xrange(number_of_constants)])
     variables = sympy.symbols(['y_{0}'.format(i) for i in xrange(number_of_species)])
