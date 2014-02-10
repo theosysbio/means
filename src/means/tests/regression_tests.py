@@ -20,12 +20,12 @@ ALLOWED_TESTS = ['mea', 'lna',
 
 MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 
-MEA_TEMPLATE = 'means --MEA --nMom={moments} --model={model_file} --ODEout=ODEout.tmp'
-LNA_TEMPLATE = 'means --LNA --model={model_file} --ODEout=ODEout.tmp'
-SIMULATION_TEMPLATE = 'means --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout={output_file} --ODEout=ODEout.tmp --maxorder=2'
-INFERENCE_TEMPLATE = 'means --random-seed=42  --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp {sundials_parameters}'
-INFERENCE_WITH_RESTARTS_TEMPLATE = 'means --random-seed=42 --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
-INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'means --MEA --model={model_file} --ODEout=ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
+MEA_TEMPLATE = 'means --MEA --nMom={moments} --model={model_file} --ODEout=tmp/ODEout.tmp'
+LNA_TEMPLATE = 'means --LNA --model={model_file} --ODEout=tmp/ODEout.tmp'
+SIMULATION_TEMPLATE = 'means --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout=tmp/{output_file} --ODEout=tmp/ODEout.tmp --maxorder=2'
+INFERENCE_TEMPLATE = 'means --random-seed=42  --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp {sundials_parameters}'
+INFERENCE_WITH_RESTARTS_TEMPLATE = 'means --random-seed=42 --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
+INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'means --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
 SIMULATION_MODELS = [('MM', 1e-2, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
@@ -41,6 +41,7 @@ INFERENCE_DISTRIBUTIONS = ['gamma', 'normal', 'lognormal']
 INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean_{0}.txt'),]
                                        # Remove Hes1 model as we cannot infer it's parameters well anyway
                                        #('Hes1', 'data_Hes1.txt', 'infer_Hes1_{0}.txt')]
+
 
 def create_options_parser():
 
@@ -373,7 +374,7 @@ def generate_tests_from_options(options):
                 yield Test('MEA-{0}'.format(model),
                            MEA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model),
                                                moments=moment),
-                           os.path.join(options.inout_dir, 'ODEout.tmp'),
+                           os.path.join(options.inout_dir, 'tmp', 'ODEout.tmp'),
                            os.path.join(options.model_answers_dir, 'MEA{0}'.format(moment), model + '.out'),
                            compare_ode_problems,
 
@@ -383,7 +384,7 @@ def generate_tests_from_options(options):
         for model in MODELS:
             yield Test('LNA-{0}'.format(model),
                        LNA_TEMPLATE.format(model_file=os.path.join(options.inout_dir, model)),
-                       os.path.join(options.inout_dir, 'ODEout.tmp'),
+                       os.path.join(options.inout_dir, 'tmp', 'ODEout.tmp'),
                        os.path.join(options.model_answers_dir, 'LNA', model + '.out'),
                        diff_comparison,
                        filter_function=filter_time_taken)
@@ -400,7 +401,7 @@ def generate_tests_from_options(options):
                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                   output_file=output_file,
                                                   method='MEA'),
-                       os.path.join(options.inout_dir, output_file),
+                       os.path.join(options.inout_dir, 'tmp', output_file),
                        os.path.join(options.model_answers_dir, 'sim', output_file),
                        compare_tsv_with_float_epsilon(epsilon=epsilon_mea),
                        filter_function=filter_input_file)
@@ -412,7 +413,7 @@ def generate_tests_from_options(options):
                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                   output_file=output_file_lna,
                                                   method='LNA'),
-                       os.path.join(options.inout_dir, output_file_lna),
+                       os.path.join(options.inout_dir, 'tmp', output_file_lna),
                        os.path.join(options.model_answers_dir, 'sim', output_file_lna),
                        compare_tsv_with_float_epsilon(epsilon=epsilon_lna),
                        filter_function=filter_input_file)
@@ -424,7 +425,7 @@ def generate_tests_from_options(options):
                                                  sundials_parameters=options.sundials_parameters,
                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                  dataset=dataset),
-                       os.path.join(options.inout_dir, 'inferout.tmp'),
+                       os.path.join(options.inout_dir,  'tmp', 'inferout.tmp'),
                        os.path.join(options.model_answers_dir, 'infer', model_answer),
                        parameter_and_distance_comparisons(),
                        filter_function=filter_input_file)
@@ -435,7 +436,7 @@ def generate_tests_from_options(options):
                                                                sundials_parameters=options.sundials_parameters,
                                                                timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                                dataset=dataset),
-                       os.path.join(options.inout_dir, 'inferout.restarts.tmp'),
+                       os.path.join(options.inout_dir,  'tmp', 'inferout.restarts.tmp'),
                        os.path.join(options.model_answers_dir, 'infer', 'with-restarts', model_answer),
                        parameter_and_distance_comparisons(),
                        filter_function=filter_input_file)
@@ -451,7 +452,7 @@ def generate_tests_from_options(options):
                                                                    dataset=dataset,
                                                                    distribution=distribution,
                                                                    restart_params=''),
-                           os.path.join(options.inout_dir, 'inferout.tmp'),
+                           os.path.join(options.inout_dir, 'tmp',  'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', model_answer_template.format(distribution)),
                            parameter_and_distance_comparisons(),
                            filter_function=None)
@@ -463,7 +464,7 @@ def generate_tests_from_options(options):
                                                                    dataset=dataset,
                                                                    distribution=distribution,
                                                                    restart_params='--restart --nRestart=5 --random-seed=42'),
-                           os.path.join(options.inout_dir, 'inferout.tmp'),
+                           os.path.join(options.inout_dir, 'tmp', 'inferout.tmp'),
                            os.path.join(options.model_answers_dir, 'infer', 'distributions', 'with-restarts',
                                         model_answer_template.format(distribution)),
                            parameter_and_distance_comparisons(),
@@ -482,6 +483,11 @@ def main():
 
     if options.xunit:
         print '<testsuite tests="{0}">'.format(number_of_tests)
+
+    if not os.path.exists('tmp'):
+        os.makedirs('tmp')
+        f = open('tmp/temporary-regression-tests-directory-safe-to-delete', 'w')
+        f.close()
 
 
     for i, test in enumerate(tests_to_run):
