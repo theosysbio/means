@@ -21,14 +21,9 @@ import os
 #sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
-# Document __init__ methods
-def skip(app, what, name, obj, skip, options):
-    if name == "__init__":
-        return False
-    return skip
 
-def setup(app):
-    app.connect("autodoc-skip-member", skip)
+# Document __init__ methods
+autoclass_content = 'both'
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
@@ -40,6 +35,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -338,3 +334,12 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
+
+
+intersphinx_cache_limit = 10     # days to keep the cached inventories
+intersphinx_mapping = {
+        'python':('http://docs.python.org/2.7',None),
+    'matplotlib':('http://matplotlib.sourceforge.net', None),
+         'numpy':('http://docs.scipy.org/doc/numpy',None),
+         'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+}

@@ -19,7 +19,67 @@ RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
 
-Trajectory = namedtuple('Trajectory', ['timepoints', 'values', 'description'])
+class Trajectory(object):
+    """
+    A single simulated or observed trajectory for an ODE term.
+    """
+    _timepoints = None
+    _values = None
+    _description = None
+
+    def __init__(self, timepoints, values, description):
+        """
+
+        :param timepoints: timepoints the trajectory was simulated for
+        :type timepoints: :class:`numpy.ndarray`
+        :param values: values of the curve at each of the timepoints
+        :type values: :class:`numpy.ndarray`
+        :param description: description of the trajectory
+        :type description: :class:`~means.approximation.ode_problem.ODETermBase`
+        """
+        self._timepoints = np.array(timepoints)
+        self._values = np.array(values)
+        self._description = description
+
+    @property
+    def timepoints(self):
+        """
+        The timepoints trajectory was simulated for.
+
+        :rtype: :class:`numpy.ndarray`
+        """
+        return self._timepoints
+
+    @property
+    def values(self):
+        """
+        The values for each of the timepoints in :attr:`~Trajectory.timepoints`.
+
+        :rtype: :class:`numpy.ndarray`
+        """
+        return self._values
+
+    @property
+    def description(self):
+        """
+        Description of this trajectory. The same description as the description for particular ODE term.
+
+        :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
+        """
+        return self._description
+
+    def plot(self, *args, **kwargs):
+        """
+        Plots the trajectory using :mod:`matplotlib.pyplot`.
+
+        :param args: arguments to pass to :func:`~matplotlib.pyplot.plot`
+        :param kwargs: keyword arguments to pass to :func:`~matplotlib.pyplot.plot`
+        :return: the result of the :func:`matplotlib.pyplot.plot` function.
+        """
+        # Get label from the kwargs provided, or use self.description as default
+        label = kwargs.pop('label', self.description)
+        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
+
 
 def validate_problem(problem):
 
@@ -276,7 +336,7 @@ def graphbuilder(soln,momexpout,title,t,momlist):
                     plt.xlabel('Time')
                     plt.ylabel('Means')
                     ax1.legend(loc='upper center', bbox_to_anchor=(0.9, 1.0),
-          fancybox=True, shadow=True,prop={'size':12})                   
+          fancybox=True, shadow=True,prop={'size':12})
                 else:
                     ax = plt.subplot(n,m,i+1-count)
                     ax.plot(t,soln[:,i])
