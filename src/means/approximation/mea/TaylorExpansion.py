@@ -4,9 +4,10 @@ import operator
 from means.util.sympyhelpers import product
 
 def derive_expr_from_counter_entry(expression, species, counter_entry):
-    """
+    r"""
     Derives an given expression with respect to arbitrary species and orders.
     This is used to compute :math:`\frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}}` in eq. 6
+
     :param expression: the expression to be derived
     :param species: the name of the variables (typically {y_0, y_1, ..., y_n})
     :param counter_entry: an entry of counter. That is a tuple of integers of length equal to the number of variables.
@@ -24,7 +25,7 @@ def derive_expr_from_counter_entry(expression, species, counter_entry):
     return sp.diff(expression, *diff_orders)
 
 def get_factorial_term(counter_entry):
-    """
+    r"""
     Calculates  the :math:`\frac{1}{\mathbf{n!}}` of eq. 6 (see Ale et al. 2013).
     That is the invert of a product of factorials.
     :param counter_entry: an entry of counter. That is an array of integers of length equal to the number of variables.
@@ -39,12 +40,15 @@ def get_factorial_term(counter_entry):
     return sp.Integer(1)/sp.S(prod)
 
 def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
-    """
+    r"""
     Calculate :math:`\frac{d\mu_i}{dt}` in eq. 6 (see Ale et al. 2013).
-    .. math::
-         \frac{d\mu_i}{dt} = S \begin{bmatrix} \sum_{l} \sum_{n_1=0}^{\infty} ... \sum_{n_d=0}^{\infty} \frac{1}{\mathbf{n!}}\frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}} \|_{x=\mu} \mathbf{M_{x^n}} \end{bmatrix}
 
-    :param species: the name of the variables (typically {y_0, y_1, ..., y_n})
+    .. math::
+         \frac{d\mu_i}{dt} = S \begin{bmatrix} \sum_{l} \sum_{n_1=0}^{\infty} ... \sum_{n_d=0}^{\infty}
+         \frac{1}{\mathbf{n!}}
+         \frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}} |_{x=\mu} \mathbf{M_{x^n}} \end{bmatrix}
+
+    :param species: the name of the variables (typically `['y_0', 'y_1', ..., 'y_n']`)
     :param propensity: the reactions describes by the model
     :param n_counter: a list of central moments
     :param stoichiometry_matrix: the stoichiometry matrix

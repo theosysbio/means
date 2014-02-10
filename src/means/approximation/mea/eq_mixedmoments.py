@@ -16,9 +16,10 @@ from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_ent
 from means.approximation.mea.TaylorExpansion import get_factorial_term
 
 def make_f_of_x(variables, k_vec, e_vec, reaction):
-    """
+    r"""
     Calculates F() in eq. 12 (see Ale et al. 2013) for a specific reaction , k and e
-    :param variables: the variables (or species). Typically (y_0, y_1, ...,y_n)
+
+    :param variables: the variables (or species). Typically :math:`[y_0, y_1, ...,y_n]`
     :param k_vec: the vector k
     :param e_vec: the vector e
     :param reaction: the equation of the reaction {a(x) in the model}
@@ -33,6 +34,7 @@ def make_f_of_x(variables, k_vec, e_vec, reaction):
 def make_f_expectation(variables, expr, counter):
     """
     Calculates <F> in eq. 12 (see Ale et al. 2013) to calculate <F> for EACH VARIABLE combination.
+
     :param variables: the name of the variables (typically {y_0, y_1, ..., y_n})
     :param expr: an expression
     :param counter: a list of all possible combination of order of derivation
@@ -54,6 +56,7 @@ def make_f_expectation(variables, expr, counter):
 def make_k_chose_e(e_vec, k_vec):
     """
     Computes the product k chose e
+
     :param e_vec: the vector e
     :param k_vec: the vector k
     :return: a scalar
@@ -64,6 +67,7 @@ def make_k_chose_e(e_vec, k_vec):
 def make_s_pow_e(S, reac_idx, e_vec):
     """
     Compute s^e in equation 11  (see Ale et al. 2013)
+
     :param S: The stoichiometry matrix. Explicitly provided by the model
     :param reac_idx: the index of the reaction to consider
     :param e_vec: the vector e
@@ -73,10 +77,9 @@ def make_s_pow_e(S, reac_idx, e_vec):
 
 
 def eq_mixedmoments(propensities, n_counter, S, species , k_iter, e_counter):
-
-    """
+    r"""
     Provides the terms needed for equation 11 (see Ale et al. 2013).
-    This gives the expressions for dB/dt in equation 9, these are the
+    This gives the expressions for :math:`\frac{d\beta}{dt}` in equation 9, these are the
     time dependencies of the mixed moments
 
     :param propensities:    propensities
@@ -86,7 +89,7 @@ def eq_mixedmoments(propensities, n_counter, S, species , k_iter, e_counter):
     :param k_vec: k in eq. 11
     :param e_counter: e in eq. 11
 
-    :return: dB/dt
+    :return: :math:`\frac{d\beta}{dt}`
     """
     if len(e_counter) == 0:
         return sp.Matrix(1, len(n_counter), lambda i, j: 0)
