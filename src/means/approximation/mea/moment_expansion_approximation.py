@@ -6,6 +6,7 @@ from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
+from log_normal_closer import log_normal_closer_wrapper
 
 class MomentExpansionApproximation(ApproximationBaseClass):
     """
@@ -33,15 +34,27 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix)
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
+
+
+        log_normal_closer_wrapper(central_from_raw_exprs, n_counter, k_counter, n_moments, species)
+
+
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
+
+
+
         mass_fluctuation_kinetics = self.generate_mass_fluctuation_kinetics(central_moments_exprs, n_counter, dmu_over_dt)
         # concatenate the first order raw moments (means)
+
+
         prob_moments = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
         prob_moments += [n for n in n_counter if n.order > 1]
         # return a problem object
+
+
         out_problem = ode_problem.ODEProblem("MEA", prob_moments, mass_fluctuation_kinetics, sp.Matrix(self.model.constants))
         return out_problem
 
