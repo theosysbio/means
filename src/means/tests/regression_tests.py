@@ -22,10 +22,10 @@ MODELS = ['model_p53.txt', 'model_MM.txt', 'model_dimer.txt', 'model_Hes1.txt']
 
 MEA_TEMPLATE = 'means --MEA --nMom={moments} --model={model_file} --ODEout=tmp/ODEout.tmp'
 LNA_TEMPLATE = 'means --LNA --model={model_file} --ODEout=tmp/ODEout.tmp'
-SIMULATION_TEMPLATE = 'means --random-seed=42 --{method} --nMom=3 --model={model_file} --compile {sundials_parameters} --timeparam={timeparam_file} --sim --simout=tmp/{output_file} --ODEout=tmp/ODEout.tmp --maxorder=2'
-INFERENCE_TEMPLATE = 'means --random-seed=42  --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp {sundials_parameters}'
-INFERENCE_WITH_RESTARTS_TEMPLATE = 'means --random-seed=42 --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.restarts.tmp --restart --nRestart=5 {sundials_parameters}'
-INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'means --MEA --model={model_file} --ODEout=tmp/ODEout.tmp --compile --library=library.tmp --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp --limit --pdf={distribution} {restart_params} {sundials_parameters}'
+SIMULATION_TEMPLATE = 'means --random-seed=42 --{method} --nMom=3 --model={model_file} --timeparam={timeparam_file} --sim --simout=tmp/{output_file} --ODEout=tmp/ODEout.tmp --maxorder=2'
+INFERENCE_TEMPLATE = 'means --random-seed=42  --MEA --model={model_file} --ODEout=tmp/ODEout.tmp  --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp'
+INFERENCE_WITH_RESTARTS_TEMPLATE = 'means --random-seed=42 --MEA --model={model_file} --ODEout=tmp/ODEout.tmp  --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.restarts.tmp --restart --nRestart=5'
+INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE = 'means --MEA --model={model_file} --ODEout=tmp/ODEout.tmp  --timeparam={timeparam_file} --infer --data={dataset} --inferfile=tmp/inferout.tmp --limit --pdf={distribution} {restart_params}'
 SIMULATION_MODELS = [('MM', 1e-2, 1e-3), ('p53', {1: 1e-2, 2: 1.5e-1}, 1e-3)]
 INFERENCE_MODELS = [('dimer', 'data_dimer_x40.txt', 'infer_dimer_x40.txt'),
                     ('dimer', 'data_dimer_x40_mean.txt', 'infer_dimer_x40_mean.txt'),
@@ -45,14 +45,6 @@ INFERENCE_WITH_DISTRIBUTIONS_MODELS = [('dimer', 'data_dimer_x40_mean.txt', 'inf
 
 def create_options_parser():
 
-
-    def _infer_sundials_parameters():
-        # This is where sundials is stored on Mac OS X if homebrew was used to
-        # install it
-        if os.path.isfile('/usr/local/lib/libsundials_cvode.a'):
-            return "--sd2=/usr/local/lib/ --sd1=/usr/local/include/"
-        else:
-            return None
 
     def _validate_tests(test):
         if not test in ALLOWED_TESTS:
@@ -77,10 +69,6 @@ def create_options_parser():
     parser.add_argument('tests', default=ALLOWED_TESTS, nargs='*',
                         help='Tests to run, must be one of {0}'.format(ALLOWED_TESTS),
                         type=_validate_tests)
-
-    parser.add_argument('--sundials-parameters', help='Sundials parameters to use, '
-                                                      'e.g. --sundials-paramteres="--sd1=/foo/bar --sd2=/bar/baz"',
-                        default=_infer_sundials_parameters())
 
     parser.add_argument('--xunit', help='Return output in xunit format (parseable by Jenkins)',
                         default=False, action='store_true')
@@ -390,14 +378,11 @@ def generate_tests_from_options(options):
                        filter_function=filter_time_taken)
 
     if 'simulation' in options.tests:
-        if options.sundials_parameters is None:
-            raise Exception("Cannot run simulation tests as no sundials parameters specified")
 
         for model, epsilon_mea, epsilon_lna in SIMULATION_MODELS:
             output_file = 'simout_{0}.txt'.format(model)
             yield Test('simulation-{0}-MEA'.format(model),
                        SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                  sundials_parameters=options.sundials_parameters,
                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                   output_file=output_file,
                                                   method='MEA'),
@@ -409,7 +394,6 @@ def generate_tests_from_options(options):
             output_file_lna = 'simout_{0}_LNA.txt'.format(model)
             yield Test('simulation-{0}-LNA'.format(model),
                        SIMULATION_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                  sundials_parameters=options.sundials_parameters,
                                                   timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                   output_file=output_file_lna,
                                                   method='LNA'),
@@ -422,7 +406,6 @@ def generate_tests_from_options(options):
         for model, dataset, model_answer in INFERENCE_MODELS:
             yield Test('inference-{0}-{1}'.format(model, dataset),
                        INFERENCE_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                 sundials_parameters=options.sundials_parameters,
                                                  timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                  dataset=dataset),
                        os.path.join(options.inout_dir,  'tmp', 'inferout.tmp'),
@@ -433,7 +416,6 @@ def generate_tests_from_options(options):
         for model, dataset, model_answer in INFERENCE_WITH_RESTARTS_MODELS:
             yield Test('inference-restarts-{0}-{1}'.format(model, dataset),
                        INFERENCE_WITH_RESTARTS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                               sundials_parameters=options.sundials_parameters,
                                                                timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                                dataset=dataset),
                        os.path.join(options.inout_dir,  'tmp', 'inferout.restarts.tmp'),
@@ -447,7 +429,6 @@ def generate_tests_from_options(options):
                 yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
 
                            INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                                   sundials_parameters=options.sundials_parameters,
                                                                    timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                                    dataset=dataset,
                                                                    distribution=distribution,
@@ -459,7 +440,6 @@ def generate_tests_from_options(options):
                 yield Test('inference-restarts-{0}-{1}-{2}'.format(model, dataset, distribution),
 
                            INFERENCE_WITH_DISTRIBUTIONS_TEMPLATE.format(model_file=os.path.join(options.inout_dir, 'model_{0}.txt'.format(model)),
-                                                                   sundials_parameters=options.sundials_parameters,
                                                                    timeparam_file=os.path.join(options.inout_dir, 'param_{0}.txt'.format(model)),
                                                                    dataset=dataset,
                                                                    distribution=distribution,
