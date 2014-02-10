@@ -32,6 +32,7 @@ cd $WORKSPACE
 pip install --quiet nosexcover
 pip install --quiet pylint
 pip install --quiet sphinx
+pip install --quiet sphinx_rtd_theme
 
 # Uninstall previous version of our script
 pip uninstall -y means || echo "Means not yet installed"

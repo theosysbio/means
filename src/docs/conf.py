@@ -14,6 +14,7 @@
 
 import sys
 import os
+import logging
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -343,3 +344,19 @@ intersphinx_mapping = {
          'numpy':('http://docs.scipy.org/doc/numpy',None),
          'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
 }
+
+
+# on_rtd is whether we are on readthedocs.org
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    try:
+        import sphinx_rtd_theme
+    except ImportError:
+        logging.warn('No sphinx_rtd_theme found. Falling back to the default theme')
+        pass
+    else:
+        html_theme = 'sphinx_rtd_theme'
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# otherwise, readthedocs.org uses their theme by default, so no need to specify it
