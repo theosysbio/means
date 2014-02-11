@@ -5,8 +5,10 @@ from sympy.utilities.autowrap import autowrap
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
 from means.util.decorators import memoised_property
 
+class Descriptor(object):
+    pass
 
-class ODETermBase(object):
+class ODETermBase(Descriptor):
     """
     Base class for explaining terms in the ODE expressions.
     Instances of this class allow providing a description for each of the equations in the generated ODE system.
@@ -15,6 +17,7 @@ class ODETermBase(object):
     _symbol = None
 
     def __init__(self, symbol):
+        super(ODETermBase, self).__init__()
         self._symbol = symbol
 
     @property

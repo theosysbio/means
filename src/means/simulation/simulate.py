@@ -11,13 +11,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy import Matrix
 
-
 # These are the default values in solver.c but they seem very low
-from means.approximation.ode_problem import Moment
+from means.approximation.ode_problem import Moment, Descriptor
 
 RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
+
+
+class SensitivityTerm(Descriptor):
+    r"""
+    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object represents the sensitivity
+    of some ODE term with respect to some parameter.
+    In other words, sensitivity term describes :math:`s_{ij}(t) = \frac{\partial y_i(t)}{\partial p_j}` where
+    :math:`y_i` is the ODE term described above and :math:`p_j` is the parameter.
+
+    This class is used to describe sensitivity trajectories returned by :class:`means.simulation.simulate.Simulation`
+    """
+    _ode_term = None
+    _parameter = None
+
+    def __init__(self, ode_term, parameter):
+        """
+
+        :param ode_term: the ode term whose sensitivity is being computed
+        :type ode_term: :class:`~means.approximation.ode_problem.ODETermBase`
+        :param parameter: parameter w.r.t. which the sensitivity is computed
+        :type parameter: :class:`sympy.Symbol`
+        """
+        self._ode_term = ode_term
+        self._parameter = parameter
+
+    @property
+    def ode_term(self):
+        return self._ode_term
+
+    @property
+    def parameter(self):
+        return self._parameter
+
+    def __repr__(self):
+        return '<Sensitivity of {0!r} w.r.t. {1!r}>'.format(self.ode_term, self.parameter)
+
+    def mathjax_label(self):
+        # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
+        return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
+
 
 class Trajectory(object):
     """
