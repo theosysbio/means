@@ -247,7 +247,8 @@ class ODEProblem(object):
         return f
 
     def __unicode__(self):
-        equations_pretty_str = '\n\n'.join(['{0!r}:\n\t{1!r}'.format(x,y) for x, y in zip(self.ode_lhs_terms, self.right_hand_side)])
+        equations_pretty_str = '\n\n'.join(['{0!r}:\n\t{1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,
+                                                                                           self.right_hand_side)])
         return u"{0.__class__!r}\n" \
                u"Method: {0.method!r}\n" \
                u"Constants: {0.constants!r}\n" \
