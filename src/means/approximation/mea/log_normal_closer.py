@@ -1,4 +1,6 @@
 import sympy as sp
+from means.util.sympyhelpers import substitute_all
+
 
 def get_covariance_symbol(q_counter, sp1_idx, sp2_idx):
     if sp1_idx == sp2_idx:
@@ -15,13 +17,12 @@ def get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_mat
                        (log_variance_mat[x,x] + log_variance_mat[y, y])/ sp.Integer(2))
         return sp.log(sp.Integer(1) + covariance_matrix[x, y] / denom)
 
-def log_normal_closer(n_species, n_counter, k_counter):
+def log_normal_closer(n_species, problem_moments):
 
-    covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: get_covariance_symbol(n_counter,x,y))
+    covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: get_covariance_symbol(problem_moments,x,y))
     variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
 
-    expectation_symbols = [k.symbol for k in k_counter if k.order == 1]
-
+    expectation_symbols = [pm.symbol for pm in problem_moments if pm.order == 1]
 
     log_variance_symbols = sp.Matrix([sp.log(sp.Integer(1) + v/(e ** sp.Integer(2))) for e,v in zip(expectation_symbols, variance_symbols)])
 
@@ -33,22 +34,28 @@ def log_normal_closer(n_species, n_counter, k_counter):
     log_covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: \
             get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
 
+    pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in problem_moments if pm.order > 1 ]
 
-    n_counter_vecs = [sp.Matrix(n.n_vector) for n in n_counter if n.order >0 ]
-    # [sp.Matrix(n.n_vector) * log_expectation_symbols for n in n_counter if n.order >0 ]
-
-    out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in n_counter_vecs])
+    out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
     out_mat = out_mat.applyfunc(lambda x: sp.expand(sp.exp(x)))
 
     return out_mat
 
-def log_normal_closer_wrapper(central_from_raw_exprs, n_counter, k_counter, n_moments, species):
-
-    central_symbols = [n.symbol for n in n_counter if n.order > 0]
-
+def log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments, central_from_raw_exprs, n_moments, species):
     n_species = len(species)
+    log_normal_closed_central_moms = log_normal_closer(n_species, prob_moments)
+    print "log_normal_closed_central_moms"
+    print log_normal_closed_central_moms
+    print "----------------"
+    new_mkf = sp.Matrix([mfk for mfk, pm in zip(mass_fluctuation_kinetics, prob_moments) if pm.order < n_moments])
+    new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
 
-    log_normal_closer(n_species, n_counter, k_counter)
-    #... todo
-    return #... todo
+    central_mom_symbols = [pm for pm in prob_moments if pm.order > 1]
+    substitution_pairs = [(cm.symbol,ln) for ln, cm in zip(log_normal_closed_central_moms, central_mom_symbols) if cm.order == n_moments]
+    for i in substitution_pairs:
+        print i
+    new_mkf = new_mkf.applyfunc(lambda x: substitute_all(x, substitution_pairs))
+
+
+    return new_mkf,new_prob_moments
 

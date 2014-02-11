@@ -1,3 +1,4 @@
+from assimulo import problem
 import itertools
 import sympy as sp
 from means.approximation import ode_problem
@@ -36,7 +37,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
 
 
-        log_normal_closer_wrapper(central_from_raw_exprs, n_counter, k_counter, n_moments, species)
 
 
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
@@ -54,6 +54,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         prob_moments += [n for n in n_counter if n.order > 1]
         # return a problem object
 
+        mass_fluctuation_kinetics, prob_moments =  log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
+                                                                             central_from_raw_exprs, n_moments, species)
 
         out_problem = ode_problem.ODEProblem("MEA", prob_moments, mass_fluctuation_kinetics, sp.Matrix(self.model.constants))
         return out_problem
@@ -146,13 +148,24 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         # Higher order raw moment descriptors
         k_counter_descriptors = [i for i in itertools.product(range(n_moments + 1), repeat=len(species)) if sum(i) <= n_moments and sum(i) > 1]
+
+        #this mimics matlab sorting
+        k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
+        #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
+
         k_counter_symbols = [sp.S("x_" + "_".join([str(s) for s in count])) for count in k_counter_descriptors]
         k_counter += [Moment(d, s) for d,s in zip(k_counter_descriptors, k_counter_symbols)]
 
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
-        n_counter_symbols = [sp.S('yx{0}'.format(i+1)) for i in range(len(n_counter_descriptors))]
+
+        #starts from two to mimic matlab!!
+
+        n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
+
+        for i in k_counter:
+            print ("=>",i)
 
         return n_counter, k_counter
 
