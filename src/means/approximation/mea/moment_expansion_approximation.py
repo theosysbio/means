@@ -54,8 +54,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         prob_moments += [n for n in n_counter if n.order > 1]
         # return a problem object
 
-        mass_fluctuation_kinetics, prob_moments =  log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
-                                                                             central_from_raw_exprs, n_moments, species)
+        mass_fluctuation_kinetics, prob_moments = log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
+                                                                central_from_raw_exprs, n_moments, species, k_counter)
 
         out_problem = ode_problem.ODEProblem("MEA", prob_moments, mass_fluctuation_kinetics, sp.Matrix(self.model.constants))
         return out_problem
@@ -160,11 +160,13 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
 
         #starts from two to mimic matlab!!
-
         n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         for i in k_counter:
+            print ("=>",i)
+
+        for i in n_counter:
             print ("=>",i)
 
         return n_counter, k_counter
