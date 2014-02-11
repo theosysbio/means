@@ -13,11 +13,11 @@ from sympy import Matrix
 
 # These are the default values in solver.c but they seem very low
 from means.approximation.ode_problem import Moment, Descriptor
+from means.plotting.util import mathtextify
 
 RTOL = 1e-4
 ATOL = 1e-4
 NP_FLOATING_POINT_PRECISION = np.double
-
 
 class SensitivityTerm(Descriptor):
     r"""
@@ -53,7 +53,7 @@ class SensitivityTerm(Descriptor):
     def __repr__(self):
         return '<Sensitivity of {0!r} w.r.t. {1!r}>'.format(self.ode_term, self.parameter)
 
-    def mathjax_label(self):
+    def __mathtext__(self):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
 
@@ -118,7 +118,7 @@ class Trajectory(object):
         :return: the result of the :func:`matplotlib.pyplot.plot` function.
         """
         # Get label from the kwargs provided, or use self.description as default
-        label = kwargs.pop('label', self.description)
+        label = kwargs.pop('label', mathtextify(self.description))
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
 
     def __repr__(self):

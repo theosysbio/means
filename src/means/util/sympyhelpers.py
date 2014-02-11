@@ -169,3 +169,4 @@ def product(list):
 
 def sympy_sum_list(list):
     return reduce(operator.add, list)
+

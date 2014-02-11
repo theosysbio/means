@@ -40,6 +40,10 @@ class ODETermBase(Descriptor):
     def __unicode__(self):
         return u'{0}({1})'.format(self.__class__.__name__, self.symbol)
 
+    def __mathtext__(self):
+        # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
+        return r'${0}$'.format(self.symbol)
+
 
 class VarianceTerm(ODETermBase):
     """
