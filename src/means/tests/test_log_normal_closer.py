@@ -6,15 +6,7 @@ from means.approximation.mea.log_normal_closer import *
 
 class TestLogNormalCloser(unittest.TestCase):
 
-    def test_compute_raw_moments(self):
-        """
-        Given two vectors of Moments: counter and mcounter (up to second moment) and
-        Given a vector of two species ymat,
-        Then, the answer should match exactlty the expected result
-        :return:
-        """
-        n_species = 3
-        problem_moments = [
+    __problem_moments = [
             Moment([0, 0, 0], symbol=sympy.Integer(1)),
             Moment([1, 0, 0], symbol=sympy.Symbol("y_0")),
             Moment([0, 1, 0], symbol=sympy.Symbol("y_1")),
@@ -36,6 +28,65 @@ class TestLogNormalCloser(unittest.TestCase):
             Moment([2, 1, 0], symbol=sympy.Symbol("yx16")),
             Moment([3, 0, 0], symbol=sympy.Symbol("yx17"))
         ]
+    def test_get_log_covariance(self):
+
+
+        log_variance_mat =sp.Matrix([
+                ["log(1+yx7/y_0**2)", "0", "0"],
+                ["0", "log(1+yx4/y_1**2)", "0"],
+                ["0", "0", "log(1+yx2/y_2**2)"]
+                        ])
+
+        log_expectation_symbols = sp.Matrix([
+                ["log(y_0)-log(1+yx7/y_0**2)/2"],
+                ["log(y_1)-log(1+yx4/y_1**2)/2"],
+                ["log(y_2)-log(1+yx2/y_2**2)/2"]
+                ])
+
+        covariance_matrix = sp.Matrix([
+                ["yx7","yx6","yx5"],
+                ["yx6","yx4","yx3"],
+                ["yx5","yx3","yx2"]])
+
+        expected = sp.sympify("log(1 + yx6/(y_0*y_1))")
+        answer = get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 0,1)
+
+        self.assertEqual(answer, expected)
+
+        answer1 = get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
+        answer2 = get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
+        #logcovariance between species 1 and 2  ==  covarianc between sp. 2 and 1
+        self.assertEqual(answer1, answer2)
+
+    def test_get_covariance_symbol(self):
+
+        problem_moments = self.__problem_moments
+        expected = sp.Symbol("yx3")
+        answer = get_covariance_symbol(problem_moments,1, 2)
+
+        self.assertEqual(answer, expected)
+
+
+        expected = sp.Symbol("yx6")
+        answer = get_covariance_symbol(problem_moments,1, 0)
+
+        self.assertEqual(answer, expected)
+
+        #covariance between species 1 and 2  ==  covarianc between sp. 2 and 1
+        answer1 = get_covariance_symbol(problem_moments,1, 0)
+        answer2 = get_covariance_symbol(problem_moments,0, 1)
+        self.assertEqual(answer1, answer2)
+
+
+    def test_compute_raw_moments(self):
+        """
+        Given two vectors of Moments: counter and mcounter (up to second moment) and
+        Given a vector of two species ymat,
+        Then, the answer should match exactlty the expected result
+        :return:
+        """
+        n_species = 3
+        problem_moments = self.__problem_moments
 
         expected = sympy.Matrix([
             ["y_2**2+yx2"],
