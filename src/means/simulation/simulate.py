@@ -102,12 +102,15 @@ def validate_problem(problem):
 class Simulation(object):
     __problem = None
     __postprocessing = None
+    __compute_sensitivities = None
 
-    def __init__(self, problem):
+    def __init__(self, problem, compute_sensitivities=False):
         """
         Initialise the simulator object for a given problem
+
         :param problem:
         :type problem: ODEProblem
+        :param compute_sensitivities: Whether the model should test parameter sensitivity or not
         :return:
         """
         self.__problem = problem
@@ -117,6 +120,8 @@ class Simulation(object):
             self.__postprocessing = _postprocess_lna_simulation
         else:
             self.__postprocessing = _postprocess_default
+
+        self.__compute_sensitivities = compute_sensitivities
 
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
@@ -128,8 +133,16 @@ class Simulation(object):
         :return: instance of `CVode` solver
         :rtype: CVode
         """
-        rhs = self.problem.right_hand_side_as_function(initial_constants)
-        model = Explicit_Problem(lambda t, x: rhs(x), initial_values, initial_timepoint)
+        initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
+        initial_values = np.array(initial_values, dtype=NP_FLOATING_POINT_PRECISION)
+        assert(initial_constants.shape == (len(self.problem.constants),))
+        assert(initial_values.shape == (self.problem.number_of_equations,))
+
+        rhs = self.problem.right_hand_side_as_function
+        model = Explicit_Problem(lambda t, x, p: rhs(x, p), initial_values, initial_timepoint)
+        # Set the parameters to the model directly
+        model.p0 = np.array(initial_constants)
+
         solver = CVode(model)
 
         solver.verbosity = 50  # Verbosity flag suppresses output
@@ -140,6 +153,8 @@ class Simulation(object):
         solver.atol = ATOL
         solver.rtol = RTOL
         solver.linear_solver = 'dense'
+
+        solver.usesens = self.__compute_sensitivities
 
         return solver
 
@@ -172,7 +187,7 @@ class Simulation(object):
             # Let's try to call that function ourselves and see if we could cause that error
             # and not mask it
             try:
-                self.problem.right_hand_side_as_function(initial_constants)(initial_values)
+                self.problem.right_hand_side_as_function(initial_values, initial_constants)
             except:
                 raise
             else:
