@@ -1,18 +1,23 @@
 import sympy
 from sympy.core.sympify import SympifyError
 
-def substitute_all(expr, pairs):
+def substitute_all(sp_object, pairs):
     """
     Performs multiple substitutions in an expression
-    :param expr: a sympy expression
+    :param expr: a sympy matrix or expression
     :param pairs: a list of pairs (a,b) where each a_i is to be substituted with b_i
     :return: the substituted expression
     """
-    out = expr
+    # we recurse if the object was a matrix so we apply substitution to all elements
+    if isinstance(sp_object, sympy.Matrix):
+        return sp_object.applyfunc(lambda x: substitute_all(x, pairs))
+
+    expr =  sp_object
     for (a,b) in pairs:
-        out = sympy.Subs(out, a, b)
-    to_ret = out.doit()
+        expr = sympy.Subs(expr, a, b)
+    to_ret = expr.doit()
     return to_ret
+
 
 def to_sympy_matrix(value):
     """
