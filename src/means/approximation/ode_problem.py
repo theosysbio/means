@@ -169,8 +169,8 @@ class ODEProblem(object):
         :param ode_lhs_terms:
         :return:
         """
-        descriptions_dict = dict([(odet.symbol, odet)  for odet in ode_lhs_terms])
-        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in ode_lhs_terms if isinstance(plhs, Moment)]
+        descriptions_dict = dict([(ode_term.symbol, ode_term) for ode_term in ode_lhs_terms])
+        self.__ordered_descriptions_of_lhs_terms = ode_lhs_terms
         self.__descriptions_dict = descriptions_dict
 
     def validate(self):

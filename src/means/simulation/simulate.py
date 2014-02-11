@@ -80,6 +80,9 @@ class Trajectory(object):
         label = kwargs.pop('label', self.description)
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
 
+    def __repr__(self):
+        return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
+
 
 def validate_problem(problem):
 

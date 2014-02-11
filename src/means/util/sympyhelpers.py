@@ -33,6 +33,7 @@ def to_sympy_column_matrix(matrix):
     :param matrix: a vector to be converted to column
     :return:
     """
+    matrix = to_sympy_matrix(matrix)
     if matrix.cols == 1:
         return matrix
     elif matrix.rows == 1:
