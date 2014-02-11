@@ -163,11 +163,5 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
-        for i in k_counter:
-            print ("=>",i)
-
-        for i in n_counter:
-            print ("=>",i)
-
         return n_counter, k_counter
 
