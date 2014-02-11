@@ -1,1 +1,1 @@
-from simulate import Simulation
+from simulate import Simulation, SimulationWithSensitivities, Trajectory, TrajectoryWithSensitivityData

@@ -80,6 +80,8 @@ class Trajectory(object):
         self._values = np.array(values)
         self._description = description
 
+        assert(self._timepoints.shape == self._values.shape)
+
     @property
     def timepoints(self):
         """
@@ -140,9 +142,8 @@ class TrajectoryWithSensitivityData(Trajectory):
         :type values: :class:`numpy.ndarray`
         :param description: description of the trajectory
         :type description: :class:`~means.approximation.ode_problem.Descriptor`
-        :param sensitivity_data: a dictionary of (parameter, sensitivity_trajectory) paris, where
-                                 parameters are the constants of the model and sensitivity_trajectory is the
-                                 trajectory for the sensitivity coefficient w.r.t. this parameter
+        :param sensitivity_data: a list of :class:`~means.approximation.simulation.simulate.Trajectory` objects
+                                 signifying the sensitivity change over time for each of the parameters.
         """
         super(TrajectoryWithSensitivityData, self).__init__(timepoints, values, description)
         self._sensitivity_data = sensitivity_data
@@ -303,23 +304,23 @@ class SimulationWithSensitivities(Simulation):
         trajectories = super(SimulationWithSensitivities, self)._simulate(solver, initial_constants, initial_values,
                                                                           timepoints)
 
-        sensitivities_raw = solver.p_sol
+        sensitivities_raw = np.array(solver.p_sol)
 
         sensitivity_values = []
         for i, ode_term in enumerate(self.problem.ode_lhs_terms):
             term_sensitivities = []
             for j, parameter in enumerate(self.problem.constants):
-                term_sensitivities.append((parameter, np.array(sensitivities_raw[j, i, :])))
+                term_sensitivities.append((parameter, sensitivities_raw[j, :, i]))
             sensitivity_values.append(term_sensitivities)
 
         trajectories_with_sensitivity_data = []
         for trajectory, sensitivities in zip(trajectories, sensitivity_values):
 
             # Collect the sensitivities into a nice dictionary of Trajectory objects
-            sensitivity_trajectories = {}
-            for parameter, values in sensitivity_values:
-                sensitivity_trajectories[parameter] = Trajectory(trajectory.timepoints, values,
-                                                                 SensitivityTerm(trajectory.description, parameter))
+            sensitivity_trajectories = []
+            for parameter, values in sensitivities:
+                sensitivity_trajectories.append(Trajectory(trajectory.timepoints, values,
+                                                           SensitivityTerm(trajectory.description, parameter)))
 
             trajectory_with_sensitivities = TrajectoryWithSensitivityData.from_trajectory(trajectory,
                                                                                           sensitivity_trajectories)
