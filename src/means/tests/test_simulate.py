@@ -53,9 +53,7 @@ class TestSimulate(unittest.TestCase):
                                                                              '-Prey*V_01*k_2 - Prey*V_10*k_2 + 2*V_11*(-Pred*k_2 + k_1) + (Prey*k_1)**1.0 + (Pred*Prey*k_2)**1.0']),
                                             constants=['k_1', 'k_2', 'k_3'])
 
-        # compute_sensitivities=False is required, as otherwise the parameters are slightly perturbed
-        # in order to compute these derivatives, causing the results to become slightly different.
-        s = Simulation(lna_for_lotka_volterra, compute_sensitivities=False)
+        s = Simulation(lna_for_lotka_volterra)
         np.random.seed(42)
 
         trajectories = s.simulate_system(range(3), [200, 10], [1, 2, 3, 4, 5])
