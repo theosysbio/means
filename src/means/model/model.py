@@ -76,6 +76,25 @@ class Model(object):
     def number_of_constants(self):
         return len(self.__constants)
 
+
+    def __unicode__(self):
+        return u"{0.__class__!r}\n" \
+               u"Species: {0.species!r}\n" \
+               u"Constants: {0.constants!r}\n" \
+               u"\n" \
+               u"Stoichiometry matrix:\n" \
+               u"{0.stoichiometry_matrix!r}\n" \
+               u"\n" \
+               u"Propensities:\n" \
+               u"{0.propensities!r}".format(self)
+
+    def __str__(self):
+        return unicode(self).encode("utf8")
+
+    def __repr__(self):
+        return str(self)
+
+
 def parse_model(input_filename):
     """
     Parses model from the `input_filename` file and returns it
