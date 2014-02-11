@@ -74,7 +74,7 @@ class Trajectory(object):
         :param values: values of the curve at each of the timepoints
         :type values: :class:`numpy.ndarray`
         :param description: description of the trajectory
-        :type description: :class:`~means.approximation.ode_problem.ODETermBase`
+        :type description: :class:`~means.approximation.ode_problem.Descriptor`
         """
         self._timepoints = np.array(timepoints)
         self._values = np.array(values)
@@ -122,6 +122,39 @@ class Trajectory(object):
     def __repr__(self):
         return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
 
+class TrajectoryWithSensitivityData(Trajectory):
+    """
+    An extension to :class:`~means.simulation.simulate.Trajectory` that provides data about the sensitivity
+    of said trajectory as well.
+
+    """
+
+    _sensitivity_data = None
+
+    def __init__(self, timepoints, values, description, sensitivity_data):
+        """
+
+        :param timepoints: timepoints the trajectory was simulated for
+        :type timepoints: :class:`numpy.ndarray`
+        :param values: values of the curve at each of the timepoints
+        :type values: :class:`numpy.ndarray`
+        :param description: description of the trajectory
+        :type description: :class:`~means.approximation.ode_problem.Descriptor`
+        :param sensitivity_data: a dictionary of (parameter, sensitivity_trajectory) paris, where
+                                 parameters are the constants of the model and sensitivity_trajectory is the
+                                 trajectory for the sensitivity coefficient w.r.t. this parameter
+        """
+        super(TrajectoryWithSensitivityData, self).__init__(timepoints, values, description)
+        self._sensitivity_data = sensitivity_data
+
+    @classmethod
+    def from_trajectory(cls, trajectory, sensitivity_data):
+        return cls(trajectory.timepoints, trajectory.values, trajectory.description, sensitivity_data)
+
+    @property
+    def sensitivity_data(self):
+        return self._sensitivity_data
+
 
 def validate_problem(problem):
 
@@ -138,29 +171,30 @@ def validate_problem(problem):
         pass
 
 
-class Simulation(object):
-    __problem = None
-    __postprocessing = None
-    __compute_sensitivities = None
 
-    def __init__(self, problem, compute_sensitivities=False):
+class Simulation(object):
+    """
+    An object that provides wrappers around CVode library to allow simulation of the ODE systems.
+
+    """
+    __problem = None
+    _postprocessing = None
+
+    def __init__(self, problem):
         """
-        Initialise the simulator object for a given problem
 
         :param problem:
         :type problem: ODEProblem
         :param compute_sensitivities: Whether the model should test parameter sensitivity or not
-        :return:
         """
         self.__problem = problem
         validate_problem(problem)
 
         if problem.method == 'LNA':
-            self.__postprocessing = _postprocess_lna_simulation
+            self._postprocessing = _postprocess_lna_simulation
         else:
-            self.__postprocessing = _postprocess_default
+            self._postprocessing = _postprocess_default
 
-        self.__compute_sensitivities = compute_sensitivities
 
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
@@ -193,31 +227,14 @@ class Simulation(object):
         solver.rtol = RTOL
         solver.linear_solver = 'dense'
 
-        solver.usesens = self.__compute_sensitivities
+
+        # It is necessary to set usesens to false here as setting model.p0 automatically overrides this to "True"
+        solver.usesens = False
 
         return solver
 
-    def simulate_system(self, initial_constants, initial_values, timepoints):
-        """
-        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
-        :param initial_constants: list of the initial values for the constants in the model. Must be in the same order
-        as in the model
-        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
-        these equations occur. If not all values specified, the remaining ones will be assumed to be 0.
-        :param timepoints: A list of time points to simulate the system for
-        :return:
-        """
-
-        # If not all intial conditions specified, append zeros to them
-        # TODO: is this really the best way to do this?
-        if len(initial_values) < self.problem.number_of_equations:
-            initial_values = np.concatenate((initial_values,
-                                             [0.0] * (self.problem.number_of_equations - len(initial_values))))
-
-        initial_timepoint = timepoints[0]
+    def _simulate(self, solver, initial_constants, initial_values, timepoints):
         last_timepoint = timepoints[-1]
-
-        solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
         try:
             simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
         except CVodeError as e:
@@ -232,14 +249,99 @@ class Simulation(object):
             else:
                 # If the right_hand_side_as_function above did not raise any exceptions, re-raise CVode error
                 raise e
+        trajectories = self._postprocessing(self.problem, simulated_values, simulated_timepoints)
+        return trajectories
 
-        trajectories = self.__postprocessing(self.problem, simulated_values, simulated_timepoints)
+    def simulate_system(self, initial_constants, initial_values, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+
+        :param initial_constants: list of the initial values for the constants in the model.
+                                  Must be in the same order as in the model
+        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
+                               these equations occur.
+                               If not all values specified, the remaining ones will be assumed to be 0.
+        :param timepoints: A list of time points to simulate the system for
+        :return: a list of :class:`~means.simulation.simulate.Trajectory` objects,
+                 one for each of the equations in the problem
+        """
+
+        # If not all intial conditions specified, append zeros to them
+        # TODO: is this really the best way to do this?
+        if len(initial_values) < self.problem.number_of_equations:
+            initial_values = np.concatenate((initial_values,
+                                             [0.0] * (self.problem.number_of_equations - len(initial_values))))
+
+        initial_timepoint = timepoints[0]
+
+
+        solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
+        trajectories = self._simulate(solver, initial_constants, initial_values, timepoints)
 
         return trajectories
 
     @property
     def problem(self):
         return self.__problem
+
+class SimulationWithSensitivities(Simulation):
+    """
+    A similar object to it's baseclass :class:`~means.simulation.simulate.Simulation`, however provides
+    instances of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects as a result instead.
+    """
+
+    def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
+        solver = super(SimulationWithSensitivities, self)._create_cvode_solver(initial_constants, initial_values,
+                                                                               initial_timepoint)
+        # Override sensitivity settings of solver
+        solver.usesens = True
+        solver.report_continuously = True
+
+        return solver
+
+    def _simulate(self, solver, initial_constants, initial_values, timepoints):
+        trajectories = super(SimulationWithSensitivities, self)._simulate(solver, initial_constants, initial_values,
+                                                                          timepoints)
+
+        sensitivities_raw = solver.p_sol
+
+        sensitivity_values = []
+        for i, ode_term in enumerate(self.problem.ode_lhs_terms):
+            term_sensitivities = []
+            for j, parameter in enumerate(self.problem.constants):
+                term_sensitivities.append((parameter, np.array(sensitivities_raw[j, i, :])))
+            sensitivity_values.append(term_sensitivities)
+
+        trajectories_with_sensitivity_data = []
+        for trajectory, sensitivities in zip(trajectories, sensitivity_values):
+
+            # Collect the sensitivities into a nice dictionary of Trajectory objects
+            sensitivity_trajectories = {}
+            for parameter, values in sensitivity_values:
+                sensitivity_trajectories[parameter] = Trajectory(trajectory.timepoints, values,
+                                                                 SensitivityTerm(trajectory.description, parameter))
+
+            trajectory_with_sensitivities = TrajectoryWithSensitivityData.from_trajectory(trajectory,
+                                                                                          sensitivity_trajectories)
+            trajectories_with_sensitivity_data.append(trajectory_with_sensitivities)
+
+        return trajectories_with_sensitivity_data
+
+    def simulate_system(self, initial_constants, initial_values, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+
+        :param initial_constants: list of the initial values for the constants in the model.
+                                  Must be in the same order as in the model
+        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
+                               these equations occur.
+                               If not all values specified, the remaining ones will be assumed to be 0.
+        :param timepoints: A list of time points to simulate the system for
+        :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
+                 one for each of the equations in the problem
+        """
+        return super(SimulationWithSensitivities, self).simulate_system(initial_constants, initial_values, timepoints)
+
 
 def _postprocess_default(problem, simulated_values, timepoints):
 
