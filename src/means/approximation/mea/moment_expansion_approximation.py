@@ -17,6 +17,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         super(MomentExpansionApproximation, self).__init__(model)
         self.__n_moments = int(n_moments)
 
+        #self.closer = Closer(n_moments)
+
+
     def run(self):
         """
         Overrides the default run() method.
@@ -36,26 +39,22 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
 
-
-
-
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
 
-
-
         mass_fluctuation_kinetics = self.generate_mass_fluctuation_kinetics(central_moments_exprs, n_counter, dmu_over_dt)
         # concatenate the first order raw moments (means)
-
 
         prob_moments = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
         prob_moments += [n for n in n_counter if n.order > 1]
         # return a problem object
 
-        mass_fluctuation_kinetics, prob_moments = log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
-                                                                central_from_raw_exprs, n_moments, species, k_counter)
+        #mass_fluctuation_kinetics, prob_moments = log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
+        #                                                        central_from_raw_exprs, n_moments, species, k_counter)
+
+        #self.closer.close(mass_fluctuation_kinetics, prob_moments, central_from_raw_exprs, species, k_counter)
 
         out_problem = ode_problem.ODEProblem("MEA", prob_moments, mass_fluctuation_kinetics, sp.Matrix(self.model.constants))
         return out_problem
@@ -152,7 +151,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #this mimics matlab sorting
         k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
-
         k_counter_symbols = [sp.S("x_" + "_".join([str(s) for s in count])) for count in k_counter_descriptors]
         k_counter += [Moment(d, s) for d,s in zip(k_counter_descriptors, k_counter_symbols)]
 
@@ -160,7 +158,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
 
         #starts from two to mimic matlab!!
-        n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.S('yx{0}'.format(i+1)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter
