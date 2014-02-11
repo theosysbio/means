@@ -12,7 +12,7 @@ class ConstantDerivativesProblem(ODEProblem):
                                                          right_hand_side=['c_1', 'c_2'],
                                                          constants=['c_1', 'c_2'])
 
-class TestSimulate(object):
+class TestSimulate(unittest.TestCase):
 
     def test_simulation_of_simple_model(self):
         """
