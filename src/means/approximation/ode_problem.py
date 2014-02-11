@@ -28,6 +28,15 @@ class ODETermBase(object):
         """
         return None
 
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return unicode(self).encode('utf8')
+
+    def __unicode__(self):
+        return u'{0}({1})'.format(self.__class__.__name__, self.symbol)
+
 
 class VarianceTerm(ODETermBase):
     """
@@ -86,9 +95,6 @@ class Moment(ODETermBase):
         # If moment is not mixed, it will be of form [0, ... , k, ..., 0] where k is the max order
         return self.order not in self.n_vector
 
-    def __repr__(self):
-        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector, self.symbol)
-
     def __str__(self):
         return ', '.join(map(str, self.n_vector))
 
@@ -116,6 +122,10 @@ class Moment(ODETermBase):
         """
         return (self.n_vector >= other.n_vector).all()
         #return all([a >= b for a, b in zip])
+
+    def __repr__(self):
+        return '{0}({1!r}, symbol={2!r})'.format(self.__class__.__name__, self.n_vector, self.symbol)
+
 
 
 class ODEProblem(object):
@@ -247,7 +257,7 @@ class ODEProblem(object):
         return f
 
     def __unicode__(self):
-        equations_pretty_str = '\n\n'.join(['{0!r}:\n\t{1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,
+        equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,
                                                                                            self.right_hand_side)])
         return u"{0.__class__!r}\n" \
                u"Method: {0.method!r}\n" \
