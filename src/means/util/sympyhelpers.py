@@ -38,6 +38,7 @@ def to_sympy_column_matrix(matrix):
     :param matrix: a vector to be converted to column
     :return:
     """
+    matrix = to_sympy_matrix(matrix)
     if matrix.cols == 1:
         return matrix
     elif matrix.rows == 1:
@@ -173,3 +174,4 @@ def product(list):
 
 def sympy_sum_list(list):
     return reduce(operator.add, list)
+

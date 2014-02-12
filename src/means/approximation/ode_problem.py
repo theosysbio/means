@@ -5,8 +5,10 @@ from sympy.utilities.autowrap import autowrap
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
 from means.util.decorators import memoised_property
 
+class Descriptor(object):
+    pass
 
-class ODETermBase(object):
+class ODETermBase(Descriptor):
     """
     Base class for explaining terms in the ODE expressions.
     Instances of this class allow providing a description for each of the equations in the generated ODE system.
@@ -15,6 +17,7 @@ class ODETermBase(object):
     _symbol = None
 
     def __init__(self, symbol):
+        super(ODETermBase, self).__init__()
         self._symbol = symbol
 
     @property
@@ -27,6 +30,19 @@ class ODETermBase(object):
         Returns an uniquely identifying descriptor for this particular ODE term.
         """
         return None
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return unicode(self).encode('utf8')
+
+    def __unicode__(self):
+        return u'{0}({1})'.format(self.__class__.__name__, self.symbol)
+
+    def __mathtext__(self):
+        # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
+        return r'${0}$'.format(self.symbol)
 
 
 class VarianceTerm(ODETermBase):
@@ -86,9 +102,6 @@ class Moment(ODETermBase):
         # If moment is not mixed, it will be of form [0, ... , k, ..., 0] where k is the max order
         return self.order not in self.n_vector
 
-    def __repr__(self):
-        return '{0}({1!r}, symbol={2})'.format(self.__class__.__name__, self.n_vector, self.symbol)
-
     def __str__(self):
         return ', '.join(map(str, self.n_vector))
 
@@ -116,6 +129,10 @@ class Moment(ODETermBase):
         """
         return (self.n_vector >= other.n_vector).all()
         #return all([a >= b for a, b in zip])
+
+    def __repr__(self):
+        return '{0}({1!r}, symbol={2!r})'.format(self.__class__.__name__, self.n_vector, self.symbol)
+
 
 
 class ODEProblem(object):
@@ -159,8 +176,8 @@ class ODEProblem(object):
         :param ode_lhs_terms:
         :return:
         """
-        descriptions_dict = dict([(odet.symbol, odet)  for odet in ode_lhs_terms])
-        self.__ordered_descriptions_of_lhs_terms = [plhs for plhs in ode_lhs_terms if isinstance(plhs, Moment)]
+        descriptions_dict = dict([(ode_term.symbol, ode_term) for ode_term in ode_lhs_terms])
+        self.__ordered_descriptions_of_lhs_terms = ode_lhs_terms
         self.__descriptions_dict = descriptions_dict
 
     def validate(self):
@@ -226,25 +243,40 @@ class ODEProblem(object):
         wrapping_func = lambda x: autowrap(x, args=all_symbols, language='C', backend='Cython')
         return map(wrapping_func, self.right_hand_side)
 
-    def right_hand_side_as_function(self, values_for_constants):
+    @memoised_property
+    def right_hand_side_as_function(self):
         """
-        Returns the right hand side of the model as a callable function with constant terms i.e. `(c_1, c_2, etc.)` set
-        from values_for_constants.
+        Generates and returns the right hand side of the model as a callable function that takes two parameters:
+        values for variables and values for constants,
+        e.g. `f(values_for_variables=[1,2,3], values_for_constants=[3,4,5])
 
-        The function returned takes a vector of values for the remaining variables, e.g. `f([1,2,3])`
-
-        :param values_for_constants:
+        This function is directly used in `means.simulation.Simulation`
         :return:
+        :rtype: function
         """
-        values_for_constants = np.array(values_for_constants)
-        assert(values_for_constants.shape == (len(self.constants),))
         wrapped_functions = self._right_hand_side_as_numeric_functions
 
-        def f(values_for_variables):
+        def f(values_for_variables, values_for_constants):
             all_values = np.concatenate((values_for_constants, values_for_variables))
             return np.array([[w_f(*all_values)] for w_f in wrapped_functions])
 
         return f
+
+    def __unicode__(self):
+        equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,
+                                                                                           self.right_hand_side)])
+        return u"{0.__class__!r}\n" \
+               u"Method: {0.method!r}\n" \
+               u"Constants: {0.constants!r}\n" \
+               u"\n" \
+               u"Equations:\n\n" \
+               u"{1}\n".format(self, equations_pretty_str)
+
+    def __str__(self):
+        return unicode(self).encode("utf8")
+
+    def __repr__(self):
+        return str(self)
 
 
 def parse_problem(input_filename, from_string=False):
