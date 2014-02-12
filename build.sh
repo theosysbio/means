@@ -20,7 +20,7 @@ pip uninstall -y means || echo "Means not yet installed"
 pip install $CODE_DIR
 
 ./run_tests.sh
-pylint -f parseable $CODE_DIR/means | tee pylint.out
+pylint --rcfile=pylint.rc -f parseable $CODE_DIR/means | tee pylint.out
 
 # Documentation
 pip install --quiet sphinx
