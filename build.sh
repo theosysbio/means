@@ -2,7 +2,6 @@
 PYENV_HOME=$WORKSPACE/.pyenv/
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
 CODE_DIR=$WORKSPACE/src
-INOUT_DIR=$WORKSPACE/Inoutput
 DOCS_DIR=$CODE_DIR/docs
 
 # Delete previously built virtualenv
@@ -29,8 +28,6 @@ python setup.py install
 
 cd $WORKSPACE
 
-pip install --quiet nosexcover
-pip install --quiet pylint
 pip install --quiet sphinx
 pip install --quiet sphinx_rtd_theme
 
@@ -39,10 +36,8 @@ pip uninstall -y means || echo "Means not yet installed"
 # Install current version of our script
 pip install $CODE_DIR
 
-nosetests --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR 
+./run_tests.sh
 pylint -f parseable $CODE_DIR/means | tee pylint.out
-cd $INOUT_DIR
-python -m means.tests.regression_tests --xunit | tee $WORKSPACE/regression_tests.xml
 
 cd $DOCS_DIR
 make html
