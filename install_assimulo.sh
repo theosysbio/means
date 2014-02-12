@@ -1,5 +1,8 @@
 #!/bin/bash
 ASSIMULO_TRUNK=$WORKSPACE/.assimulo-trunk/
+echo "Installing assimulo: "
+echo `which python`
+
 if [ -d $ASSIMULO_TRUNK ]; then
      svn update $ASSIMULO_TRUNK || echo "Warning: Could not update assimulo"
 else
