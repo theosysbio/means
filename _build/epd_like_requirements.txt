@@ -1,5 +1,5 @@
+Cython==0.15.1
 numpy==1.6.1
 scipy==0.10.0
 matplotlib==1.1.0
 sympy==0.7.1
-Assimulo=trunk
