@@ -14,7 +14,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     """
     Performs moment expansion approximation (Ale et al. 2013) up to a given order of moment.
     """
-    def __init__(self, model, n_moments, closer="log-normal", *closer_args, **closer_kwargs):
+    def __init__(self, model, n_moments, closer='zero', *closer_args, **closer_kwargs):
         super(MomentExpansionApproximation, self).__init__(model)
         self.__n_moments = int(n_moments)
 
