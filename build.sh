@@ -4,6 +4,8 @@ PYENV_HOME=$WORKSPACE/.pyenv/
 CODE_DIR=$WORKSPACE/src
 DOCS_DIR=$CODE_DIR/docs
 
+export LD_LIBRARY_PATH=/usr/local/lib # This is needed for assimulo to find sundials lsibraries and thus work properly
+
 
 # Create virtualenv and install necessary packages
 # We might want to add --no-site-packages if this is too slow
