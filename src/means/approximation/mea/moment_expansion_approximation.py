@@ -7,18 +7,30 @@ from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
-from log_normal_closer import log_normal_closer_wrapper
+from log_normal_closer import LogNormalCloser
+from zero_closer import  ZeroCloser
 
 class MomentExpansionApproximation(ApproximationBaseClass):
     """
     Performs moment expansion approximation (Ale et al. 2013) up to a given order of moment.
     """
-    def __init__(self, model, n_moments):
+    def __init__(self, model, n_moments, closer="log-normal", *closer_args, **closer_kwargs):
         super(MomentExpansionApproximation, self).__init__(model)
         self.__n_moments = int(n_moments)
 
-        #self.closer = Closer(n_moments)
+        # a dictionary of option -> closer this allow a generic handling for closer without to have to add
+        # if-else and exceptions when implementing new closers. Onre only needs to add the new closer class to the dict
+        supported_closers = {"log-normal": LogNormalCloser ,"zero": ZeroCloser}
 
+        # exception it the closer name is not in the dict
+        if not closer in supported_closers:
+            error_str = "The closer type '{0}' is not supported.\n Supported values for closer:\n{1}"
+            raise KeyError(error_str.format(closer,supported_closers))
+        # otherwise, we initialise the closer for this approximator
+        else:
+            # our closer is an instance of the class queried in the dictionary
+            CloserClass = supported_closers[closer]
+            self.__closer = CloserClass(n_moments, *closer_args, **closer_kwargs)
 
     def run(self):
         """
@@ -38,25 +50,12 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix)
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
-
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
+        mfk, prob_lhs = self.closer.close(central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter)
 
-        mass_fluctuation_kinetics = self.generate_mass_fluctuation_kinetics(central_moments_exprs, n_counter, dmu_over_dt)
-        # concatenate the first order raw moments (means)
-
-        prob_moments = [k for k in k_counter if k.order == 1]
-        # and the higher order central moments (variances, covariances,...)
-        prob_moments += [n for n in n_counter if n.order > 1]
-        # return a problem object
-
-        #mass_fluctuation_kinetics, prob_moments = log_normal_closer_wrapper(mass_fluctuation_kinetics, prob_moments,
-        #                                                        central_from_raw_exprs, n_moments, species, k_counter)
-
-        #self.closer.close(mass_fluctuation_kinetics, prob_moments, central_from_raw_exprs, species, k_counter)
-
-        out_problem = ode_problem.ODEProblem("MEA", prob_moments, mass_fluctuation_kinetics, sp.Matrix(self.model.constants))
+        out_problem = ode_problem.ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
         return out_problem
 
     def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
@@ -94,31 +93,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #todo eventually, remove simplify (slow)
         out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
-
-    def generate_mass_fluctuation_kinetics(self, central_moments, n_counter, dmu_over_dt):
-        """
-        :param central_moments:
-        :param n_counter:
-        :param dmu_over_dt:
-        :return: MFK ...
-        """
-        # symbols for central moments
-        central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
-        # try to simplify an expression. returns the original expression if fail
-        # todo remove this when we do not need it anymore
-        def try_to_simplify(expr):
-            try:
-                return sp.simplify(expr)
-            except:
-                pass
-            return expr
-
-
-        # rhs for the first order raw moment
-        MFK = [try_to_simplify(e) for e in dmu_over_dt * central_moments_symbols]
-        # rhs for the higher order raw moments
-        MFK += [try_to_simplify((sp.Matrix(cm).T * central_moments_symbols)[0]) for cm in central_moments.tolist()]
-        return sp.Matrix(MFK)
 
     def generate_n_and_k_counters(self, n_moments, species):
         """
@@ -163,3 +137,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         return n_counter, k_counter
 
+    @property
+    def closer(self):
+        return self.__closer
