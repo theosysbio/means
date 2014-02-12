@@ -9,5 +9,6 @@ fi
 # assimulo setup
 export LD_LIBRARY_PATH=/usr/local/lib # This is needed for assimulo to find sundials lsibraries and thus work properly
 pip install --quiet cython # needed for assimulo
+pip install --quiet numpy # also needed for assimulo
 cd $ASSIMULO_TRUNK
 python setup.py install
