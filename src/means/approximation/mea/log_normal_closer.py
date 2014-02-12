@@ -1,6 +1,6 @@
 import sympy as sp
 from means.util.sympyhelpers import substitute_all
-
+from zero_closer import CloserBase
 class LogNormalCloser(CloserBase):
     def __init__(self,n_moments, multivariate = True):
         super(LogNormalCloser, self).__init__(n_moments)
