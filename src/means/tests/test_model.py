@@ -255,7 +255,7 @@ class TestModelInitialisation(unittest.TestCase):
         and return them as sympy Matrix
         e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
         """
-        answer = np.array([[-1, 1, 0], [0, 0, 1]])
+        answer = sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
 
         # Column
         m = Model(self.SAMPLE_CONSTANTS,
