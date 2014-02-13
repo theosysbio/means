@@ -24,7 +24,24 @@ def to_sympy_matrix(value):
     """
     if isinstance(value, sympy.Matrix):
         return value
-    return sympy.Matrix(value)
+    try:
+        return sympy.Matrix(value)
+    except ValueError as original_exception:
+        if isinstance(value, list) and len(value) and all([not isinstance(x, list) for x in value]):
+            # Let's try to convert the contents into a list
+            # (this is required for 0.7.4 if we pass in a list of strings)
+            # See `test_creation_of_column_matrix_from_list_of_strings` test
+            list_of_lists_value = [[x] for x in value]
+            try:
+                m = sympy.Matrix(list_of_lists_value)
+                return m
+            except Exception:
+                raise original_exception
+        else:
+            raise original_exception
+
+
+
 
 def to_sympy_column_matrix(matrix):
     """
@@ -57,15 +74,23 @@ def sympy_expressions_equal(expr1, expr2):
     :return: True if the expressions are similar, False otherwise
     """
     # the simplified difference is equal to zero: same expressions
-
     try:
-        return sympy.simplify(expr1 - expr2) == 0
+        difference = sympy.simplify(expr1 - expr2)
     except SympifyError:
-        # Doing sympy.simplify(expr1 - expr2) raises an error if expr1 or expr2 is a matrix
+        # Doing sympy.simplify(expr1 - expr2) raises an error if expr1 or expr2 is a matrix (for sympy 0.7.2)
         if isinstance(expr1, sympy.Matrix) or isinstance(expr2, sympy.Matrix):
             return _sympy_matrices_equal(expr1, expr2)
         else:
             raise
+
+    # sympy 0.7.4 returns matrix of zeros for equal matrices
+    try:
+        difference = sum(difference)
+    except TypeError:
+        pass
+
+    return difference == 0
+
 
 def assert_sympy_expressions_equal(expr1, expr2):
     """
