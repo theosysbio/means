@@ -132,7 +132,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
 
         #starts from two to mimic matlab!!
-        n_counter_symbols = [sp.S('yx{0}'.format(i+1)) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter
