@@ -4,6 +4,7 @@ import sympy
 
 from means.approximation.mea.log_normal_closer import LogNormalCloser
 from means.util.sympyhelpers import sympy_expressions_equal
+from means.util.sympyhelpers import to_sympy_matrix
 
 class TestLogNormalCloser(unittest.TestCase):
 
@@ -31,19 +32,19 @@ class TestLogNormalCloser(unittest.TestCase):
     def test_get_log_covariance(self):
 
 
-        log_variance_mat =sympy.Matrix([
+        log_variance_mat =to_sympy_matrix([
                 ["log(1+yx7/y_0**2)", "0", "0"],
                 ["0", "log(1+yx4/y_1**2)", "0"],
                 ["0", "0", "log(1+yx2/y_2**2)"]
                         ])
 
-        log_expectation_symbols = sympy.Matrix([
+        log_expectation_symbols = to_sympy_matrix([
                 ["log(y_0)-log(1+yx7/y_0**2)/2"],
                 ["log(y_1)-log(1+yx4/y_1**2)/2"],
                 ["log(y_2)-log(1+yx2/y_2**2)/2"]
                 ])
 
-        covariance_matrix = sympy.Matrix([
+        covariance_matrix = to_sympy_matrix([
                 ["yx7","yx6","yx5"],
                 ["yx6","yx4","yx3"],
                 ["yx5","yx3","yx2"]])
@@ -89,7 +90,7 @@ class TestLogNormalCloser(unittest.TestCase):
         n_species = 3
         problem_moments = self.__problem_moments
 
-        expected = sympy.Matrix([
+        expected = to_sympy_matrix([
             ["y_2**2+yx2"],
             ["y_1*y_2+yx3"],
             ["y_1**2+yx4"],
@@ -114,7 +115,7 @@ class TestLogNormalCloser(unittest.TestCase):
 
     def test_log_normal_closer_wrapper(self):
 
-        mfk = sympy.Matrix([
+        mfk = to_sympy_matrix([
                     ["-(c_2*c_6*y_2*yx17*(c_6+y_0)**6+c_2*c_6*yx5*(c_6+y_0)**8+c_2*y_0*y_2*(c_6+y_0)**9-(c_0-c_1*y_0)*(c_6+y_0)**10-(c_6+y_0)**7*(c_2*c_6*y_2*yx7+c_2*c_6*yx15))/(c_6+y_0)**10"],
                     ["c_3*y_0-c_4*y_1"],
                     ["c_4*y_1-c_5*y_2"],
@@ -135,7 +136,7 @@ class TestLogNormalCloser(unittest.TestCase):
                     ["-2*c_2*c_6*yx15*yx6/(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)+2*c_2*c_6*yx5*yx6/(c_6**2+2*c_6*y_0+y_0**2)+c_2*y_0*yx3/(c_6+y_0)-c_2*yx13*(2*c_6*y_0-c_6+2*y_0**2)/(c_6**2+2*c_6*y_0+y_0**2)-yx16*(2*c_2*c_6*y_0*y_2+2*c_2*y_0**2*y_2-c_2*y_0*y_2+2*c_2*y_2*(c_6+y_0)**2+(2*c_1+c_4)*(c_6+y_0)**3-(c_6+y_0)*(4*c_2*y_0*y_2-c_2*y_2))/(c_6+y_0)**3+yx17*(2*c_2*c_6*y_2*yx6+c_3*c_6**4+4*c_3*c_6**3*y_0+6*c_3*c_6**2*y_0**2+4*c_3*c_6*y_0**3+c_3*y_0**4)/(c_6**4+4*c_6**3*y_0+6*c_6**2*y_0**2+4*c_6*y_0**3+y_0**4)+yx6*(2*c_0-4*c_1*y_0+c_1+2*c_2*y_0**2*y_2/(c_6+y_0)**2-4*c_2*y_0*y_2/(c_6+y_0)-c_2*y_0*y_2/(c_6+y_0)**2+c_2*y_2/(c_6+y_0)-2*c_4*y_0+2*y_0*(c_1-c_2*y_0*y_2/(c_6+y_0)**2+c_2*y_2/(c_6+y_0)+c_4))-yx7*(2*c_2*c_6*y_2*yx6-c_3*c_6**3*y_0-3*c_3*c_6**2*y_0**2-3*c_3*c_6*y_0**3-c_3*y_0**4+c_4*c_6**3*y_1+3*c_4*c_6**2*y_0*y_1+3*c_4*c_6*y_0**2*y_1+c_4*y_0**3*y_1)/(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)+(-2*c_0*c_6*yx6-2*c_0*y_0*yx6+2*c_1*c_6*y_0*yx6+2*c_1*y_0**2*yx6+2*c_2*y_0*y_2*yx6-c_3*c_6*y_0*yx7-c_3*y_0**2*yx7+c_4*c_6*y_1*yx7+c_4*y_0*y_1*yx7)/(c_6+y_0)"],
                     ["-(-c_2*yx5*(c_6+y_0)*(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)*(3*c_6*y_0+3*c_6*yx7-c_6+3*y_0**2)*(c_6**4+4*c_6**3*y_0+6*c_6**2*y_0**2+4*c_6*y_0**3+y_0**4)+yx17*(c_6+y_0)*(c_6**2+2*c_6*y_0+y_0**2)*(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)*(3*c_1*c_6**4+12*c_1*c_6**3*y_0+18*c_1*c_6**2*y_0**2+12*c_1*c_6*y_0**3+3*c_1*y_0**4+3*c_2*c_6**3*y_2+6*c_2*c_6**2*y_0*y_2+3*c_2*c_6**2*y_2+3*c_2*c_6*y_0**2*y_2+3*c_2*c_6*y_0*y_2-3*c_2*c_6*y_2*yx7+c_2*c_6*y_2)-(c_6+y_0)*(-c_2*yx15*(3*c_6**2*y_0-3*c_6**2+6*c_6*y_0**2-3*c_6*y_0+3*c_6*yx7-c_6+3*y_0**3)+yx7*(3*c_0*c_6**3+9*c_0*c_6**2*y_0+9*c_0*c_6*y_0**2+3*c_0*y_0**3-3*c_1*c_6**3*y_0+3*c_1*c_6**3-9*c_1*c_6**2*y_0**2+9*c_1*c_6**2*y_0-9*c_1*c_6*y_0**3+9*c_1*c_6*y_0**2-3*c_1*y_0**4+3*c_1*y_0**3-3*c_2*c_6**2*y_0*y_2+3*c_2*c_6**2*y_2-6*c_2*c_6*y_0**2*y_2+3*c_2*c_6*y_0*y_2-3*c_2*c_6*y_2*yx7+c_2*c_6*y_2-3*c_2*y_0**3*y_2))*(c_6**2+2*c_6*y_0+y_0**2)*(c_6**4+4*c_6**3*y_0+6*c_6**2*y_0**2+4*c_6*y_0**3+y_0**4)-(c_6**2+2*c_6*y_0+y_0**2)*(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)*(c_6**4+4*c_6**3*y_0+6*c_6**2*y_0**2+4*c_6*y_0**3+y_0**4)*(-3*c_0*c_6*yx7+c_0*c_6-3*c_0*y_0*yx7+c_0*y_0+3*c_1*c_6*y_0*yx7-c_1*c_6*y_0+3*c_1*y_0**2*yx7-c_1*y_0**2+3*c_2*y_0*y_2*yx7-c_2*y_0*y_2))/((c_6+y_0)*(c_6**2+2*c_6*y_0+y_0**2)*(c_6**3+3*c_6**2*y_0+3*c_6*y_0**2+y_0**3)*(c_6**4+4*c_6**3*y_0+6*c_6**2*y_0**2+4*c_6*y_0**3+y_0**4))"]
             ])
-        central_from_raw_exprs = sympy.Matrix(
+        central_from_raw_exprs = to_sympy_matrix(
                     [["x_0_0_2-y_2**2"],
                     ["x_0_1_1-y_1*y_2"],
                     ["x_0_2_0-y_1**2"],
@@ -179,9 +180,9 @@ class TestLogNormalCloser(unittest.TestCase):
                 ]
 
         n_moments = 3
-        species = sympy.Matrix([["y_0"],["y_1"],["y_2"]])
+        species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
-        expected = sympy.Matrix([
+        expected = to_sympy_matrix([
                     ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3+(c_2*c_6*yx5*(yx5*y_0 ** 2+2*y_2*yx7*y_0+yx5*yx7))/(y_0 ** 2*y_2*(c_6+y_0) ** 3)-(c_2*c_6*y_2*yx7 ** 2*(3*y_0 ** 2+yx7))/(y_0 ** 3*(c_6+y_0) ** 4)"],
                     ["c_3*y_0-c_4*y_1"],
                     ["c_4*y_1-c_5*y_2"],
