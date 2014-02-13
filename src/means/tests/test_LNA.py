@@ -4,6 +4,7 @@ import sympy
 
 from means.model.model import Model
 from means.approximation.lna.lna import LinearNoiseApproximation
+from means.util.sympyhelpers import to_sympy_matrix
 
 
 class TestLNA(unittest.TestCase):
@@ -13,17 +14,17 @@ class TestLNA(unittest.TestCase):
                                              [0,  0,  0, 1, -1,  0],
                                              [0,  0,  0, 0,  1, -1]])
 
-        propensities = sympy.Matrix(['c_0',
+        propensities = to_sympy_matrix(['c_0',
                                      'c_1*y_0',
                                      'c_2*y_0*y_2/(c_6 + y_0)',
                                      'c_3*y_0',
                                      'c_4*y_1',
                                      'c_5*y_2'])
 
-        species = sympy.Matrix(['y_0', 'y_1', 'y_2'])
+        species = to_sympy_matrix(['y_0', 'y_1', 'y_2'])
 
 
-        correct_rhs =  sympy.Matrix(
+        correct_rhs = to_sympy_matrix(
             ["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)",
             "c_3*y_0 - c_4*y_1",
             "c_4*y_1 - c_5*y_2",
@@ -37,7 +38,7 @@ class TestLNA(unittest.TestCase):
             "V_11*c_4 + V_20*c_3 - V_21*c_4 - V_21*c_5 - (c_4*y_1)**1.0",
             "V_12*c_4 + V_21*c_4 - 2*V_22*c_5 + (c_4*y_1)**1.0 + (c_5*y_2)**1.0"])
 
-        correct_lhs = sympy.Matrix(['y_0','y_1','y_2','V_00', 'V_01', 'V_02', 'V_10', 'V_11', 'V_12', 'V_20', 'V_21', 'V_22'])
+        correct_lhs = to_sympy_matrix(['y_0','y_1','y_2','V_00', 'V_01', 'V_02', 'V_10', 'V_11', 'V_12', 'V_20', 'V_21', 'V_22'])
 
         # todo use stub class?
         constants = ["c_{0}".format(i) for i in range(6)]

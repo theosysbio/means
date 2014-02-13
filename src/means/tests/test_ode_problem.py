@@ -5,6 +5,7 @@ from numpy.testing import assert_array_equal
 import sympy
 
 from means.approximation.ode_problem import ODEProblem, Moment, VarianceTerm
+from means.util.sympyhelpers import to_sympy_matrix
 
 
 class TestODEProblem(unittest.TestCase):
@@ -17,7 +18,7 @@ class TestODEProblem(unittest.TestCase):
         :return:
         """
         lhs = [Moment(np.ones(3),i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
-        rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+        rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
 
         p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
@@ -35,10 +36,10 @@ class TestODEProblem(unittest.TestCase):
         """
         constants = [1, 2, 3]
         p1_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
-        p1_rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+        p1_rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
 
         p2_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
-        p2_rhs = sympy.Matrix(['y_1', 'c_1', 'y_2+y_3'])
+        p2_rhs = to_sympy_matrix(['y_1', 'c_1', 'y_2+y_3'])
 
         p1 = ODEProblem('MEA', p1_lhs, p1_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p1_rhs_as_function = p1.right_hand_side_as_function
@@ -65,7 +66,7 @@ class TestODEProblem(unittest.TestCase):
         for each of the symbols
         """
         lhs = [VarianceTerm(i) for i in ['V34', 'V32', 'V11']]
-        rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+        rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
         for i,l in enumerate(lhs):
@@ -79,10 +80,10 @@ class TestODEProblem(unittest.TestCase):
         for each corresponding symbol
         :return:
         """
-        symbs = sympy.Matrix(['y_1', 'y_2', 'y_3'])
+        symbs = to_sympy_matrix(['y_1', 'y_2', 'y_3'])
         desc = [[0,0,1],[1,0,432],[21,43,34]]
         lhs = [Moment(d,s) for d,s in zip(desc,symbs)]
-        rhs = sympy.Matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+        rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         for i,l in enumerate(lhs):
             self.assertEqual((p.descriptions_dict[l.symbol].descriptor == np.array(desc[i])).all(), True )

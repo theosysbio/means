@@ -180,13 +180,15 @@ class Simulation(object):
     """
     __problem = None
     _postprocessing = None
+    _cvode_options = None
 
-    def __init__(self, problem):
+    def __init__(self, problem, **cvode_options):
         """
 
         :param problem:
         :type problem: ODEProblem
         :param compute_sensitivities: Whether the model should test parameter sensitivity or not
+        :type cvode_options: options to be set to to cvode solver
         """
         self.__problem = problem
         validate_problem(problem)
@@ -196,6 +198,7 @@ class Simulation(object):
         else:
             self._postprocessing = _postprocess_default
 
+        self._cvode_options = cvode_options
 
     def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
         """
@@ -219,15 +222,23 @@ class Simulation(object):
 
         solver = CVode(model)
 
-        solver.verbosity = 50  # Verbosity flag suppresses output
+        options = self._cvode_options
+        # A couple of defaults kwargs for the solver
+        solver.verbosity = options.pop('verbosity', 50)  # Verbosity flag suppresses output
 
-        # TODO: Make these customisable
-        solver.iter = 'Newton'
-        solver.discr = 'BDF'
-        solver.atol = ATOL
-        solver.rtol = RTOL
-        solver.linear_solver = 'dense'
+        solver.iter = options.pop('iter', 'Newton')
+        solver.discr = options.pop('discr', 'BDF')
+        solver.atol = options.pop('atol', ATOL)
+        solver.rtol = options.pop('rtol', RTOL)
+        solver.linear_solver = options.pop('linear_solver', 'dense')
 
+        # Set the remaining attributes
+        for attribute, value in options:
+            setattr(solver, attribute, value)
+
+        if 'usesens' in options:
+            raise AttributeError('Cannot set \'usesens\' parameter. Use Simulation or SimulationWithSensitivities for '
+                                 'sensitivity calculations')
 
         # It is necessary to set usesens to false here as setting model.p0 automatically overrides this to "True"
         solver.usesens = False
