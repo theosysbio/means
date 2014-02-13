@@ -4,6 +4,7 @@ import sympy
 import numpy as np
 
 from means.model.model import Model
+from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
 
 class TestModelInitialisation(unittest.TestCase):
@@ -165,13 +166,13 @@ class TestModelInitialisation(unittest.TestCase):
         and return them as sympy (column) Matrix of equations
         i.e. sympy.Matrix(['y_0+y_1', 'y_1+y_2'])
         """
-        answer = sympy.Matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
+        answer = to_sympy_matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
                                ['c_1*(-y_0 - y_1 + 301)'],
                                ['c_2*(-y_0 - y_1 + 301)']])
         # Column
         m = Model(self.SAMPLE_CONSTANTS,
                   self.SAMPLE_VARIABLES,
-                  sympy.Matrix(['c_0*y_0*(y_0 + y_1 - 181)',
+                  to_sympy_matrix(['c_0*y_0*(y_0 + y_1 - 181)',
                                'c_1*(-y_0 - y_1 + 301)',
                                'c_2*(-y_0 - y_1 + 301)']),
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
@@ -254,14 +255,14 @@ class TestModelInitialisation(unittest.TestCase):
         and return them as sympy Matrix
         e.g. sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
         """
-        answer = np.array([[-1, 1, 0], [0, 0, 1]])
+        answer = sympy.Matrix([[-1, 1, 0], [0, 0, 1]])
 
         # Column
         m = Model(self.SAMPLE_CONSTANTS,
                   self.SAMPLE_VARIABLES,
                   self.SAMPLE_PROPENSITIES,
                   sympy.Matrix([[-1, 1, 0], [0, 0, 1]]))
-        self.assertEqual(m.stoichiometry_matrix, answer)
+        assert_sympy_expressions_equal(m.stoichiometry_matrix, answer)
 
     #-- Validation ----------------------------------------------------------
 
