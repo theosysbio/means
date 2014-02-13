@@ -1,5 +1,5 @@
 import unittest
-from means import to_sympy_matrix
+from means.util.sympyhelpers import to_sympy_matrix
 from means.approximation.ode_problem import ODEProblem, ODETermBase, Moment, VarianceTerm
 from means.simulation import Simulation
 from numpy.testing import assert_array_almost_equal

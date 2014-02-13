@@ -4,6 +4,7 @@ import sympy
 
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols
 
+__all__ = ['Model']
 
 class Model(object):
     """

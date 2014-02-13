@@ -4,6 +4,7 @@ import sympy
 
 from means.approximation.mea.eq_mixedmoments import eq_mixedmoments
 from means.approximation.ode_problem import Moment
+from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
 
 class TestEqMixedMoments(unittest.TestCase):
@@ -26,7 +27,7 @@ class TestEqMixedMoments(unittest.TestCase):
             [0,  0,  0, 0,  1, -1]
         ])
 
-        propensities = sympy.Matrix([
+        propensities = to_sympy_matrix([
             ["                    c_0"],
             ["                c_1*y_0"],
             ["c_2*y_0*y_2/(c_6 + y_0)"],
@@ -48,6 +49,6 @@ class TestEqMixedMoments(unittest.TestCase):
         k_vec = Moment([1, 0, 0], None)
         ek_counter = [Moment([1, 0, 0], sympy.Symbol("y_0"))]
         answer = eq_mixedmoments(propensities,counter,stoichio,species,k_vec,ek_counter).T
-        result = sympy.Matrix(["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"," 0"," 0"," 0"," c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"," 0"," -c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2"])
-        self.assertEqual(answer, result)
+        result = to_sympy_matrix(["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"," 0"," 0"," 0"," c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"," 0"," -c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2"])
+        assert_sympy_expressions_equal(answer, result)
 
