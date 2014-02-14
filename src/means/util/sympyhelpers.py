@@ -12,11 +12,15 @@ def substitute_all(sp_object, pairs):
     if isinstance(sp_object, sympy.Matrix):
         return sp_object.applyfunc(lambda x: substitute_all(x, pairs))
 
-    expr =  sp_object
-    for (a,b) in pairs:
-        expr = sympy.Subs(expr, a, b)
-    to_ret = expr.doit()
-    return to_ret
+    try:
+        expr = expr.subs(pairs)
+    # in sympy 0.7.2, this would not work, so we do it manually
+    except:
+        expr =  sp_object
+        for (a,b) in pairs:
+            expr = sympy.Subs(expr, a, b)
+        expr = expr.doit()
+    return expr
 
 
 def to_sympy_matrix(value):
