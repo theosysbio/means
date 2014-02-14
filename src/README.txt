@@ -14,9 +14,17 @@ On Mac OS X these libraries can be installed via HomeBrew_::
     brew install sundials
 
 On other linux systems one might need to compile the sundials libraries from source.
+You can download and untar the source using, for instance:
+
+    wget http://computation.llnl.gov/casc/sundials/download/code/sundials-2.5.0.tar.gz
+    tar -xvf sundials-2.5.0.tar.gz && cd sundials-2.5.0
+
 Make sure the following flags are set when compiling these libraries::
 
     ./configure --disable-debug --disable-dependency-tracking --prefix=/usr/local --enable-shared --enable-static --with-gnu-ld --with-cflags=-fPIC
+
+Then run (as root):
+    make && make install
 
 Once the libraries are installed, make sure they are in your `LD_LIBRARY_PATH`, i.e.::
 
