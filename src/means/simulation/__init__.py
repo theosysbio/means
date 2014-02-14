@@ -1,1 +1,3 @@
-from simulate import Simulation, SimulationWithSensitivities, Trajectory, TrajectoryWithSensitivityData
+from simulate import Simulation, SimulationWithSensitivities
+from trajectory import Trajectory, TrajectoryWithSensitivityData
+from solvers import NP_FLOATING_POINT_PRECISION

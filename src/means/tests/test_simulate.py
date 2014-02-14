@@ -21,8 +21,8 @@ class TestSimulate(unittest.TestCase):
         """
         s = Simulation(ConstantDerivativesProblem())
 
-        trajectories = s.simulate_system(initial_constants=[0, 1],
-                                         initial_values=[3, 2],
+        trajectories = s.simulate_system(parameters=[0, 1],
+                                         initial_conditions=[3, 2],
                                          timepoints=[0, 1, 2, 3])
         trajectories_dict = {trajectory.description.symbol: trajectory for trajectory in trajectories}
         y_1_trajectory = trajectories_dict['y_1']

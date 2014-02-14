@@ -2,7 +2,7 @@ import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
 
-from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix
+from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix
 from means.util.decorators import memoised_property
 
 class Descriptor(object):
@@ -49,7 +49,29 @@ class VarianceTerm(ODETermBase):
     """
     Signifies that a particular equation generated from the model is part of a Variance Term
     """
-    pass
+    _position = None
+
+    def __init__(self, symbol, position):
+        """
+        Creates a Descriptor for a particular ODE in the system that signifies that that particular equation
+        computes the position-th term of a covariance matrix, where position is some tuple (row,column).
+
+        It is used in LNA approximation as there we need to deal with moment and variance terms differently
+
+        :param symbol: symbol assigned to the term
+        :param position: position in the covariance matrix
+
+        """
+        super(VarianceTerm, self).__init__(symbol=symbol)
+        self._position = position
+
+    @property
+    def position(self):
+        return self._position
+
+    def __unicode__(self):
+        return u'{0}({1}, {2})'.format(self.__class__.__name__, self.symbol, self.position)
+
 
 
 class Moment(ODETermBase):
@@ -159,7 +181,7 @@ class ODEProblem(object):
         """
 
         self.__ode_lhs_terms = ode_lhs_terms
-        self.__left_hand_side = to_sympy_column_matrix(sympy.Matrix([plhs.symbol for plhs in ode_lhs_terms]))
+        self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix([plhs.symbol for plhs in ode_lhs_terms]))
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
@@ -341,7 +363,13 @@ def parse_problem(input_filename, from_string=False):
         raise
 
     moment_terms = [Moment(nv,lhs) for (nv,lhs) in zip(n_vecs, left_hand_side)]
-    variance_terms = [VarianceTerm(lhs) for lhs in left_hand_side[len(moment_terms):]]
+    # TODO: remove this hack below, where I read the variance position from the symbol name
+    # Replace this with explicitly storing them alongside list of moments
+    variance_terms = []
+    for lhs in left_hand_side[len(moment_terms):]:
+        str_lhs = str(lhs)
+        position = int(str_lhs[2]), int(str_lhs[3])
+        variance_terms.append(VarianceTerm(lhs, position))
     ode_terms = moment_terms + variance_terms
 
     return ODEProblem(method, ode_terms, right_hand_side, constants)

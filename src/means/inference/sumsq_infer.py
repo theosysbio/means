@@ -16,7 +16,7 @@ from scipy.optimize import fmin
 from means.util.decorators import memoised_property
 from means.inference.gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
 from means.approximation.ode_problem import Moment
-from means.simulation.simulate import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
+from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
 # value returned if parameters, means or variances < 0
 FTOL = 0.000001

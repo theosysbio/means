@@ -4,20 +4,15 @@ and method (moment expansion or LNA)
 """
 from collections import namedtuple
 
-from assimulo.problem import Explicit_Problem
-from assimulo.solvers.sundials import CVode
-from assimulo.solvers.sundials import CVodeError
 import numpy as np
 import matplotlib.pyplot as plt
-from sympy import Matrix
+import sympy
+from means.simulation.trajectory import Trajectory
+from means.simulation.solvers import NP_FLOATING_POINT_PRECISION, CVodeSolver
 
 # These are the default values in solver.c but they seem very low
-from means.approximation.ode_problem import Moment, Descriptor
-from means.plotting.util import mathtextify
+from means.approximation.ode_problem import Moment, Descriptor, VarianceTerm
 
-RTOL = 1e-4
-ATOL = 1e-4
-NP_FLOATING_POINT_PRECISION = np.double
 
 class SensitivityTerm(Descriptor):
     r"""
@@ -57,106 +52,6 @@ class SensitivityTerm(Descriptor):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
 
-
-class Trajectory(object):
-    """
-    A single simulated or observed trajectory for an ODE term.
-    """
-    _timepoints = None
-    _values = None
-    _description = None
-
-    def __init__(self, timepoints, values, description):
-        """
-
-        :param timepoints: timepoints the trajectory was simulated for
-        :type timepoints: :class:`numpy.ndarray`
-        :param values: values of the curve at each of the timepoints
-        :type values: :class:`numpy.ndarray`
-        :param description: description of the trajectory
-        :type description: :class:`~means.approximation.ode_problem.Descriptor`
-        """
-        self._timepoints = np.array(timepoints)
-        self._values = np.array(values)
-        self._description = description
-
-        assert(self._timepoints.shape == self._values.shape)
-
-    @property
-    def timepoints(self):
-        """
-        The timepoints trajectory was simulated for.
-
-        :rtype: :class:`numpy.ndarray`
-        """
-        return self._timepoints
-
-    @property
-    def values(self):
-        """
-        The values for each of the timepoints in :attr:`~Trajectory.timepoints`.
-
-        :rtype: :class:`numpy.ndarray`
-        """
-        return self._values
-
-    @property
-    def description(self):
-        """
-        Description of this trajectory. The same description as the description for particular ODE term.
-
-        :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
-        """
-        return self._description
-
-    def plot(self, *args, **kwargs):
-        """
-        Plots the trajectory using :mod:`matplotlib.pyplot`.
-
-        :param args: arguments to pass to :func:`~matplotlib.pyplot.plot`
-        :param kwargs: keyword arguments to pass to :func:`~matplotlib.pyplot.plot`
-        :return: the result of the :func:`matplotlib.pyplot.plot` function.
-        """
-        # Get label from the kwargs provided, or use self.description as default
-        label = kwargs.pop('label', mathtextify(self.description))
-        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
-
-    def __repr__(self):
-        return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
-
-class TrajectoryWithSensitivityData(Trajectory):
-    """
-    An extension to :class:`~means.simulation.simulate.Trajectory` that provides data about the sensitivity
-    of said trajectory as well.
-
-    """
-
-    _sensitivity_data = None
-
-    def __init__(self, timepoints, values, description, sensitivity_data):
-        """
-
-        :param timepoints: timepoints the trajectory was simulated for
-        :type timepoints: :class:`numpy.ndarray`
-        :param values: values of the curve at each of the timepoints
-        :type values: :class:`numpy.ndarray`
-        :param description: description of the trajectory
-        :type description: :class:`~means.approximation.ode_problem.Descriptor`
-        :param sensitivity_data: a list of :class:`~means.approximation.simulation.simulate.Trajectory` objects
-                                 signifying the sensitivity change over time for each of the parameters.
-        """
-        super(TrajectoryWithSensitivityData, self).__init__(timepoints, values, description)
-        self._sensitivity_data = sensitivity_data
-
-    @classmethod
-    def from_trajectory(cls, trajectory, sensitivity_data):
-        return cls(trajectory.timepoints, trajectory.values, trajectory.description, sensitivity_data)
-
-    @property
-    def sensitivity_data(self):
-        return self._sensitivity_data
-
-
 def validate_problem(problem):
 
     problem.validate()
@@ -176,19 +71,20 @@ def validate_problem(problem):
 class Simulation(object):
     """
     An object that provides wrappers around CVode library to allow simulation of the ODE systems.
-
     """
     __problem = None
     _postprocessing = None
-    _cvode_options = None
+    _solver_options = None
+    _solver_short_name = None
 
-    def __init__(self, problem, **cvode_options):
+    def __init__(self, problem, solver_short_name='cvode', **solver_options):
         """
 
         :param problem:
         :type problem: ODEProblem
         :param compute_sensitivities: Whether the model should test parameter sensitivity or not
-        :type cvode_options: options to be set to to cvode solver
+        :param solver_short_name: the solver to use TODO: list available solvers
+        :param solver_options: options to set in the solver
         """
         self.__problem = problem
         validate_problem(problem)
@@ -198,79 +94,16 @@ class Simulation(object):
         else:
             self._postprocessing = _postprocess_default
 
-        self._cvode_options = cvode_options
+        self._solver_short_name = solver_short_name
+        self._solver_options = solver_options
 
-    def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
-        """
-        Creates an instance of `CVode` that will be used to simulate the ODEs.
-
-        :param initial_constants: initial values for constants
-        :param initial_values: initial values for variables
-        :param initial_timepoint: initial timepoint
-        :return: instance of `CVode` solver
-        :rtype: CVode
-        """
-        initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-        initial_values = np.array(initial_values, dtype=NP_FLOATING_POINT_PRECISION)
-        assert(initial_constants.shape == (len(self.problem.constants),))
-        assert(initial_values.shape == (self.problem.number_of_equations,))
-
-        rhs = self.problem.right_hand_side_as_function
-        model = Explicit_Problem(lambda t, x, p: rhs(x, p), initial_values, initial_timepoint)
-        # Set the parameters to the model directly
-        model.p0 = np.array(initial_constants)
-
-        solver = CVode(model)
-
-        options = self._cvode_options
-        # A couple of defaults kwargs for the solver
-        solver.verbosity = options.pop('verbosity', 50)  # Verbosity flag suppresses output
-
-        solver.iter = options.pop('iter', 'Newton')
-        solver.discr = options.pop('discr', 'BDF')
-        solver.atol = options.pop('atol', ATOL)
-        solver.rtol = options.pop('rtol', RTOL)
-        solver.linear_solver = options.pop('linear_solver', 'dense')
-
-        # Set the remaining attributes
-        for attribute, value in options:
-            setattr(solver, attribute, value)
-
-        if 'usesens' in options:
-            raise AttributeError('Cannot set \'usesens\' parameter. Use Simulation or SimulationWithSensitivities for '
-                                 'sensitivity calculations')
-
-        # It is necessary to set usesens to false here as setting model.p0 automatically overrides this to "True"
-        solver.usesens = False
-
-        return solver
-
-    def _simulate(self, solver, initial_constants, initial_values, timepoints):
-        last_timepoint = timepoints[-1]
-        try:
-            simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
-        except CVodeError as e:
-            # assimulo masks the error that occurs in RHS function
-            # by it's CVodeError exception
-            # Let's try to call that function ourselves and see if we could cause that error
-            # and not mask it
-            try:
-                self.problem.right_hand_side_as_function(initial_values, initial_constants)
-            except:
-                raise
-            else:
-                # If the right_hand_side_as_function above did not raise any exceptions, re-raise CVode error
-                raise e
-        trajectories = self._postprocessing(self.problem, simulated_values, simulated_timepoints)
-        return trajectories
-
-    def simulate_system(self, initial_constants, initial_values, timepoints):
+    def simulate_system(self, parameters, initial_conditions, timepoints):
         """
         Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
 
-        :param initial_constants: list of the initial values for the constants in the model.
+        :param parameters: list of the initial values for the constants in the model.
                                   Must be in the same order as in the model
-        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
+        :param initial_conditions: List of the initial values for the equations in the problem. Must be in the same order as
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
@@ -280,17 +113,15 @@ class Simulation(object):
 
         # If not all intial conditions specified, append zeros to them
         # TODO: is this really the best way to do this?
-        if len(initial_values) < self.problem.number_of_equations:
-            initial_values = np.concatenate((initial_values,
-                                             [0.0] * (self.problem.number_of_equations - len(initial_values))))
+        if len(initial_conditions) < self.problem.number_of_equations:
+            initial_conditions = np.concatenate((initial_conditions,
+                                                 [0.0] * (self.problem.number_of_equations - len(initial_conditions))))
 
-        initial_timepoint = timepoints[0]
+        solver = CVodeSolver(self.problem, parameters, initial_conditions, starting_time=timepoints[0],
+                             **self._solver_options)
+        trajectories = solver.simulate(timepoints)
 
-
-        solver = self._create_cvode_solver(initial_constants, initial_values, initial_timepoint)
-        trajectories = self._simulate(solver, initial_constants, initial_values, timepoints)
-
-        return trajectories
+        return self._postprocessing(self.problem, trajectories)
 
     @property
     def problem(self):
@@ -302,9 +133,14 @@ class SimulationWithSensitivities(Simulation):
     instances of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects as a result instead.
     """
 
-    def _create_cvode_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
-        solver = super(SimulationWithSensitivities, self)._create_cvode_solver(initial_constants, initial_values,
-                                                                               initial_timepoint)
+    def __init__(self, problem, **solver_options):
+        # Hardcode CVODE solver for sensitivity simulations
+        super(SimulationWithSensitivities, self).__init__(problem, solver_short_name='cvode', **solver_options)
+
+
+    def _initialise_solver(self, initial_constants, initial_values, initial_timepoint=0.0):
+        solver = super(SimulationWithSensitivities, self)._initialise_solver(initial_constants, initial_values,
+                                                                             initial_timepoint)
         # Override sensitivity settings of solver
         solver.usesens = True
         solver.report_continuously = True
@@ -339,69 +175,63 @@ class SimulationWithSensitivities(Simulation):
 
         return trajectories_with_sensitivity_data
 
-    def simulate_system(self, initial_constants, initial_values, timepoints):
+    def simulate_system(self, parameters, initial_conditions, timepoints):
         """
         Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
 
-        :param initial_constants: list of the initial values for the constants in the model.
+        :param parameters: list of the initial values for the constants in the model.
                                   Must be in the same order as in the model
-        :param initial_values: List of the initial values for the equations in the problem. Must be in the same order as
+        :param initial_conditions: List of the initial values for the equations in the problem. Must be in the same order as
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
         :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
                  one for each of the equations in the problem
         """
-        return super(SimulationWithSensitivities, self).simulate_system(initial_constants, initial_values, timepoints)
+        return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
 
 
-def _postprocess_default(problem, simulated_values, timepoints):
-
-    trajectories = []
-    descriptions = problem.ordered_descriptions
-
-    number_of_timepoints, number_of_simulated_values = simulated_values.shape
-
-    assert(len(descriptions) == number_of_simulated_values)
-    assert(len(timepoints) == number_of_timepoints)
-
-    for description, simulated_value_column in zip(descriptions, simulated_values.T):
-        trajectories.append(Trajectory(timepoints, simulated_value_column, description))
-
+def _postprocess_default(problem, trajectories):
     return trajectories
 
-def _postprocess_lna_simulation(problem, simulated_values, timepoints):
+def _postprocess_lna_simulation(problem, trajectories):
+    timepoints = trajectories[0].timepoints
 
     # TODO: this should be going through the descriptions of LHS fields, rather than number of species
     # Would make code cleaner
 
     number_of_species = problem.number_of_species
-    # Answer_buffer
+
+    sampled_observations = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
+    variance_trajectories = filter(lambda x: isinstance(x.description, VarianceTerm), trajectories)
+    species_trajectories = filter(lambda x: not isinstance(x.description, VarianceTerm), trajectories)
+
+    for t in range(len(timepoints)):
+        covariance_matrix = sympy.Matrix(np.zeros((number_of_species, number_of_species)))
+
+        for trajectory in variance_trajectories:
+            values = trajectory.values
+
+            if not isinstance(trajectory.description, VarianceTerm):
+                continue
+            i, j = trajectory.description.position
+             # FIXME: hack to make regression tests still work, remove
+            if i*number_of_species+j >= 2*number_of_species:
+                continue
+            covariance_matrix[i, j] = values[t]
+
+        means = [ trajectory.values[t] for trajectory in species_trajectories ]
+
+        # Recreate the species trajectories by sampling from multivariate normal
+        sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
+
+    # Recompile everything back to trajectories
     answer = []
 
-    mu_t = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
-    for species_id in range(number_of_species):
+    for i, old_trajectory in enumerate(species_trajectories):
+        new_trajectory = Trajectory(old_trajectory.timepoints, sampled_observations[:, i], old_trajectory.description)
+        answer.append(new_trajectory)
 
-        mu_i = np.zeros(len(timepoints), dtype=NP_FLOATING_POINT_PRECISION)
-        for timepoint_index in range(len(timepoints)):
-
-            # For each timepoint
-            if species_id == 0:
-                # Construct a covariance matrix out of the covariance terms in the model
-                V = Matrix(number_of_species, number_of_species, lambda k, l: 0)
-                # FIXME: Does the hardcoded 2 really work here?
-                # shouldn't it be number_of_species**2
-                for v in range(2 * number_of_species):
-                    V[v] = simulated_values[timepoint_index, v + number_of_species]
-
-                # Sample new values for each species from a multivariate normal
-                mu_t[timepoint_index] = np.random.multivariate_normal(simulated_values[timepoint_index, 0:number_of_species], V)
-
-            mu_i[timepoint_index] = mu_t[timepoint_index][species_id]
-
-        # TODO: some zipping action should be there below to get the description in a nicer way
-        trajectory = Trajectory(timepoints, mu_i, problem.ordered_descriptions[species_id])
-        answer.append(trajectory)
     return answer
 
 
