@@ -1,4 +1,6 @@
 import sympy as sp
+import operator
+import copy
 from means.util.sympyhelpers import substitute_all
 from zero_closer import CloserBase
 class LogNormalCloser(CloserBase):
@@ -25,39 +27,68 @@ class LogNormalCloser(CloserBase):
             return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 2 and q.order == 2][0]
         return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 1 and q.n_vector[sp2_idx] == 1 and q.order == 2][0]
 
-    def compute_raw_moments(self, n_species, problem_moments):
+    def partition(k,accum,index,list_for_par):
+            '''
+            :param k: the number of elements in each partition
+            :param accum: should be [[]] as each partition pair consists of lists within a list
+            :param index: the index of item in list to start partition.should start from 0
+            :param list_for_par: the list for partition
+            :return: a list of non-repetitive partition pairs, each partition pair contains 2 indeces for variance
+            '''
+            if index == len(list_for_par):
+                if(k==0):
+                    return accum
+                else:
+                    return []
+
+            element = list_for_par[index]
+            result = []
+
+            for set_i in range(len(accum)):
+                clone_new = copy.deepcopy(accum)
+                clone_new[set_i].append([element])
+                result.extend(partition(k-1,clone_new,index+1,list_for_par) )
+
+                for elem_i in range(len(accum[set_i])):
+                    clone_new = copy.deepcopy(accum)
+                    clone_new[set_i][elem_i].append(element)
+                    result.extend( partition(k,clone_new,index+1,list_for_par) )
+
+            return [row for row in result if len(row[0]) ==2]
+
+    def compute_raw_moments(self, n_counter, n_species, problem_moments):
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
         variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
 
-        return out_mat
-    def partition(k,accum,index,arr):
-        '''
-        :param k: the number of elements in each partition
-        :param accum: should be [[]] as each partition pair consists of lists within a list
-        :param index: the index of item in list to start partition.should start from 0
-        :param arr: the array for partition
-        :return: a list of non-repetitive partition pairs, each partition pair contains 2 indeces for variance
-        '''
-        if index == len(arr):
-            if(k==0):
-                return accum
+        print variance_symbols
+
+        out_mat = []
+
+        for n in n_counter:
+            n.order = sum(n)
+            if n.order % 2 != 0:
+                out_mat.append([0])
+
             else:
-                return []
+                list_for_partition = []
 
-        element = arr[index]
-        result = []
+                for i,e in enumerate(n):
+                    list_for_partition.extend([i for n_times in range(e)])
 
-        for set_i in range(len(accum)):
-            clone_new = copy.deepcopy(accum)
-            clone_new[set_i].append([element])
-            result.extend(partition(k-1,clone_new,index+1,arr) )
+                # retrieve the items based on the indeces pairs and add the partitions
 
-            for elem_i in range(len(accum[set_i])):
-                clone_new = copy.deepcopy(accum)
-                clone_new[set_i][elem_i].append(element)
-                result.extend( partition(k,clone_new,index+1,arr) )
+                idx = partition(2,[[]],0,list_for_partition)
+                if n.order == 2:
+                    each_row = [variance_symbols[list_for_partition[0]][list_for_partition[1]]]
+                else:
+                    each_row = []
+                    for idx_pairs in idx:
+                        l = [variance_symbols[i[0]][i[1]] for i in idx_pairs]
+                        row_elements = reduce(operator.mul,l)
+                        each_row.append(row_elements)
+                out_mat.append(sum(each_row))
 
-        return [row for row in result if len(row[0]) ==2]
+        return out_mat
 
     def compute_closed_central_moments(self, closed_raw_moments, central_from_raw_exprs, k_counter):
         """
