@@ -37,14 +37,11 @@ class SolverBase(object):
     that allows solvers be used with `means` objects.
     """
 
-    short_name = None  # This name is used when the solver is initialised by string parameter
-
     _parameters = None
     _initial_conditions = None
     _problem = None
     _starting_time = None
     _options = None
-    _solver_exception_class = None
 
     def __init__(self, problem, parameters, initial_conditions, starting_time=0.0, **options):
         """
@@ -99,6 +96,13 @@ class SolverBase(object):
 
     def _default_solver_instance(self):
         raise NotImplementedError
+
+    @property
+    def _solver_exception_class(self):
+        """
+        Property That would return the exception class thrown by a specific solver the subclases can override.
+        """
+        return None
 
     @memoised_property
     def _solver(self):
@@ -156,12 +160,14 @@ class Dopri5Solver(SolverBase):
 
 class CVodeSolver(SolverBase):
 
+    @property
+    def _solver_exception_class(self):
+        from assimulo.solvers.sundials import CVodeError
+        return CVodeError
 
     def _default_solver_instance(self):
         from assimulo.solvers.sundials import CVode
-        from assimulo.solvers.sundials import CVodeError
 
-        self._solver_exception_class = CVodeError
         solver = CVode(self._model)
 
         options = self._options
