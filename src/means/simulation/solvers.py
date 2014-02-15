@@ -2,6 +2,7 @@ from collections import namedtuple
 from assimulo.problem import Explicit_Problem
 import numpy as np
 from means.simulation.trajectory import Trajectory
+from means.util.decorators import memoised_property
 
 NP_FLOATING_POINT_PRECISION = np.double
 
@@ -10,55 +11,41 @@ ATOL = 1e-4
 
 _Solver = namedtuple('_Solver', ['name', 'supports_sensitivity'])
 
+def _set_kwargs_as_attributes(instance, **kwargs):
+    for attribute, value in kwargs.iteritems():
+        setattr(instance, attribute, value)
+    return instance
+
 class SolverBase(object):
+    """
+    This acts as a base class for ODE solvers used in `means`.
+    It wraps around the solvers available in :module:`assimulo` package, and provides some basic functionality
+    that allows solvers be used with `means` objects.
+    """
 
     short_name = None  # This name is used when the solver is initialised by string parameter
-    supports_sensitivity = None  # Whether solver supports sensitivity calculations or not
 
     _parameters = None
     _initial_conditions = None
     _problem = None
     _starting_time = None
     _options = None
-    _solver = None
     _solver_exception_class = None
 
-    def simulate(self, timepoints):
-        solver = self._solver
-        last_timepoint = timepoints[-1]
-
-        try:
-            simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
-        except self._solver_exception_class as e:
-            # The exceptions thrown by solvers are usually hiding the real cause, try to see if it is
-            # our right_hand_side_as_function that is broken first
-            try:
-                self._problem_right_hand_side(self._initial_conditions, self._parameters)
-            except:
-                # If it is broken, throw that exception instead
-                raise
-            else:
-                # If it is not, re-raise the original exception
-                raise e
-
-        return self._postprocess_results(simulated_timepoints, simulated_values, solver)
-
-    def _postprocess_results(self, simulated_timepoints, simulated_values, solver):
-        pass
-
-    def _initialise_model(self):
-        raise NotImplementedError
-
-    def _set_options_to_solver(self):
-        # We want to silence all solvers by default, don't we?
-        self._solver.verbosity = self._options.pop('verbosity', 50)
-
-         # Set the remaining attributes
-        for attribute, value in self._options:
-            setattr(self._solver, attribute, value)
-
     def __init__(self, problem, parameters, initial_conditions, starting_time=0.0, **options):
+        """
 
+        :param problem: Problem to simulate
+        :type problem: :class:`~means.approximation.ODEProblem`
+        :param parameters: Parameters of the solver. One entry for each constant in `problem`
+        :type parameters: :class:`iterable`
+        :param initial_conditions: Initial conditions of the system. One for each of the equations.
+                                   Assumed to be zero, if not specified
+        :type initial_conditions: :class:`iterable`
+        :param starting_time: Starting time for the solver, defaults to 0.0
+        :type starting_time: float
+        :param options: Options to be passed to the specific instance of the solver.
+        """
         parameters = np.array(parameters, dtype=NP_FLOATING_POINT_PRECISION)
         initial_conditions = np.array(initial_conditions, dtype=NP_FLOATING_POINT_PRECISION)
         assert(parameters.shape == (len(problem.constants),))
@@ -70,17 +57,43 @@ class SolverBase(object):
         self._problem = problem
         self._options = options
 
-        self._initialise_model()
-        self._solver = self._get_solver_instance()
-        self._set_options_to_solver()
+    def simulate(self, timepoints):
+        """
+        Simulate initialised solver for the specified timepoints
 
-    def _get_solver_instance(self):
+        :param timepoints: timepoints that will be returned from simulation
+        :return: a list of trajectories for each of the equations in the problem.
+        """
+        solver = self._solver
+        last_timepoint = timepoints[-1]
+
+        try:
+            simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
+        except self._solver_exception_class as e:
+            # The exceptions thrown by solvers are usually hiding the real cause, try to see if it is
+            # our right_hand_side_as_function that is broken first
+            try:
+                self._problem.right_hand_side(self._initial_conditions, self._parameters)
+            except:
+                # If it is broken, throw that exception instead
+                raise
+            else:
+                # If it is not, re-raise the original exception
+                raise e
+
+        return self._results_to_trajectories(simulated_timepoints, simulated_values)
+
+    def _default_solver_instance(self):
         raise NotImplementedError
 
-class NonparametricSolverBase(SolverBase):
-    _model = None
+    @memoised_property
+    def _solver(self):
+        solver = self._default_solver_instance()
+        verbosity = self._options.pop('verbosity', 50)
+        return _set_kwargs_as_attributes(solver, verbosity=verbosity, **self._options)
 
-    def _initialise_model(self):
+    @memoised_property
+    def _model(self):
         rhs = self._problem.right_hand_side_as_function
         parameters = self._parameters
         initial_conditions = self._initial_conditions
@@ -89,10 +102,10 @@ class NonparametricSolverBase(SolverBase):
         model = Explicit_Problem(lambda t, x: rhs(x, parameters),
                                  initial_conditions, initial_timepoint)
 
-        self._model = model
+        return model
 
-    def _postprocess_results(self, simulated_timepoints, simulated_values, solver):
-        trajectories = []
+    def _results_to_trajectories(self, simulated_timepoints, simulated_values):
+
         descriptions = self._problem.ordered_descriptions
 
         number_of_timepoints, number_of_simulated_values = simulated_values.shape
@@ -100,14 +113,16 @@ class NonparametricSolverBase(SolverBase):
         assert(len(descriptions) == number_of_simulated_values)
         assert(len(simulated_timepoints) == number_of_timepoints)
 
+        # Wrap results to trajectories
+        trajectories = []
         for description, simulated_value_column in zip(descriptions, simulated_values.T):
             trajectories.append(Trajectory(simulated_timepoints, simulated_value_column, description))
 
         return trajectories
 
-class SensitivitySolverBase(NonparametricSolverBase):
+class SensitivitySolverBase(SolverBase):
 
-    def _initialise_model(self):
+    def _model(self):
         rhs = self._problem.right_hand_side_as_function
         parameters = self._parameters
         initial_conditions = self._initial_conditions
@@ -119,19 +134,23 @@ class SensitivitySolverBase(NonparametricSolverBase):
                                  initial_conditions, initial_timepoint)
 
         model.p0 = np.array(parameters)
-        self._model = model
+        return model
 
 
-class Dopri5Solver(NonparametricSolverBase):
+class Dopri5Solver(SolverBase):
 
-    def _get_solver_instance(self):
+    def _default_solver_instance(self):
         from assimulo.solvers.runge_kutta import Dopri5
         return Dopri5(self._model)
 
-class CVodeSolver(NonparametricSolverBase):
+class CVodeSolver(SolverBase):
 
-    def _get_solver_instance(self):
+
+    def _default_solver_instance(self):
         from assimulo.solvers.sundials import CVode
+        from assimulo.solvers.sundials import CVodeError
+
+        self._solver_exception_class = CVodeError
         solver = CVode(self._model)
 
         options = self._options
