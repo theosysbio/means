@@ -16,6 +16,20 @@ def _set_kwargs_as_attributes(instance, **kwargs):
         setattr(instance, attribute, value)
     return instance
 
+def _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions):
+    number_of_timepoints, number_of_simulated_values = simulated_values.shape
+
+    assert(len(descriptions) == number_of_simulated_values)
+    assert(len(simulated_timepoints) == number_of_timepoints)
+
+    # Wrap results to trajectories
+    trajectories = []
+    for description, simulated_value_column in zip(descriptions, simulated_values.T):
+        trajectories.append(Trajectory(simulated_timepoints, simulated_value_column, description))
+
+    return trajectories
+
+
 class SolverBase(object):
     """
     This acts as a base class for ODE solvers used in `means`.
@@ -105,20 +119,17 @@ class SolverBase(object):
         return model
 
     def _results_to_trajectories(self, simulated_timepoints, simulated_values):
+        """
+        Convert the resulting results into a list of trajectories
+
+        :param simulated_timepoints: timepoints output from a solver
+        :param simulated_values: values returned by the solver
+        :return:
+        """
 
         descriptions = self._problem.ordered_descriptions
 
-        number_of_timepoints, number_of_simulated_values = simulated_values.shape
-
-        assert(len(descriptions) == number_of_simulated_values)
-        assert(len(simulated_timepoints) == number_of_timepoints)
-
-        # Wrap results to trajectories
-        trajectories = []
-        for description, simulated_value_column in zip(descriptions, simulated_values.T):
-            trajectories.append(Trajectory(simulated_timepoints, simulated_value_column, description))
-
-        return trajectories
+        return _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions)
 
 class SensitivitySolverBase(SolverBase):
 

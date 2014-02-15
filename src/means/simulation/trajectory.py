@@ -68,6 +68,10 @@ class Trajectory(object):
     def __repr__(self):
         return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
 
+    def __eq__(self, other):
+        return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
+            and self.description == other.description
+
 class TrajectoryWithSensitivityData(Trajectory):
     """
     An extension to :class:`~means.simulation.simulate.Trajectory` that provides data about the sensitivity
