@@ -1,7 +1,7 @@
 from collections import namedtuple
 from assimulo.problem import Explicit_Problem
 import numpy as np
-from means.simulation.trajectory import Trajectory
+from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 from means.util.decorators import memoised_property
 
 NP_FLOATING_POINT_PRECISION = np.double
@@ -135,8 +135,74 @@ class SolverBase(object):
 
         return _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions)
 
+class Dopri5Solver(SolverBase):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers.runge_kutta import Dopri5
+        return Dopri5(self._model)
+
+class CVodeMixin(object):
+
+    @property
+    def _solver_exception_class(self):
+        from assimulo.solvers.sundials import CVodeError
+        return CVodeError
+
+    def _cvode_instance(self, model, options):
+        from assimulo.solvers.sundials import CVode
+
+        solver = CVode(model)
+
+        solver.iter = options.pop('iter', 'Newton')
+        solver.discr = options.pop('discr', 'BDF')
+        solver.atol = options.pop('atol', ATOL)
+        solver.rtol = options.pop('rtol', RTOL)
+        solver.linear_solver = options.pop('linear_solver', 'dense')
+
+        if 'usesens' in options:
+            # TODO: Change this with regard to how Simulation CLass changes
+            raise AttributeError('Cannot set \'usesens\' parameter. Use Simulation or SimulationWithSensitivities for '
+                                 'sensitivity calculations')
+
+        return solver
+
+class CVodeSolver(SolverBase, CVodeMixin):
+
+    def _default_solver_instance(self):
+        solver = self._cvode_instance(self._model, self._options)
+        # It is necessary to set usesens to false here as we are non-parametric here
+        solver.usesens = False
+        return solver
+
+#-- Solvers with sensitivity support -----------------------------------------------------------------------------------
+
+
+def _add_sensitivity_data_to_trajectories(trajectories, raw_sensitivity_data, parameters):
+    sensitivity_values = []
+    for i, trajectory in enumerate(trajectories):
+        ode_term = trajectory.description
+        term_sensitivities = []
+        for j, parameter in enumerate(parameters):
+            term_sensitivities.append((parameter, raw_sensitivity_data[j, :, i]))
+        sensitivity_values.append(term_sensitivities)
+    trajectories_with_sensitivity_data = []
+    for trajectory, sensitivities in zip(trajectories, sensitivity_values):
+
+        # Collect the sensitivities into a nice dictionary of Trajectory objects
+        sensitivity_trajectories = []
+        for parameter, values in sensitivities:
+            sensitivity_trajectories.append(Trajectory(trajectory.timepoints, values,
+                                                       SensitivityTerm(trajectory.description, parameter)))
+
+        trajectory_with_sensitivities = TrajectoryWithSensitivityData.from_trajectory(trajectory,
+                                                                                      sensitivity_trajectories)
+        trajectories_with_sensitivity_data.append(trajectory_with_sensitivities)
+    return trajectories_with_sensitivity_data
+
+
 class SensitivitySolverBase(SolverBase):
 
+    @property
     def _model(self):
         rhs = self._problem.right_hand_side_as_function
         parameters = self._parameters
@@ -152,42 +218,23 @@ class SensitivitySolverBase(SolverBase):
         return model
 
 
-class Dopri5Solver(SolverBase):
+    def _results_to_trajectories(self, simulated_timepoints, simulated_values):
+        trajectories = super(SensitivitySolverBase, self)._results_to_trajectories(simulated_timepoints,
+                                                                                   simulated_values)
+        sensitivities_raw = np.array(self._solver.p_sol)
+
+        trajectories_with_sensitivity_data = _add_sensitivity_data_to_trajectories(trajectories, sensitivities_raw,
+                                                                                   self._problem.constants)
+
+        return trajectories_with_sensitivity_data
+
+class CVodeSolverWithSensitivities(SensitivitySolverBase, CVodeMixin):
 
     def _default_solver_instance(self):
-        from assimulo.solvers.runge_kutta import Dopri5
-        return Dopri5(self._model)
-
-class CVodeSolver(SolverBase):
-
-    @property
-    def _solver_exception_class(self):
-        from assimulo.solvers.sundials import CVodeError
-        return CVodeError
-
-    def _default_solver_instance(self):
-        from assimulo.solvers.sundials import CVode
-
-        solver = CVode(self._model)
-
-        options = self._options
-
-        solver.iter = options.pop('iter', 'Newton')
-        solver.discr = options.pop('discr', 'BDF')
-        solver.atol = options.pop('atol', ATOL)
-        solver.rtol = options.pop('rtol', RTOL)
-        solver.linear_solver = options.pop('linear_solver', 'dense')
-
-        if 'usesens' in options:
-            # TODO: Change this with regard to how Simulation CLass changes
-            raise AttributeError('Cannot set \'usesens\' parameter. Use Simulation or SimulationWithSensitivities for '
-                                 'sensitivity calculations')
-
-        # It is necessary to set usesens to false here as we are non-parametric here
-        solver.usesens = False
-
+        solver = self._cvode_instance(self._model, self._options)
+        # It is necessary to set usesens to true here as we are non-parametric here
+        solver.usesens = True
+        solver.report_continuously = True
         return solver
-
-
 
 

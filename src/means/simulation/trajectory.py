@@ -1,4 +1,44 @@
 import numpy as np
+from means.approximation.ode_problem import Descriptor
+
+
+class SensitivityTerm(Descriptor):
+    r"""
+    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object represents the sensitivity
+    of some ODE term with respect to some parameter.
+    In other words, sensitivity term describes :math:`s_{ij}(t) = \frac{\partial y_i(t)}{\partial p_j}` where
+    :math:`y_i` is the ODE term described above and :math:`p_j` is the parameter.
+
+    This class is used to describe sensitivity trajectories returned by :class:`means.simulation.simulate.Simulation`
+    """
+    _ode_term = None
+    _parameter = None
+
+    def __init__(self, ode_term, parameter):
+        """
+
+        :param ode_term: the ode term whose sensitivity is being computed
+        :type ode_term: :class:`~means.approximation.ode_problem.ODETermBase`
+        :param parameter: parameter w.r.t. which the sensitivity is computed
+        :type parameter: :class:`sympy.Symbol`
+        """
+        self._ode_term = ode_term
+        self._parameter = parameter
+
+    @property
+    def ode_term(self):
+        return self._ode_term
+
+    @property
+    def parameter(self):
+        return self._parameter
+
+    def __repr__(self):
+        return '<Sensitivity of {0!r} w.r.t. {1!r}>'.format(self.ode_term, self.parameter)
+
+    def __mathtext__(self):
+        # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
+        return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
 
 class Trajectory(object):
     """
@@ -12,9 +52,9 @@ class Trajectory(object):
         """
 
         :param timepoints: timepoints the trajectory was simulated for
-        :type timepoints: :class:`numpy.ndarray`
+        :type timepoints: :class:`iterable`
         :param values: values of the curve at each of the timepoints
-        :type values: :class:`numpy.ndarray`
+        :type values: :class:`iterable`
         :param description: description of the trajectory
         :type description: :class:`~means.approximation.ode_problem.Descriptor`
         """
@@ -103,3 +143,8 @@ class TrajectoryWithSensitivityData(Trajectory):
     @property
     def sensitivity_data(self):
         return self._sensitivity_data
+
+    def __eq__(self, other):
+        return isinstance(other, TrajectoryWithSensitivityData) and \
+               super(TrajectoryWithSensitivityData, self).__eq__(other) and \
+               self.sensitivity_data == other.sensitivity_data
