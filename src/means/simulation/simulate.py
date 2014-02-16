@@ -2,13 +2,14 @@
 Simulates data for given model, moments, parameters, initial conditions
 and method (moment expansion or LNA)
 """
-from collections import namedtuple
 
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy
+from means.simulation.solvers import available_solvers
+
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
-from means.simulation.solvers import NP_FLOATING_POINT_PRECISION, CVodeSolver, CVodeSolverWithSensitivities
+
 
 # These are the default values in solver.c but they seem very low
 from means.approximation.ode_problem import Moment, VarianceTerm
@@ -36,15 +37,15 @@ class Simulation(object):
     __problem = None
     _postprocessing = None
     _solver_options = None
-    _solver_short_name = None
+    _solver = None
 
-    def __init__(self, problem, solver_short_name='cvode', **solver_options):
+    def __init__(self, problem, solver='cvode', **solver_options):
         """
 
         :param problem:
         :type problem: ODEProblem
         :param compute_sensitivities: Whether the model should test parameter sensitivity or not
-        :param solver_short_name: the solver to use TODO: list available solvers
+        :param solver: the solver to use TODO: list available solvers
         :param solver_options: options to set in the solver
         """
         self.__problem = problem
@@ -55,7 +56,7 @@ class Simulation(object):
         else:
             self._postprocessing = _postprocess_default
 
-        self._solver_short_name = solver_short_name
+        self._solver = solver.lower()
         self._solver_options = solver_options
 
     def _append_zeros(self, initial_conditions, number_of_equations):
@@ -68,9 +69,30 @@ class Simulation(object):
                                                  [0.0] * (self.problem.number_of_equations - len(initial_conditions))))
         return initial_conditions
 
+    @classmethod
+    def _supported_solvers_dict(cls):
+        return available_solvers(with_sensitivity_support=False)
+
+    @classmethod
+    def supported_solvers(cls):
+        return sorted(cls._supported_solvers_dict().keys())
+
+    @property
+    def _solver_class(self):
+        supported_solvers = self._supported_solvers_dict()
+        try:
+            solver_class = supported_solvers[self._solver]
+        except KeyError:
+            raise Exception('Solver {0!r} not available. '
+                            'Available solvers: {1!r}'.format(self._solver, self.supported_solvers()))
+
+        return solver_class
+
+
     def _initialise_solver(self, initial_conditions, parameters, timepoints):
-        solver = CVodeSolver(self.problem, parameters, initial_conditions, starting_time=timepoints[0],
-                             **self._solver_options)
+
+        solver = self._solver_class(self.problem, parameters, initial_conditions, starting_time=timepoints[0],
+                                    **self._solver_options)
         return solver
 
     def simulate_system(self, parameters, initial_conditions, timepoints):
@@ -105,13 +127,11 @@ class SimulationWithSensitivities(Simulation):
 
     def __init__(self, problem, **solver_options):
         # Hardcode CVODE solver for sensitivity simulations
-        super(SimulationWithSensitivities, self).__init__(problem, solver_short_name='cvode', **solver_options)
+        super(SimulationWithSensitivities, self).__init__(problem, solver='cvode', **solver_options)
 
-
-    def _initialise_solver(self, initial_conditions, parameters, timepoints):
-        solver = CVodeSolverWithSensitivities(self.problem, parameters, initial_conditions, starting_time=timepoints[0],
-                             **self._solver_options)
-        return solver
+    @classmethod
+    def _supported_solvers_dict(cls):
+        return available_solvers(with_sensitivity_support=True)
 
 def _postprocess_default(problem, trajectories):
     return trajectories

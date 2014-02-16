@@ -1,15 +1,48 @@
 from collections import namedtuple
 from assimulo.problem import Explicit_Problem
 import numpy as np
+import sys
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 from means.util.decorators import memoised_property
+import inspect
 
 NP_FLOATING_POINT_PRECISION = np.double
 
 RTOL = 1e-4
 ATOL = 1e-4
 
-_Solver = namedtuple('_Solver', ['name', 'supports_sensitivity'])
+#-- Easy initialisation utilities -------------------------------------------------------------
+
+class UniqueNameInitialisationMixin(object):
+
+    @classmethod
+    def unique_name(self):
+        return NotImplemented
+
+def available_solvers(with_sensitivity_support=False):
+    members = inspect.getmembers(sys.modules[__name__])
+
+    initialisable_solvers = {}
+    # Some metaprogramming here: look for all classes at this module that are subclasses of
+    # `UniqueNameInitialisationMixin`. Compile a dictionary of these
+    for name, object in members:
+        if inspect.isclass(object) and issubclass(object, SolverBase) \
+                and issubclass(object, UniqueNameInitialisationMixin) \
+                and object != UniqueNameInitialisationMixin:
+
+            if with_sensitivity_support and not issubclass(object, SensitivitySolverBase):
+                # If we need sensitivity support, skip all non-sensitivity solvers
+                continue
+            elif not with_sensitivity_support and issubclass(object, SensitivitySolverBase):
+                # If we don't need sensitivity support, skip all solvers with sensitivity support
+                continue
+
+            assert(object.unique_name not in initialisable_solvers)
+            initialisable_solvers[object.unique_name().lower()] = object
+
+    return initialisable_solvers
+
+#-- Base solver functionality ---------------------------------------------------------------
 
 def _set_kwargs_as_attributes(instance, **kwargs):
     for attribute, value in kwargs.iteritems():
@@ -135,13 +168,22 @@ class SolverBase(object):
 
         return _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions)
 
-class Dopri5Solver(SolverBase):
+class Dopri5Solver(SolverBase, UniqueNameInitialisationMixin):
 
     def _default_solver_instance(self):
         from assimulo.solvers.runge_kutta import Dopri5
         return Dopri5(self._model)
 
-class CVodeMixin(object):
+    @classmethod
+    def unique_name(self):
+        return 'dopri5'
+
+
+class CVodeMixin(UniqueNameInitialisationMixin, object):
+
+    @classmethod
+    def unique_name(cls):
+        return 'cvode'
 
     @property
     def _solver_exception_class(self):
@@ -173,6 +215,18 @@ class CVodeSolver(SolverBase, CVodeMixin):
         # It is necessary to set usesens to false here as we are non-parametric here
         solver.usesens = False
         return solver
+
+class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import LSODAR
+
+        return LSODAR(self._model)
+
+    @classmethod
+    def unique_name(self):
+        return 'lsodar'
+
 
 #-- Solvers with sensitivity support -----------------------------------------------------------------------------------
 
@@ -236,5 +290,6 @@ class CVodeSolverWithSensitivities(SensitivitySolverBase, CVodeMixin):
         solver.usesens = True
         solver.report_continuously = True
         return solver
+
 
 
