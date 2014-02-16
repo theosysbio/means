@@ -2,7 +2,7 @@ import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
 
-from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix
+from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
 from means.util.decorators import memoised_property
 
 class Descriptor(object):
@@ -280,7 +280,8 @@ class ODEProblem(object):
 
         def f(values_for_variables, values_for_constants):
             all_values = np.concatenate((values_for_constants, values_for_variables))
-            return np.array([[w_f(*all_values)] for w_f in wrapped_functions])
+            ans = np.array([w_f(*all_values) for w_f in wrapped_functions])
+            return ans
 
         return f
 

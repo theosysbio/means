@@ -6,8 +6,7 @@ and method (moment expansion or LNA)
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy
-from means.simulation.solvers import available_solvers
-
+from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 
 

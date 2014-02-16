@@ -5,6 +5,7 @@ import sys
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 from means.util.decorators import memoised_property
 import inspect
+from means.util.sympyhelpers import to_one_dim_array
 
 NP_FLOATING_POINT_PRECISION = np.double
 
@@ -90,10 +91,11 @@ class SolverBase(object):
         :type starting_time: float
         :param options: Options to be passed to the specific instance of the solver.
         """
-        parameters = np.array(parameters, dtype=NP_FLOATING_POINT_PRECISION)
-        initial_conditions = np.array(initial_conditions, dtype=NP_FLOATING_POINT_PRECISION)
+        parameters = to_one_dim_array(parameters, dtype=NP_FLOATING_POINT_PRECISION)
+        initial_conditions = to_one_dim_array(initial_conditions, dtype=NP_FLOATING_POINT_PRECISION)
+
         assert(parameters.shape == (len(problem.constants),))
-        assert(initial_conditions.shape == (problem.number_of_equations,))
+        assert(initial_conditions.shape[0] == problem.number_of_equations)
 
         self._parameters = parameters
         self._initial_conditions = initial_conditions
@@ -144,7 +146,7 @@ class SolverBase(object):
         return _set_kwargs_as_attributes(solver, verbosity=verbosity, **self._options)
 
     @memoised_property
-    def _model(self):
+    def _assimulo_problem(self):
         rhs = self._problem.right_hand_side_as_function
         parameters = self._parameters
         initial_conditions = self._initial_conditions
@@ -167,16 +169,6 @@ class SolverBase(object):
         descriptions = self._problem.ordered_descriptions
 
         return _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions)
-
-class Dopri5Solver(SolverBase, UniqueNameInitialisationMixin):
-
-    def _default_solver_instance(self):
-        from assimulo.solvers.runge_kutta import Dopri5
-        return Dopri5(self._model)
-
-    @classmethod
-    def unique_name(self):
-        return 'dopri5'
 
 
 class CVodeMixin(UniqueNameInitialisationMixin, object):
@@ -211,22 +203,85 @@ class CVodeMixin(UniqueNameInitialisationMixin, object):
 class CVodeSolver(SolverBase, CVodeMixin):
 
     def _default_solver_instance(self):
-        solver = self._cvode_instance(self._model, self._options)
+        solver = self._cvode_instance(self._assimulo_problem, self._options)
         # It is necessary to set usesens to false here as we are non-parametric here
         solver.usesens = False
         return solver
+
+class Dopri5Solver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers.runge_kutta import Dopri5
+        return Dopri5(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(self):
+        return 'dopri5'
 
 class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
 
     def _default_solver_instance(self):
         from assimulo.solvers import LSODAR
 
-        return LSODAR(self._model)
+        return LSODAR(self._assimulo_problem)
 
     @classmethod
     def unique_name(self):
         return 'lsodar'
 
+class ExplicitEulerSolver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import ExplicitEuler
+        return ExplicitEuler(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(cls):
+        return 'euler'
+
+class RungeKutta4Solver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import RungeKutta4
+
+        return RungeKutta4(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(cls):
+        return 'rungekutta4'
+
+
+class RungeKutta34Solver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import RungeKutta34
+
+        return RungeKutta34(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(cls):
+        return 'rungekutta34'
+
+class Radau5Solver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import Radau5ODE
+
+        return Radau5ODE(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(cls):
+        return 'radau5'
+
+class RodasSolver(SolverBase, UniqueNameInitialisationMixin):
+
+    def _default_solver_instance(self):
+        from assimulo.solvers import RodasODE
+        return RodasODE(self._assimulo_problem)
+
+    @classmethod
+    def unique_name(cls):
+        return 'rodas'
 
 #-- Solvers with sensitivity support -----------------------------------------------------------------------------------
 
@@ -257,7 +312,7 @@ def _add_sensitivity_data_to_trajectories(trajectories, raw_sensitivity_data, pa
 class SensitivitySolverBase(SolverBase):
 
     @property
-    def _model(self):
+    def _assimulo_problem(self):
         rhs = self._problem.right_hand_side_as_function
         parameters = self._parameters
         initial_conditions = self._initial_conditions
@@ -285,7 +340,7 @@ class SensitivitySolverBase(SolverBase):
 class CVodeSolverWithSensitivities(SensitivitySolverBase, CVodeMixin):
 
     def _default_solver_instance(self):
-        solver = self._cvode_instance(self._model, self._options)
+        solver = self._cvode_instance(self._assimulo_problem, self._options)
         # It is necessary to set usesens to true here as we are non-parametric here
         solver.usesens = True
         solver.report_continuously = True
