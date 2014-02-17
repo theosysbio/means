@@ -29,11 +29,14 @@ class LogNormalCloser(CloserBase):
 
         if x == y:
             return log_variance_mat[x,x]
-        else:
+        elif self.is_multivariate:
             denom = sp.exp(log_expectation_symbols[x] +
                            log_expectation_symbols[y] +
                            (log_variance_mat[x,x] + log_variance_mat[y, y])/ sp.Integer(2))
             return sp.log(sp.Integer(1) + covariance_matrix[x, y] / denom)
+        # univariate case:
+        else:
+            return sp.Integer(0)
 
     def compute_raw_moments(self, n_species, problem_moments):
         # The covariance expressed in terms of central moment symbols (tipycally, yxNs, where N is an integer)
@@ -86,8 +89,8 @@ class LogNormalCloser(CloserBase):
         n_species = len(species)
         # we compute all raw moments according to means / variance/ covariance
         # at this point we have as many raw moments expressions as non-null central moments
-        closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
 
+        closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
         # we obtain expressions for central moments in terms of closed raw moments
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
 
@@ -96,7 +99,6 @@ class LogNormalCloser(CloserBase):
         # new_mkf = mfk
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
         n_counter = [n for n in prob_moments if n.order > 1]
-
         # now we want to replace the new mfk (i.e. without highest order moment) any
         # symbol for highest order central moment by the corresponding expression (computed above)
         substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
