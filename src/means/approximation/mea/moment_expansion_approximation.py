@@ -8,6 +8,7 @@ from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
 from log_normal_closer import LogNormalCloser
+from normal_closer import NormalCloser
 from zero_closer import  ZeroCloser
 
 class MomentExpansionApproximation(ApproximationBaseClass):
@@ -20,7 +21,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         # a dictionary of option -> closer this allow a generic handling for closer without to have to add
         # if-else and exceptions when implementing new closers. Onre only needs to add the new closer class to the dict
-        supported_closers = {"log-normal": LogNormalCloser ,"zero": ZeroCloser}
+        supported_closers = {"log-normal": LogNormalCloser ,"zero": ZeroCloser, "normal": NormalCloser}
 
         # exception it the closer name is not in the dict
         if not closer in supported_closers:
