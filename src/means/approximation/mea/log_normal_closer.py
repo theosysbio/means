@@ -36,21 +36,30 @@ class LogNormalCloser(CloserBase):
             return sp.log(sp.Integer(1) + covariance_matrix[x, y] / denom)
 
     def compute_raw_moments(self, n_species, problem_moments):
+        # The covariance expressed in terms of central moment symbols (tipycally, yxNs, where N is an integer)
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
+
+        # Variances is the diagonal of covariance matrix
         variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
 
+        # the symbols for expectations are simply the first order raw moments.
         expectation_symbols = [pm.symbol for pm in problem_moments if pm.order == 1]
+
         log_variance_symbols = sp.Matrix([sp.log(sp.Integer(1) + v/(e ** sp.Integer(2))) for e,v in zip(expectation_symbols, variance_symbols)])
+
         log_expectation_symbols = sp.Matrix([sp.log(e) - lv/sp.Integer(2) for e,lv in zip(expectation_symbols, log_variance_symbols)])
 
         log_variance_mat = sp.Matrix(n_species,n_species, lambda x,y: log_variance_symbols[x] if x == y else 0)
 
         log_covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: \
                 self.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
+
+        # the n_vectors (e.g. [0,2,0]) of the central moments
         pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in problem_moments if pm.order > 1 ]
 
         out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
-        out_mat = out_mat.applyfunc(lambda x: sp.expand(sp.exp(x)))
+        # return the exponential of all values
+        out_mat = out_mat.applyfunc(lambda x: sp.exp(x))
         return out_mat
 
     def compute_closed_central_moments(self, closed_raw_moments, central_from_raw_exprs, k_counter):
@@ -83,8 +92,8 @@ class LogNormalCloser(CloserBase):
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
 
         # we remove ODEs of highest order in mfk
-        new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
-
+        # new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
+        new_mkf = mfk
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
         n_counter = [n for n in prob_moments if n.order > 1]
 
@@ -94,6 +103,7 @@ class LogNormalCloser(CloserBase):
         new_mkf = substitute_all(new_mkf, substitutions_pairs)
 
         # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
-        new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
+        #new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
+        new_prob_moments = prob_moments
 
         return new_mkf,new_prob_moments
