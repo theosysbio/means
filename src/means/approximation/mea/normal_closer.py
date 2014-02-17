@@ -8,28 +8,6 @@ from zero_closer import CloserBase
 
 import itertools
 
-def generate_partitions(l):
-    if len(l) % 2 != 0:
-        raise ValueError("the length of the list to partition must be even")
-    #define partition size
-    part_size = int(len(l)/2)
-    idxs = [i for i in range(len(l))]
-
-    print l
-
-    # make all combinations
-    # A natural property of these combinaisons, is that the last element
-    # is a complementary set to the fist one, the second to the one before last,
-    # and so on.
-    combin =  [i for i in itertools.combinations(idxs , part_size)]
-    print combin
-    # this loop will return the first, the second with the one before last ans so on
-    # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
-    for i in combin:
-        yield (i,combin.pop())
-
-
-
 class NormalCloser(CloserBase):
     def __init__(self,n_moments, multivariate = True):
         super(NormalCloser, self).__init__(n_moments)
@@ -63,14 +41,13 @@ class NormalCloser(CloserBase):
 
         n_counter = [n for n in problem_moments if n.order > 1]
 
-        print n_counter
-
         for n in n_counter:
 
             list_for_partition = []
 
             for i,e in enumerate(n.n_vector):
                 list_for_partition.extend([i for n_times in range(e)])
+
 
             if n.order % 2 != 0:
                 each_row = [0]
@@ -82,11 +59,14 @@ class NormalCloser(CloserBase):
                #fixme
                 # retrieve the items based on the indices pairs and add the partitions
                 idx = self.partition(2,[[]],0,list_for_partition)
-                print "idx"
-                print idx
+                #print "idx"
+                #print idx
 
                 each_row = []
+                #print "idx_pairs"
+                #for idx_pairs in self.generate_partitions(list_for_partition):
                 for idx_pairs in idx:
+
                     l = [covariance_matrix[i[0],i[1]] for i in idx_pairs]
                     row_elements = reduce(operator.mul,l)
                     each_row.append(row_elements)
@@ -98,6 +78,16 @@ class NormalCloser(CloserBase):
 
 
     def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
+        # print "mfk"
+        # print mfk
+        # print "k_counter"
+        # print k_counter
+        # print "prob_moments"
+        # print prob_moments
+        # print "central_from_raw_exprs"
+        # print central_from_raw_exprs
+        # print "------------------------------------------------"
+
         n_moments = self.n_moments
         n_species = len(species)
 
@@ -114,14 +104,31 @@ class NormalCloser(CloserBase):
         # symbol for highest order central moment by the corresponding expression (computed above)
         substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
         new_mfk = substitute_all(new_mfk, substitutions_pairs)
-        print "mfk"
 
-        print new_mfk
         # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
         new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
 
 
         return new_mfk,new_prob_moments
+    def generate_partitions(self,l):
+        if len(l) % 2 != 0:
+            raise ValueError("the length of the list to partition must be even")
+        #define partition size
+        part_size = int(len(l)/2)
+        idxs = [i for i in range(len(l))]
+
+
+
+        # make all combinations
+        # A natural property of these combinaisons, is that the last element
+        # is a complementary set to the fist one, the second to the one before last,
+        # and so on.
+        combin =  [i for i in itertools.combinations(idxs , part_size)]
+
+        # this loop will return the first, the second with the one before last ans so on
+        # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
+        for i in combin:
+            yield (i,combin.pop())
 
     def partition(self, k, accum, index, list_for_par):
         '''
