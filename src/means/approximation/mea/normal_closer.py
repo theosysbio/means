@@ -3,9 +3,9 @@ import operator
 import copy
 from means.util.sympyhelpers import substitute_all
 from zero_closer import CloserBase
-class LogNormalCloser(CloserBase):
+class NormalCloser(CloserBase):
     def __init__(self,n_moments, multivariate = True):
-        super(LogNormalCloser, self).__init__(n_moments)
+        super(NormalCloser, self).__init__(n_moments)
         self.__is_multivariate = multivariate
         #fixme implement multivariate
         if not multivariate:
@@ -114,7 +114,7 @@ class LogNormalCloser(CloserBase):
         n_species = len(species)
         # we compute all raw moments according to means / variance/ covariance
         # at this point we have as many raw moments expressions as non-null central moments
-        closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
+        closed_raw_moments = self.compute_raw_moments(n_counter, n_species, prob_moments)
 
         # we obtain expressions for central moments in terms of closed raw moments
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
@@ -134,3 +134,4 @@ class LogNormalCloser(CloserBase):
         new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
 
         return new_mkf,new_prob_moments
+    print new_mkf
