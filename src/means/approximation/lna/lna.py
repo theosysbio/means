@@ -1,3 +1,4 @@
+from itertools import product, combinations_with_replacement
 import operator
 
 import sympy as sp
@@ -46,8 +47,20 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         # E is stoichiometry matrix times diagA
         E = S * diagA
 
-        # V is a matrix of symbols V_ij for all i and j (TODO: this won't work for more than 10 species)
-        V = sp.Matrix(len(ymat), len(ymat), lambda i, j: 'V_' + str(i) + str(j))  # TODO: (from original authors) Make V_ij equal to V_ji
+
+        variance_terms = []
+        cov_matrix = []
+        for i in range(len(ymat)):
+            row = []
+            for j in range(len(ymat)):
+                # TODO: (from original authors) Make V_ij equal to V_ji
+                # TODO: this wont work for more than 9 species
+                symbol = 'V_{0}{1}'.format(i, j)
+                variance_terms.append(VarianceTerm(symbol=symbol, position=(i,j)))
+                row.append(symbol)
+            cov_matrix.append(row)
+
+        V = sp.Matrix(cov_matrix)
 
         # Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time.
         # I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
@@ -61,7 +74,7 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         n_vectors = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
         moment_terms = [Moment(nvec,lhs) for (lhs, nvec) in zip(ymat, n_vectors)]
 
-        variance_terms = [VarianceTerm(var) for var in V]
+
         ode_terms = moment_terms + variance_terms
 
 

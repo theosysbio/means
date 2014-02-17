@@ -14,7 +14,7 @@ class TestODEProblem(unittest.TestCase):
         """
         Given an ODEProblem with well specified LHS, RHS expressions as well as list of constants,
         the value of rhs_as_function given the appropriate params should be the same as the value of
-        rhs evaluated for these params.
+        rhs evaluated for these params. The returned answer should also be an one-dimensional numpy array.
         :return:
         """
         lhs = [Moment(np.ones(3),i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
@@ -25,9 +25,12 @@ class TestODEProblem(unittest.TestCase):
         rhs_as_function = p.right_hand_side_as_function
 
         values = [4, 5, 6]  # y_1, y_2, y_3 in that order
-        expected_ans = np.array([[11], [14], [7]])
+        expected_ans = np.array([11, 14, 7])
         actual_ans = np.array(rhs_as_function(values, [1, 2, 3]))
+        self.assertEqual(actual_ans.ndim, 1)  # Returned answer must be an one-dimensional array,
+                                              # otherwise ExplicitEuler solver would fail.
         assert_array_equal(actual_ans, expected_ans)
+
 
     def test_ode_rhs_as_function_cache_does_not_persist_between_instances(self):
         """
@@ -49,8 +52,8 @@ class TestODEProblem(unittest.TestCase):
         p2 = ODEProblem('MEA', p2_lhs, p2_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p2_rhs_as_function = p2.right_hand_side_as_function
 
-        p1_expected_ans = np.array([[11], [14], [7]])
-        p2_expected_ans = np.array([[4], [1], [6+5]])
+        p1_expected_ans = np.array([11, 14, 7])
+        p2_expected_ans = np.array([4, 1, 6+5])
         p1_actual_ans = np.array(p1_rhs_as_function(values, constants))
         p2_actual_ans = np.array(p2_rhs_as_function(values, constants))
 
@@ -65,7 +68,7 @@ class TestODEProblem(unittest.TestCase):
         dict should have nones
         for each of the symbols
         """
-        lhs = [VarianceTerm(i) for i in ['V34', 'V32', 'V11']]
+        lhs = [VarianceTerm(term, pos) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 

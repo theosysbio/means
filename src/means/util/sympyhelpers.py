@@ -1,5 +1,6 @@
 import sympy
 from sympy.core.sympify import SympifyError
+import numpy as np
 
 def substitute_all(sp_object, pairs):
     """
@@ -204,3 +205,5 @@ def product(list):
 def sympy_sum_list(list):
     return reduce(operator.add, list)
 
+def to_one_dim_array(iterable_, dtype=np.double):
+    return np.array(iterable_, dtype = dtype).reshape(-1,)
