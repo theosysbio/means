@@ -1,4 +1,5 @@
 import unittest
+import means
 from means.util.sympyhelpers import to_sympy_matrix
 from means.approximation.ode_problem import ODEProblem, ODETermBase, Moment, VarianceTerm
 from means.simulation import Simulation
@@ -69,4 +70,66 @@ class TestSimulate(unittest.TestCase):
                                                                               -3.02892609e-03]))
 
 
+class TestSimulateWithSensitivities(unittest.TestCase):
 
+
+    def test_model_in_paper(self):
+        """
+        Given the model in the Ale et. al Paper, and the initial parameters,
+        the simulation with sensitivities result should be similar to the one described in paper, within minimal margin
+        of error.
+        """
+        parameters = [1.66e-3, 0.2]
+        initial_conditions = [301, 0]
+        timepoints = np.arange(0, 20, 0.1)
+
+        problem = means.approximation.ODEProblem('MNA',
+                                                 [Moment([1, 0], 'x_1'),
+                                                  Moment([0, 1], 'x_2'),
+                                                  Moment([0, 2], 'yx1'),
+                                                  Moment([1, 1], 'yx2'),
+                                                  Moment([2, 0], 'yx3')],
+                                                 to_sympy_matrix(['-2*k_1*x_1*(x_1 - 1) - 2*k_1*yx3 + 2*k_2*x_2',
+                                                                  'k_1*x_1*(x_1 - 1) + k_1*yx3 - k_2*x_2',
+
+                                                                  'k_1*x_1**2 - k_1*x_1 + 2*k_1*yx2*(2*x_1 - 1) '
+                                                                  '+ k_1*yx3 + k_2*x_2 - 2*k_2*yx1',
+
+                                                                  '-2*k_1*x_1**2 + 2*k_1*x_1 + k_1*yx3*(2*x_1 - 3) '
+                                                                  '- 2*k_2*x_2 + 2*k_2*yx1 - yx2*(4*k_1*x_1 '
+                                                                  '- 2*k_1 + k_2)',
+
+                                                                  '4*k_1*x_1**2 - 4*k_1*x_1 - 8*k_1*yx3*(x_1 - 1)'
+                                                                  ' + 4*k_2*x_2 + 4*k_2*yx2'
+                                                                  ]),
+                                                 ['k_1', 'k_2']
+                                                 )
+
+        simulation = means.simulation.SimulationWithSensitivities(problem)
+        trajectories = simulation.simulate_system(parameters, initial_conditions, timepoints)
+
+        answers = {}
+
+        # Trajectory value, sensitivity wrt k_1, sensitivity wrt k_2
+        answers[Moment([1, 0], 'x_1')] = (107.948953772, -25415.3565093, 210.946558295)
+        answers[Moment([0, 1], 'x_2')] = (96.5255231141, 12707.6782547, -105.473279147)
+
+        seen_answers = set()
+        for trajectory in trajectories:
+            # There should be one sensitivity trajectory for each parameter
+            self.assertEqual(len(trajectory.sensitivity_data), len(parameters))
+
+            # Check the ones we have answers for
+            answer = None
+            try:
+                answer = answers[trajectory.description]
+            except KeyError:
+                continue
+
+            seen_answers.add(trajectory.description)
+
+            self.assertAlmostEqual(answer[0], trajectory.values[-1], delta=1e-6)
+            self.assertAlmostEqual(answer[1], trajectory.sensitivity_data[0].values[-1], delta=1e-6)
+            self.assertAlmostEqual(answer[2], trajectory.sensitivity_data[1].values[-1], delta=1e-6)
+
+        self.assertEqual(len(seen_answers), len(answers), msg='Some of the trajectories for moments were not returned')

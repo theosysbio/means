@@ -9,7 +9,6 @@ import sympy
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 
-
 # These are the default values in solver.c but they seem very low
 from means.approximation.ode_problem import Moment, VarianceTerm
 
@@ -106,6 +105,7 @@ class Simulation(object):
         :param timepoints: A list of time points to simulate the system for
         :return: a list of :class:`~means.simulation.simulate.Trajectory` objects,
                  one for each of the equations in the problem
+        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
         """
 
         initial_conditions = self._append_zeros(initial_conditions, self.problem.number_of_equations)
@@ -131,6 +131,23 @@ class SimulationWithSensitivities(Simulation):
     @classmethod
     def _supported_solvers_dict(cls):
         return available_solvers(with_sensitivity_support=True)
+
+    def simulate_system(self, parameters, initial_conditions, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+
+        :param parameters: list of the initial values for the constants in the model.
+                                  Must be in the same order as in the model
+        :param initial_conditions: List of the initial values for the equations in the problem. Must be in the same order as
+                               these equations occur.
+                               If not all values specified, the remaining ones will be assumed to be 0.
+        :param timepoints: A list of time points to simulate the system for
+        :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
+                 one for each of the equations in the problem
+        :rtype: list[:class:`~means.simulation.simulate.TrajectoryWithSensitivityData`]
+        """
+        return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
+
 
 def _postprocess_default(problem, trajectories):
     return trajectories

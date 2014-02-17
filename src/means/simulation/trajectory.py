@@ -132,6 +132,7 @@ class TrajectoryWithSensitivityData(Trajectory):
         :type description: :class:`~means.approximation.ode_problem.Descriptor`
         :param sensitivity_data: a list of :class:`~means.approximation.simulation.simulate.Trajectory` objects
                                  signifying the sensitivity change over time for each of the parameters.
+        :type sensitivity_data: list[:class:`~means.approximation.simulation.simulate.Trajectory`]
         """
         super(TrajectoryWithSensitivityData, self).__init__(timepoints, values, description)
         self._sensitivity_data = sensitivity_data
@@ -142,6 +143,11 @@ class TrajectoryWithSensitivityData(Trajectory):
 
     @property
     def sensitivity_data(self):
+        """
+        THe sensitivity data for the trajectory
+
+        :rtype: list[:class:`~means.approximation.simulation.simulate.Trajectory`]
+        """
         return self._sensitivity_data
 
     def __eq__(self, other):
