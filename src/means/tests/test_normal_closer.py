@@ -1,5 +1,5 @@
 import unittest
-import sympy as sp
+import sympy
 from means.approximation.mea.normal_closer import NormalCloser
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
@@ -28,72 +28,19 @@ class TestNormalCloser(unittest.TestCase):
             Moment([2, 1, 0], symbol=sympy.Symbol("yx16")),
             Moment([3, 0, 0], symbol=sympy.Symbol("yx17"))
         ]
-    def test_partition(self):
+    # def test_partition(self):
+    #
+    #     test_list_for_partition = [sympy.Symbol('A'),sympy.Symbol('B'),sympy.Symbol('C'),sympy.Symbol('D')]
+    #     expected = [[[sympy.Symbol('A'),sympy.Symbol('B')],[sympy.Symbol('A'),sympy.Symbol('C')]],
+    #                 [[sympy.Symbol('A'),sympy.Symbol('D')],[sympy.Symbol('B'),sympy.Symbol('C')]],
+    #                 [[sympy.Symbol('B'),sympy.Symbol('D')],[sympy.Symbol('C'),sympy.Symbol('D')]]]
+    #
+    #
+    #     closer = NormalCloser(3,multivariate=True)
+    #     answer = closer.partition(2,[[]],0,test_list_for_partition)
+    #
+    #     self.assertEqual(answer, expected)
 
-        test_list_for_partition = [sp.Symbol('A'),sp.Symbol('B'),sp.Symbol('C'),sp.Symbol('D')]
-        expected = [[[sp.Symbol('A'),sp.Symbol('B')],[sp.Symbol('A'),sp.Symbol('C')]],
-                    [[sp.Symbol('A'),sp.Symbol('D')],[sp.Symbol('B'),sp.Symbol('C')]],
-                    [[sp.Symbol('B'),sp.Symbol('D')],[sp.Symbol('C'),sp.Symbol('D')]]]
-
-
-        closer = NormalCloser(3,multivariate=True)
-        answer = closer.partition(2,[[]],0,test_list_for_partition)
-
-        self.assertEqual(answer, expected)
-
-    def test_get_covariance_symbol(self):
-        closer = NormalCloser(3,multivariate=True)
-        problem_moments = self.__problem_moments
-        expected = sp.Symbol("yx3")
-        answer = closer.get_covariance_symbol(problem_moments,1, 2)
-        self.assertEqual(answer, expected)
-
-    def test_get_covariance_symbol2(self):
-        closer = NormalCloser(3,multivariate=True)
-        problem_moments = self.__problem_moments
-        expected = sp.Symbol("yx6")
-        answer = closer.get_covariance_symbol(problem_moments,1, 0)
-        self.assertEqual(answer, expected)
-
-    def test_get_covariance_symbol_is_triangular(self):
-        closer = NormalCloser(3,multivariate=True)
-        problem_moments = self.__problem_moments
-        #covariance between species 1 and 2  ==  covariance between sp. 2 and 1
-        answer1 =closer.get_covariance_symbol(problem_moments,1, 0)
-        answer2 = closer.get_covariance_symbol(problem_moments,0, 1)
-        self.assertEqual(answer1, answer2)
-
-
-    def test_compute_raw_moments(self):
-
-        n_species = 3
-        problem_moments = self.__problem_moments
-
-        expected = to_sympy_matrix([
-            []
-        ])
-        expected = to_sympy_matrix([
-            ["y_2**2+yx2"],
-            ["y_1*y_2+yx3"],
-            ["y_1**2+yx4"],
-            ["y_0*y_2+yx5"],
-            ["y_0*y_1+yx6"],
-            ["y_0**2+yx7"],
-            ["y_2**3+3*y_2*yx2+3*yx2**2/y_2+yx2**3/y_2**3"],
-            ["y_1*y_2**2+y_1*yx2+2*y_2*yx3+2*yx2*yx3/y_2+yx3**2/y_1+yx2*yx3**2/(y_1*y_2**2)"],
-            ["y_1**2*y_2+2*y_1*yx3+y_2*yx4+yx3**2/y_2+2*yx3*yx4/y_1+yx3**2*yx4/(y_1**2*y_2)"],
-            ["y_1**3+3*y_1*yx4+3*yx4**2/y_1+yx4**3/y_1**3"],
-            ["y_0*y_2**2+y_0*yx2+2*y_2*yx5+2*yx2*yx5/y_2+yx5**2/y_0+yx2*yx5**2/(y_0*y_2**2)"],
-            ["y_0*y_1*y_2+y_0*yx3+y_1*yx5+y_2*yx6+yx3*yx5/y_2+yx3*yx6/y_1+yx5*yx6/y_0+yx3*yx5*yx6/(y_0*y_1*y_2)"],
-            ["y_0*y_1**2+y_0*yx4+2*y_1*yx6+2*yx4*yx6/y_1+yx6**2/y_0+yx4*yx6**2/(y_0*y_1**2)"],
-            ["y_0**2*y_2+2*y_0*yx5+y_2*yx7+yx5**2/y_2+2*yx5*yx7/y_0+yx5**2*yx7/(y_0**2*y_2)"],
-            ["y_0**2*y_1+2*y_0*yx6+y_1*yx7+yx6**2/y_1+2*yx6*yx7/y_0+yx6**2*yx7/(y_0**2*y_1)"],
-            ["y_0**3+3*y_0*yx7+3*yx7**2/y_0+yx7**3/y_0**3"]
-        ])
-        closer = NormalCloser(3,multivariate=True)
-        answer = closer.compute_raw_moments(n_species,problem_moments)
-
-        self.assertEqual(answer, expected)
 
     def test_log_normal_closer_wrapper(self):
 
@@ -164,18 +111,18 @@ class TestNormalCloser(unittest.TestCase):
         n_moments = 3
         species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
-        expected = to_sympy_matrix([
-                    ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3+(c_2*c_6*yx5*(yx5*y_0 ** 2+2*y_2*yx7*y_0+yx5*yx7))/(y_0 ** 2*y_2*(c_6+y_0) ** 3)-(c_2*c_6*y_2*yx7 ** 2*(3*y_0 ** 2+yx7))/(y_0 ** 3*(c_6+y_0) ** 4)"],
-                    ["c_3*y_0-c_4*y_1"],
-                    ["c_4*y_1-c_5*y_2"],
-                    ["c_4*y_1+c_5*y_2+2*c_4*yx3-2*c_5*yx2"],
-                    ["c_3*yx5-c_4*yx3-c_4*y_1+c_4*yx4-c_5*yx3"],
-                    ["c_3*y_0+c_4*y_1-2*c_4*yx4+2*c_3*yx6"],
-                    ["-(c_2*y_0 ** 5*y_2 ** 2*yx2+c_1*y_0 ** 5*y_2 ** 2*yx5-c_4*y_0 ** 5*y_2 ** 2*yx6+c_5*y_0 ** 5*y_2 ** 2*yx5+2*c_2*c_6*y_0 ** 4*y_2 ** 2*yx2+3*c_1*c_6*y_0 ** 4*y_2 ** 2*yx5+c_2*c_6*y_0 ** 3*y_2 ** 3*yx5-3*c_4*c_6*y_0 ** 4*y_2 ** 2*yx6+3*c_5*c_6*y_0 ** 4*y_2 ** 2*yx5+c_2*c_6*y_0 ** 2*yx2*yx5 ** 2+c_2*c_6 ** 2*y_0*yx2*yx5 ** 2-c_2*c_6*y_2 ** 2*yx5 ** 2*yx7+c_2*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx2+3*c_1*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx5+c_1*c_6 ** 3*y_0 ** 2*y_2 ** 2*yx5+c_2*c_6 ** 2*y_0*y_2 ** 2*yx5 ** 2+c_2*c_6 ** 2*y_0 ** 2*y_2 ** 3*yx5-3*c_4*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx6-c_4*c_6 ** 3*y_0 ** 2*y_2 ** 2*yx6+3*c_5*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx5+c_5*c_6 ** 3*y_0 ** 2*y_2 ** 2*yx5+2*c_2*c_6*y_0 ** 3*y_2*yx2*yx5-2*c_2*c_6*y_0*y_2 ** 3*yx5*yx7+2*c_2*c_6 ** 2*y_0 ** 2*y_2*yx2*yx5)/(y_0 ** 2*y_2 ** 2*(c_6+y_0) ** 3)"],
-                    ["-(c_2*y_0 ** 5*y_1*y_2*yx3+c_1*y_0 ** 5*y_1*y_2*yx6-c_3*y_0 ** 5*y_1*y_2*yx7+c_4*y_0 ** 5*y_1*y_2*yx6-c_2*c_6*y_2 ** 2*yx6 ** 2*yx7-c_2*c_6*y_0 ** 2*y_2 ** 2*yx6 ** 2+c_2*c_6 ** 2*y_0 ** 2*y_1*y_2 ** 2*yx6+2*c_2*c_6*y_0 ** 4*y_1*y_2*yx3+3*c_1*c_6*y_0 ** 4*y_1*y_2*yx6-3*c_3*c_6*y_0 ** 4*y_1*y_2*yx7+3*c_4*c_6*y_0 ** 4*y_1*y_2*yx6+c_2*c_6*y_0 ** 3*y_1*yx3*yx5+c_2*c_6*y_0 ** 3*y_2*yx3*yx6+c_2*c_6*y_0 ** 2*yx3*yx5*yx6+c_2*c_6 ** 2*y_0*yx3*yx5*yx6+c_2*c_6 ** 2*y_0 ** 3*y_1*y_2*yx3+3*c_1*c_6 ** 2*y_0 ** 3*y_1*y_2*yx6+c_1*c_6 ** 3*y_0 ** 2*y_1*y_2*yx6+c_2*c_6*y_0 ** 3*y_1*y_2 ** 2*yx6-3*c_3*c_6 ** 2*y_0 ** 3*y_1*y_2*yx7-c_3*c_6 ** 3*y_0 ** 2*y_1*y_2*yx7+3*c_4*c_6 ** 2*y_0 ** 3*y_1*y_2*yx6+c_4*c_6 ** 3*y_0 ** 2*y_1*y_2*yx6+c_2*c_6 ** 2*y_0 ** 2*y_1*yx3*yx5+c_2*c_6 ** 2*y_0 ** 2*y_2*yx3*yx6+c_2*c_6*y_0 ** 2*y_1*y_2*yx5*yx6+c_2*c_6 ** 2*y_0*y_1*y_2*yx5*yx6-2*c_2*c_6*y_0*y_1*y_2 ** 2*yx6*yx7)/(y_0 ** 2*y_1*y_2*(c_6+y_0) ** 3)"],
-                    ["-(-c_1*c_6 ** 4*y_0 ** 4*y_2+2*c_1*c_6 ** 4*y_0 ** 3*y_2*yx7-c_0*c_6 ** 4*y_0 ** 3*y_2-4*c_1*c_6 ** 3*y_0 ** 5*y_2-c_2*c_6 ** 3*y_0 ** 4*y_2 ** 2+2*c_2*c_6 ** 3*y_0 ** 4*y_2*yx5+8*c_1*c_6 ** 3*y_0 ** 4*y_2*yx7-4*c_0*c_6 ** 3*y_0 ** 4*y_2+2*c_2*c_6 ** 3*y_0 ** 3*y_2 ** 2*yx7-c_2*c_6 ** 3*y_0 ** 3*y_2*yx5+2*c_2*c_6 ** 3*y_0 ** 3*yx5 ** 2+4*c_2*c_6 ** 3*y_0 ** 2*y_2*yx5*yx7+2*c_2*c_6 ** 3*y_0*yx5 ** 2*yx7-6*c_1*c_6 ** 2*y_0 ** 6*y_2-3*c_2*c_6 ** 2*y_0 ** 5*y_2 ** 2+6*c_2*c_6 ** 2*y_0 ** 5*y_2*yx5+12*c_1*c_6 ** 2*y_0 ** 5*y_2*yx7-6*c_0*c_6 ** 2*y_0 ** 5*y_2+4*c_2*c_6 ** 2*y_0 ** 4*y_2 ** 2*yx7-2*c_2*c_6 ** 2*y_0 ** 4*y_2*yx5+4*c_2*c_6 ** 2*y_0 ** 4*yx5 ** 2+c_2*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx7+8*c_2*c_6 ** 2*y_0 ** 3*y_2*yx5*yx7+c_2*c_6 ** 2*y_0 ** 3*yx5 ** 2-6*c_2*c_6 ** 2*y_0 ** 2*y_2 ** 2*yx7 ** 2+2*c_2*c_6 ** 2*y_0 ** 2*y_2*yx5*yx7+4*c_2*c_6 ** 2*y_0 ** 2*yx5 ** 2*yx7+c_2*c_6 ** 2*y_0*yx5 ** 2*yx7-2*c_2*c_6 ** 2*y_2 ** 2*yx7 ** 3-4*c_1*c_6*y_0 ** 7*y_2-3*c_2*c_6*y_0 ** 6*y_2 ** 2+6*c_2*c_6*y_0 ** 6*y_2*yx5+8*c_1*c_6*y_0 ** 6*y_2*yx7-4*c_0*c_6*y_0 ** 6*y_2+2*c_2*c_6*y_0 ** 5*y_2 ** 2*yx7-c_2*c_6*y_0 ** 5*y_2*yx5+2*c_2*c_6*y_0 ** 5*yx5 ** 2+c_2*c_6*y_0 ** 4*y_2 ** 2*yx7+4*c_2*c_6*y_0 ** 4*y_2*yx5*yx7+c_2*c_6*y_0 ** 4*yx5 ** 2-6*c_2*c_6*y_0 ** 3*y_2 ** 2*yx7 ** 2+2*c_2*c_6*y_0 ** 3*y_2*yx5*yx7+2*c_2*c_6*y_0 ** 3*yx5 ** 2*yx7-3*c_2*c_6*y_0 ** 2*y_2 ** 2*yx7 ** 2+c_2*c_6*y_0 ** 2*yx5 ** 2*yx7-2*c_2*c_6*y_0*y_2 ** 2*yx7 ** 3-c_2*c_6*y_2 ** 2*yx7 ** 3-c_1*y_0 ** 8*y_2-c_2*y_0 ** 7*y_2 ** 2+2*c_2*y_0 ** 7*y_2*yx5+2*c_1*y_0 ** 7*y_2*yx7-c_0*y_0 ** 7*y_2)/(y_0 ** 3*y_2*(c_6+y_0) ** 4)"]
-                ])
-        closer = LogNormalCloser(3,multivariate=True)
+        expected = sympy.Matrix([
+            ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3"],
+            ["c_3*y_0-c_4*y_1"],
+            ["c_4*y_1-c_5*y_2"],
+            ["c_4*y_1+c_5*y_2+2*c_4*yx3-2*c_5*yx2"],
+            ["c_3*yx5-c_4*yx3-c_4*y_1+c_4*yx4-c_5*yx3"],
+            ["c_3*y_0+c_4*y_1-2*c_4*yx4+2*c_3*yx6"],
+            ["c_4*yx6-c_1*yx5-c_5*yx5-(c_2*y_0*yx2)/(c_6+y_0)-(c_2*y_2*yx5)/(c_6+y_0)+(c_2*y_0*y_2*yx5)/(c_6+y_0) ** 2"],
+            ["c_3*yx7-c_1*yx6-c_4*yx6-(c_2*y_0*yx3)/(c_6+y_0)-(c_2*y_2*yx6)/(c_6+y_0)+(c_2*y_0*y_2*yx6)/(c_6+y_0) ** 2"],
+            ["(c_0*c_6 ** 3+c_0*y_0 ** 3+c_1*y_0 ** 4+c_2*y_0 ** 3*y_2-2*c_2*y_0 ** 3*yx5-2*c_1*y_0 ** 3*yx7+3*c_1*c_6 ** 2*y_0 ** 2+3*c_0*c_6*y_0 ** 2+3*c_0*c_6 ** 2*y_0+3*c_1*c_6*y_0 ** 3+c_1*c_6 ** 3*y_0+c_2*c_6 ** 2*yx5-2*c_1*c_6 ** 3*yx7+c_2*c_6*y_0*yx5-c_2*c_6*y_2*yx7+2*c_2*c_6*y_0 ** 2*y_2+c_2*c_6 ** 2*y_0*y_2-4*c_2*c_6*y_0 ** 2*yx5-2*c_2*c_6 ** 2*y_0*yx5-6*c_1*c_6*y_0 ** 2*yx7-6*c_1*c_6 ** 2*y_0*yx7-2*c_2*c_6 ** 2*y_2*yx7-2*c_2*c_6*y_0*y_2*yx7)/(c_6+y_0) ** 3"]
+        ])
+        closer = NormalCloser(n_moments,multivariate=True)
         answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
