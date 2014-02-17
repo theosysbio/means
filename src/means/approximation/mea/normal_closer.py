@@ -12,9 +12,6 @@ class NormalCloser(CloserBase):
     def __init__(self,n_moments, multivariate = True):
         super(NormalCloser, self).__init__(n_moments)
         self.__is_multivariate = multivariate
-        #fixme implement multivariate
-        if not multivariate:
-            raise NotImplementedError("todo: implement univariate")
 
     @property
     def is_multivariate(self):
@@ -81,15 +78,7 @@ class NormalCloser(CloserBase):
 
 
     def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
-        # print "mfk"
-        # print mfk
-        # print "k_counter"
-        # print k_counter
-        # print "prob_moments"
-        # print prob_moments
-        # print "central_from_raw_exprs"
-        # print central_from_raw_exprs
-        # print "------------------------------------------------"
+
         n_moments = self.n_moments
         n_species = len(species)
 
