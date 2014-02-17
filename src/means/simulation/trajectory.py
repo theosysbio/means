@@ -154,3 +154,98 @@ class TrajectoryWithSensitivityData(Trajectory):
         return isinstance(other, TrajectoryWithSensitivityData) and \
                super(TrajectoryWithSensitivityData, self).__eq__(other) and \
                self.sensitivity_data == other.sensitivity_data
+
+    def plot_perturbations(self, parameter, delta=1e-4, *args, **kwargs):
+        from matplotlib import pyplot as plt
+        alpha = kwargs.pop('alpha', 0.1)
+        for sensitivity_trajectory in self.sensitivity_data:
+            description_parameter = sensitivity_trajectory.description.parameter
+            # Compare them as strings so it is easier to pass it in
+            if str(sensitivity_trajectory.description.parameter) != str(parameter):
+                continue
+
+            perturbed_trajectory_positive = perturbed_trajectory(self, sensitivity_trajectory, delta=delta)
+            perturbed_trajectory_negative = perturbed_trajectory(self, sensitivity_trajectory, delta=-delta)
+            plt.fill_between(self.timepoints,
+                             perturbed_trajectory_negative.values,
+                             perturbed_trajectory_positive.values,
+                             alpha=alpha,
+                             *args,
+                             **kwargs)
+
+            label = kwargs.pop('label', "${0}$, "
+                                        "when ${1}$ is perturbed by ${2}$".format(self.description.symbol,
+                                                                                  sensitivity_trajectory.description.parameter,
+                                                                                  delta))
+            # Fill_between does not generate a legend entry, use this hack with Rectangle to do this
+            plt.gca().add_patch(plt.Rectangle((0, 0), 0, 0, alpha=alpha,
+                                              label=label,
+                                                    *args, **kwargs))
+
+
+class PerturbedTerm(Descriptor):
+    r"""
+    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object represents the sensitivity
+    of some ODE term with respect to some parameter.
+    In other words, sensitivity term describes :math:`s_{ij}(t) = \frac{\partial y_i(t)}{\partial p_j}` where
+    :math:`y_i` is the ODE term described above and :math:`p_j` is the parameter.
+
+    This class is used to describe sensitivity trajectories returned by :class:`means.simulation.simulate.Simulation`
+    """
+    _ode_term = None
+    _parameter = None
+    _delta = None
+
+    def __init__(self, ode_term, parameter, delta=0.01):
+        """
+
+        :param ode_term: the ode term whose sensitivity is being computed
+        :type ode_term: :class:`~means.approximation.ode_problem.ODETermBase`
+        :param parameter: parameter w.r.t. which the sensitivity is computed
+        :type parameter: :class:`sympy.Symbol`
+        """
+        self._ode_term = ode_term
+        self._parameter = parameter
+        self._delta = delta
+
+    @property
+    def ode_term(self):
+        return self._ode_term
+
+    @property
+    def parameter(self):
+        return self._parameter
+
+    @property
+    def delta(self):
+        return self._delta
+
+    def __repr__(self):
+        return '<Perturbed {0!r} when {1!r} is perturbed by {2!r}>'.format(self.ode_term, self.parameter, self.delta)
+
+    def __mathtext__(self):
+        # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
+        return r'${0}$ when ${1}={1}+{2}$'.format(self.ode_term.symbol, self.parameter, self.delta)
+
+
+def perturbed_trajectory(trajectory, sensitivity_trajectory, delta=1e-4):
+    """
+    Slightly perturb trajectory wrt the parameter specified in sensitivity_trajectory.
+
+    :param trajectory: the actual trajectory for an ODE term
+    :type trajectory: :class:`Trajectory`
+    :param sensitivity_trajectory: sensitivity trajectory (dy/dpi for all timepoints t)
+    :type sensitivity_trajectory: :class:`Trajectory`
+    :param delta: the perturbation size
+    :type delta: float
+    :return: :class:`Trajectory`
+    """
+    sensitivity_trajectory_description = sensitivity_trajectory.description
+    assert(isinstance(sensitivity_trajectory_description, SensitivityTerm))
+    assert(np.equal(trajectory.timepoints, sensitivity_trajectory.timepoints).all())
+
+    return Trajectory(trajectory.timepoints,
+                      trajectory.values + sensitivity_trajectory.values * delta,
+                      PerturbedTerm(sensitivity_trajectory_description.ode_term,
+                                    sensitivity_trajectory_description.parameter,
+                                    delta))
