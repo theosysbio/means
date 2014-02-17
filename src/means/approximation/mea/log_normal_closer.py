@@ -81,28 +81,29 @@ class LogNormalCloser(CloserBase):
         closed_central_moments = substitute_all(central_from_raw_exprs, substitution_pairs)
         return closed_central_moments
 
-    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments, n_counter):
+    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
         n_moments = self.n_moments
         n_species = len(species)
         # we compute all raw moments according to means / variance/ covariance
         # at this point we have as many raw moments expressions as non-null central moments
-        closed_raw_moments = self.compute_raw_moments(n_counter, n_species, prob_moments)
+        closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
 
         # we obtain expressions for central moments in terms of closed raw moments
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
 
         # we remove ODEs of highest order in mfk
-        new_mfk = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
-
+        new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
+        # new_mkf = mfk
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
         n_counter = [n for n in prob_moments if n.order > 1]
 
         # now we want to replace the new mfk (i.e. without highest order moment) any
         # symbol for highest order central moment by the corresponding expression (computed above)
         substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
-        new_mfk = substitute_all(new_mfk, substitutions_pairs)
-        print new_mfk
+        new_mkf = substitute_all(new_mkf, substitutions_pairs)
+
         # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
         new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
+        #new_prob_moments = prob_moments
 
-        return new_mfk,new_prob_moments
+        return new_mkf,new_prob_moments
