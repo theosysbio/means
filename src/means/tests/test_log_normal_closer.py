@@ -110,8 +110,7 @@ class TestLogNormalCloser(unittest.TestCase):
         ])
         closer = LogNormalCloser(3,multivariate=True)
         answer = closer.compute_raw_moments(n_species,problem_moments)
-
-        self.assertEqual(answer, expected)
+        self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_log_normal_closer_wrapper(self):
 
