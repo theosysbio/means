@@ -82,5 +82,29 @@ class TestInferenceForRegressions(unittest.TestCase):
         assert_array_almost_equal(opt_initconds, [301.00385505534678, 0], decimal=1)
         self.assertAlmostEqual(distance, 0.00823811223489, delta=5e-3)
 
+    def test_sum_of_squares_means_only(self):
+
+        params_with_variability = [(0.001, True), (0.5, True), (330.0, True)]
+        initcond_with_variability = [(320.0, True), (0, False)]
+
+        optimiser_method = 'sum_of_squares'
+        constraints = None
+
+        inference = ParameterInference(self.dimer_problem,
+                                       params_with_variability,
+                                       initcond_with_variability,
+                                       constraints,
+                                       self.observed_timepoints,
+                                       # Only means trajectory
+                                       [self.observed_trajectories[0]],
+                                       method=optimiser_method)
+        parameters, distance, iterations, evaluations, __ = inference.infer()
+
+        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+
+        assert_array_almost_equal(opt_param, [0.00017664681741244679, 0.043856181172598596, 495.49530645744187], decimal=2)
+        assert_array_almost_equal(opt_initconds, [301.27426184772685, 0], decimal=1)
+        self.assertAlmostEqual(distance, 0.350944811744, delta=5e-3)
+
 
 
