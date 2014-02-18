@@ -2,6 +2,7 @@ import sympy as sp
 import operator
 import copy
 from means.util.sympyhelpers import substitute_all
+from means.util.sympyhelpers import product
 from zero_closer import CloserBase
 
 
@@ -32,40 +33,35 @@ class NormalCloser(CloserBase):
         else:
             return sp.Integer(0)
 
+
+    def compute_one_closed_central_moment(self, moment, covariance_matrix):
+
+        if moment.order % 2 != 0:
+            return sp.Integer(0)
+
+        # index of species
+        idx = [i for i in range(len(moment.n_vector))]
+        # repeat the index of a species as many time as its value in counter
+        list_for_partition = reduce(operator.add, map(lambda i, c: [i] * c, idx, moment.n_vector))
+
+        if moment.order == 2:
+            return covariance_matrix[list_for_partition[0], list_for_partition[1]]
+
+        else:
+            each_row = []
+            for idx_pair in self.generate_partitions(list_for_partition):
+                l = [covariance_matrix[i, j] for i,j in idx_pair]
+                each_row.append(product(l))
+
+            return sum(each_row)
+
+
     def compute_closed_central_moments(self, n_species, problem_moments):
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-        out_mat = []
-
-        n_counter = [n for n in problem_moments if n.order > 1]
         print covariance_matrix
-        for n in n_counter:
-
-            list_for_partition = []
-
-            for i,e in enumerate(n.n_vector):
-                list_for_partition.extend([i for n_times in range(e)])
-
-
-            if n.order % 2 != 0:
-                each_row = [sp.Integer(0)]
-
-            elif n.order == 2:
-
-                each_row = [covariance_matrix[list_for_partition[0],list_for_partition[1]]]
-            else:
-               #fixme
-                # retrieve the items based on the indices pairs and add the partitions
-                idx = self.partition(2,[[]],0,list_for_partition)
-                each_row = []
-                for idx_pairs in idx:
-
-                    l = [covariance_matrix[i[0],i[1]] for i in idx_pairs]
-                    row_elements = reduce(operator.mul,l)
-                    each_row.append(row_elements)
-
-            out_mat.append(sum(each_row))
-
-        return out_mat
+        n_counter = [n for n in problem_moments if n.order > 1]
+        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
+        return sp.Matrix(out_mat)
 
 
 
@@ -90,20 +86,19 @@ class NormalCloser(CloserBase):
 
 
         return new_mfk,new_prob_moments
+
     def generate_partitions(self,l):
         if len(l) % 2 != 0:
             raise ValueError("the length of the list to partition must be even")
         #define partition size
         part_size = int(len(l)/2)
-        idxs = [i for i in range(len(l))]
-
-
+        #idxs = [i for i in range(len(l))]
 
         # make all combinations
-        # A natural property of these combinaisons, is that the last element
+        # A natural property of these combinations, is that the last element
         # is a complementary set to the fist one, the second to the one before last,
         # and so on.
-        combin =  [i for i in itertools.combinations(idxs , part_size)]
+        combin = [i for i in itertools.combinations(l, part_size)]
 
         # this loop will return the first, the second with the one before last ans so on
         # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
