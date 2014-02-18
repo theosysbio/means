@@ -4,7 +4,8 @@ from sympy import Symbol, Float, MutableDenseMatrix
 from means.approximation.ode_problem import Moment, ODEProblem
 import numpy as np
 from means.inference import ParameterInference
-from means.inference.sumsq_infer import i0_to_test
+# We need renaming as otherwise nose picks it up as a test
+from means.inference.sumsq_infer import extract_params_from_i0
 from means.simulation import Trajectory
 
 
@@ -76,7 +77,7 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        method=optimiser_method)
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
         assert_array_almost_equal(opt_param, [0.00012707216279026558, 0.089221047933167152, 301.09712661982326], decimal=2)
         assert_array_almost_equal(opt_initconds, [301.00385505534678, 0], decimal=1)
@@ -100,7 +101,7 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        method=optimiser_method)
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
         assert_array_almost_equal(opt_param, [0.00017664681741244679, 0.043856181172598596, 495.49530645744187], decimal=2)
         assert_array_almost_equal(opt_initconds, [301.27426184772685, 0], decimal=1)
@@ -123,7 +124,7 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        method=optimiser_method)
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
         assert_array_almost_equal(opt_param, [9.8148438195906734e-05, 0.11551859499768752, 260.00000014956925])
         assert_array_almost_equal(opt_initconds, [300.51956949425931, 0])
@@ -148,7 +149,7 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        method=optimiser_method)
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
         assert_array_almost_equal(opt_param, [9.5172228362479672e-05, 0.10496345081374701, 260.0000007146773],
                                   decimal=2)
@@ -174,7 +175,7 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        method=optimiser_method)
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
         assert_array_almost_equal(opt_param, [0.00097039430700166115, 9.1893721957377865e-07, 303.48309650132126])
         assert_array_almost_equal(opt_initconds, [290.06297620238149, 0])

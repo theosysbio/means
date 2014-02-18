@@ -11,7 +11,6 @@ class TestHyperCube(unittest.TestCase):
         random.seed(42)
         np.random.seed(42)
 
-
     def test_hypercube_regression_dimer(self):
 
         param_ranges = [(0.001, 0.0), (0.5, 0.0), (330.0, 260.0)]
