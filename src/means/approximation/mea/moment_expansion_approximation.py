@@ -7,6 +7,8 @@ from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
+
+from gamma_closer import GammaCloser
 from log_normal_closer import LogNormalCloser
 from normal_closer import NormalCloser
 from zero_closer import  ZeroCloser
@@ -20,8 +22,11 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         self.__n_moments = int(n_moments)
 
         # a dictionary of option -> closer this allow a generic handling for closer without to have to add
-        # if-else and exceptions when implementing new closers. Onre only needs to add the new closer class to the dict
-        supported_closers = {"log-normal": LogNormalCloser ,"zero": ZeroCloser, "normal": NormalCloser}
+        # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
+        supported_closers = {"log-normal": LogNormalCloser,
+                             "zero": ZeroCloser,
+                             "normal": NormalCloser,
+                             "gamma": GammaCloser}
 
         # exception it the closer name is not in the dict
         if not closer in supported_closers:

@@ -96,6 +96,7 @@ class NormalCloser(CloserBase):
         return new_mfk,new_prob_moments
 
     def generate_partitions(self,l):
+
         if len(l) % 2 != 0:
             raise ValueError("the length of the list to partition must be even")
         #define partition size

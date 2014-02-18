@@ -1,6 +1,6 @@
 import unittest
 import sympy
-from means.approximation.mea.gamma_closer_new import GammaCloser
+from means.approximation.mea.gamma_closer import GammaCloser
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
