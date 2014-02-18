@@ -106,5 +106,79 @@ class TestInferenceForRegressions(unittest.TestCase):
         assert_array_almost_equal(opt_initconds, [301.27426184772685, 0], decimal=1)
         self.assertAlmostEqual(distance, 0.350944811744, delta=5e-3)
 
+    def test_gamma_inference(self):
+        params_with_variability = [(0.0003553578523702354, True), (0.29734640303161364, True), (306.2260484701648, True)]
+        initcond_with_variability = [(304.7826314512718, True), (0, False)]
+
+        optimiser_method = 'gamma'
+        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
+
+        inference = ParameterInference(self.dimer_problem,
+                                       params_with_variability,
+                                       initcond_with_variability,
+                                       constraints,
+                                       self.observed_timepoints,
+                                       # Only means trajectory
+                                       [self.observed_trajectories[0]],
+                                       method=optimiser_method)
+        parameters, distance, iterations, evaluations, __ = inference.infer()
+
+        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+
+        assert_array_almost_equal(opt_param, [9.8148438195906734e-05, 0.11551859499768752, 260.00000014956925])
+        assert_array_almost_equal(opt_initconds, [300.51956949425931, 0])
+        self.assertAlmostEqual(distance, 115.362403987, places=3)
+
+    def test_normal_inference(self):
+        params_with_variability = zip([0.0003553578523702354, 0.29734640303161364, 306.2260484701648],
+                                      [True, True, True])
+        initcond_with_variability = zip([304.7826314512718, 0],
+                                        [True, False])
+
+        optimiser_method = 'normal'
+        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
+
+        inference = ParameterInference(self.dimer_problem,
+                                       params_with_variability,
+                                       initcond_with_variability,
+                                       constraints,
+                                       self.observed_timepoints,
+                                       # Only means trajectory
+                                       [self.observed_trajectories[0]],
+                                       method=optimiser_method)
+        parameters, distance, iterations, evaluations, __ = inference.infer()
+
+        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+
+        assert_array_almost_equal(opt_param, [9.5172228362479672e-05, 0.10496345081374701, 260.0000007146773],
+                                  decimal=2)
+        assert_array_almost_equal(opt_initconds, [298.77729673200088, 0], decimal=1)
+        self.assertAlmostEqual(distance, 115.688062045, places=2)
+
+    def test_lognormal_inference(self):
+        params_with_variability = zip([0.0008721146403084233, 0.34946447118966373, 285.8232870026351],
+                                      [True, True, True])
+        initcond_with_variability = zip([309.6216092798371, 0],
+                                        [True, False])
+
+        optimiser_method = 'lognormal'
+        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
+
+        inference = ParameterInference(self.dimer_problem,
+                                       params_with_variability,
+                                       initcond_with_variability,
+                                       constraints,
+                                       self.observed_timepoints,
+                                       # Only means trajectory
+                                       [self.observed_trajectories[0]],
+                                       method=optimiser_method)
+        parameters, distance, iterations, evaluations, __ = inference.infer()
+
+        (opt_param, opt_initconds) = i0_to_test(list(parameters), params_with_variability, initcond_with_variability)
+
+        assert_array_almost_equal(opt_param, [0.00097039430700166115, 9.1893721957377865e-07, 303.48309650132126])
+        assert_array_almost_equal(opt_initconds, [290.06297620238149, 0])
+        self.assertAlmostEqual(distance, 2090.53260392, places=3)
+
 
 
