@@ -5,9 +5,6 @@ class LogNormalCloser(CloserBase):
     def __init__(self,n_moments, multivariate = True):
         super(LogNormalCloser, self).__init__(n_moments)
         self.__is_multivariate = multivariate
-        #fixme implement multivariate
-        if not multivariate:
-            raise NotImplementedError("todo: implement univariate")
 
     @property
     def is_multivariate(self):

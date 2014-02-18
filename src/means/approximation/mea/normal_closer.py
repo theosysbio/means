@@ -33,14 +33,11 @@ class NormalCloser(CloserBase):
             return sp.Integer(0)
 
     def compute_closed_central_moments(self, n_species, problem_moments):
-
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-
-
         out_mat = []
 
         n_counter = [n for n in problem_moments if n.order > 1]
-
+        print covariance_matrix
         for n in n_counter:
 
             list_for_partition = []
@@ -59,12 +56,7 @@ class NormalCloser(CloserBase):
                #fixme
                 # retrieve the items based on the indices pairs and add the partitions
                 idx = self.partition(2,[[]],0,list_for_partition)
-                #print "idx"
-                #print idx
-
                 each_row = []
-                #print "idx_pairs"
-                #for idx_pairs in self.generate_partitions(list_for_partition):
                 for idx_pairs in idx:
 
                     l = [covariance_matrix[i[0],i[1]] for i in idx_pairs]

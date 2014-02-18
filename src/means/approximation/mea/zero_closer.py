@@ -9,7 +9,7 @@ class CloserBase(object):
     def n_moments(self):
         return self._n_moments
 
-    def close(self):
+    def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
         raise NotImplementedError("CloserBase is an abstract class. `close()` is not implemented. ")
 
     def generate_problem_left_hand_side(self, n_counter, k_counter):
