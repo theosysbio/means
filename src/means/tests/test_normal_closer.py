@@ -440,7 +440,7 @@ class TestNormalCloser(unittest.TestCase):
         n_moments = 3
         species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
-        expected = sympy.Matrix([
+        expected = to_sympy_matrix([
             ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3"],
             ["c_3*y_0-c_4*y_1"],
             ["c_4*y_1-c_5*y_2"],
@@ -451,7 +451,7 @@ class TestNormalCloser(unittest.TestCase):
             ["c_3*yx7-c_1*yx6-c_4*yx6-(c_2*y_0*yx3)/(c_6+y_0)-(c_2*y_2*yx6)/(c_6+y_0)+(c_2*y_0*y_2*yx6)/(c_6+y_0) ** 2"],
             ["(c_0*c_6 ** 3+c_0*y_0 ** 3+c_1*y_0 ** 4+c_2*y_0 ** 3*y_2-2*c_2*y_0 ** 3*yx5-2*c_1*y_0 ** 3*yx7+3*c_1*c_6 ** 2*y_0 ** 2+3*c_0*c_6*y_0 ** 2+3*c_0*c_6 ** 2*y_0+3*c_1*c_6*y_0 ** 3+c_1*c_6 ** 3*y_0+c_2*c_6 ** 2*yx5-2*c_1*c_6 ** 3*yx7+c_2*c_6*y_0*yx5-c_2*c_6*y_2*yx7+2*c_2*c_6*y_0 ** 2*y_2+c_2*c_6 ** 2*y_0*y_2-4*c_2*c_6*y_0 ** 2*yx5-2*c_2*c_6 ** 2*y_0*yx5-6*c_1*c_6*y_0 ** 2*yx7-6*c_1*c_6 ** 2*y_0*yx7-2*c_2*c_6 ** 2*y_2*yx7-2*c_2*c_6*y_0*y_2*yx7)/(c_6+y_0) ** 3"]
         ])
-        closer = NormalCloser(n_moments,multivariate=True)
+        closer = NormalCloser(n_moments, multivariate=True)
         answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
@@ -469,7 +469,7 @@ class TestNormalCloser(unittest.TestCase):
                      (sympy.Symbol('B'),sympy.Symbol('C')))]
 
 
-        closer = NormalCloser(3,multivariate=True)
+        closer = NormalCloser(3, multivariate=True)
         answer = [p for p in closer.generate_partitions(test_list_for_partition)]
 
         self.assertEqual(answer, expected)
