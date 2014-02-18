@@ -79,9 +79,9 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
-        assert_array_almost_equal(opt_param, [0.00012707216279026558, 0.089221047933167152, 301.09712661982326], decimal=2)
-        assert_array_almost_equal(opt_initconds, [301.00385505534678, 0], decimal=1)
-        self.assertAlmostEqual(distance, 0.00823811223489, delta=5e-3)
+        assert_array_almost_equal(opt_param, [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
+        assert_array_almost_equal(opt_initconds, [300.986186470956, 0])
+        self.assertAlmostEqual(distance, 0.0107977081308)
 
     def test_sum_of_squares_means_only(self):
 
@@ -103,9 +103,9 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
-        assert_array_almost_equal(opt_param, [0.00017664681741244679, 0.043856181172598596, 495.49530645744187], decimal=2)
-        assert_array_almost_equal(opt_initconds, [301.27426184772685, 0], decimal=1)
-        self.assertAlmostEqual(distance, 0.350944811744, delta=5e-3)
+        assert_array_almost_equal(opt_param, [0.00017664682228204413, 0.043856182869604673, 495.49530551533815])
+        assert_array_almost_equal(opt_initconds, [301.27426546880224, 0])
+        self.assertAlmostEqual(distance, 0.350924941344)
 
     def test_gamma_inference(self):
         params_with_variability = [(0.0003553578523702354, True), (0.29734640303161364, True), (306.2260484701648, True)]
@@ -151,10 +151,9 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
 
-        assert_array_almost_equal(opt_param, [9.5172228362479672e-05, 0.10496345081374701, 260.0000007146773],
-                                  decimal=2)
-        assert_array_almost_equal(opt_initconds, [298.77729673200088, 0], decimal=1)
-        self.assertAlmostEqual(distance, 115.688062045, places=2)
+        assert_array_almost_equal(opt_param, [9.5190703395740974e-05, 0.10494581837857614, 260.00255131904339])
+        assert_array_almost_equal(opt_initconds, [298.81392432779984, 0])
+        self.assertAlmostEqual(distance, 115.687969964)
 
     def test_lognormal_inference(self):
         params_with_variability = zip([0.0008721146403084233, 0.34946447118966373, 285.8232870026351],
@@ -179,7 +178,7 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         assert_array_almost_equal(opt_param, [0.00097039430700166115, 9.1893721957377865e-07, 303.48309650132126])
         assert_array_almost_equal(opt_initconds, [290.06297620238149, 0])
-        self.assertAlmostEqual(distance, 2090.53260392, places=3)
+        self.assertAlmostEqual(distance, 2090.53271923)
 
 
 
