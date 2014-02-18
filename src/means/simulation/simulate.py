@@ -9,7 +9,6 @@ import sympy
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 
-
 # These are the default values in solver.c but they seem very low
 from means.approximation.ode_problem import Moment, VarianceTerm
 
@@ -31,7 +30,11 @@ def validate_problem(problem):
 
 class Simulation(object):
     """
-    An object that provides wrappers around CVode library to allow simulation of the ODE systems.
+    Class that allows to perform simulations of the trajectories for a particular problem.
+    Implements all ODE solvers supported by Assimulo_ package.
+
+    .. _Assimulo: http://www.jmodelica.org/assimulo_home/
+
     """
     __problem = None
     _postprocessing = None
@@ -41,11 +44,39 @@ class Simulation(object):
     def __init__(self, problem, solver='cvode', **solver_options):
         """
 
-        :param problem:
+        :param problem: Problem to simulate
         :type problem: ODEProblem
         :param compute_sensitivities: Whether the model should test parameter sensitivity or not
-        :param solver: the solver to use TODO: list available solvers
-        :param solver_options: options to set in the solver
+        :param solver: the solver to use. Currently, the solvers that available are:
+
+                       `'cvode'`
+                            sundials CVode solver, as implemented in :class:`assimulo.solvers.sundials.CVode`
+                       `'dopri5'`
+                            Dopri5 solver, see :class:`assimulo.solvers.runge_kutta.Dopri5`
+                       `'euler'`
+                            Euler solver, see :class:`assimulo.solvers.euler.ExplicitEuler`
+                       `'lsodar'`
+                            LSODAR solver, see :class:`assimulo.solvers.odepack.LSODAR`
+                       `'radau5'`
+                            Radau5 solver, see :class:`assimulo.solvers.radau5.Radau5ODE`
+                       `'rodas'`
+                            Rosenbrock method of order (3)4 with step-size control,
+                            see :class:`assimulo.solvers.rosenbrock.RodasODE`
+                       `'rungekutta34'`
+                            Adaptive Runda-Kutta of order four,
+                            see :class:`assimulo.solvers.runge_kutta.RungeKutta34`
+                       `'rungekutta4'`
+                            Runge-Kutta method of order 4,
+                            see :class:`assimulo.solvers.runge_kutta.RungeKutta4`
+
+                       The list of these solvers is always accessible at runtime
+                       from :meth:`Simulation.supported_solvers()` method.
+
+        :type solver: basestring
+        :param solver_options: options to set in the solver. Consult `Assimulo documentation`_ for available options
+                               for information on specific options available.
+
+        .. _`Assimulo documentation`: http://www.jmodelica.org/assimulo_home/
         """
         self.__problem = problem
         validate_problem(problem)
@@ -74,6 +105,14 @@ class Simulation(object):
 
     @classmethod
     def supported_solvers(cls):
+        """
+        List the supported solvers for the simulations.
+
+        >>> Simulation.supported_solvers()
+        ['cvode', 'dopri5', 'euler', 'lsodar', 'radau5', 'rodas', 'rungekutta34', 'rungekutta4']
+
+        :return: the names of the solvers supported for simulations
+        """
         return sorted(cls._supported_solvers_dict().keys())
 
     @property
@@ -106,6 +145,7 @@ class Simulation(object):
         :param timepoints: A list of time points to simulate the system for
         :return: a list of :class:`~means.simulation.simulate.Trajectory` objects,
                  one for each of the equations in the problem
+        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
         """
 
         initial_conditions = self._append_zeros(initial_conditions, self.problem.number_of_equations)
@@ -120,17 +160,67 @@ class Simulation(object):
 
 class SimulationWithSensitivities(Simulation):
     """
-    A similar object to it's baseclass :class:`~means.simulation.simulate.Simulation`, however provides
-    instances of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects as a result instead.
+    A similar class to it's baseclass :class:`~means.simulation.simulate.Simulation`.
+    Performs simulations of the trajectories for each of the ODEs in given problem and performs sensitivity simulations
+    for the problem's parameters.
+
     """
 
-    def __init__(self, problem, **solver_options):
-        # Hardcode CVODE solver for sensitivity simulations
-        super(SimulationWithSensitivities, self).__init__(problem, solver='cvode', **solver_options)
+    def __init__(self, problem, solver='cvode', **solver_options):
+        """
+
+        :param problem: Problem to simulate
+        :type problem: ODEProblem
+        :param compute_sensitivities: Whether the model should test parameter sensitivity or not
+        :param solver: the solver to use. Currently, the solvers that available are:
+
+                       `'cvode'`
+                            sundials CVode solver, as implemented in :class:`assimulo.solvers.sundials.CVode`
+
+                       The list of these solvers is always accessible at runtime
+                       from :meth:`SimulationWithSensitivities.supported_solvers()` method.
+
+        :type solver: basestring
+        :param solver_options: options to set in the solver. Consult `Assimulo documentation`_ for available options
+                               for information on specific options available.
+
+        .. _`Assimulo documentation`: http://www.jmodelica.org/assimulo_home/
+        """
+        super(SimulationWithSensitivities, self).__init__(problem, solver, **solver_options)
 
     @classmethod
     def _supported_solvers_dict(cls):
         return available_solvers(with_sensitivity_support=True)
+
+    @classmethod
+    def supported_solvers(cls):
+        """
+        List the supported solvers for the simulations.
+
+        >>> SimulationWithSensitivities.supported_solvers()
+        ['cvode']
+
+        :return: the names of the solvers supported for simulations
+        """
+        return super(SimulationWithSensitivities, cls).supported_solvers()
+
+
+    def simulate_system(self, parameters, initial_conditions, timepoints):
+        """
+        Simulates the system for each of the timepoints, starting at initial_constants and initial_values values
+
+        :param parameters: list of the initial values for the constants in the model.
+                                  Must be in the same order as in the model
+        :param initial_conditions: List of the initial values for the equations in the problem. Must be in the same order as
+                               these equations occur.
+                               If not all values specified, the remaining ones will be assumed to be 0.
+        :param timepoints: A list of time points to simulate the system for
+        :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
+                 one for each of the equations in the problem
+        :rtype: list[:class:`~means.simulation.simulate.TrajectoryWithSensitivityData`]
+        """
+        return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
+
 
 def _postprocess_default(problem, trajectories):
     return trajectories

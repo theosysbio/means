@@ -343,6 +343,7 @@ intersphinx_mapping = {
     'matplotlib':('http://matplotlib.sourceforge.net', None),
          'numpy':('http://docs.scipy.org/doc/numpy',None),
          'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None)
 }
 
 
