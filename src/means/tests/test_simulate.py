@@ -373,3 +373,62 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
         assert_array_almost_equal(results_dict[Moment(np.array([0, 2]), symbol=yx1)], answers[2], decimal=2)
         assert_array_almost_equal(results_dict[Moment(np.array([1, 1]), symbol=yx3)], answers[3], decimal=2)
         assert_array_almost_equal(results_dict[Moment(np.array([2, 0]), symbol=yx5)], answers[4], decimal=2)
+
+    def test_mm_lna(self):
+
+        c_0 = Symbol('c_0')
+        c_1 = Symbol('c_1')
+        c_2 = Symbol('c_2')
+
+        constants = [c_0, c_1, c_2]
+
+        y_0 = Symbol('y_0')
+        y_1 = Symbol('y_1')
+
+        V_00 = Symbol('V_00')
+        V_01 = Symbol('V_01')
+        V_10 = Symbol('V_10')
+        V_11 = Symbol('V_11')
+
+        right_hand_side = MutableDenseMatrix([[-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301)], [c_2*(-y_0 - y_1 + 301)], [2*V_00*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_01*(-c_0*y_0 - c_1) + V_10*(-c_0*y_0 - c_1) + (c_1*(-y_0 - y_1 + 301))**Float('1.0', prec=15) + (c_0*y_0*(y_0 + y_1 - 181))**Float('1.0', prec=15)], [-V_00*c_2 - V_01*c_2 + V_01*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_11*(-c_0*y_0 - c_1)], [-V_00*c_2 - V_10*c_2 + V_10*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_11*(-c_0*y_0 - c_1)], [-V_01*c_2 - V_10*c_2 - 2*V_11*c_2 + (c_2*(-y_0 - y_1 + 301))**Float('1.0', prec=15)]])
+
+        ode_lhs_terms = [Moment(np.array([1, 0]), symbol=y_0),
+                         Moment(np.array([0, 1]), symbol=y_1),
+                         VarianceTerm(V_00, (0, 0)),
+                         VarianceTerm(V_01, (0, 1)),
+                         VarianceTerm(V_10, (1, 0)),
+                         VarianceTerm(V_11, (1, 1))]
+
+        problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
+
+        simulation = Simulation(problem)
+
+        parameters = [0.00166, 0.001, 0.1]
+        initial_conditions = [301, 0, 0, 0, 0]
+        timepoints = np.arange(0, 51, 1)
+
+        results = simulation.simulate_system(parameters, initial_conditions, timepoints)
+        results_dict = {t.description: t.values for t in results}
+
+        answers = np.array([
+            [301.0, 253.436204566, 230.979937842, 204.788375704, 200.702081292, 186.700214895, 169.55274518,
+             172.886849671, 163.162739153, 150.065251265, 132.384230734, 129.127889951, 129.173570586, 126.290300197,
+             114.252052972, 113.204700825, 95.1139404228, 82.9887100358, 78.5678469333, 88.0933796784, 69.4089961867,
+             67.8450703519, 69.5724696162, 63.337046349, 45.8974177336, 45.3968374186, 49.383867011, 37.1971368196,
+             39.4769627647, 33.7410154804, 30.9601505347, 27.7139599986, 23.8036526083, 23.7608053923, 15.5146758224,
+             19.0321624258, 18.325963395, 21.7767482547, 10.087362842, 4.92575948392, 9.54896456015, 3.38745834523,
+             6.5947923919, 4.60581264612, 6.21689947528, 5.446392893, 3.59236888858, 1.08215157214, 2.5709100709,
+             1.77705725707, 2.14497286178],
+            [0.0, 4.84523313622, 6.90986981639, 20.5395973602, 22.2942326462, 27.6240531838, 36.424640945,
+             36.8724566907, 51.0373385448, 56.512898557, 83.8518607355, 80.2356913682, 87.1665972214, 91.1911941353,
+             102.279960896, 114.602305255, 121.581893031, 136.232923213, 137.287055837, 135.766847829, 161.16278263,
+             159.971722631, 154.173184687, 173.410043038, 182.001202567, 190.862317333, 190.136780804, 211.62501592,
+             199.268263416, 217.007030375, 213.843188415, 212.567792688, 236.800759441, 233.908547984, 239.845245558,
+             246.579060084, 247.620136326, 232.210821473, 254.301189011, 256.556380674, 259.553405022, 272.829631718,
+             261.554313692, 274.956855149, 269.213033823, 275.211114272, 272.784404667, 276.210719763, 281.90835264,
+             282.157591867, 277.571924101]]
+        )
+
+        assert_array_almost_equal(results_dict[Moment(np.array([1, 0]), symbol=y_0)], answers[0], decimal=3)
+        assert_array_almost_equal(results_dict[Moment(np.array([0, 1]), symbol=y_1)], answers[1], decimal=3)
+
