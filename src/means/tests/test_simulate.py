@@ -5,7 +5,8 @@ from means.approximation.ode_problem import ODEProblem, ODETermBase, Moment, Var
 from means.simulation import Simulation
 from numpy.testing import assert_array_almost_equal
 import numpy as np
-from sympy import Symbol, MutableDenseMatrix, symbols
+import random
+from sympy import Symbol, MutableDenseMatrix, symbols, Float
 
 class ConstantDerivativesProblem(ODEProblem):
     def __init__(self):
@@ -70,7 +71,77 @@ class TestSimulate(unittest.TestCase):
                                                                               3.65911320e-03, -2.78905874e-03,
                                                                               -3.02892609e-03]))
 
+
+class TestSimulateWithSensitivities(unittest.TestCase):
+
+
+    def test_model_in_paper(self):
+        """
+        Given the model in the Ale et. al Paper, and the initial parameters,
+        the simulation with sensitivities result should be similar to the one described in paper, within minimal margin
+        of error.
+        """
+        parameters = [1.66e-3, 0.2]
+        initial_conditions = [301, 0]
+        timepoints = np.arange(0, 20, 0.1)
+
+        problem = means.approximation.ODEProblem('MNA',
+                                                 [Moment([1, 0], 'x_1'),
+                                                  Moment([0, 1], 'x_2'),
+                                                  Moment([0, 2], 'yx1'),
+                                                  Moment([1, 1], 'yx2'),
+                                                  Moment([2, 0], 'yx3')],
+                                                 to_sympy_matrix(['-2*k_1*x_1*(x_1 - 1) - 2*k_1*yx3 + 2*k_2*x_2',
+                                                                  'k_1*x_1*(x_1 - 1) + k_1*yx3 - k_2*x_2',
+
+                                                                  'k_1*x_1**2 - k_1*x_1 + 2*k_1*yx2*(2*x_1 - 1) '
+                                                                  '+ k_1*yx3 + k_2*x_2 - 2*k_2*yx1',
+
+                                                                  '-2*k_1*x_1**2 + 2*k_1*x_1 + k_1*yx3*(2*x_1 - 3) '
+                                                                  '- 2*k_2*x_2 + 2*k_2*yx1 - yx2*(4*k_1*x_1 '
+                                                                  '- 2*k_1 + k_2)',
+
+                                                                  '4*k_1*x_1**2 - 4*k_1*x_1 - 8*k_1*yx3*(x_1 - 1)'
+                                                                  ' + 4*k_2*x_2 + 4*k_2*yx2'
+                                                                  ]),
+                                                 ['k_1', 'k_2']
+                                                 )
+
+        simulation = means.simulation.SimulationWithSensitivities(problem)
+        trajectories = simulation.simulate_system(parameters, initial_conditions, timepoints)
+
+        answers = {}
+
+        # Trajectory value, sensitivity wrt k_1, sensitivity wrt k_2
+        answers[Moment([1, 0], 'x_1')] = (107.948953772, -25415.3565093, 210.946558295)
+        answers[Moment([0, 1], 'x_2')] = (96.5255231141, 12707.6782547, -105.473279147)
+
+        seen_answers = set()
+        for trajectory in trajectories:
+            # There should be one sensitivity trajectory for each parameter
+            self.assertEqual(len(trajectory.sensitivity_data), len(parameters))
+
+            # Check the ones we have answers for
+            answer = None
+            try:
+                answer = answers[trajectory.description]
+            except KeyError:
+                continue
+
+            seen_answers.add(trajectory.description)
+
+            self.assertAlmostEqual(answer[0], trajectory.values[-1], delta=1e-6)
+            self.assertAlmostEqual(answer[1], trajectory.sensitivity_data[0].values[-1], delta=1e-6)
+            self.assertAlmostEqual(answer[2], trajectory.sensitivity_data[1].values[-1], delta=1e-6)
+
+        self.assertEqual(len(seen_answers), len(answers), msg='Some of the trajectories for moments were not returned')
+
+
 class TestSimulateRegressionForPopularModels(unittest.TestCase):
+
+    def setUp(self):
+        np.random.seed(42)
+        random.seed(42)
 
     def test_p53_3_moments(self):
 
@@ -158,68 +229,60 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
                                   decimal=1
                                   )
 
-        
 
-class TestSimulateWithSensitivities(unittest.TestCase):
+    def test_p53_lna(self):
+        # Again just an output of means.approximation.LinearNoiseApproximation(p53).run()
 
+        c_0, c_1, c_2, c_3, c_4, c_5, c_6 = symbols(['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'])
+        constants = [c_0, c_1, c_2, c_3, c_4, c_5, c_6]
 
-    def test_model_in_paper(self):
-        """
-        Given the model in the Ale et. al Paper, and the initial parameters,
-        the simulation with sensitivities result should be similar to the one described in paper, within minimal margin
-        of error.
-        """
-        parameters = [1.66e-3, 0.2]
-        initial_conditions = [301, 0]
-        timepoints = np.arange(0, 20, 0.1)
+        y_0, y_1, y_2 = symbols(['y_0', 'y_1', 'y_2'])
 
-        problem = means.approximation.ODEProblem('MNA',
-                                                 [Moment([1, 0], 'x_1'),
-                                                  Moment([0, 1], 'x_2'),
-                                                  Moment([0, 2], 'yx1'),
-                                                  Moment([1, 1], 'yx2'),
-                                                  Moment([2, 0], 'yx3')],
-                                                 to_sympy_matrix(['-2*k_1*x_1*(x_1 - 1) - 2*k_1*yx3 + 2*k_2*x_2',
-                                                                  'k_1*x_1*(x_1 - 1) + k_1*yx3 - k_2*x_2',
+        V_00 = Symbol('V_00')
+        V_02 = Symbol('V_02')
+        V_20 = Symbol('V_20')
+        V_01 = Symbol('V_01')
+        V_21 = Symbol('V_21')
+        V_22 = Symbol('V_22')
+        V_10 = Symbol('V_10')
+        V_12 = Symbol('V_12')
+        V_11 = Symbol('V_11')
 
-                                                                  'k_1*x_1**2 - k_1*x_1 + 2*k_1*yx2*(2*x_1 - 1) '
-                                                                  '+ k_1*yx3 + k_2*x_2 - 2*k_2*yx1',
+        ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
+                         Moment(np.array([0, 1, 0]), symbol=y_1),
+                         Moment(np.array([0, 0, 1]), symbol=y_2),
+                         VarianceTerm(V_00, (0, 0)),
+                         VarianceTerm(V_01, (0, 1)),
+                         VarianceTerm(V_02, (0, 2)),
+                         VarianceTerm(V_10, (1, 0)),
+                         VarianceTerm(V_11, (1, 1)),
+                         VarianceTerm(V_12, (1, 2)),
+                         VarianceTerm(V_20, (2, 0)),
+                         VarianceTerm(V_21, (2, 1)),
+                         VarianceTerm(V_22, (2, 2))]
 
-                                                                  '-2*k_1*x_1**2 + 2*k_1*x_1 + k_1*yx3*(2*x_1 - 3) '
-                                                                  '- 2*k_2*x_2 + 2*k_2*yx1 - yx2*(4*k_1*x_1 '
-                                                                  '- 2*k_1 + k_2)',
+        right_hand_side = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*V_00*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_02*c_2*y_0/(c_6 + y_0) - V_20*c_2*y_0/(c_6 + y_0) + c_0**Float('1.0', prec=15) + (c_1*y_0)**Float('1.0', prec=15) + (c_2*y_0*y_2/(c_6 + y_0))**Float('1.0', prec=15)], [V_00*c_3 - V_01*c_4 + V_01*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_21*c_2*y_0/(c_6 + y_0)], [V_01*c_4 - V_02*c_5 + V_02*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_00*c_3 - V_10*c_4 + V_10*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_12*c_2*y_0/(c_6 + y_0)], [V_01*c_3 + V_10*c_3 - 2*V_11*c_4 + (c_3*y_0)**Float('1.0', prec=15) + (c_4*y_1)**Float('1.0', prec=15)], [V_02*c_3 + V_11*c_4 - V_12*c_4 - V_12*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_10*c_4 - V_20*c_5 + V_20*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_11*c_4 + V_20*c_3 - V_21*c_4 - V_21*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_12*c_4 + V_21*c_4 - 2*V_22*c_5 + (c_4*y_1)**Float('1.0', prec=15) + (c_5*y_2)**Float('1.0', prec=15)]])
 
-                                                                  '4*k_1*x_1**2 - 4*k_1*x_1 - 8*k_1*yx3*(x_1 - 1)'
-                                                                  ' + 4*k_2*x_2 + 4*k_2*yx2'
-                                                                  ]),
-                                                 ['k_1', 'k_2']
-                                                 )
+        problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
 
-        simulation = means.simulation.SimulationWithSensitivities(problem)
-        trajectories = simulation.simulate_system(parameters, initial_conditions, timepoints)
+        simulation = Simulation(problem)
 
-        answers = {}
+        timepoints = np.arange(0, 20.5, 0.5)
+        parameters = [90, 0.002, 1.2, 1.1, 0.8, 0.96, 0.01]
+        initial_conditions = [80, 40, 60]
 
-        # Trajectory value, sensitivity wrt k_1, sensitivity wrt k_2
-        answers[Moment([1, 0], 'x_1')] = (107.948953772, -25415.3565093, 210.946558295)
-        answers[Moment([0, 1], 'x_2')] = (96.5255231141, 12707.6782547, -105.473279147)
+        results = simulation.simulate_system(parameters, initial_conditions, timepoints)
 
-        seen_answers = set()
-        for trajectory in trajectories:
-            # There should be one sensitivity trajectory for each parameter
-            self.assertEqual(len(trajectory.sensitivity_data), len(parameters))
+        results_dict = {t.description: t.values for t in results}
 
-            # Check the ones we have answers for
-            answer = None
-            try:
-                answer = answers[trajectory.description]
-            except KeyError:
-                continue
+        assert_array_almost_equal(results_dict[Moment(np.array([1, 0, 0]), symbol=y_0)],
+                                  np.array([80.0, 79.1914740741, 79.9965992329, 104.757648005, 120.578727088, 123.625206959, 123.96128436, 82.7992770474, 72.969246402, 44.4156687873, 30.9092456985, 46.423683946, 42.7809706641, 19.0878802128, 48.4536080199, 78.7752508454, 81.3518991999, 100.209004988, 52.1574381872, 101.490225853, 113.379695621, 116.740675457, 73.013623733, 87.5875770675, 41.1328281111, 24.1179749096, 67.118762094, 6.68894373981, 71.1628138437, 39.5630424494, 33.0596472337, 75.4319249595, 56.197544248, 106.450025998, 107.741535966, 47.3359499928, 80.6510210778, 84.2708255921, 79.7045784887, 91.705844575, 48.370911984]),
+                                  decimal=3)
 
-            seen_answers.add(trajectory.description)
+        assert_array_almost_equal(results_dict[Moment(np.array([0, 1, 0]), symbol=y_1)],
+                                  np.array([40.0, 57.1167556561, 79.256989629, 97.6003424371, 105.027101911, 134.253703289, 140.963298647, 133.665335589, 130.634411817, 90.0576485135, 116.852067224, 105.108267082, 40.6294248475, 54.8936675225, 53.9876853104, 73.0288716935, 43.5029866606, 83.7102704857, 73.3673978019, 116.887163066, 126.779184193, 163.028298877, 132.447880522, 139.652927357, 124.794217403, 73.266618371, 64.3904319568, 79.0744095042, 89.4239610675, 48.5329448553, 69.9268603664, 74.53962416, 67.7668059066, 77.3129863689, 96.4245270836, 108.063656586, 99.1486239561, 113.359776108, 121.379864182, 160.1543129, 65.4335585637]),
+                                  decimal=3)
 
-            self.assertAlmostEqual(answer[0], trajectory.values[-1], delta=1e-6)
-            self.assertAlmostEqual(answer[1], trajectory.sensitivity_data[0].values[-1], delta=1e-6)
-            self.assertAlmostEqual(answer[2], trajectory.sensitivity_data[1].values[-1], delta=1e-6)
-
-        self.assertEqual(len(seen_answers), len(answers), msg='Some of the trajectories for moments were not returned')
+        assert_array_almost_equal(results_dict[Moment(np.array([0, 0, 1]), symbol=y_2)],
+                                  np.array([60.0, 55.801520363, 59.2514861196, 66.6939807382, 74.0266560861, 87.75867501, 94.5489860211, 103.558303549, 105.923250253, 91.0106034811, 112.018502603, 96.6016038707, 49.2842205322, 68.8714831808, 53.0202508497, 52.4354537685, 28.1507133056, 50.2727519602, 65.4537783909, 76.2773556745, 79.939578983, 105.825863104, 104.967414284, 104.739539035, 115.61868957, 84.9556066665, 56.4488920599, 96.5401807491, 71.8215126846, 53.9779463325, 73.9363247459, 55.6559579202, 59.7507791639, 42.5220093781, 57.5850452991, 96.7292445787, 74.7145007402, 84.7610649373, 93.8314564752, 118.357794655, 66.2615966428]),
+                                  decimal=3)
