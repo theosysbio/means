@@ -43,6 +43,7 @@ class GammaCloser(CloserBase):
         else:
             beta_in_matrix = sp.Matrix(symbolic_species[1:])
 
+
         expectation_symbols = sp.Matrix([n.symbol for n in prob_moments if n.order == 1])
 
         variance_symbols = []
@@ -58,7 +59,7 @@ class GammaCloser(CloserBase):
         # but as it will force alpha0 to be negative, resulting ODEs are not solvable, so set arbitrary alpha0
         # i.e. alpha_exprs[0] = 1. same as the gamma_type
         # Gamma type 0 (univariate case): covariance is zero, same as the gamma_type too.
-        if gamma_type == 1 or 0:
+        if gamma_type != 2:
             first = sp.Matrix([gamma_type])
             alpha_exprs = alpha_bar_exprs - sp.Matrix([gamma_type]*n_species)
             alpha_exprs = first.col_join(alpha_exprs)
@@ -117,14 +118,15 @@ class GammaCloser(CloserBase):
         # we want to replace raw moments symbols with closed raw moment expressions (in terms of variances/means)
         substitution_pairs = zip(raw_symbols, closed_raw_moments)
 
-        # for i in substitution_pairs:
-        #     print i
-        # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>central_from raw"
-        # print central_from_raw_exprs
-        # so we can obtain expression of central moments in terms of low order raw moments
         closed_central_moments = substitute_all(central_from_raw_exprs, substitution_pairs)
         return closed_central_moments
 
+    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+        n_counter = [n for n in prob_moments if n.order > 1]
+        if self.is_multivariate:
+            return closed_central_moments
+        else:
+            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
 
 
     def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
@@ -136,8 +138,8 @@ class GammaCloser(CloserBase):
         # we obtain expressions for central moments in terms of closed raw moments
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
         # set mixed central moment to zero iff univariate
-        #fixme
-        #closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
+
+        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
 
         # we remove ODEs of highest order in mfk
         new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
