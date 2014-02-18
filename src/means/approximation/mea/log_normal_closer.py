@@ -35,6 +35,15 @@ class LogNormalCloser(CloserBase):
         else:
             return sp.Integer(0)
 
+    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+        n_counter = [n for n in prob_moments if n.order > 1]
+        if self.is_multivariate:
+            return closed_central_moments
+        else:
+            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
+
+
+
     def compute_raw_moments(self, n_species, problem_moments):
         # The covariance expressed in terms of central moment symbols (tipycally, yxNs, where N is an integer)
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
@@ -90,7 +99,9 @@ class LogNormalCloser(CloserBase):
         closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
         # we obtain expressions for central moments in terms of closed raw moments
         closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
-
+        # set mixed central moment to zero iff univariate
+        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
+        
         # we remove ODEs of highest order in mfk
         new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
         # new_mkf = mfk

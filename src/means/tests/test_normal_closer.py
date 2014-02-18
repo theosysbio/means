@@ -194,13 +194,12 @@ class TestNormalCloserMom4(unittest.TestCase):
         ])
 
 
-        closer = NormalCloser(n_moments,multivariate=True)
+        closer = NormalCloser(n_moments, multivariate=True)
         answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_normal_closer_wrapper_univariate(self):
-
         mfk = to_sympy_matrix([
             ["(c_2*c_6*y_2*yx32 - c_2*c_6*yx5*(c_6 + y_0)**3 + c_2*c_6*(c_6 + y_0)**2*(y_2*yx7 + yx15) - c_2*c_6*(c_6 + y_0)*(y_2*yx17 + yx30) - c_2*y_0*y_2*(c_6 + y_0)**4 + (c_0 - c_1*y_0)*(c_6 + y_0)**5)/(c_6 + y_0)**5"],
             ["c_3*y_0 - c_4*y_1"],
@@ -336,7 +335,8 @@ class TestNormalCloserMom4(unittest.TestCase):
             ["(c_2*y_0 ** 5*yx2+c_1*y_0 ** 5*yx5-2*c_2*y_0 ** 5*yx12-2*c_1*y_0 ** 5*yx15+c_4*y_0 ** 5*yx16-c_5*y_0 ** 5*yx15+2*c_2*c_6 ** 4*yx5 ** 2+c_1*c_6 ** 5*yx5+c_2*c_6 ** 4*yx12-2*c_1*c_6 ** 5*yx15+c_4*c_6 ** 5*yx16-c_5*c_6 ** 5*yx15+6*c_2*c_6 ** 2*y_0 ** 2*yx5 ** 2+4*c_2*c_6*y_0 ** 4*yx2+c_2*c_6 ** 4*y_0*yx2+5*c_1*c_6*y_0 ** 4*yx5+5*c_1*c_6 ** 4*y_0*yx5+c_2*c_6 ** 4*y_2*yx5+c_2*c_6*y_0 ** 3*yx12+3*c_2*c_6 ** 3*y_0*yx12-8*c_2*c_6*y_0 ** 4*yx12-2*c_2*c_6 ** 4*y_0*yx12-10*c_1*c_6*y_0 ** 4*yx15-10*c_1*c_6 ** 4*y_0*yx15-c_2*c_6 ** 3*y_2*yx15-2*c_2*c_6 ** 4*y_2*yx15+5*c_4*c_6*y_0 ** 4*yx16+5*c_4*c_6 ** 4*y_0*yx16-5*c_5*c_6*y_0 ** 4*yx15-5*c_5*c_6 ** 4*y_0*yx15-2*c_2*c_6 ** 3*yx5*yx15+6*c_2*c_6 ** 2*y_0 ** 3*yx2+4*c_2*c_6 ** 3*y_0 ** 2*yx2+10*c_1*c_6 ** 2*y_0 ** 3*yx5+10*c_1*c_6 ** 3*y_0 ** 2*yx5+2*c_2*c_6*y_0 ** 3*yx5 ** 2+6*c_2*c_6 ** 3*y_0*yx5 ** 2+3*c_2*c_6 ** 2*y_0 ** 2*yx12-12*c_2*c_6 ** 2*y_0 ** 3*yx12-8*c_2*c_6 ** 3*y_0 ** 2*yx12-20*c_1*c_6 ** 2*y_0 ** 3*yx15-20*c_1*c_6 ** 3*y_0 ** 2*yx15+10*c_4*c_6 ** 2*y_0 ** 3*yx16+10*c_4*c_6 ** 3*y_0 ** 2*yx16-10*c_5*c_6 ** 2*y_0 ** 3*yx15-10*c_5*c_6 ** 3*y_0 ** 2*yx15+3*c_2*c_6 ** 2*y_0 ** 2*y_2*yx5-6*c_2*c_6 ** 2*y_0 ** 2*y_2*yx15+c_2*c_6*y_0 ** 3*y_2*yx5+3*c_2*c_6 ** 3*y_0*y_2*yx5-c_2*c_6*y_0 ** 2*y_2*yx15-2*c_2*c_6 ** 2*y_0*y_2*yx15-2*c_2*c_6*y_0 ** 3*y_2*yx15-6*c_2*c_6 ** 3*y_0*y_2*yx15-6*c_2*c_6*y_2*yx5*yx7 ** 2-2*c_2*c_6 ** 3*y_2*yx5*yx7-2*c_2*c_6*y_0 ** 2*yx5*yx15-4*c_2*c_6 ** 2*y_0*yx5*yx15+2*c_2*c_6 ** 2*y_2*yx5*yx17+2*c_2*c_6*y_0*y_2*yx5*yx17-2*c_2*c_6*y_0 ** 2*y_2*yx5*yx7-4*c_2*c_6 ** 2*y_0*y_2*yx5*yx7)/(c_6+y_0) ** 5"],
             ["(c_2*y_0 ** 5*yx3+c_1*y_0 ** 5*yx6-2*c_2*y_0 ** 5*yx13-2*c_1*y_0 ** 5*yx16+c_3*y_0 ** 5*yx17-c_4*y_0 ** 5*yx16+c_1*c_6 ** 5*yx6+c_2*c_6 ** 4*yx13-2*c_1*c_6 ** 5*yx16+c_3*c_6 ** 5*yx17-c_4*c_6 ** 5*yx16+4*c_2*c_6*y_0 ** 4*yx3+c_2*c_6 ** 4*y_0*yx3+5*c_1*c_6*y_0 ** 4*yx6+5*c_1*c_6 ** 4*y_0*yx6+c_2*c_6 ** 4*y_2*yx6+c_2*c_6*y_0 ** 3*yx13+3*c_2*c_6 ** 3*y_0*yx13-8*c_2*c_6*y_0 ** 4*yx13-2*c_2*c_6 ** 4*y_0*yx13-10*c_1*c_6*y_0 ** 4*yx16-10*c_1*c_6 ** 4*y_0*yx16-c_2*c_6 ** 3*y_2*yx16-2*c_2*c_6 ** 4*y_2*yx16+5*c_3*c_6*y_0 ** 4*yx17+5*c_3*c_6 ** 4*y_0*yx17-5*c_4*c_6*y_0 ** 4*yx16-5*c_4*c_6 ** 4*y_0*yx16+2*c_2*c_6 ** 4*yx5*yx6-2*c_2*c_6 ** 3*yx6*yx15+6*c_2*c_6 ** 2*y_0 ** 3*yx3+4*c_2*c_6 ** 3*y_0 ** 2*yx3+10*c_1*c_6 ** 2*y_0 ** 3*yx6+10*c_1*c_6 ** 3*y_0 ** 2*yx6+3*c_2*c_6 ** 2*y_0 ** 2*yx13-12*c_2*c_6 ** 2*y_0 ** 3*yx13-8*c_2*c_6 ** 3*y_0 ** 2*yx13-20*c_1*c_6 ** 2*y_0 ** 3*yx16-20*c_1*c_6 ** 3*y_0 ** 2*yx16+10*c_3*c_6 ** 2*y_0 ** 3*yx17+10*c_3*c_6 ** 3*y_0 ** 2*yx17-10*c_4*c_6 ** 2*y_0 ** 3*yx16-10*c_4*c_6 ** 3*y_0 ** 2*yx16+3*c_2*c_6 ** 2*y_0 ** 2*y_2*yx6-6*c_2*c_6 ** 2*y_0 ** 2*y_2*yx16+6*c_2*c_6 ** 2*y_0 ** 2*yx5*yx6+c_2*c_6*y_0 ** 3*y_2*yx6+3*c_2*c_6 ** 3*y_0*y_2*yx6-c_2*c_6*y_0 ** 2*y_2*yx16-2*c_2*c_6 ** 2*y_0*y_2*yx16-2*c_2*c_6*y_0 ** 3*y_2*yx16-6*c_2*c_6 ** 3*y_0*y_2*yx16+2*c_2*c_6*y_0 ** 3*yx5*yx6+6*c_2*c_6 ** 3*y_0*yx5*yx6-6*c_2*c_6*y_2*yx6*yx7 ** 2-2*c_2*c_6 ** 3*y_2*yx6*yx7-2*c_2*c_6*y_0 ** 2*yx6*yx15-4*c_2*c_6 ** 2*y_0*yx6*yx15+2*c_2*c_6 ** 2*y_2*yx6*yx17+2*c_2*c_6*y_0*y_2*yx6*yx17-2*c_2*c_6*y_0 ** 2*y_2*yx6*yx7-4*c_2*c_6 ** 2*y_0*y_2*yx6*yx7)/(c_6+y_0) ** 5"],
             ["(c_0*c_6 ** 5+c_0*y_0 ** 5-c_1*y_0 ** 6-c_2*y_0 ** 5*y_2+3*c_2*y_0 ** 5*yx5+3*c_1*y_0 ** 5*yx7-3*c_2*y_0 ** 5*yx15-3*c_1*y_0 ** 5*yx17+10*c_0*c_6 ** 2*y_0 ** 3+10*c_0*c_6 ** 3*y_0 ** 2-10*c_1*c_6 ** 2*y_0 ** 4-10*c_1*c_6 ** 3*y_0 ** 3-5*c_1*c_6 ** 4*y_0 ** 2+5*c_0*c_6*y_0 ** 4+5*c_0*c_6 ** 4*y_0-5*c_1*c_6*y_0 ** 5-c_1*c_6 ** 5*y_0-c_2*c_6 ** 4*yx5+3*c_1*c_6 ** 5*yx7+c_2*c_6 ** 3*yx15+3*c_2*c_6 ** 4*yx15-3*c_1*c_6 ** 5*yx17-4*c_2*c_6*y_0 ** 4*y_2-c_2*c_6 ** 4*y_0*y_2-c_2*c_6*y_0 ** 3*yx5-3*c_2*c_6 ** 3*y_0*yx5+12*c_2*c_6*y_0 ** 4*yx5+3*c_2*c_6 ** 4*y_0*yx5+15*c_1*c_6*y_0 ** 4*yx7+15*c_1*c_6 ** 4*y_0*yx7+3*c_2*c_6*y_2*yx7 ** 2-9*c_2*c_6*y_2*yx7 ** 3+c_2*c_6 ** 3*y_2*yx7+3*c_2*c_6 ** 4*y_2*yx7+c_2*c_6*y_0 ** 2*yx15+2*c_2*c_6 ** 2*y_0*yx15+3*c_2*c_6*y_0 ** 3*yx15+9*c_2*c_6 ** 3*y_0*yx15-12*c_2*c_6*y_0 ** 4*yx15-3*c_2*c_6 ** 4*y_0*yx15-15*c_1*c_6*y_0 ** 4*yx17-15*c_1*c_6 ** 4*y_0*yx17-c_2*c_6 ** 2*y_2*yx17-3*c_2*c_6 ** 3*y_2*yx17-3*c_2*c_6 ** 4*y_2*yx17+3*c_2*c_6 ** 4*yx5*yx7-3*c_2*c_6 ** 3*yx7*yx15-6*c_2*c_6 ** 2*y_0 ** 3*y_2-4*c_2*c_6 ** 3*y_0 ** 2*y_2-3*c_2*c_6 ** 2*y_0 ** 2*yx5+18*c_2*c_6 ** 2*y_0 ** 3*yx5+12*c_2*c_6 ** 3*y_0 ** 2*yx5+30*c_1*c_6 ** 2*y_0 ** 3*yx7+30*c_1*c_6 ** 3*y_0 ** 2*yx7+9*c_2*c_6 ** 2*y_2*yx7 ** 2+6*c_2*c_6 ** 3*y_2*yx7 ** 2+9*c_2*c_6 ** 2*y_0 ** 2*yx15-18*c_2*c_6 ** 2*y_0 ** 3*yx15-12*c_2*c_6 ** 3*y_0 ** 2*yx15-30*c_1*c_6 ** 2*y_0 ** 3*yx17-30*c_1*c_6 ** 3*y_0 ** 2*yx17+6*c_2*c_6*y_0 ** 2*y_2*yx7 ** 2+12*c_2*c_6 ** 2*y_0*y_2*yx7 ** 2+9*c_2*c_6 ** 2*y_0 ** 2*y_2*yx7-9*c_2*c_6 ** 2*y_0 ** 2*y_2*yx17+9*c_2*c_6 ** 2*y_0 ** 2*yx5*yx7-c_2*c_6*y_0*y_2*yx17+9*c_2*c_6*y_0*y_2*yx7 ** 2+c_2*c_6*y_0 ** 2*y_2*yx7+2*c_2*c_6 ** 2*y_0*y_2*yx7+3*c_2*c_6*y_0 ** 3*y_2*yx7+9*c_2*c_6 ** 3*y_0*y_2*yx7-3*c_2*c_6*y_0 ** 2*y_2*yx17-6*c_2*c_6 ** 2*y_0*y_2*yx17-3*c_2*c_6*y_0 ** 3*y_2*yx17-9*c_2*c_6 ** 3*y_0*y_2*yx17+3*c_2*c_6*y_0 ** 3*yx5*yx7+9*c_2*c_6 ** 3*y_0*yx5*yx7-3*c_2*c_6*y_0 ** 2*yx7*yx15-6*c_2*c_6 ** 2*y_0*yx7*yx15+3*c_2*c_6 ** 2*y_2*yx7*yx17+3*c_2*c_6*y_0*y_2*yx7*yx17)/(c_6+y_0) ** 5"]
-            ])
+        ])
+
 
         # univariate != multivariate
         closer = NormalCloser(n_moments, multivariate=False)
@@ -344,7 +344,7 @@ class TestNormalCloserMom4(unittest.TestCase):
 
         #sympy.print_python(answer)
 
-        #self.assertTrue(sympy_expressions_equal(answer, expected))
+        self.assertTrue(sympy_expressions_equal(answer, expected))
 
 
 class TestNormalCloser(unittest.TestCase):

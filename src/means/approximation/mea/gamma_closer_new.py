@@ -1,21 +1,22 @@
 import sympy as sp
 import operator
-import copy
 from means.util.sympyhelpers import substitute_all
 from zero_closer import CloserBase
 
 
-
-import itertools
-
 class GammaCloser(CloserBase):
-    def __init__(self,n_moments, multivariate = True):
+    def __init__(self,n_moments, multivariate=True, type=0):
         super(GammaCloser, self).__init__(n_moments)
         self.__is_multivariate = multivariate
+        self.__type = type
 
     @property
     def is_multivariate(self):
         return self.__is_multivariate
+
+    @property
+    def type(self):
+        return self.__type
 
     def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
         mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
@@ -24,11 +25,11 @@ class GammaCloser(CloserBase):
         mfk, prob_lhs = self.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_lhs)
         return mfk, prob_lhs
 
-    def get_parameter_symbols(self, gamma_type, n_species, prob_moments ):
+    def get_parameter_symbols(self, n_species, prob_moments):
         #fixme set cross terms to zero for gamma type 1
         # Create symbolic species Y0 - Yn, where n = n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
-
+        gamma_type = self.type
         # Obtain beta terms in the gamma matrix
         if gamma_type == 1:
             beta_in_matrix = sp.Matrix([symbolic_species[0]] + [Y + symbolic_species[0] for Y in symbolic_species[1:]])
@@ -79,21 +80,9 @@ class GammaCloser(CloserBase):
             subs_pairs.append((sp.Symbol("Y_{0}".format(i)),a ))
             alpha_multipliers = alpha_multipliers.applyfunc(lambda x : substitute_all(x, subs_pairs))
 
-
-
-
-
-
-
-
-
-
-
     def compute_closed_central_moments(self, n_species, problem_moments):
 
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-
-
         out_mat = []
 
         n_counter = [n for n in problem_moments if n.order > 1]
@@ -155,51 +144,3 @@ class GammaCloser(CloserBase):
 
 
         return new_mfk,new_prob_moments
-    def generate_partitions(self,l):
-        if len(l) % 2 != 0:
-            raise ValueError("the length of the list to partition must be even")
-        #define partition size
-        part_size = int(len(l)/2)
-        idxs = [i for i in range(len(l))]
-
-
-
-        # make all combinations
-        # A natural property of these combinaisons, is that the last element
-        # is a complementary set to the fist one, the second to the one before last,
-        # and so on.
-        combin =  [i for i in itertools.combinations(idxs , part_size)]
-
-        # this loop will return the first, the second with the one before last ans so on
-        # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
-        for i in combin:
-            yield (i,combin.pop())
-
-    def partition(self, k, accum, index, list_for_par):
-        '''
-        :param k: the number of elements in each partition
-        :param accum: should be [[]] as each partition pair consists of lists within a list
-        :param index: the index of item in list to start partition.should start from 0
-        :param list_for_par: the list for partition
-        :return: a list of non-repetitive partition pairs, each partition pair contains 2 indeces for variance
-        '''
-        if index == len(list_for_par):
-            if (k == 0):
-                return accum
-            else:
-                return []
-
-        element = list_for_par[index]
-        result = []
-
-        for set_i in range(len(accum)):
-            clone_new = copy.deepcopy(accum)
-            clone_new[set_i].append([element])
-            result.extend(self.partition(k - 1, clone_new, index + 1, list_for_par))
-
-            for elem_i in range(len(accum[set_i])):
-                clone_new = copy.deepcopy(accum)
-                clone_new[set_i][elem_i].append(element)
-                result.extend(self.partition(k, clone_new, index + 1, list_for_par))
-
-        return [row for row in result if len(row[0]) == 2]

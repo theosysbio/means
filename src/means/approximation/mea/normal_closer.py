@@ -58,11 +58,17 @@ class NormalCloser(CloserBase):
 
     def compute_closed_central_moments(self, n_species, problem_moments):
         covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-        print covariance_matrix
         n_counter = [n for n in problem_moments if n.order > 1]
         out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
         return sp.Matrix(out_mat)
 
+
+    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+        n_counter = [n for n in prob_moments if n.order > 1]
+        if self.is_multivariate:
+            return closed_central_moments
+        else:
+            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
 
 
     def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
@@ -72,6 +78,8 @@ class NormalCloser(CloserBase):
 
         # we obtain expressions for central moments in terms of variances/covariances
         closed_central_moments = self.compute_closed_central_moments(n_species, prob_moments)
+        # set mixed central moment to zero iff univariate
+        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
         # we remove ODEs of highest order in mfk
         new_mfk = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
 
@@ -104,32 +112,3 @@ class NormalCloser(CloserBase):
         # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
         for i in combin:
             yield (i,combin.pop())
-
-    def partition(self, k, accum, index, list_for_par):
-        '''
-        :param k: the number of elements in each partition
-        :param accum: should be [[]] as each partition pair consists of lists within a list
-        :param index: the index of item in list to start partition.should start from 0
-        :param list_for_par: the list for partition
-        :return: a list of non-repetitive partition pairs, each partition pair contains 2 indeces for variance
-        '''
-        if index == len(list_for_par):
-            if (k == 0):
-                return accum
-            else:
-                return []
-
-        element = list_for_par[index]
-        result = []
-
-        for set_i in range(len(accum)):
-            clone_new = copy.deepcopy(accum)
-            clone_new[set_i].append([element])
-            result.extend(self.partition(k - 1, clone_new, index + 1, list_for_par))
-
-            for elem_i in range(len(accum[set_i])):
-                clone_new = copy.deepcopy(accum)
-                clone_new[set_i][elem_i].append(element)
-                result.extend(self.partition(k, clone_new, index + 1, list_for_par))
-
-        return [row for row in result if len(row[0]) == 2]
