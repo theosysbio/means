@@ -6,6 +6,14 @@ from means.approximation.mea.log_normal_closer import LogNormalCloser
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 
+## for univariate or multivariate on dimerisation Model, we should have:
+# m = to_sympy_matrix([
+#             ["c_1*(c_2-y_0)-2*c_0*yx2-2*c_0*y_0*(y_0-1)"],
+#             ["2*c_1*c_2-4*c_0*y_0-2*c_1*y_0+8*c_0*yx2-4*c_0*yx3-2*c_1*yx2+4*c_0*y_0 ** 2-8*c_0*y_0*yx2"],
+#             ["4*c_1*c_2+8*c_0*y_0-4*c_1*y_0-6*c_0*ym4-20*c_0*yx2+18*c_0*yx3-6*c_1*yx2-3*c_1*yx3-8*c_0*y_0 ** 2+6*c_0*yx2 ** 2+24*c_0*y_0*yx2-12*c_0*y_0*yx3"]
+# ])
+
+
 class TestLogNormalCloser(unittest.TestCase):
 
     __problem_moments = [
