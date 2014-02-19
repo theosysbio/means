@@ -7,6 +7,7 @@ from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
+from means.util.sympyhelpers import substitute_all
 
 from gamma_closer import GammaCloser
 from log_normal_closer import LogNormalCloser
@@ -70,34 +71,35 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         by equivalent expressions in terms of central moment
         :param central_moments_exprs: a matrix of expressions for central moments.
         :param central_from_raw_exprs: central moment expressed in terms of raw moments
-        :param n_counter:
-        :param k_counter:
+        :param n_counter: the counter for central moments
+        :param k_counter: the counter for raw moments
         :return: expression of central moments without raw moment
         """
-        #fixme:
-        # Here we assume the n and k counters to be in same order.
-        # It would be better to ensure the moments n_vectors match
-        # The symbols for raw moment symbols
-        raw_lhs = [raw.symbol for raw in k_counter if raw.order > 1]
+        positiv_raw_moms_symbs = [raw.symbol for raw in k_counter if raw.order > 1]
         # The symbols for the corresponding central moment
         central_symbols= [central.symbol for central in n_counter if central.order > 1]
         # Now we state (central_symbols - central_from_raw_exprs) == 0
         eq_to_solve = [cfr - cs for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
         # And we solve this for the symbol of the corresponding raw moment. This gives an expression
-        #  of the symbol for raw moment in terms of central moments and lower order raw moment
-        solved_xs = [sp.solve(rhs, rlhs) for (rhs, rlhs) in zip(eq_to_solve, raw_lhs)]
+        # of the symbol for raw moment in terms of central moments and lower order raw moment
+        solved_xs = sp.Matrix([sp.solve(rhs, raw) for (rhs, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
 
-        #sympy 0.7.4 compatibility
-        try:
-            out_exprs = central_moments_exprs.clone()
-        except:
-            out_exprs = central_moments_exprs.copy()
+        # now we want to express raw moments only in terms od central moments and means
+        # for instance if we have: :math:`x_1 = 1, x_2 = 2 +x_1, x_3 = x_2*x_1`, we should give:
+        # :math: `x_1 = 1, x_2 = 2+1, x_3 = 1*(2+1)`
+        # To achieve this, we recursively apply substitution as many times as the highest order (minus one)
+        max_order = max([p.order for p in k_counter])
+        for i in range(max_order - 1):
+            substitution_pairs = zip(positiv_raw_moms_symbs, solved_xs)
+            solved_xs = substitute_all(solved_xs, substitution_pairs)
 
-        # "reversed" since we start the substitutions by higher order moments and propagate to the lower order moments
-        for rlhs, sx in reversed(zip(raw_lhs, solved_xs)):
-            out_exprs = out_exprs.applyfunc(lambda x : sp.Subs(x, rlhs, sx).doit())
+        # we finally build substitution pairs to replace all raw moments
+        substitution_pairs = zip(positiv_raw_moms_symbs, solved_xs)
+        # apply this substitution to all elements of the central moment expressions matrix
+        out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
+
         #todo eventually, remove simplify (slow)
-        out_exprs = out_exprs.applyfunc(sp.simplify)
+        #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
     def generate_n_and_k_counters(self, n_moments, species):
@@ -111,7 +113,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :return: a pair of lists of Moments
         """
 
-        # first order moments are 1
+        # first order moments are always 1
         k_counter = [Moment([0] * len(species), sp.Integer(1))]
         n_counter = [Moment([0] * len(species), sp.Integer(1))]
 
