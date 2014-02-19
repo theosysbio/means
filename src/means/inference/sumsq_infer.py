@@ -37,7 +37,7 @@ def to_guess(parameters_with_variability, initial_conditions_with_variability):
 
 
 
-def i0_to_test(only_variable_parameters, parameters_with_variability, initial_conditions_with_variability):
+def extract_params_from_i0(only_variable_parameters, parameters_with_variability, initial_conditions_with_variability):
     """
     Used within the distance/cost function to create the current kinetic parameter and initial condition vectors
     to be used during that interaction, using current values in i0.
@@ -265,7 +265,7 @@ class ParameterInference(object):
             if not self._constraints_are_satisfied(current_guess):
                 return MAX_DIST
 
-            current_parameters, current_initial_conditions = i0_to_test(current_guess,
+            current_parameters, current_initial_conditions = extract_params_from_i0(current_guess,
                                                                         starting_parameters_with_variability,
                                                                         starting_conditions_with_variability)
 
@@ -358,7 +358,7 @@ def write_inference_results(restart_results, t, vary, initcond_full, varyic, inf
     outfile = open(inferfile, 'w')
     for i in range(len(restart_results)):
         outfile.write('Starting parameters:\t' + str(restart_results[i][2]) + '\n')
-        (opt_param, opt_initconds) = i0_to_test(list(restart_results[i][0][0]), zip(restart_results[i][2], vary),
+        (opt_param, opt_initconds) = extract_params_from_i0(list(restart_results[i][0][0]), zip(restart_results[i][2], vary),
                                                 zip(initcond_full, varyic))
         outfile.write('Optimised parameters:\t' + str(opt_param) + '\n')
         outfile.write('Starting initial conditions:\t' + str(restart_results[i][3]) + '\n')
@@ -393,7 +393,7 @@ def graph(problem, opt_results, observed_trajectories, timepoints, initcond_full
     :param moments_list:
     :return:
     """
-    (opt_param, opt_initcond) = i0_to_test(list(opt_results[0][0]), opt_results[2], vary, initcond_full, varyic)
+    (opt_param, opt_initcond) = extract_params_from_i0(list(opt_results[0][0]), opt_results[2], vary, initcond_full, varyic)
 
     # get trajectories for optimised parameters
     simulator = Simulation(problem)
