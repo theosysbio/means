@@ -22,7 +22,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         super(MomentExpansionApproximation, self).__init__(model)
         self.__n_moments = int(n_moments)
 
-        # a dictionary of option -> closer this allow a generic handling for closer without to have to add
+        # a dictionary of "option -> closer" this allow a generic handling for closer without to have to add
         # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
         supported_closers = {"log-normal": LogNormalCloser,
                              "zero": ZeroCloser,
@@ -38,6 +38,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
             # our closer is an instance of the class queried in the dictionary
             CloserClass = supported_closers[closer]
             self.__closer = CloserClass(n_moments, *closer_args, **closer_kwargs)
+
+    @property
+    def closer(self):
+        return self.__closer
 
     def run(self):
         """
@@ -102,7 +106,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
-    def generate_n_and_k_counters(self, n_moments, species):
+    def generate_n_and_k_counters(self, n_moments, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
         """
         Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter)
         Each is a list of "Moment" objects. Therefore, they are represented by both a vector of integer
@@ -128,23 +132,21 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         k_counter += [Moment(d, s) for d,s in zip(descriptors, species)]
 
         # Higher order raw moment descriptors
-        k_counter_descriptors = [i for i in itertools.product(range(n_moments + 1), repeat=len(species)) if sum(i) <= n_moments and sum(i) > 1]
+        k_counter_descriptors = [i for i in itertools.product(range(n_moments + 1), repeat=len(species))
+                                 if 1 < sum(i) <= n_moments]
 
         #this mimics matlab sorting
         k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
-        k_counter_symbols = [sp.S("x_" + "_".join([str(s) for s in count])) for count in k_counter_descriptors]
+        k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]))
+                             for count in k_counter_descriptors]
         k_counter += [Moment(d, s) for d,s in zip(k_counter_descriptors, k_counter_symbols)]
 
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
-
-        #starts from two to mimic matlab!!
-        n_counter_symbols = [sp.S('yx{0}'.format(i+2)) for i in range(len(n_counter_descriptors))]
+        # arbitrary symbols
+        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter
 
-    @property
-    def closer(self):
-        return self.__closer
