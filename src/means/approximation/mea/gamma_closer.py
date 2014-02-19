@@ -26,16 +26,23 @@ class GammaCloser(CloserBase):
         return mfk, prob_lhs
 
     def get_parameter_symbols(self, n_species, prob_moments):
-        #fixme set cross terms to zero for gamma type 0
+        '''
+        Calculates parameters Y expressions and beta coefficients in
+        :math: 'X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}'
+
+        :param n_species: the number of species
+        :param prob_moments: the moments with symbols and moment vectors
+        :return: two column matrices Y expressions and beta multipliers
+        '''
 
         gamma_type = self.type
         n_moment = self.n_moments
 
-        # Create symbolic species Y0 - Yn, where n = n_species
+        # Create symbolic species :math: 'Y_0 \sim {Y_n}', where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
 
 
-        # Obtain beta terms in the gamma matrix
+        # Obtain beta terms in multivariate Gamma matrix. See Eq. 1a & 1b in Lakatos 2014 unpublished
         if gamma_type == 1:
             beta_in_matrix = sp.Matrix([Y + symbolic_species[0] for Y in symbolic_species[1:]])
         elif gamma_type == 2:
@@ -43,57 +50,67 @@ class GammaCloser(CloserBase):
         else:
             beta_in_matrix = sp.Matrix(symbolic_species[1:])
 
-
+        # E() and Var() symbols for each species have already been made in prob_moments matrix
         expectation_symbols = sp.Matrix([n.symbol for n in prob_moments if n.order == 1])
-
         variance_symbols = []
         for sp_idx in range(n_species):
             variance_symbols += [p.symbol for p in prob_moments if p.n_vector[sp_idx] == 2 and p.order == 2]
         variance_symbols = sp.Matrix(variance_symbols)
-        # Use Eq. 4 to calculate alpha bar and beta
+
+        # Compute :math:  :math: '\beta_i = Var(X_i)/\mathbb{E}(X_i) \bar\alpha_i = \mathbb{E}(X_i)^2/Var(X_i)
         beta_exprs = sp.Matrix([v / e for e,v in zip(expectation_symbols,variance_symbols)])
         alpha_bar_exprs = sp.Matrix([(e ** 2) / v for e,v in zip(expectation_symbols,variance_symbols)])
 
-
-        # Gamma type 1: covariance is alpha0 * betai * betaj, so should be taken into account,
-        # but as it will force alpha0 to be negative, resulting ODEs are not solvable, so set arbitrary alpha0
-        # i.e. alpha_exprs[0] = 1. same as the gamma_type
-        # Gamma type 0 (univariate case): covariance is zero, same as the gamma_type too.
+        # Gamma type 1 :math: '\bar\alpha_i = \alpha_0 + \alpha_i'
+        # Gamma type 1: covariance is :math: '\alpha_0 * \beta_i * \beta_j', so :math: '\alpha_0' should be calculated
+        # but as it will force :math: '\alpha_0' to be negative
+        # resulting ODEs are not solvable, so set arbitrary :math: '\alpha_0'
+        # Arbitrary value 1 here is adopted from MATLAB code.
+        # Gamma type 0 (univariate case): :math: 'alpha_0 = 0'
+        # Thus :math: 'alpha_0' for Gamma type 0 and 1 happen to be the same as the gamma_type
         if gamma_type != 2:
             first = sp.Matrix([gamma_type])
             alpha_exprs = alpha_bar_exprs - sp.Matrix([gamma_type]*n_species)
             alpha_exprs = first.col_join(alpha_exprs)
 
-        # Gamma type 2 has arbitrary alpha0
+        # Gamma type 2 has arbitrary alpha0 fixme why is it arbitrary
+        # Gamma type 2 :math: '\bar\alpha_i = \sum \limits_{i}  \alpha_i'
         else: # if gamma_type == 2:
             first = sp.Matrix([1] + [alpha_bar_exprs[0] - 1])
             alpha_exprs = sp.Matrix(alpha_bar_exprs[1:]) - sp.Matrix(alpha_bar_exprs[0:len(alpha_bar_exprs)-1])
             alpha_exprs = first.col_join(alpha_exprs)
 
-        alpha_multipliers = []
+        # Each row in moment matrix contains the exponents of Xs for a given moment
+        # Each row in Y_exprs and beta_multipliers has elements on the appropriate power
+        # determined by the corresponding row in the moment matrix
+        Y_exprs = []
         beta_multipliers = []
         for mom in prob_moments:
             if mom.order < 2:
                 continue
-            alpha_multipliers.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
+            Y_exprs.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
             beta_multipliers.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
 
 
-        alpha_multipliers = sp.Matrix(alpha_multipliers)
+        Y_exprs = sp.Matrix(Y_exprs)
         beta_multipliers = sp.Matrix(beta_multipliers)
-        alpha_multipliers = alpha_multipliers.applyfunc(sp.expand)
+        Y_exprs = Y_exprs.applyfunc(sp.expand)
 
-        ## get alpha-expressions
+        # Substitute alpha expressions in place of symbolic species Ys
+        # by going through all powers up to the moment order for closure
         subs_pairs = []
         for i,a in enumerate(alpha_exprs):
             Y_to_substitute = [sp.Symbol("Y_{0}".format(i))**n for n in range(2, n_moment+1)]
+
+            # Obtain alpha term for higher older moments :math: '\mathbb{E}(X_i^m) = (\bar\alpha_i)_m\beta_i^m'
             alpha_m = [self.gamma_factorial(a,n) for n in range(2, n_moment+1)]
 
+            # Substitute alpha term for symbolic species
             subs_pairs += zip(Y_to_substitute, alpha_m)
             subs_pairs.append((sp.Symbol("Y_{0}".format(i)), a))
-        alpha_multipliers = alpha_multipliers.applyfunc(lambda x: substitute_all(x, subs_pairs))
+        Y_exprs = Y_exprs.applyfunc(lambda x: substitute_all(x, subs_pairs))
 
-        return alpha_multipliers, beta_multipliers
+        return Y_exprs, beta_multipliers
 
     def compute_raw_moments(self, n_species, problem_moments):
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_species, problem_moments)
@@ -122,6 +139,12 @@ class GammaCloser(CloserBase):
         return closed_central_moments
 
     def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+        '''
+        In univariate case, set the cross-terms to 0. Cross-term is :math: '\mathbb{E}(X_i^mX_j^n)'
+        :param closed_central_moments: Matrix of closed central moment
+        :param prob_moments: moment matrix
+        :return:  a matrix of new closed central moments with cross-terms equal to 0
+        '''
         n_counter = [n for n in prob_moments if n.order > 1]
         if self.is_multivariate:
             return closed_central_moments
@@ -158,6 +181,13 @@ class GammaCloser(CloserBase):
         return new_mkf,new_prob_moments
 
     def gamma_factorial(self, expr, n):
+        '''
+        Compute :math: '\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}
+        See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished
+        :param expr:
+        :param n:
+        :return:
+        '''
         if n == 0:
             return 1
         return reduce(operator.mul,[ expr+i for i in range(n)])

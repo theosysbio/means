@@ -26,24 +26,51 @@ class NormalCloser(CloserBase):
         return mfk, prob_lhs
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
+        '''
+        Compute second order moments i.e. variances and covariances
+        Covariances equal to 0 in univariate case
+        :param q_counter: moment matrix
+        :param sp1_idx: index of one species
+        :param sp2_idx: index of another species
+        :return: second order moments matrix of size n_species by n_species
+        '''
+
+        # The diagonal positions in the matrix are the variances
         if sp1_idx == sp2_idx:
             return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 2 and q.order == 2][0]
+
+        # In multivariate cases, return covariances
         elif self.is_multivariate:
             return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 1 and q.n_vector[sp2_idx] == 1 and q.order == 2][0]
+
+        # In univariate cases, covariances are 0s
         else:
             return sp.Integer(0)
 
 
     def compute_one_closed_central_moment(self, moment, covariance_matrix):
+        '''
+        Compute each row of closed central moment based on Isserlis' Theorem of calculating higher order moments
+        of multivariate normal distribution in terms of covariance matrix
 
+        :param moment: moment matrix
+        :param covariance_matrix: matrix containing variances and covariances
+        :return:  each row of closed central moment
+        '''
+
+        # If moment order is even, higher order moments equals 0
         if moment.order % 2 != 0:
             return sp.Integer(0)
 
         # index of species
         idx = [i for i in range(len(moment.n_vector))]
+
         # repeat the index of a species as many time as its value in counter
         list_for_partition = reduce(operator.add, map(lambda i, c: [i] * c, idx, moment.n_vector))
 
+        # If moment order is odd, :math: '\mathbb{E} [x_1x_2 \ldots  x_2_n] = \sum \prod\mathbb{E} [x_ix_j] '
+
+        # For second order moment, there is only one way of 
         if moment.order == 2:
             return covariance_matrix[list_for_partition[0], list_for_partition[1]]
 
