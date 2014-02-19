@@ -113,8 +113,15 @@ class GammaCloser(CloserBase):
         return Y_exprs, beta_multipliers
 
     def compute_raw_moments(self, n_species, problem_moments):
+        '''
+        Compute :math: 'X_i'
+        Gamma type 1: :math: 'X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i'
+        Gamma type 2: :math: 'X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k'
+        :param n_species: number of species
+        :param problem_moments: moment matrix with central moment symbols
+        :return:
+        '''
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_species, problem_moments)
-
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat
@@ -141,7 +148,7 @@ class GammaCloser(CloserBase):
     def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
         '''
         In univariate case, set the cross-terms to 0. Cross-term is :math: '\mathbb{E}(X_i^mX_j^n)'
-        :param closed_central_moments: Matrix of closed central moment
+        :param closed_central_moments: matrix of closed central moment
         :param prob_moments: moment matrix
         :return:  a matrix of new closed central moments with cross-terms equal to 0
         '''

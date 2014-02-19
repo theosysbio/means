@@ -58,7 +58,7 @@ class NormalCloser(CloserBase):
         :return:  each row of closed central moment
         '''
 
-        # If moment order is even, higher order moments equals 0
+        # If moment order is odd, higher order moments equals 0
         if moment.order % 2 != 0:
             return sp.Integer(0)
 
@@ -68,18 +68,23 @@ class NormalCloser(CloserBase):
         # repeat the index of a species as many time as its value in counter
         list_for_partition = reduce(operator.add, map(lambda i, c: [i] * c, idx, moment.n_vector))
 
-        # If moment order is odd, :math: '\mathbb{E} [x_1x_2 \ldots  x_2_n] = \sum \prod\mathbb{E} [x_ix_j] '
-
-        # For second order moment, there is only one way of 
+        # If moment order is even, :math: '\mathbb{E} [x_1x_2 \ldots  x_2_n] = \sum \prod\mathbb{E} [x_ix_j] '
+        # e.g.:math: '\mathbb{E} [x_1x_2x_3x_4] = \mathbb{E} [x_1x_2] +\mathbb{E} [x_1x_3] +\mathbb{E} [x_1x_4]
+        # +\mathbb{E} [x_2x_3]+\mathbb{E} [x_2x_4]+\mathbb{E} [x_3x_4]'
+        # For second order moment, there is only one way of partitioning. Hence, no need to generate partitions
         if moment.order == 2:
             return covariance_matrix[list_for_partition[0], list_for_partition[1]]
 
+        # For even moment order other than 2, generate a list of partitions of the indices of covariances
         else:
             each_row = []
             for idx_pair in self.generate_partitions(list_for_partition):
+                # Retrieve the pairs of covariances using the pairs of partitioned indices
                 l = [covariance_matrix[i, j] for i,j in idx_pair]
+                # Calculate the product of each pair of covariances
                 each_row.append(product(l))
 
+            # The corresponding closed central moment of that moment order is the sum of the products
             return sum(each_row)
 
 
@@ -91,6 +96,12 @@ class NormalCloser(CloserBase):
 
 
     def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+        '''
+        In univariate case, set the cross-terms to 0.
+        :param closed_central_moments: matrix of closed central moment
+        :param prob_moments: moment matrix
+        :return:  a matrix of new closed central moments with cross-terms equal to 0
+        '''
         n_counter = [n for n in prob_moments if n.order > 1]
         if self.is_multivariate:
             return closed_central_moments
