@@ -24,25 +24,25 @@ class CloserBase(object):
         :param central_moments:
         :param n_counter:
         :param dmu_over_dt:
-        :return: MFK ...
+        :return: the right hand side of the final ODEs
         """
         # symbols for central moments
         central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
         # try to simplify an expression. returns the original expression if fail
-        # todo remove this when we do not need it anymore
-        def try_to_simplify(expr):
-            try:
-                return sp.simplify(expr)
-            except:
-                pass
-            return expr
-
+        # # todo remove this when we do not need it anymore
+        # def try_to_simplify(expr):
+        #     try:
+        #         return sp.simplify(expr)
+        #     except:
+        #         pass
+        #     return expr
+        #
 
         # rhs for the first order raw moment
-        MFK = [try_to_simplify(e) for e in dmu_over_dt * central_moments_symbols]
+        mfk = [e for e in dmu_over_dt * central_moments_symbols]
         # rhs for the higher order raw moments
-        MFK += [try_to_simplify((sp.Matrix(cm).T * central_moments_symbols)[0]) for cm in central_moments.tolist()]
-        return sp.Matrix(MFK)
+        mfk += [(sp.Matrix(cm).T * central_moments_symbols)[0] for cm in central_moments.tolist()]
+        return sp.Matrix(mfk)
 
 class ZeroCloser(CloserBase):
     def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
