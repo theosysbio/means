@@ -44,6 +44,10 @@ class ODETermBase(Descriptor):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'${0}$'.format(self.symbol)
 
+    def _repr_latex(self):
+        return '${0}$'.format(self.symbol)
+
+
 
 class VarianceTerm(ODETermBase):
     """
@@ -72,6 +76,8 @@ class VarianceTerm(ODETermBase):
     def __unicode__(self):
         return u'{0}({1}, {2})'.format(self.__class__.__name__, self.symbol, self.position)
 
+    def _repr_latex_(self):
+        return '${0}$ (Variance term $V_{{{0}, {1}}})'.format(self.symbol, self.position[0], self.position[1])
 
 
 class Moment(ODETermBase):
@@ -156,6 +162,8 @@ class Moment(ODETermBase):
         return '{0}({1!r}, symbol={2!r})'.format(self.__class__.__name__, self.n_vector, self.symbol)
 
 
+    def _repr_latex_(self):
+        return '{0}($[{1}]$, symbol=${2}$)'.format(self.__class__.__name__, ', '.join(map(str, self.n_vector)), self.symbol)
 
 class ODEProblem(object):
     """
@@ -300,6 +308,30 @@ class ODEProblem(object):
 
     def __repr__(self):
         return str(self)
+
+    def _repr_latex_(self):
+        """
+        This is used in IPython notebook it allows us to render the ODEProblem object in LaTeX.
+        How Cool is this?
+        """
+        # TODO: we're mixing HTML with latex here. That is not necessarily a good idea, but works
+        # with IPython 1.2.0. Once IPython 2.0 is released, this needs to be changed to _ipython_display_
+        lines = []
+        lines.append(r"<h1>{0}</h1>".format(self.__class__.__name__))
+
+        lines.append("<p>Method: <code>{0!r}</code></p>".format(self.method))
+        lines.append("<p>Constants: <code>{0!r}</code></p>".format(self.constants))
+        lines.append("<p>Terms:</p>")
+        lines.append("<ul>")
+        lines.extend(['<li><code>{0!r}</code></li>'.format(lhs) for lhs in self.ode_lhs_terms])
+        lines.append("</ul>")
+        lines.append('<hr />')
+        lines.append(r"\begin{align*}")
+        for lhs, rhs in zip(self.ode_lhs_terms, self.right_hand_side):
+            lines.append(r"\dot{{{0}}} &= {1} \\".format(sympy.latex(lhs.symbol), sympy.latex(rhs)))
+        lines.append(r"\end{align*}")
+        return "\n".join(lines)
+
 
 
 def parse_problem(input_filename, from_string=False):

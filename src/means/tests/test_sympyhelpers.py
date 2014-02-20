@@ -1,6 +1,30 @@
 import unittest
-from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal, sympy_expressions_equal
 import sympy
+from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal, sympy_expressions_equal
+from means.util.sympyhelpers import substitute_all
+
+class TestSympyHelpers(unittest.TestCase):
+
+    def test_substitute_all_on_matrix(self):
+
+        to_substitute = to_sympy_matrix(["a*b","c*d","d*e","e*f"])
+        pairs = zip(to_sympy_matrix(["a","d","e","c","b"]),
+                    to_sympy_matrix(["z","w","v","x","y"]))
+
+        expected = sympy.Matrix(["z*y","x*w","w*v","v*f"])
+        answer = substitute_all(to_substitute, pairs)
+        self.assertEqual(answer, expected)
+
+    def test_substitute_all_on_expression(self):
+
+        to_substitute = sympy.sympify("a*b + c*d + d*e + e*f")
+        pairs = zip(to_sympy_matrix(["a","d","e","c","b"]),
+                    to_sympy_matrix(["z","w","v","x","y"]))
+        expected = sympy.sympify("z*y + x*w + w*v + v*f")
+        answer = substitute_all(to_substitute, pairs)
+        self.assertEqual(answer, expected)
+
+
 
 class TestSympyExpressionsEqual(unittest.TestCase):
 
