@@ -179,6 +179,8 @@ class TrajectoryWithSensitivityData(Trajectory):
                                         "when ${1}$ is perturbed by ${2}$".format(self.description.symbol,
                                                                                   sensitivity_trajectory.description.parameter,
                                                                                   delta))
+            # This is needed for matplotlib version 1.1.1
+            label = str(label)
             # Fill_between does not generate a legend entry, use this hack with Rectangle to do this
             plt.gca().add_patch(plt.Rectangle((0, 0), 0, 0, alpha=alpha,
                                               label=label,
