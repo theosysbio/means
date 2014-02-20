@@ -1,4 +1,5 @@
 from collections import namedtuple
+
 from assimulo.problem import Explicit_Problem
 import numpy as np
 import sys
@@ -42,6 +43,29 @@ def available_solvers(with_sensitivity_support=False):
             initialisable_solvers[object.unique_name().lower()] = object
 
     return initialisable_solvers
+
+#-- Exception handling utilities -----------------------------------------------------------
+
+
+def parse_flag(exception_message):
+    """
+    Parse the flag from the solver exception.
+    e.g.
+
+    >>> parse_flag("Exception: Dopri5 failed with flag -3")
+    -3
+
+    :param exception_message: message from the exception
+    :type exception_message: str
+    :return: flag id
+    :rtype: int
+    """
+    import re
+    match = re.match('.* failed with flag (-\d+)', exception_message)
+    try:
+        return int(match.group(1))
+    except Exception:
+        return None
 
 #-- Base solver functionality ---------------------------------------------------------------
 
@@ -112,22 +136,34 @@ class SolverBase(object):
         """
         solver = self._solver
         last_timepoint = timepoints[-1]
-
         try:
             simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
-        except self._solver_exception_class as e:
+        except (Exception, self._solver_exception_class) as e:
             # The exceptions thrown by solvers are usually hiding the real cause, try to see if it is
             # our right_hand_side_as_function that is broken first
             try:
-                self._problem.right_hand_side(self._initial_conditions, self._parameters)
+                self._problem.right_hand_side_as_function(self._initial_conditions, self._parameters)
             except:
                 # If it is broken, throw that exception instead
                 raise
             else:
-                # If it is not, re-raise the original exception
-                raise e
+                # If it is not, handle the original exception
+                self._handle_solver_exception(e)
 
         return self._results_to_trajectories(simulated_timepoints, simulated_values)
+
+
+    def _handle_solver_exception(self, solver_exception):
+        """
+        This function handles any exceptions that occurred in the solver and have been proven not to be
+        related to our right_hand_side function.
+        Subclasses can override it.
+
+        :param solver_exception: the exception raised by the solver
+        :type solver_exception: Exception
+        """
+        # By default just reraise it
+        raise solver_exception
 
     def _default_solver_instance(self):
         raise NotImplementedError
@@ -218,7 +254,31 @@ class Dopri5Solver(SolverBase, UniqueNameInitialisationMixin):
     def unique_name(self):
         return 'dopri5'
 
+    def _handle_solver_exception(self, solver_exception):
+        # Let's try and parse the exception flag, to add some helpful info
+        flag = parse_flag(solver_exception.message)
+
+        FLAG_DOCUMENTATION = {-1: 'Input is not consistent',
+                              -2: 'Larger NMAX is needed',
+                              -3: 'Step size becomes too small',
+                              -4: 'Problem is probably stiff'}
+
+        new_message = None
+        try:
+            new_message = 'Dopri5 failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+        except KeyError:
+            # We have no documentation for this exception, let's just reraise it
+            raise solver_exception
+
+        # All is fine
+        raise Exception(new_message)
+
 class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
+
+    @property
+    def _solver_exception_class(self):
+        from assimulo.exception import ODEPACK_Exception
+        return ODEPACK_Exception
 
     def _default_solver_instance(self):
         from assimulo.solvers import LSODAR
@@ -228,6 +288,29 @@ class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
     @classmethod
     def unique_name(self):
         return 'lsodar'
+
+    def _handle_solver_exception(self, solver_exception):
+        flag = parse_flag(solver_exception.message)
+
+        from assimulo.exception import ODEPACK_Exception
+
+        FLAG_DOCUMENTATION = {-1: 'Excess work done on this call (perhaps wrong jt)',
+                              -2: 'Excess accuracy requested (tolerances too small)',
+                              -3: 'Illegal input detected (see printed message)',
+                              -4: 'Repeated error test failures (check all inputs)',
+                              -5: 'Repeated convergence failures (perhaps bad jacobian supplied or wrong choice of '
+                                  'jt or tolerances)',
+                              -6: 'Error weight became zero during problem.',
+                              -7: 'Work space insufficient to finish (see messages)'}
+        new_message = None
+        try:
+            new_message = 'LSODAR failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+        except KeyError:
+            # We have no documentation for this exception, let's just reraise it
+            raise solver_exception
+
+        # All is fine
+        raise ODEPACK_Exception(new_message)
 
 class ExplicitEulerSolver(SolverBase, UniqueNameInitialisationMixin):
 
@@ -273,6 +356,25 @@ class Radau5Solver(SolverBase, UniqueNameInitialisationMixin):
     def unique_name(cls):
         return 'radau5'
 
+    def _handle_solver_exception(self, solver_exception):
+        # Let's try and parse the exception flag, to add some helpful info
+        flag = parse_flag(solver_exception.message)
+
+        FLAG_DOCUMENTATION = {-1: 'Input is not consistent',
+                              -2: 'Larger NMAX is needed',
+                              -3: 'Step size becomes too small',
+                              -4: 'Matrix is repeatedly singular'}
+
+        new_message = None
+        try:
+            new_message = 'Radau5 failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+        except KeyError:
+            # We have no documentation for this exception, let's just reraise it
+            raise solver_exception
+
+        # All is fine
+        raise Exception(new_message)
+
 class RodasSolver(SolverBase, UniqueNameInitialisationMixin):
 
     def _default_solver_instance(self):
@@ -282,6 +384,25 @@ class RodasSolver(SolverBase, UniqueNameInitialisationMixin):
     @classmethod
     def unique_name(cls):
         return 'rodas'
+
+    def _handle_solver_exception(self, solver_exception):
+        # Let's try and parse the exception flag, to add some helpful info
+        flag = parse_flag(solver_exception.message)
+
+        FLAG_DOCUMENTATION = {-1: 'Input is not consistent',
+                              -2: 'Larger NMAX is needed',
+                              -3: 'Step size becomes too small',
+                              -4: 'Matrix is repeatedly singular'}
+
+        new_message = None
+        try:
+            new_message = 'Rodas failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+        except KeyError:
+            # We have no documentation for this exception, let's just reraise it
+            raise solver_exception
+
+        # All is fine
+        raise Exception(new_message)
 
 #-- Solvers with sensitivity support -----------------------------------------------------------------------------------
 
