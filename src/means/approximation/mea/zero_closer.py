@@ -31,19 +31,23 @@ class CloserBase(object):
         central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
         # try to simplify an expression. returns the original expression if fail
         # # todo remove this when we do not need it anymore
-        # def try_to_simplify(expr):
-        #     try:
-        #         return sp.simplify(expr)
-        #     except:
-        #         pass
-        #     return expr
-        #
+        def try_to_simplify(expr):
+            try:
+                return sp.simplify(expr)
+            except:
+                pass
+            return expr
 
         # rhs for the first order raw moment
         mfk = [e for e in dmu_over_dt * central_moments_symbols]
         # rhs for the higher order raw moments
         mfk += [(sp.Matrix(cm).T * central_moments_symbols)[0] for cm in central_moments.tolist()]
-        return sp.Matrix(mfk)
+
+        mfk = sp.Matrix(mfk)
+        mfk = mfk.applyfunc(try_to_simplify)
+
+        return mfk
+
 
 class ParametricCloser(CloserBase):
 
