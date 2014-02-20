@@ -15,6 +15,9 @@ import sympy as sp
 from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
 from means.approximation.mea.TaylorExpansion import get_factorial_term
 
+
+
+
 def make_f_of_x(variables, k_vec, e_vec, reaction):
     r"""
     Calculates F() in eq. 12 (see Ale et al. 2013) for a specific reaction , k and e
@@ -31,6 +34,7 @@ def make_f_of_x(variables, k_vec, e_vec, reaction):
     # multiply the product by the propensity {a(x)}
     return prod * reaction
 
+
 def make_f_expectation(variables, expr, counter):
     """
     Calculates <F> in eq. 12 (see Ale et al. 2013) to calculate <F> for EACH VARIABLE combination.
@@ -40,12 +44,11 @@ def make_f_expectation(variables, expr, counter):
     :param counter: a list of all possible combination of order of derivation
     :return: a column vector (as a sympy matrix). Each row correspond to an element of counter
     """
-
     # compute derivatives for EACH ENTRY in COUNTER
-    derives = [derive_expr_from_counter_entry(expr, variables, c.n_vector) for c in counter]
+    derives = [derive_expr_from_counter_entry(expr, variables, tuple(c.n_vector)) for c in counter]
 
     # Computes the factorial terms for EACH entry in COUNTER
-    factorial_terms = [get_factorial_term(c.n_vector) for (c) in counter]
+    factorial_terms = [get_factorial_term(tuple(c.n_vector)) for (c) in counter]
 
     # Element wise product of the two vectors
     te_matrix = sp.Matrix(len(counter), 1, [d*f for (d, f) in zip(derives, factorial_terms)])
@@ -91,6 +94,9 @@ def eq_mixedmoments(propensities, n_counter, S, species , k_iter, e_counter):
 
     :return: :math:`\frac{d\beta}{dt}`
     """
+
+    species = tuple(species)
+
     if len(e_counter) == 0:
         return sp.Matrix(1, len(n_counter), lambda i, j: 0)
 
@@ -99,6 +105,7 @@ def eq_mixedmoments(propensities, n_counter, S, species , k_iter, e_counter):
 
     # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
     # vector in which each element relates to an entry of counter
+
     f_expectation_vec = [make_f_expectation(species, f, n_counter) for f in f_of_x_vec]
 
     # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars

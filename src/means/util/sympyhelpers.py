@@ -14,7 +14,8 @@ def substitute_all(sp_object, pairs):
         return sp_object.applyfunc(lambda x: substitute_all(x, pairs))
 
     try:
-        expr = sp_object.subs(pairs,simultaneous=True)
+        expr = sp_object.subs(pairs)
+
     # in sympy 0.7.2, this would not work, so we do it manually
     except:
         expr =  sp_object

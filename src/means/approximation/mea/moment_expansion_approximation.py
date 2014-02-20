@@ -103,7 +103,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
         #todo eventually, remove simplify (slow)
-        out_exprs = out_exprs.applyfunc(sp.simplify)
+        #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
     def generate_n_and_k_counters(self, n_moments, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
