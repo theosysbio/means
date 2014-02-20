@@ -103,6 +103,8 @@ class Trajectory(object):
         from matplotlib import pyplot as plt
         # Get label from the kwargs provided, or use self.description as default
         label = kwargs.pop('label', mathtextify(self.description))
+        # This is needed for matplotlib version 1.1.1
+        label = str(label)
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
 
     def __repr__(self):
