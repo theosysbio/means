@@ -95,6 +95,18 @@ class Model(object):
     def __repr__(self):
         return str(self)
 
+    def _repr_latex_(self):
+
+        lines = []
+        lines.append(r"\begin{align*}")
+        lines.append(r"\text{{Species}} &= {0} \\".format(sympy.latex(self.species)))
+        lines.append(r"\text{{Constants}} &= {0} \\".format(sympy.latex(self.constants)))
+        lines.append(r"\text{{Stoichiometry matrix}} &= {0} \\".format(sympy.latex(self.stoichiometry_matrix)))
+        lines.append(r"\text{{Propensities}} &= {0} \\".format(sympy.latex(self.propensities)))
+        lines.append(r"\end{align*}")
+        return "\n".join(lines)
+
+
 
 def parse_model(input_filename):
     """
