@@ -1,14 +1,14 @@
 import sympy as sp
 import operator
+from zero_closer import ParametricCloser
 from means.util.sympyhelpers import substitute_all
-from zero_closer import CloserBase
 
-
-class GammaCloser(CloserBase):
+class GammaCloser(ParametricCloser):
     def __init__(self, n_moments, type=0):
         super(GammaCloser, self).__init__(n_moments)
-        self.__is_multivariate = (type > 0)
         self.__type = type
+        self.__is_multivariate = (self.type > 0)
+
 
     @property
     def is_multivariate(self):
@@ -18,19 +18,13 @@ class GammaCloser(CloserBase):
     def type(self):
         return self.__type
 
-    def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
-        mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
-        prob_lhs = self.generate_problem_left_hand_side(n_counter, k_counter)
 
-        mfk, prob_lhs = self.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_lhs)
-        return mfk, prob_lhs
-
-    def get_parameter_symbols(self, n_species, prob_moments):
+    def get_parameter_symbols(self, prob_moments):
         '''
         Calculates parameters Y expressions and beta coefficients in
         :math: `X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
 
-        :param n_species: the number of species
+
         :param prob_moments: the moments with symbols and moment vectors
         :return: two column matrices Y expressions and beta multipliers
         '''
@@ -38,6 +32,7 @@ class GammaCloser(CloserBase):
         gamma_type = self.type
         n_moment = self.n_moments
 
+        n_species = len([None for pm in prob_moments if pm.order == 1])
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
 
@@ -112,84 +107,20 @@ class GammaCloser(CloserBase):
 
         return Y_exprs, beta_multipliers
 
-    def compute_raw_moments(self, n_species, problem_moments):
+    def compute_raw_moments(self, problem_moments):
         '''
         Compute :math: `X_i`
         Gamma type 1: :math: `X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
         Gamma type 2: :math: `X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
 
-        :param n_species: number of species
         :param problem_moments: moment matrix with central moment symbols
         :return:
         '''
-        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_species, problem_moments)
+
+        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(problem_moments)
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat
-
-    def compute_closed_central_moments(self, closed_raw_moments, central_from_raw_exprs, k_counter):
-        """
-        Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
-
-        :param closed_raw_moments: the expression of all raw moments (expect 0th) in terms of
-        parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
-        :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-        :param k_counter: a list of `Moment` object corresponding to raw moment symbols an descriptors
-        :return: the central moments where raw moments have been replaced by parametric expressions
-        :rtype: sympy.Matrix
-        """
-        # raw moment lef hand side symbol
-        raw_symbols = [raw.symbol for raw in k_counter if raw.order > 1]
-        # we want to replace raw moments symbols with closed raw moment expressions (in terms of variances/means)
-        substitution_pairs = zip(raw_symbols, closed_raw_moments)
-
-        closed_central_moments = substitute_all(central_from_raw_exprs, substitution_pairs)
-        return closed_central_moments
-
-    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
-        '''
-        In univariate case, set the cross-terms to 0.
-        Otherwise, cross-term is :math: `\mathbb{E}(X_i^mX_j^n)`
-
-        :param closed_central_moments: matrix of closed central moment
-        :param prob_moments: moment matrix
-        :return:  a matrix of new closed central moments with cross-terms equal to 0
-        '''
-
-        if self.is_multivariate:
-            return closed_central_moments
-        else:
-            n_counter = [n for n in prob_moments if n.order > 1]
-            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
-
-
-    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
-        n_moments = self.n_moments
-        n_species = len(species)
-        # we compute all raw moments according to means / variance/ covariance
-        # at this point we have as many raw moments expressions as non-null central moments
-        closed_raw_moments = self.compute_raw_moments(n_species, prob_moments)
-        # we obtain expressions for central moments in terms of closed raw moments
-        closed_central_moments = self.compute_closed_central_moments(closed_raw_moments, central_from_raw_exprs, k_counter)
-        # set mixed central moment to zero iff univariate
-
-        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
-
-        # we remove ODEs of highest order in mfk
-        new_mkf = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
-        # new_mkf = mfk
-        # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
-        n_counter = [n for n in prob_moments if n.order > 1]
-        # now we want to replace the new mfk (i.e. without highest order moment) any
-        # symbol for highest order central moment by the corresponding expression (computed above)
-        substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
-        new_mkf = substitute_all(new_mkf, substitutions_pairs)
-
-        # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
-        new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
-        #new_prob_moments = prob_moments
-
-        return new_mkf,new_prob_moments
 
     def gamma_factorial(self, expr, n):
         '''
@@ -202,4 +133,4 @@ class GammaCloser(CloserBase):
         '''
         if n == 0:
             return 1
-        return reduce(operator.mul,[ expr+i for i in range(n)])
+        return reduce(operator.mul, [expr+i for i in range(n)])

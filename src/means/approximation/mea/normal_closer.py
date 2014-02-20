@@ -1,29 +1,13 @@
 import sympy as sp
 import operator
-import copy
-from means.util.sympyhelpers import substitute_all
 from means.util.sympyhelpers import product
-from zero_closer import CloserBase
+from zero_closer import ParametricCloser
 
 
 
 import itertools
 
-class NormalCloser(CloserBase):
-    def __init__(self,n_moments, multivariate = True):
-        super(NormalCloser, self).__init__(n_moments)
-        self.__is_multivariate = multivariate
-
-    @property
-    def is_multivariate(self):
-        return self.__is_multivariate
-
-    def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
-        mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
-        prob_lhs = self.generate_problem_left_hand_side(n_counter, k_counter)
-
-        mfk, prob_lhs = self.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_lhs)
-        return mfk, prob_lhs
+class NormalCloser(ParametricCloser):
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         '''
@@ -88,52 +72,15 @@ class NormalCloser(CloserBase):
             return sum(each_row)
 
 
-    def compute_closed_central_moments(self, n_species, problem_moments):
-        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
+    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
+        n_species = len([None for pm in problem_moments if pm.order == 1])
+        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
         n_counter = [n for n in problem_moments if n.order > 1]
         out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
         return sp.Matrix(out_mat)
 
 
-    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
-        '''
-        In univariate case, set the cross-terms to 0.
-        :param closed_central_moments: matrix of closed central moment
-        :param prob_moments: moment matrix
-        :return:  a matrix of new closed central moments with cross-terms equal to 0
-        '''
-        n_counter = [n for n in prob_moments if n.order > 1]
-        if self.is_multivariate:
-            return closed_central_moments
-        else:
-            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
-
-
-    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, species, k_counter, prob_moments):
-
-        n_moments = self.n_moments
-        n_species = len(species)
-
-        # we obtain expressions for central moments in terms of variances/covariances
-        closed_central_moments = self.compute_closed_central_moments(n_species, prob_moments)
-        # set mixed central moment to zero iff univariate
-        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_moments)
-        # we remove ODEs of highest order in mfk
-        new_mfk = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_moments) if pm.order < n_moments])
-
-        # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
-        n_counter = [n for n in prob_moments if n.order > 1]
-        # now we want to replace the new mfk (i.e. without highest order moment) any
-        # symbol for highest order central moment by the corresponding expression (computed above)
-        substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
-        new_mfk = substitute_all(new_mfk, substitutions_pairs)
-        # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
-        new_prob_moments = [pm for pm in prob_moments if pm.order < n_moments]
-
-
-        return new_mfk,new_prob_moments
-
-    def generate_partitions(self,l):
+    def generate_partitions(self, l):
 
         if len(l) % 2 != 0:
             raise ValueError("the length of the list to partition must be even")

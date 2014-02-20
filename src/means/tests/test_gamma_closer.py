@@ -113,7 +113,7 @@ class TestNormalCloser(unittest.TestCase):
 
         n_moments = 3
         closer = GammaCloser(n_moments, type=1)
-        answer = closer.compute_closed_central_moments(closed_raw_moms, central_from_raw_exprs, k_counter)
+        answer = closer.compute_closed_central_moments(central_from_raw_exprs, k_counter, self.__problem_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_compute_raw_moments(self):
@@ -136,12 +136,11 @@ class TestNormalCloser(unittest.TestCase):
             ["(2*yx7 ** 2)/y_0+3*y_0*yx7+y_0 ** 3"]
         ])
 
-        n_species = 3
         n_moments = 3
         prob_moments = self.__problem_moments
 
         closer = GammaCloser(n_moments, type=1)
-        answer= closer.compute_raw_moments(n_species,prob_moments)
+        answer= closer.compute_raw_moments(prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
@@ -213,7 +212,6 @@ class TestNormalCloser(unittest.TestCase):
                 ]
 
         n_moments = 3
-        species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
         expected = to_sympy_matrix([
             ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3-(2*c_2*c_6*y_2*yx7 ** 2)/(y_0*(c_6+y_0) ** 4)+(2*c_2*c_6*yx2*yx7 ** 2)/(y_0 ** 2*y_2*(c_6+y_0) ** 3)"],
@@ -230,7 +228,7 @@ class TestNormalCloser(unittest.TestCase):
 
 
         closer = GammaCloser(n_moments, type=1)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
+        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_normal_closer_wrapper_type_zero(self):
@@ -300,7 +298,6 @@ class TestNormalCloser(unittest.TestCase):
                 ]
 
         n_moments = 3
-        species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
         expected = to_sympy_matrix([
             ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3-(2*c_2*c_6*y_2*yx7 ** 2)/(y_0*(c_6+y_0) ** 4)"],
@@ -317,7 +314,7 @@ class TestNormalCloser(unittest.TestCase):
 
 
         closer = GammaCloser(n_moments, type=0)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
+        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
 

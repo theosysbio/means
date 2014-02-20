@@ -60,14 +60,14 @@ class TestLogNormalCloser(unittest.TestCase):
         expected = sympy.sympify("log(1 + yx6/(y_0*y_1))")
 
 
-        closer = LogNormalCloser(3,multivariate=True)
+        closer = LogNormalCloser(3, multivariate=True)
         answer = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 0,1)
 
         self.assertEqual(answer, expected)
 
         answer1 = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
         answer2 = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
-        #logcovariance between species 1 and 2  ==  covarianc between sp. 2 and 1
+        #logcovariance between species 1 and 2  ==  covariance between sp. 2 and 1
         self.assertEqual(answer1, answer2)
 
     def test_get_covariance_symbol(self):
@@ -95,7 +95,6 @@ class TestLogNormalCloser(unittest.TestCase):
 
     def test_compute_raw_moments(self):
 
-        n_species = 3
         problem_moments = self.__problem_moments
 
         expected = to_sympy_matrix([
@@ -117,7 +116,7 @@ class TestLogNormalCloser(unittest.TestCase):
             ["y_0**3+3*y_0*yx7+3*yx7**2/y_0+yx7**3/y_0**3"]
         ])
         closer = LogNormalCloser(3,multivariate=True)
-        answer = closer.compute_raw_moments(n_species,problem_moments)
+        answer = closer.compute_raw_moments(problem_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_log_normal_closer_wrapper(self):
@@ -187,7 +186,6 @@ class TestLogNormalCloser(unittest.TestCase):
                 ]
 
         n_moments = 3
-        species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
         expected = to_sympy_matrix([
                     ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3+(c_2*c_6*yx5*(yx5*y_0 ** 2+2*y_2*yx7*y_0+yx5*yx7))/(y_0 ** 2*y_2*(c_6+y_0) ** 3)-(c_2*c_6*y_2*yx7 ** 2*(3*y_0 ** 2+yx7))/(y_0 ** 3*(c_6+y_0) ** 4)"],
@@ -201,7 +199,7 @@ class TestLogNormalCloser(unittest.TestCase):
                     ["-(-c_1*c_6 ** 4*y_0 ** 4*y_2+2*c_1*c_6 ** 4*y_0 ** 3*y_2*yx7-c_0*c_6 ** 4*y_0 ** 3*y_2-4*c_1*c_6 ** 3*y_0 ** 5*y_2-c_2*c_6 ** 3*y_0 ** 4*y_2 ** 2+2*c_2*c_6 ** 3*y_0 ** 4*y_2*yx5+8*c_1*c_6 ** 3*y_0 ** 4*y_2*yx7-4*c_0*c_6 ** 3*y_0 ** 4*y_2+2*c_2*c_6 ** 3*y_0 ** 3*y_2 ** 2*yx7-c_2*c_6 ** 3*y_0 ** 3*y_2*yx5+2*c_2*c_6 ** 3*y_0 ** 3*yx5 ** 2+4*c_2*c_6 ** 3*y_0 ** 2*y_2*yx5*yx7+2*c_2*c_6 ** 3*y_0*yx5 ** 2*yx7-6*c_1*c_6 ** 2*y_0 ** 6*y_2-3*c_2*c_6 ** 2*y_0 ** 5*y_2 ** 2+6*c_2*c_6 ** 2*y_0 ** 5*y_2*yx5+12*c_1*c_6 ** 2*y_0 ** 5*y_2*yx7-6*c_0*c_6 ** 2*y_0 ** 5*y_2+4*c_2*c_6 ** 2*y_0 ** 4*y_2 ** 2*yx7-2*c_2*c_6 ** 2*y_0 ** 4*y_2*yx5+4*c_2*c_6 ** 2*y_0 ** 4*yx5 ** 2+c_2*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx7+8*c_2*c_6 ** 2*y_0 ** 3*y_2*yx5*yx7+c_2*c_6 ** 2*y_0 ** 3*yx5 ** 2-6*c_2*c_6 ** 2*y_0 ** 2*y_2 ** 2*yx7 ** 2+2*c_2*c_6 ** 2*y_0 ** 2*y_2*yx5*yx7+4*c_2*c_6 ** 2*y_0 ** 2*yx5 ** 2*yx7+c_2*c_6 ** 2*y_0*yx5 ** 2*yx7-2*c_2*c_6 ** 2*y_2 ** 2*yx7 ** 3-4*c_1*c_6*y_0 ** 7*y_2-3*c_2*c_6*y_0 ** 6*y_2 ** 2+6*c_2*c_6*y_0 ** 6*y_2*yx5+8*c_1*c_6*y_0 ** 6*y_2*yx7-4*c_0*c_6*y_0 ** 6*y_2+2*c_2*c_6*y_0 ** 5*y_2 ** 2*yx7-c_2*c_6*y_0 ** 5*y_2*yx5+2*c_2*c_6*y_0 ** 5*yx5 ** 2+c_2*c_6*y_0 ** 4*y_2 ** 2*yx7+4*c_2*c_6*y_0 ** 4*y_2*yx5*yx7+c_2*c_6*y_0 ** 4*yx5 ** 2-6*c_2*c_6*y_0 ** 3*y_2 ** 2*yx7 ** 2+2*c_2*c_6*y_0 ** 3*y_2*yx5*yx7+2*c_2*c_6*y_0 ** 3*yx5 ** 2*yx7-3*c_2*c_6*y_0 ** 2*y_2 ** 2*yx7 ** 2+c_2*c_6*y_0 ** 2*yx5 ** 2*yx7-2*c_2*c_6*y_0*y_2 ** 2*yx7 ** 3-c_2*c_6*y_2 ** 2*yx7 ** 3-c_1*y_0 ** 8*y_2-c_2*y_0 ** 7*y_2 ** 2+2*c_2*y_0 ** 7*y_2*yx5+2*c_1*y_0 ** 7*y_2*yx7-c_0*y_0 ** 7*y_2)/(y_0 ** 3*y_2*(c_6+y_0) ** 4)"]
                 ])
         closer = LogNormalCloser(3,multivariate=True)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
+        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
@@ -273,7 +271,6 @@ class TestLogNormalCloser(unittest.TestCase):
                 ]
 
         n_moments = 3
-        species = to_sympy_matrix([["y_0"],["y_1"],["y_2"]])
         prob_moments = self.__problem_moments
         expected = to_sympy_matrix([
             ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2-(c_2*y_0*y_2)/(c_6+y_0)+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3-(c_2*c_6*y_2*yx7 ** 2*(3*y_0 ** 2+yx7))/(y_0 ** 3*(c_6+y_0) ** 4)"],
@@ -288,6 +285,6 @@ class TestLogNormalCloser(unittest.TestCase):
         ])
         #here, we set univariate!
         closer = LogNormalCloser(3, multivariate=False)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, species, k_counter, prob_moments)
+        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
