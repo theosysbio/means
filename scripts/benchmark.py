@@ -11,3 +11,6 @@ def get_time_for_n_mom(n):
 
 for n in range(2,9):
     print (n,get_time_for_n_mom(n))
+
+#t = log10(c(.5,3,15,66,243)); n_mom = 1:length(t)
+#plot(t~n_mom,type = 'b', ylab="log_10(t)")
