@@ -1,7 +1,7 @@
 from assimulo import problem
 import itertools
 import sympy as sp
-from means.approximation import ode_problem
+from means.approximation.ode_problem import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
@@ -17,9 +17,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     """
     Performs moment expansion approximation (Ale et al. 2013) up to a given order of moment.
     """
-    def __init__(self, model, n_moments, closer='zero', *closer_args, **closer_kwargs):
+    def __init__(self, model, max_order, closer='zero', *closer_args, **closer_kwargs):
         super(MomentExpansionApproximation, self).__init__(model)
-        self.__n_moments = int(n_moments)
+        self.__max_order = int(max_order)
 
         # a dictionary of "option -> closer" this allow a generic handling for closer without to have to add
         # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
@@ -36,7 +36,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         else:
             # our closer is an instance of the class queried in the dictionary
             CloserClass = supported_closers[closer]
-            self.__closer = CloserClass(n_moments, *closer_args, **closer_kwargs)
+            self.__closer = CloserClass(self.__max_order, *closer_args, **closer_kwargs)
 
     @property
     def closer(self):
@@ -48,16 +48,18 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         Performs the complete analysis
         :return: an ODEProblem which can be further used in inference and simulation
         """
-        n_moments = self.__n_moments
+        max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix
         propensities = self.model.propensities
         species = self.model.species
         # compute n_counter and k_counter; the "n" and "k" vectors in equations, respectively.
-        n_counter, k_counter = self.generate_n_and_k_counters(n_moments, species)
+        n_counter, k_counter = self.generate_n_and_k_counters(max_order, species)
         # dmu_over_dt has row per species and one col per element of n_counter (eq. 6)
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
         #  Calculate expressions to use in central moments equations (eq. 9)
-        central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix)
+        central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
+        print "central_moments_exprs.shape"
+        print central_moments_exprs.shape
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
@@ -65,7 +67,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Get final right hand side expressions for each moment in a vector
         mfk, prob_lhs = self.closer.close(central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter)
 
-        out_problem = ode_problem.ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
+        out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
+        print "len(out_problem.right_hand_side)"
+        print len(out_problem.right_hand_side)
         return out_problem
 
     def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
@@ -107,17 +111,17 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
-    def generate_n_and_k_counters(self, n_moments, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
+    def generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
         """
         Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter)
         Each is a list of "Moment" objects. Therefore, they are represented by both a vector of integer
         and a symbol.
 
-        :param n_moments: the maximal order of moment to be computer
+        :param max_order: the maximal order of moment to be computer
         :param species: the name of the species
         :return: a pair of lists of Moments
         """
-
+        n_moments = max_order + 1
         # first order moments are always 1
         k_counter = [Moment([0] * len(species), sp.Integer(1))]
         n_counter = [Moment([0] * len(species), sp.Integer(1))]
@@ -148,6 +152,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # arbitrary symbols
         n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1),real=True) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
-
+        print n_counter
         return n_counter, k_counter
 

@@ -3,12 +3,12 @@ from means.util.sympyhelpers import substitute_all
 
 class CloserBase(object):
 
-    _n_moments = None
-    def __init__(self,n_moments):
-        self._n_moments = n_moments
+    _max_order = None
+    def __init__(self,max_order):
+        self._max_order = max_order
     @property
-    def n_moments(self):
-        return self._n_moments
+    def max_order(self):
+        return self._max_order
 
     def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
         raise NotImplementedError("CloserBase is an abstract class. `close()` is not implemented. ")
@@ -17,7 +17,8 @@ class CloserBase(object):
         # concatenate the symbols for first order raw moments (means)
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1]
+        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self._max_order]
+        print len(prob_moments_over_dt)
         return prob_moments_over_dt
 
     def generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
@@ -29,30 +30,24 @@ class CloserBase(object):
         """
         # symbols for central moments
         central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
-        # try to simplify an expression. returns the original expression if fail
-        # # todo remove this when we do not need it anymore
-        def try_to_simplify(expr):
-            try:
-                return sp.simplify(expr)
-            except:
-                pass
-            return expr
-
+        print "central_moments.shape"
+        print central_moments.shape
+        print "central_moments_symbols"
+        print central_moments_symbols
         # rhs for the first order raw moment
         mfk = [e for e in dmu_over_dt * central_moments_symbols]
         # rhs for the higher order raw moments
         mfk += [(sp.Matrix(cm).T * central_moments_symbols)[0] for cm in central_moments.tolist()]
 
         mfk = sp.Matrix(mfk)
-        #mfk = mfk.applyfunc(try_to_simplify)
 
         return mfk
 
 
 class ParametricCloser(CloserBase):
 
-    def __init__(self,n_moments, multivariate=True):
-        super(ParametricCloser, self).__init__(n_moments)
+    def __init__(self,max_order, multivariate=True):
+        super(ParametricCloser, self).__init__(max_order)
         self.__is_multivariate = multivariate
 
     @property
@@ -103,31 +98,46 @@ class ParametricCloser(CloserBase):
 
         prob_lhs = self.generate_problem_left_hand_side(n_counter, k_counter)
 
-        mfk, prob_lhs = self.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_lhs)
+        mfk, prob_lhs = self.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_lhs, n_counter)
 
         return mfk, prob_lhs
 
-    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, k_counter, prob_lhs):
-        n_moments = self.n_moments
+    def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, k_counter, prob_lhs, n_counter):
+        max_order = self.max_order
         # we obtain expressions for central moments in terms of variances/covariances
         closed_central_moments = self.compute_closed_central_moments(central_from_raw_exprs, k_counter, prob_lhs)
         # set mixed central moment to zero iff univariate
         closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_lhs)
-        # we remove ODEs of highest order in mfk
-        new_mfk = sp.Matrix([mfk for mfk, pm in zip(mfk, prob_lhs) if pm.order < n_moments])
 
+        print "mfk"
+        print len(mfk)
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
-        n_counter = [n for n in prob_lhs if n.order > 1]
+
         # now we want to replace the new mfk (i.e. without highest order moment) any
         # symbol for highest order central moment by the corresponding expression (computed above)
-        substitutions_pairs = [(n.symbol, ccm) for n,ccm in zip(n_counter, closed_central_moments) if n.order == n_moments]
-        new_mfk = substitute_all(new_mfk, substitutions_pairs)
-        # we also update problem moments (aka lhs) to match remaining rhs (aka mkf)
-        new_prob_moments = [pm for pm in prob_lhs if pm.order < n_moments]
-        return new_mfk, new_prob_moments
+        print max_order
+        positive_n_counter = [n for n in n_counter if n.order > 0]
+        substitutions_pairs = [(n.symbol, ccm) for n,ccm in
+                               zip(positive_n_counter, closed_central_moments) if n.order > max_order]
 
-class ZeroCloser(CloserBase):
-    def close(self,central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter):
-        mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
-        prob_lhs = self.generate_problem_left_hand_side(n_counter, k_counter)
-        return mfk, prob_lhs
+        for i in substitutions_pairs:
+            print i
+        new_mfk = substitute_all(mfk, substitutions_pairs)
+
+        return new_mfk, prob_lhs
+
+class ZeroCloser(ParametricCloser):
+    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
+        """
+        Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
+
+        :param closed_raw_moments: the expression of all raw moments (expect 0th) in terms of
+        parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
+        :param central_from_raw_exprs: the expression of central moments in terms of raw moments
+        :param k_counter: a list of `Moment` object corresponding to raw moment symbols an descriptors
+        :return: the central moments where raw moments have been replaced by parametric expressions
+        :rtype: sympy.Matrix
+        """
+
+        closed_central_moments = sp.Matrix([sp.Integer(0)] * len(central_from_raw_exprs))
+        return closed_central_moments
