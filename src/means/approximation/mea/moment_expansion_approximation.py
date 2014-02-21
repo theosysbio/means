@@ -8,7 +8,6 @@ from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
 from means.util.sympyhelpers import substitute_all
-
 from gamma_closer import GammaCloser
 from log_normal_closer import LogNormalCloser
 from normal_closer import NormalCloser
@@ -82,28 +81,30 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         positiv_raw_moms_symbs = [raw.symbol for raw in k_counter if raw.order > 1]
         # The symbols for the corresponding central moment
         central_symbols= [central.symbol for central in n_counter if central.order > 1]
-        # Now we state (central_symbols - central_from_raw_exprs) == 0
-        eq_to_solve = [cfr - cs for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
+        # Now we state (central_symbols == central_from_raw_exprs)
+        eq_to_solve = [sp.Eq(cfr, cs) for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
         # And we solve this for the symbol of the corresponding raw moment. This gives an expression
         # of the symbol for raw moment in terms of central moments and lower order raw moment
-        solved_xs = sp.Matrix([sp.solve(rhs, raw) for (rhs, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
+        solved_xs = sp.Matrix([sp.solve(eq, raw) for (eq, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
 
         # now we want to express raw moments only in terms od central moments and means
         # for instance if we have: :math:`x_1 = 1, x_2 = 2 +x_1, x_3 = x_2*x_1`, we should give:
         # :math: `x_1 = 1, x_2 = 2+1, x_3 = 1*(2+1)`
         # To achieve this, we recursively apply substitution as many times as the highest order (minus one)
         max_order = max([p.order for p in k_counter])
+
         for i in range(max_order - 1):
             substitution_pairs = zip(positiv_raw_moms_symbs, solved_xs)
             solved_xs = substitute_all(solved_xs, substitution_pairs)
 
         # we finally build substitution pairs to replace all raw moments
         substitution_pairs = zip(positiv_raw_moms_symbs, solved_xs)
+
         # apply this substitution to all elements of the central moment expressions matrix
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
         #todo eventually, remove simplify (slow)
-        out_exprs = out_exprs.applyfunc(sp.simplify)
+        #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
     def generate_n_and_k_counters(self, n_moments, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
@@ -138,14 +139,14 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #this mimics matlab sorting
         k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
-        k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]))
+        k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]),real=True)
                              for count in k_counter_descriptors]
         k_counter += [Moment(d, s) for d,s in zip(k_counter_descriptors, k_counter_symbols)]
 
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
         # arbitrary symbols
-        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1)) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1),real=True) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter

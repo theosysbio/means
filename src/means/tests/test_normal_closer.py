@@ -456,18 +456,17 @@ class TestNormalCloser(unittest.TestCase):
     def test_generate_partition(self):
 
         test_list_for_partition = [sympy.Symbol('A'),sympy.Symbol('B'),sympy.Symbol('C'),sympy.Symbol('D')]
-        expected = [((sympy.Symbol('A'), sympy.Symbol('B')),
-                     (sympy.Symbol('C'),sympy.Symbol('D'))),
+        expected = [[[sympy.Symbol('A'), sympy.Symbol('C')],
+                     [sympy.Symbol('B'),sympy.Symbol('D')]],
 
-                    ((sympy.Symbol('A'), sympy.Symbol('C')),
-                     (sympy.Symbol('B'),sympy.Symbol('D'))),
+                    [[sympy.Symbol('A'), sympy.Symbol('D')],
+                     [sympy.Symbol('B'),sympy.Symbol('C')]],
 
-                    ((sympy.Symbol('A'), sympy.Symbol('D')),
-                     (sympy.Symbol('B'),sympy.Symbol('C')))]
+                    [[sympy.Symbol('A'), sympy.Symbol('B')],
+                     [sympy.Symbol('C'),sympy.Symbol('D')]]]
 
 
         closer = NormalCloser(3, multivariate=True)
-        answer = [p for p in closer.generate_partitions(test_list_for_partition)]
-
+        answer = [p for p in closer.generate_partitions(2,test_list_for_partition)]
         self.assertEqual(answer, expected)
 

@@ -2,6 +2,7 @@ import sympy
 from sympy.core.sympify import SympifyError
 import numpy as np
 
+
 def substitute_all(sp_object, pairs):
     """
     Performs multiple substitutions in an expression
@@ -9,16 +10,22 @@ def substitute_all(sp_object, pairs):
     :param pairs: a list of pairs (a,b) where each a_i is to be substituted with b_i
     :return: the substituted expression
     """
+    if not isinstance(pairs, dict):
+        dict_pairs = dict(pairs)
+    else:
+        dict_pairs = pairs
+
     # we recurse if the object was a matrix so we apply substitution to all elements
     if isinstance(sp_object, sympy.Matrix):
-        return sp_object.applyfunc(lambda x: substitute_all(x, pairs))
+        return sp_object.applyfunc(lambda x: substitute_all(x, dict_pairs))
 
     try:
-        expr = sp_object.subs(pairs,simultaneous=True)
+        expr = sp_object.xreplace(dict_pairs)
+
     # in sympy 0.7.2, this would not work, so we do it manually
     except:
         expr =  sp_object
-        for (a,b) in pairs:
+        for (a,b) in dict_pairs.items():
             expr = sympy.Subs(expr, a, b)
         expr = expr.doit()
     return expr

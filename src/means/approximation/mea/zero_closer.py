@@ -44,7 +44,7 @@ class CloserBase(object):
         mfk += [(sp.Matrix(cm).T * central_moments_symbols)[0] for cm in central_moments.tolist()]
 
         mfk = sp.Matrix(mfk)
-        mfk = mfk.applyfunc(try_to_simplify)
+        #mfk = mfk.applyfunc(try_to_simplify)
 
         return mfk
 
