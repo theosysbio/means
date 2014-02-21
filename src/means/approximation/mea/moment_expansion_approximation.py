@@ -85,7 +85,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         eq_to_solve = [sp.Eq(cfr, cs) for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
         # And we solve this for the symbol of the corresponding raw moment. This gives an expression
         # of the symbol for raw moment in terms of central moments and lower order raw moment
-        solved_xs = sp.Matrix([sp.solve(rhs, raw) for (rhs, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
+        solved_xs = sp.Matrix([sp.solve(eq, raw) for (eq, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
 
         # now we want to express raw moments only in terms od central moments and means
         # for instance if we have: :math:`x_1 = 1, x_2 = 2 +x_1, x_3 = x_2*x_1`, we should give:
@@ -100,7 +100,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # we finally build substitution pairs to replace all raw moments
         substitution_pairs = zip(positiv_raw_moms_symbs, solved_xs)
 
-        # apply this substituton to all elements of the central moment expressions matrix
+        # apply this substitution to all elements of the central moment expressions matrix
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
         #todo eventually, remove simplify (slow)

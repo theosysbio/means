@@ -2,8 +2,6 @@ import sympy as sp
 import itertools
 import operator
 from means.util.sympyhelpers import product
-from means.util.decorators import cache
-
 
 def derive_expr_from_counter_entry(expression, species, counter_entry):
     r"""
