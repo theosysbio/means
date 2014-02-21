@@ -103,7 +103,7 @@ class GammaCloser(ParametricCloser):
             # Substitute alpha term for symbolic species
             subs_pairs += zip(Y_to_substitute, alpha_m)
             subs_pairs.append((sp.Symbol("Y_{0}".format(i)), a))
-        Y_exprs = Y_exprs.applyfunc(lambda x: substitute_all(x, subs_pairs))
+        Y_exprs = substitute_all(Y_exprs, subs_pairs)
 
         return Y_exprs, beta_multipliers
 

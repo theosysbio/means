@@ -2,6 +2,7 @@ import sympy
 from sympy.core.sympify import SympifyError
 import numpy as np
 
+
 def substitute_all(sp_object, pairs):
     """
     Performs multiple substitutions in an expression

@@ -2,7 +2,7 @@ import unittest
 
 import sympy
 
-from means.approximation.mea.eq_mixedmoments import eq_mixedmoments
+from means.approximation.mea.eq_mixedmoments import DBetaOverDtCalculator
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
@@ -46,9 +46,12 @@ class TestEqMixedMoments(unittest.TestCase):
         ]
 
         species = sympy.Matrix(["y_0", "y_1", "y_2"])
+
+        dbdt_calc = DBetaOverDtCalculator(propensities, counter,stoichio, species)
         k_vec = Moment([1, 0, 0], None)
         ek_counter = [Moment([1, 0, 0], sympy.Symbol("y_0"))]
-        answer = eq_mixedmoments(propensities,counter,stoichio,species,k_vec,ek_counter).T
+
+        answer = dbdt_calc.get(k_vec,ek_counter).T
         result = to_sympy_matrix(["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"," 0"," 0"," 0"," c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"," 0"," -c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2"])
         assert_sympy_expressions_equal(answer, result)
 
