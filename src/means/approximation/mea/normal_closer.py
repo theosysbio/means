@@ -51,7 +51,8 @@ class NormalCloser(ParametricCloser):
 
         # repeat the index of a species as many time as its value in counter
         list_for_partition = reduce(operator.add, map(lambda i, c: [i] * c, idx, moment.n_vector))
-
+        print list_for_partition
+        print "=>"
         # If moment order is even, :math: '\mathbb{E} [x_1x_2 \ldots  x_2_n] = \sum \prod\mathbb{E} [x_ix_j] '
         # e.g.:math: '\mathbb{E} [x_1x_2x_3x_4] = \mathbb{E} [x_1x_2] +\mathbb{E} [x_1x_3] +\mathbb{E} [x_1x_4]
         # +\mathbb{E} [x_2x_3]+\mathbb{E} [x_2x_4]+\mathbb{E} [x_3x_4]'
