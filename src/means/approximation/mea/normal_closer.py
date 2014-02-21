@@ -1,5 +1,6 @@
 import sympy as sp
 import operator
+import copy
 from means.util.sympyhelpers import product
 from zero_closer import ParametricCloser
 
@@ -51,8 +52,7 @@ class NormalCloser(ParametricCloser):
 
         # repeat the index of a species as many time as its value in counter
         list_for_partition = reduce(operator.add, map(lambda i, c: [i] * c, idx, moment.n_vector))
-        print list_for_partition
-        print "=>"
+
         # If moment order is even, :math: '\mathbb{E} [x_1x_2 \ldots  x_2_n] = \sum \prod\mathbb{E} [x_ix_j] '
         # e.g.:math: '\mathbb{E} [x_1x_2x_3x_4] = \mathbb{E} [x_1x_2] +\mathbb{E} [x_1x_3] +\mathbb{E} [x_1x_4]
         # +\mathbb{E} [x_2x_3]+\mathbb{E} [x_2x_4]+\mathbb{E} [x_3x_4]'
@@ -63,7 +63,7 @@ class NormalCloser(ParametricCloser):
         # For even moment order other than 2, generate a list of partitions of the indices of covariances
         else:
             each_row = []
-            for idx_pair in self.generate_partitions(list_for_partition):
+            for idx_pair in self.generate_partitions(len(list_for_partition)/2,list_for_partition):
                 # Retrieve the pairs of covariances using the pairs of partitioned indices
                 l = [covariance_matrix[i, j] for i,j in idx_pair]
                 # Calculate the product of each pair of covariances
@@ -80,22 +80,36 @@ class NormalCloser(ParametricCloser):
         out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
         return sp.Matrix(out_mat)
 
+    def generate_partitions(self, k, list_for_par, accum=[[]], index=0):
+        '''
+        :param list_for_par: the list for partition
+        :param accum: should be [[]] as each partition pair consists of lists within a list
+        :param index: the index of item in list to start partition.should start from 0
+        :return: a list of non-repetitive partition pairs, each partition pair contains 2 indices for variance
+        '''
+        if index == len(list_for_par):
+            if (k == 0):
+                return accum
+            else:
+                return []
 
-    def generate_partitions(self, l):
+        element = list_for_par[index]
+        result = []
 
-        if len(l) % 2 != 0:
-            raise ValueError("the length of the list to partition must be even")
-        #define partition size
-        part_size = int(len(l)/2)
-        #idxs = [i for i in range(len(l))]
+        for set_i in range(len(accum)):
+            clone_new = copy.deepcopy(accum)
+            clone_new[set_i].append([element])
+            result.extend(self.generate_partitions(k - 1, list_for_par, clone_new, index + 1))
 
-        # make all combinations
-        # A natural property of these combinations, is that the last element
-        # is a complementary set to the fist one, the second to the one before last,
-        # and so on.
-        combin = [i for i in itertools.combinations(l, part_size)]
+            for elem_i in range(len(accum[set_i])):
+                clone_new = copy.deepcopy(accum)
+                clone_new[set_i][elem_i].append(element)
+                result.extend(self.generate_partitions(k, list_for_par,clone_new, index + 1))
 
-        # this loop will return the first, the second with the one before last ans so on
-        # eg (0,1,2,3,4,5) ->  (0,5),(1,4),(2,3)
-        for i in combin:
-            yield (i,combin.pop())
+        return [row for row in result if all([(len(r) == 2) for r in row])]
+
+
+
+
+
+
