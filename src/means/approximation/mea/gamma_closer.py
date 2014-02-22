@@ -13,7 +13,7 @@ class GammaCloser(CloserBase):
         return self.__type
 
 
-    def get_parameter_symbols(self, prob_moments):
+    def get_parameter_symbols(self, n_counter, k_counter):
         '''
         Calculates parameters Y expressions and beta coefficients in
         :math: `X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
@@ -25,7 +25,11 @@ class GammaCloser(CloserBase):
 
         gamma_type = self.type
         n_moment = self.max_order +1
-        n_species = len([None for pm in prob_moments if pm.order == 1])
+
+        expectation_symbols = sp.Matrix([n.symbol for n in k_counter if n.order == 1])
+
+        n_species = len(expectation_symbols)
+
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
 
@@ -39,10 +43,10 @@ class GammaCloser(CloserBase):
             beta_in_matrix = sp.Matrix(symbolic_species[1:])
 
         # E() and Var() symbols for each species have already been made in prob_moments matrix
-        expectation_symbols = sp.Matrix([n.symbol for n in prob_moments if n.order == 1])
+
         variance_symbols = []
         for sp_idx in range(n_species):
-            variance_symbols += [p.symbol for p in prob_moments if p.n_vector[sp_idx] == 2 and p.order == 2]
+            variance_symbols += [p.symbol for p in n_counter if p.n_vector[sp_idx] == 2 and p.order == 2]
         variance_symbols = sp.Matrix(variance_symbols)
 
         # Compute :math:  `\beta_i = Var(X_i)/\mathbb{E}(X_i) \bar\alpha_i = \mathbb{E}(X_i)^2/Var(X_i)`
@@ -73,7 +77,7 @@ class GammaCloser(CloserBase):
         # determined by the corresponding row in the moment matrix
         Y_exprs = []
         beta_multipliers = []
-        for mom in prob_moments:
+        for mom in n_counter:
             if mom.order < 2:
                 continue
             Y_exprs.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
@@ -110,13 +114,7 @@ class GammaCloser(CloserBase):
         :return:
         '''
 
-
-        prob_moments_over_dt = [k for k in k_counter if k.order == 1]
-        # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1]
-
-
-        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(prob_moments_over_dt)
+        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_counter, k_counter)
 
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
