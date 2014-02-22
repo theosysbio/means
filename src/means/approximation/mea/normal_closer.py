@@ -73,11 +73,12 @@ class NormalCloser(ParametricCloser):
             return sum(each_row)
 
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
+    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments, n_counter):
         n_species = len([None for pm in problem_moments if pm.order == 1])
         covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-        n_counter = [n for n in problem_moments if n.order > 1]
-        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
+        positive_n_counter = [n for n in n_counter if n.order > 1]
+        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
+
         return sp.Matrix(out_mat)
 
     def generate_partitions(self, k, list_for_par, accum=[[]], index=0):

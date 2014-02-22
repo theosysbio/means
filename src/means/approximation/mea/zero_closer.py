@@ -18,7 +18,7 @@ class CloserBase(object):
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
         prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self._max_order]
-        print len(prob_moments_over_dt)
+
         return prob_moments_over_dt
 
     def generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
@@ -30,10 +30,7 @@ class CloserBase(object):
         """
         # symbols for central moments
         central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
-        print "central_moments.shape"
-        print central_moments.shape
-        print "central_moments_symbols"
-        print central_moments_symbols
+
         # rhs for the first order raw moment
         mfk = [e for e in dmu_over_dt * central_moments_symbols]
         # rhs for the higher order raw moments
@@ -103,31 +100,26 @@ class ParametricCloser(CloserBase):
         return mfk, prob_lhs
 
     def parametric_closer_wrapper(self, mfk, central_from_raw_exprs, k_counter, prob_lhs, n_counter):
-        max_order = self.max_order
+        #print mfk
         # we obtain expressions for central moments in terms of variances/covariances
-        closed_central_moments = self.compute_closed_central_moments(central_from_raw_exprs, k_counter, prob_lhs)
+        closed_central_moments = self.compute_closed_central_moments(central_from_raw_exprs, k_counter, prob_lhs, n_counter)
         # set mixed central moment to zero iff univariate
-        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments,prob_lhs)
+        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments, prob_lhs)
 
-        print "mfk"
-        print len(mfk)
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
 
         # now we want to replace the new mfk (i.e. without highest order moment) any
         # symbol for highest order central moment by the corresponding expression (computed above)
-        print max_order
+
         positive_n_counter = [n for n in n_counter if n.order > 0]
         substitutions_pairs = [(n.symbol, ccm) for n,ccm in
-                               zip(positive_n_counter, closed_central_moments) if n.order > max_order]
-
-        for i in substitutions_pairs:
-            print i
+                               zip(positive_n_counter, closed_central_moments) if n.order > self.max_order]
         new_mfk = substitute_all(mfk, substitutions_pairs)
 
         return new_mfk, prob_lhs
 
 class ZeroCloser(ParametricCloser):
-    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
+    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments, n_counter):
         """
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 

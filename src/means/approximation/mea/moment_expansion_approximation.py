@@ -58,8 +58,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
         #  Calculate expressions to use in central moments equations (eq. 9)
         central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
-        print "central_moments_exprs.shape"
-        print central_moments_exprs.shape
+
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
@@ -68,8 +67,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         mfk, prob_lhs = self.closer.close(central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter)
 
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
-        print "len(out_problem.right_hand_side)"
-        print len(out_problem.right_hand_side)
+
         return out_problem
 
     def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
@@ -150,8 +148,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
         # arbitrary symbols
-        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1),real=True) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+2),real=True) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
-        print n_counter
+
         return n_counter, k_counter
 
