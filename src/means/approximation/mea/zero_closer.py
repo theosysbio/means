@@ -16,7 +16,7 @@ class CloserBase(object):
     def max_order(self):
         return self._max_order
 
-    def compute_raw_moments(self, problem_moment):
+    def compute_raw_moments(self, n_counter, k_counter):
         raise NotImplementedError("ParametricCloser is an abstract class.\
                                   `compute_closed_raw_moments()` is not implemented. ")
 
