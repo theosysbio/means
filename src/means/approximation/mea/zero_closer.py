@@ -51,25 +51,25 @@ class ParametricCloser(CloserBase):
     def is_multivariate(self):
         return self.__is_multivariate
 
-    def set_mixed_moments_to_zero(self, closed_central_moments,prob_moments):
+    def set_mixed_moments_to_zero(self, closed_central_moments, n_counter):
         '''
         In univariate case, set the cross-terms to 0.
         :param closed_central_moments: matrix of closed central moment
         :param prob_moments: moment matrix
         :return:  a matrix of new closed central moments with cross-terms equal to 0
         '''
-        n_counter = [n for n in prob_moments if n.order > 1]
+        positive_n_counter = [n for n in n_counter if n.order > 1]
         if self.is_multivariate:
             return closed_central_moments
         else:
-            return [0 if n.is_mixed else ccm for n,ccm in zip(n_counter, closed_central_moments)]
+            return [0 if n.is_mixed else ccm for n,ccm in zip(positive_n_counter, closed_central_moments)]
 
 
     def compute_raw_moments(self, problem_moment):
         raise NotImplementedError("ParametricCloser is an abstract class.\
                                   `compute_closed_raw_moments()` is not implemented. ")
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
+    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments, n_counter):
         """
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 
@@ -80,7 +80,7 @@ class ParametricCloser(CloserBase):
         :return: the central moments where raw moments have been replaced by parametric expressions
         :rtype: sympy.Matrix
         """
-        closed_raw_moments = self.compute_raw_moments(problem_moments)
+        closed_raw_moments = self.compute_raw_moments(k_counter, n_counter)
         # raw moment lef hand side symbol
         raw_symbols = [raw.symbol for raw in k_counter if raw.order > 1]
         # we want to replace raw moments symbols with closed raw moment expressions (in terms of variances/means)
@@ -104,7 +104,7 @@ class ParametricCloser(CloserBase):
         # we obtain expressions for central moments in terms of variances/covariances
         closed_central_moments = self.compute_closed_central_moments(central_from_raw_exprs, k_counter, prob_lhs, n_counter)
         # set mixed central moment to zero iff univariate
-        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments, prob_lhs)
+        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments, n_counter)
 
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
 

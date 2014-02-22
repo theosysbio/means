@@ -27,7 +27,7 @@ class TestNormalCloserMom4(unittest.TestCase):
             Moment([1, 2, 0], symbol=sympy.Symbol("yx14")),
             Moment([2, 0, 1], symbol=sympy.Symbol("yx15")),
             Moment([2, 1, 0], symbol=sympy.Symbol("yx16")),
-            Moment([3, 0, 0], symbol=sympy.Symbol("yx17")),
+            Moment([3, 0, 0], symbol=sympy.Symbol("yx17"))
     ]
 
     __n_counter = [

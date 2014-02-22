@@ -45,15 +45,15 @@ class LogNormalCloser(ParametricCloser):
         else:
             return sp.Integer(0)
 
-    def compute_raw_moments(self, problem_moments):
+    def compute_raw_moments(self, k_counter, n_counter):
 
         # The symbols for expectations are simply the first order raw moments.
-        expectation_symbols = [pm.symbol for pm in problem_moments if pm.order == 1]
+        expectation_symbols = [pm.symbol for pm in k_counter if pm.order == 1]
 
         n_species = len(expectation_symbols)
 
         # The covariance expressed in terms of central moment symbols (typically, yxNs, where N is an integer)
-        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
+        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
 
         # Variances is the diagonal of covariance matrix
         variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
@@ -72,7 +72,7 @@ class LogNormalCloser(ParametricCloser):
                 self.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
 
         # The n_vectors (e.g. [0,2,0]) of the central moments
-        pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in problem_moments if pm.order > 1 ]
+        pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1 ]
 
         #todo find out the equation
         out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
