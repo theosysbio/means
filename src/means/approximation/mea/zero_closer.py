@@ -8,6 +8,7 @@ class CloserBase(object):
         self._max_order = max_order
         self.__is_multivariate = multivariate
 
+
     @property
     def is_multivariate(self):
         return self.__is_multivariate
@@ -31,6 +32,7 @@ class CloserBase(object):
         :return: the central moments where raw moments have been replaced by parametric expressions
         :rtype: sympy.Matrix
         """
+
         closed_raw_moments = self.compute_raw_moments(n_counter, k_counter)
         # raw moment lef hand side symbol
         raw_symbols = [raw.symbol for raw in k_counter if raw.order > 1]

@@ -1,18 +1,12 @@
 import sympy as sp
 import operator
-from zero_closer import ZeroCloser
+from zero_closer import CloserBase
 from means.util.sympyhelpers import substitute_all
 
-class GammaCloser(ZeroCloser):
-    def __init__(self, n_moments, type=0):
-        super(GammaCloser, self).__init__(n_moments)
+class GammaCloser(CloserBase):
+    def __init__(self, max_order, type=1):
+        super(GammaCloser, self).__init__(max_order, multivariate = (type > 0))
         self.__type = type
-        self.__is_multivariate = (self.type > 0)
-
-
-    @property
-    def is_multivariate(self):
-        return self.__is_multivariate
 
     @property
     def type(self):
@@ -30,8 +24,12 @@ class GammaCloser(ZeroCloser):
         '''
 
         gamma_type = self.type
-        n_moment = self._max_order + 1
-
+        n_moment = self.max_order
+        print "=============================================="
+        print "prob_moments"
+        print prob_moments
+        print "n_moment"
+        print n_moment
         n_species = len([None for pm in prob_moments if pm.order == 1])
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
@@ -116,9 +114,11 @@ class GammaCloser(ZeroCloser):
         :param problem_moments: moment matrix with central moment symbols
         :return:
         '''
+
+
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.__max_order]
+        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.max_order]
 
 
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(prob_moments_over_dt)
