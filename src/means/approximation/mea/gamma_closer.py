@@ -1,7 +1,7 @@
 import sympy as sp
 import operator
 from zero_closer import CloserBase
-from means.util.sympyhelpers import substitute_all
+from means.util.sympyhelpers import substitute_all, product
 
 class GammaCloser(CloserBase):
     def __init__(self, max_order, type=1):
@@ -12,12 +12,10 @@ class GammaCloser(CloserBase):
     def type(self):
         return self.__type
 
-
     def get_parameter_symbols(self, n_counter, k_counter):
         '''
         Calculates parameters Y expressions and beta coefficients in
         :math: `X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
-
 
         :param prob_moments: the moments with symbols and moment vectors
         :return: two column matrices Y expressions and beta multipliers
@@ -77,16 +75,15 @@ class GammaCloser(CloserBase):
         # determined by the corresponding row in the moment matrix
         Y_exprs = []
         beta_multipliers = []
-        for mom in n_counter:
-            if mom.order < 2:
-                continue
-            Y_exprs.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
-            beta_multipliers.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
+
+        positive_n_counter = [n for n in n_counter if n.order > 0]
+        for mom in positive_n_counter:
+            Y_exprs.append(product([(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
+            beta_multipliers.append(product([(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
 
 
-        Y_exprs = sp.Matrix(Y_exprs)
+        Y_exprs = sp.Matrix(Y_exprs).applyfunc(sp.expand)
         beta_multipliers = sp.Matrix(beta_multipliers)
-        Y_exprs = Y_exprs.applyfunc(sp.expand)
 
         # Substitute alpha expressions in place of symbolic species Ys
         # by going through all powers up to the moment order for closure
@@ -122,7 +119,7 @@ class GammaCloser(CloserBase):
 
 
     def gamma_factorial(self, expr, n):
-        '''
+        r'''
         Compute :math: `\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
         See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished
 
@@ -132,4 +129,4 @@ class GammaCloser(CloserBase):
         '''
         if n == 0:
             return 1
-        return reduce(operator.mul, [expr+i for i in range(n)])
+        return product([expr+i for i in range(n)])

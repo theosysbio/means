@@ -15,28 +15,50 @@ from zero_closer import  ZeroCloser
 
 class MomentExpansionApproximation(ApproximationBaseClass):
     """
-    Performs moment expansion approximation (Ale et al. 2013) up to a given order of moment.
+    A class to perform moment expansion approximation as described in [Ale et al. 2013] up to a given order of moment.
+
+    .. [Ale et al. 2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf. "A general moment expansion method for stochastic kinetic models." The Journal of chemical physics 138.17 (2013): 174101.
     """
     def __init__(self, model, max_order, closer='zero', *closer_args, **closer_kwargs):
-        super(MomentExpansionApproximation, self).__init__(model)
-        self.__max_order = int(max_order)
 
-        # a dictionary of "option -> closer" this allow a generic handling for closer without to have to add
+        """
+
+        :param model: The model to be approximated
+        :type: A :class:`~means.approximation.model.Model`
+
+        :param max_order: the highest order of central moments in the resulting ODEs
+        :param closer: a string describing the type of closure to use
+        :type: string
+        :param closer_args: arguments to be passed to the closer
+        :param closer_kwargs: keyword arguments to be passed to the closer
+        """
+        super(MomentExpansionApproximation, self).__init__(model)
+        try:
+            self.__max_order = int(max_order)
+            if self.__max_order < 1:
+                raise ValueError("`max_order` can only be POSITIVE")
+        except:
+            raise ValueError("`max_order` can only be positive integer")
+
+
+        # A dictionary of "option -> closer". this allows a generic handling for closer without having to add
         # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
         supported_closers = {"log-normal": LogNormalCloser,
                              "zero": ZeroCloser,
                              "normal": NormalCloser,
                              "gamma": GammaCloser}
 
-        # exception it the closer name is not in the dict
-        if not closer in supported_closers:
-            error_str = "The closer type '{0}' is not supported.\n Supported values for closer:\n{1}"
-            raise KeyError(error_str.format(closer,supported_closers))
-        # otherwise, we initialise the closer for this approximator
-        else:
+        # We initialise the closer for this approximator
+        try:
             # our closer is an instance of the class queried in the dictionary
             CloserClass = supported_closers[closer]
             self.__closer = CloserClass(self.__max_order, *closer_args, **closer_kwargs)
+        except KeyError:
+            error_str = "The closure type '{0}' is not supported.\n\
+                         Supported values for closure:\
+                         {1}"
+            raise KeyError(error_str.format(closer,supported_closers))
+
 
     @property
     def closer(self):
@@ -46,7 +68,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         """
         Overrides the default run() method.
         Performs the complete analysis
-        :return: an ODEProblem which can be further used in inference and simulation
+        :return: an ODE problem which can be further used in inference and simulation.
+        :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
         """
         max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix
@@ -58,20 +81,32 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
         #  Calculate expressions to use in central moments equations (eq. 9)
         central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
-
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
         mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
-
+        # Applies moment expansion closure, that is replaces last order central moments by parametric expressions
         mfk = self.closer.close(mfk, central_from_raw_exprs, n_counter, k_counter)
-
+        # These are the left hand sign symbols referring to the mfk
         prob_lhs = self.generate_problem_left_hand_side(n_counter,k_counter)
+        # Finally, we build the problem
+        # print "expected_lhs = ["
+        # for i in prob_lhs:
+        #     print repr(i)+","
+        # print "]\n"
+        #
+        # print "expected_mfk = sympy.Matrix(["
+        # for i in mfk:
+        #     print "[" + repr(i) + "],"
+        # print "])\n"
+        #
+        # # print "sp.print_python(mfk)"
+        # # print sp.print_python(mfk)
+        # print "expected_constants = sympy."+repr(sp.Matrix(self.model.constants))
 
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
-
         return out_problem
 
     def generate_problem_left_hand_side(self, n_counter, k_counter):
@@ -170,14 +205,14 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #this mimics matlab sorting
         k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
-        k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]),real=True)
+        k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]))
                              for count in k_counter_descriptors]
         k_counter += [Moment(d, s) for d,s in zip(k_counter_descriptors, k_counter_symbols)]
 
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
         # arbitrary symbols
-        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1),real=True) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1)) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter
