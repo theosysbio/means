@@ -152,7 +152,6 @@ class TestLogNormalCloser(unittest.TestCase):
         ])
         closer = GammaCloser(max_order, type=0)
         answer = closer.close(self.__mfk, central_from_raw_exprs, self.__n_counter, self.__k_counter)
-        print (answer - expected).applyfunc(sympy.simplify)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     #

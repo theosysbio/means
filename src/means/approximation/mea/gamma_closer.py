@@ -24,12 +24,7 @@ class GammaCloser(CloserBase):
         '''
 
         gamma_type = self.type
-        n_moment = self.max_order
-        print "=============================================="
-        print "prob_moments"
-        print prob_moments
-        print "n_moment"
-        print n_moment
+        n_moment = self.max_order +1
         n_species = len([None for pm in prob_moments if pm.order == 1])
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
@@ -123,10 +118,6 @@ class GammaCloser(CloserBase):
 
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(prob_moments_over_dt)
 
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        for i in alpha_multipliers:
-            print i
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat

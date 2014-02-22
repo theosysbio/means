@@ -41,10 +41,6 @@ class CloserBase(object):
         # we want to replace raw moments symbols with closed raw moment expressions (in terms of variances/means)
         substitution_pairs = zip(raw_symbols, closed_raw_moments)
         # so we can obtain expression of central moments in terms of low order raw moments
-        for s in substitution_pairs:
-            print s
-        for i in central_from_raw_exprs:
-            print i
         closed_central_moments = substitute_all(central_from_raw_exprs, substitution_pairs)
         return closed_central_moments
 
