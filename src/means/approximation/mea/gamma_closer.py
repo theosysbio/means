@@ -118,10 +118,15 @@ class GammaCloser(CloserBase):
 
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.max_order]
+        prob_moments_over_dt += [n for n in n_counter if n.order > 1]
 
 
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(prob_moments_over_dt)
+
+        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        for i in alpha_multipliers:
+            print i
+        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat
