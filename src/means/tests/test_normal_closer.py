@@ -8,28 +8,6 @@ from means.util.sympyhelpers import to_sympy_matrix
 
 
 class TestNormalCloserMom4(unittest.TestCase):
-    __problem_moments = [
-            Moment([1, 0, 0], symbol=sympy.Symbol("y_0")),
-            Moment([0, 1, 0], symbol=sympy.Symbol("y_1")),
-            Moment([0, 0, 1], symbol=sympy.Symbol("y_2")),
-            Moment([0, 0, 2], symbol=sympy.Symbol("yx2")),
-            Moment([0, 1, 1], symbol=sympy.Symbol("yx3")),
-            Moment([0, 2, 0], symbol=sympy.Symbol("yx4")),
-            Moment([1, 0, 1], symbol=sympy.Symbol("yx5")),
-            Moment([1, 1, 0], symbol=sympy.Symbol("yx6")),
-            Moment([2, 0, 0], symbol=sympy.Symbol("yx7")),
-            Moment([0, 0, 3], symbol=sympy.Symbol("yx8")),
-            Moment([0, 1, 2], symbol=sympy.Symbol("yx9")),
-            Moment([0, 2, 1], symbol=sympy.Symbol("yx10")),
-            Moment([0, 3, 0], symbol=sympy.Symbol("yx11")),
-            Moment([1, 0, 2], symbol=sympy.Symbol("yx12")),
-            Moment([1, 1, 1], symbol=sympy.Symbol("yx13")),
-            Moment([1, 2, 0], symbol=sympy.Symbol("yx14")),
-            Moment([2, 0, 1], symbol=sympy.Symbol("yx15")),
-            Moment([2, 1, 0], symbol=sympy.Symbol("yx16")),
-            Moment([3, 0, 0], symbol=sympy.Symbol("yx17"))
-    ]
-
     __n_counter = [
             Moment([0, 0, 0], symbol=sympy.Integer(0)),
             Moment([0, 0, 2], symbol=sympy.Symbol("yx2")),
@@ -163,7 +141,6 @@ class TestNormalCloserMom4(unittest.TestCase):
 
         max_order = 3
 
-        prob_moments = self.__problem_moments
         expected = to_sympy_matrix([
             ["c_0-c_1*y_0-(c_2*c_6*yx5)/(c_6+y_0) ** 2+(c_2*c_6*yx15)/(c_6+y_0) ** 3-(c_2*y_0*y_2)/(c_6+y_0)+(3*c_2*c_6*y_2*yx7 ** 2)/(c_6+y_0) ** 5+(c_2*c_6*y_2*yx7)/(c_6+y_0) ** 3-(c_2*c_6*y_2*yx17)/(c_6+y_0) ** 4-(3*c_2*c_6*yx5*yx7)/(c_6+y_0) ** 4"],
             ["c_3*y_0-c_4*y_1"],
@@ -188,7 +165,7 @@ class TestNormalCloserMom4(unittest.TestCase):
 
 
         closer = NormalCloser(max_order, multivariate=True)
-        answer, lhs_answer = closer.parametric_closer_wrapper(self.__mfk, central_from_raw_exprs, k_counter, prob_moments, self.__n_counter)
+        answer = closer.close(self.__mfk, central_from_raw_exprs,self.__n_counter, k_counter)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
     #
@@ -296,7 +273,7 @@ class TestNormalCloserMom4(unittest.TestCase):
     #
     #     # univariate != multivariate
     #     closer = NormalCloser(max_order, multivariate=False)
-    #     answer, lhs_answer = closer.parametric_closer_wrapper(self.__mfk, central_from_raw_exprs, k_counter, prob_moments, self.__n_counter)
+    #     answer, lhs_answer = closer.close(self.__mfk, central_from_raw_exprs, k_counter, prob_moments, self.__n_counter)
     #
     #     #sympy.print_python(answer)
     #
@@ -408,7 +385,7 @@ class TestNormalCloser(unittest.TestCase):
             ["(c_0*c_6 ** 3+c_0*y_0 ** 3+c_1*y_0 ** 4+c_2*y_0 ** 3*y_2-2*c_2*y_0 ** 3*yx5-2*c_1*y_0 ** 3*yx7+3*c_1*c_6 ** 2*y_0 ** 2+3*c_0*c_6*y_0 ** 2+3*c_0*c_6 ** 2*y_0+3*c_1*c_6*y_0 ** 3+c_1*c_6 ** 3*y_0+c_2*c_6 ** 2*yx5-2*c_1*c_6 ** 3*yx7+c_2*c_6*y_0*yx5-c_2*c_6*y_2*yx7+2*c_2*c_6*y_0 ** 2*y_2+c_2*c_6 ** 2*y_0*y_2-4*c_2*c_6*y_0 ** 2*yx5-2*c_2*c_6 ** 2*y_0*yx5-6*c_1*c_6*y_0 ** 2*yx7-6*c_1*c_6 ** 2*y_0*yx7-2*c_2*c_6 ** 2*y_2*yx7-2*c_2*c_6*y_0*y_2*yx7)/(c_6+y_0) ** 3"]
         ])
         closer = NormalCloser(max_order, multivariate=True)
-        answer, lhs_answer = closer.parametric_closer_wrapper(self.__mfk, central_from_raw_exprs, k_counter, prob_moments, self.__n_counter)
+        answer = closer.close(self.__mfk, central_from_raw_exprs,self.__n_counter, k_counter)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
 

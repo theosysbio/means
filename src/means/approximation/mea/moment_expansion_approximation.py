@@ -64,11 +64,42 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
         central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
-        mfk, prob_lhs = self.closer.close(central_moments_exprs, dmu_over_dt, central_from_raw_exprs, species, n_counter, k_counter)
+        mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
+
+        mfk = self.closer.close(mfk, central_from_raw_exprs, n_counter, k_counter)
+
+        prob_lhs = self.generate_problem_left_hand_side(n_counter,k_counter)
 
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
 
         return out_problem
+
+    def generate_problem_left_hand_side(self, n_counter, k_counter):
+        # concatenate the symbols for first order raw moments (means)
+        prob_moments_over_dt = [k for k in k_counter if k.order == 1]
+        # and the higher order central moments (variances, covariances,...)
+        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.__max_order]
+
+        return prob_moments_over_dt
+
+    def generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
+        """
+        :param central_moments:
+        :param n_counter:
+        :param dmu_over_dt:
+        :return: the right hand side of the final ODEs
+        """
+        # symbols for central moments
+        central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
+
+        # rhs for the first order raw moment
+        mfk = [e for e in dmu_over_dt * central_moments_symbols]
+        # rhs for the higher order raw moments
+        mfk += [(sp.Matrix(cm).T * central_moments_symbols)[0] for cm in central_moments.tolist()]
+
+        mfk = sp.Matrix(mfk)
+
+        return mfk
 
     def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
         """
@@ -105,8 +136,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # apply this substitution to all elements of the central moment expressions matrix
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
-        #todo eventually, remove simplify (slow)
-        #out_exprs = out_exprs.applyfunc(sp.simplify)
         return out_exprs
 
     def generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
@@ -148,7 +177,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         #  central moments
         n_counter_descriptors = [m for m in k_counter_descriptors if sum(m) > 1]
         # arbitrary symbols
-        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+2),real=True) for i in range(len(n_counter_descriptors))]
+        n_counter_symbols = [sp.Symbol(central_symbols_prefix + str(i+1),real=True) for i in range(len(n_counter_descriptors))]
         n_counter += [Moment(c, s) for c,s in zip(n_counter_descriptors, n_counter_symbols)]
 
         return n_counter, k_counter

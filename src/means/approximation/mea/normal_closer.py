@@ -2,13 +2,10 @@ import sympy as sp
 import operator
 import copy
 from means.util.sympyhelpers import product
-from zero_closer import ParametricCloser
+from zero_closer import CloserBase
 
 
-
-import itertools
-
-class NormalCloser(ParametricCloser):
+class NormalCloser(CloserBase):
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         '''
@@ -73,12 +70,11 @@ class NormalCloser(ParametricCloser):
             return sum(each_row)
 
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments, n_counter):
-        n_species = len([None for pm in problem_moments if pm.order == 1])
-        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
+    def compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+        n_species = len([None for pm in k_counter if pm.order == 1])
+        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
         positive_n_counter = [n for n in n_counter if n.order > 1]
         out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
-
         return sp.Matrix(out_mat)
 
     def generate_partitions(self, k, list_for_par, accum=[[]], index=0):

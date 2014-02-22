@@ -113,7 +113,7 @@ class TestNormalCloser(unittest.TestCase):
 
         n_moments = 3
         closer = GammaCloser(n_moments, type=1)
-        answer = closer.compute_closed_central_moments(central_from_raw_exprs, k_counter, self.__problem_moments)
+        answer = closer.compute_closed_central_moments(central_from_raw_exprs,self.__n_counter, k_counter)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_compute_raw_moments(self):
@@ -228,7 +228,7 @@ class TestNormalCloser(unittest.TestCase):
 
 
         closer = GammaCloser(n_moments, type=1)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
+        answer, lhs_answer = closer.close(mfk, central_from_raw_exprs, k_counter, prob_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
     def test_normal_closer_wrapper_type_zero(self):
@@ -314,7 +314,7 @@ class TestNormalCloser(unittest.TestCase):
 
 
         closer = GammaCloser(n_moments, type=0)
-        answer, lhs_answer = closer.parametric_closer_wrapper(mfk, central_from_raw_exprs, k_counter, prob_moments)
+        answer, lhs_answer = closer.close(mfk, central_from_raw_exprs, k_counter, prob_moments)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
 
