@@ -1,5 +1,5 @@
 tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve"
-OUT="bench.tmp"
+OUT="/tmp/bench.tmp"
 
 function run_python_script(){
 	mo=$1
@@ -16,14 +16,14 @@ print '{0}, {1}'.format(pb.number_of_equations, time.time() - t0);"
 
 # We generate data
 
-MAX_ORDER=3
+MAX_ORDER=8
 # csv header
 echo "method, n_ODEs, t" > $OUT
 for mo in $(seq 2 $MAX_ORDER)
 	do
 	for t in $tags;
 		do
-		git checkout $t 2> /dev/null
+		git checkout $t 
 		echo "tag: $t, max_order: $mo"
 		sleep 3
 		res=$(run_python_script $mo)

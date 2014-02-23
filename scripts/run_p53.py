@@ -5,7 +5,7 @@ from means.approximation.mea import MomentExpansionApproximation
 from means.examples.sample_models import MODEL_P53
 from means.approximation.ode_problem import ODEProblemWriter
 
-prob = MomentExpansionApproximation(MODEL_P53, 2, "gamma").run()
+prob = MomentExpansionApproximation(MODEL_P53, 4, "log-normal").run()
 
 
 #"simple_closure_vs_legacy"
