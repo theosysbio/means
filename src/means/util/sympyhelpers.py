@@ -30,6 +30,26 @@ def substitute_all(sp_object, pairs):
         expr = expr.doit()
     return expr
 
+def quick_solve(self, expr, var):
+        r"""
+        A function that tries to solve a very simple equation in the quickest way.
+        For instance, an expression like :math: `2*a + 3*b + c == 0` needed to be solved for :math: `c`
+        may be simply solved by stating :math: `c = -(2*a + 3*b)`.
+        The function checks if the right hand side does not contain :math: `c`.
+        If it does, then, the classic `sympy.solve()` method is used.
+        `sympy.solve()` used simplify in the background,
+        it is therefore preferable to avoid using it.
+
+        :param expr: an expression like implicitly equal to 0
+        :param var: a variable to solve for
+        :return: the solution for `var`
+        """
+        res = -(expr - var)
+        # This may not work every time,
+        # so we fallback on the --slow-- `solve()` if we failed
+        if var in res:
+            return sp.solve(expr, var)
+        return res
 
 def to_sympy_matrix(value):
     """

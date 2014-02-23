@@ -7,7 +7,7 @@ from means.approximation.ode_problem import Moment
 from TaylorExpansion import generate_dmu_over_dt
 from centralmoments import eq_centralmoments
 from raw_to_central import raw_to_central
-from means.util.sympyhelpers import substitute_all
+from means.util.sympyhelpers import substitute_all, quick_solve
 from gamma_closer import GammaCloser
 from log_normal_closer import LogNormalCloser
 from normal_closer import NormalCloser
@@ -136,10 +136,11 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # The symbols for the corresponding central moment
         central_symbols= [central.symbol for central in n_counter if central.order > 1]
         # Now we state (central_symbols == central_from_raw_exprs)
-        eq_to_solve = [sp.Eq(cfr, cs) for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
+        eq_to_solve = [cfr - cs for (cs, cfr) in zip(central_symbols, central_from_raw_exprs)]
+
         # And we solve this for the symbol of the corresponding raw moment. This gives an expression
         # of the symbol for raw moment in terms of central moments and lower order raw moment
-        solved_xs = sp.Matrix([sp.solve(eq, raw) for (eq, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
+        solved_xs = sp.Matrix([quick_solve(eq,raw) for (eq, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
 
         # now we want to express raw moments only in terms od central moments and means
         # for instance if we have: :math:`x_1 = 1, x_2 = 2 +x_1, x_3 = x_2*x_1`, we should give:
