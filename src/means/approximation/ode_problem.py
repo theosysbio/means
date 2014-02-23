@@ -4,6 +4,7 @@ from sympy.utilities.autowrap import autowrap
 
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
 from means.util.decorators import memoised_property
+from means.util.sympyhelpers import sympy_expressions_equal
 
 class Descriptor(object):
     pass
@@ -18,6 +19,7 @@ class ODETermBase(Descriptor):
 
     def __init__(self, symbol):
         super(ODETermBase, self).__init__()
+        #if isinstance(symbol, sympy.Basic):
         self._symbol = symbol
 
     @property
@@ -331,6 +333,19 @@ class ODEProblem(object):
             lines.append(r"\dot{{{0}}} &= {1} \\".format(sympy.latex(lhs.symbol), sympy.latex(rhs)))
         lines.append(r"\end{align*}")
         return "\n".join(lines)
+
+
+    def __neq__(self, other):
+        return not  other == self
+
+    def __eq__(self, other):
+        if set(other.constants) ^ set(self.constants):
+            return False
+        if sympy.Matrix(other.ode_lhs_terms) != sympy.Matrix(self.ode_lhs_terms):
+            return False
+        if not sympy_expressions_equal(other.right_hand_side, self.right_hand_side):
+            return False
+        return True
 
 
 
