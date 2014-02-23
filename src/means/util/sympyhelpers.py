@@ -30,7 +30,7 @@ def substitute_all(sp_object, pairs):
         expr = expr.doit()
     return expr
 
-def quick_solve(self, expr, var):
+def quick_solve(expr, var):
         r"""
         A function that tries to solve a very simple equation in the quickest way.
         For instance, an expression like :math: `2*a + 3*b + c == 0` needed to be solved for :math: `c`
