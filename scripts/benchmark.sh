@@ -1,20 +1,41 @@
+tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve"
 OUT="bench.tmp"
-PYTHON_SCRIPT="/home/quentin/Desktop/benchmark.py"
-tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms"
+
+function run_python_script(){
+	mo=$1
+	PYTHON_SCRIPT="import time;
+from means.approximation.mea import MomentExpansionApproximation;
+from means.examples.sample_models import MODEL_P53;
+t0 = time.time();
+pb = MomentExpansionApproximation(MODEL_P53, $mo, 'log-normal').run();
+print '{0}, {1}'.format(pb.number_of_equations, time.time() - t0);"
+	
+	echo $(python -c "$PYTHON_SCRIPT")
+}
+
 
 # We generate data
-echo "method, n_ODEs, t" > $OUT;
-MAX_ORDER=4
-for t in $tags;
-	do
-	git checkout $t
-	sleep 1
-	python $PYTHON_SCRIPT $t $MAX_ORDER >> $OUT;
-	done
 
-# we plot with R ggplot
+MAX_ORDER=3
+# csv header
+echo "method, n_ODEs, t" > $OUT
+for mo in $(seq 2 $MAX_ORDER)
+	do
+	for t in $tags;
+		do
+		git checkout $t 2> /dev/null
+		echo "tag: $t, max_order: $mo"
+		sleep 3
+		res=$(run_python_script $mo)
+		# One row
+		echo $t, $res >> $OUT
+	done
+done
+
+# When data is generated, we plot
+# with R ggplot:
 rcom="	library(ggplot2);
-		pdf('bench.pdf');
+		pdf('bench.pdf', width=10, height=6);
 		df <- read.table('$OUT',h=T,sep=',');
 		df\$max_order <- as.numeric(as.factor(df\$n_ODEs));
 		ggplot(data=df, aes(x=max_order, y=log2(t), group=method, colour=method, shape=method)) + 
