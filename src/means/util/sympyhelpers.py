@@ -92,7 +92,7 @@ def sympy_expressions_equal(expr1, expr2):
     """
     # the simplified difference is equal to zero: same expressions
     try:
-        difference = sympy.simplify(expr1 - expr2)
+        difference = sympy.simplify(sympy.expand(expr1 - expr2))
     except SympifyError:
         # Doing sympy.simplify(expr1 - expr2) raises an error if expr1 or expr2 is a matrix (for sympy 0.7.2)
         if isinstance(expr1, sympy.Matrix) or isinstance(expr2, sympy.Matrix):

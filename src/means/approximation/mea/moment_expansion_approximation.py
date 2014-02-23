@@ -92,20 +92,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # These are the left hand sign symbols referring to the mfk
         prob_lhs = self.generate_problem_left_hand_side(n_counter,k_counter)
         # Finally, we build the problem
-        # print "expected_lhs = ["
-        # for i in prob_lhs:
-        #     print repr(i)+","
-        # print "]\n"
-        #
-        # print "expected_mfk = sympy.Matrix(["
-        # for i in mfk:
-        #     print "[" + repr(i) + "],"
-        # print "])\n"
-        #
-        # # print "sp.print_python(mfk)"
-        # # print sp.print_python(mfk)
-        # print "expected_constants = sympy."+repr(sp.Matrix(self.model.constants))
-
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
         return out_problem
 
