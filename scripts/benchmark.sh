@@ -16,7 +16,7 @@ print '{0}, {1}'.format(pb.number_of_equations, time.time() - t0);"
 
 # We generate data
 
-MAX_ORDER=8
+MAX_ORDER=9
 # csv header
 echo "method, n_ODEs, t" > $OUT
 for mo in $(seq 2 $MAX_ORDER)
