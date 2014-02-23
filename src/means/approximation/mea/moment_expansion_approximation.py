@@ -79,7 +79,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         n_counter, k_counter = self.generate_n_and_k_counters(max_order, species)
         # dmu_over_dt has row per species and one col per element of n_counter (eq. 6)
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
-        #  Calculate expressions to use in central moments equations (eq. 9)
+        # Calculate expressions to use in central moments equations (eq. 9)
         central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
