@@ -19,7 +19,7 @@ def make_k_chose_e(e_vec, k_vec):
     :param k_vec: the vector k
     :return: a scalar
     """
-    return  product([sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)])
+    return product([sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)])
 
 class DBetaOverDtCalculator(object):
     def __init__(self, propensities, n_counter, stoichoimetry_matrix, species):
@@ -53,24 +53,28 @@ class DBetaOverDtCalculator(object):
 
         # compute <F> from f(x) (eq. 12). The result is a list in which each element is a
         # vector in which each element relates to an entry of counter
-
         f_expectation_vec = [self.make_f_expectation(f) for f in f_of_x_vec]
 
         # compute s^e for EACH REACTION and EACH entry in the EKCOUNTER . this is a list of scalars
-        s_pow_e_vec = [self.make_s_pow_e(reac_idx, ek.n_vector) for (reac_idx, ek) in
-                       itertools.product(range(len(self.__propensities)), e_counter)]
+        s_pow_e_vec = sp.Matrix([self.make_s_pow_e(reac_idx, ek.n_vector) for (reac_idx, ek) in
+                       itertools.product(range(len(self.__propensities)), e_counter)])
 
         # compute (k choose e) for EACH REACTION and EACH entry in the EKCOUNTER . This is a list of scalars.
         # Note that this does not depend on the reaction, so we can just repeat the result for each reaction
-        k_choose_e_vec = [make_k_chose_e(ek.n_vector, k_iter.n_vector)
-                          for ek in e_counter] * len(self.__propensities)
+        k_choose_e_vec = sp.Matrix([make_k_chose_e(ek.n_vector, k_iter.n_vector)
+                          for ek in e_counter] * len(self.__propensities))
 
         # compute the element-wise product of the three entities
-        prod = [f * s * ke for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]
+        #prod = [sp.Mul(f,  s, ke) for (f, s, ke) in zip(f_expectation_vec, s_pow_e_vec, k_choose_e_vec)]
+
+        s_times_ke = s_pow_e_vec.multiply_elementwise(k_choose_e_vec)
+
+        #
+        prod = [list(f * s_ke) for (f, s_ke) in zip(f_expectation_vec, s_times_ke)]
 
         # we have a list of vectors and we want to obtain a list of sums of all nth element together.
         # To do that we put all the data into a matrix in which each row is a different vector
-        to_sum = sp.Matrix(prod).reshape(len(prod),len(prod[0]))
+        to_sum = sp.Matrix(prod)
 
         # then we sum over the columns -> row vector
         mixed_moments = sum_of_cols(to_sum)
@@ -104,17 +108,18 @@ class DBetaOverDtCalculator(object):
         """
         # compute derivatives for EACH ENTRY in COUNTER
 
-        derives = [derive_expr_from_counter_entry(expr, self.__species, tuple(c.n_vector)) for c in self.__n_counter]
+        derives = sp.Matrix([derive_expr_from_counter_entry(expr, self.__species, tuple(c.n_vector))
+                             for c in self.__n_counter])
+
+
 
         # Computes the factorial terms for EACH entry in COUNTER
-        factorial_terms = [get_factorial_term(tuple(c.n_vector)) for c in self.__n_counter]
+        factorial_terms = sp.Matrix([get_factorial_term(tuple(c.n_vector)) for c in self.__n_counter])
 
         # Element wise product of the two vectors
-        te_matrix = sp.Matrix(len(self.__n_counter), 1, [d*f for (d, f) in zip(derives, factorial_terms)])
+        te_vector= derives.multiply_elementwise(factorial_terms)
 
-        return te_matrix
-        # return [d*f for (d, f) in zip(derives, factorial_terms)]
-
+        return te_vector
 
     def make_s_pow_e(self, reac_idx, e_vec):
         """
