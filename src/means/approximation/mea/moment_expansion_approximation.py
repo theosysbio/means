@@ -11,7 +11,34 @@ from means.util.sympyhelpers import substitute_all, quick_solve
 from gamma_closer import GammaCloser
 from log_normal_closer import LogNormalCloser
 from normal_closer import NormalCloser
-from zero_closer import  ZeroCloser
+from zero_closer import ZeroCloser
+
+
+
+def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
+    r"""
+    A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
+    It performs moment expansion approximation as described in [Ale et al. 2013] up to a given order of moment.
+    It returns a set of ODEs describing the time derivative of the modeled moments.
+
+    .. [Ale et al. 2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
+     "A general moment expansion method for stochastic kinetic models." The Journal of chemical physics 138.17 (2013): 174101.
+
+    :param model: The model to be approximated
+    :type: A :class:`~means.approximation.model.Model`
+    :param max_order: the highest order of central moments in the resulting ODEs
+    :param closer: a string describing the type of closure to use
+    :type: string
+    :param closer_args: arguments to be passed to the closer
+    :param closer_kwargs: keyword arguments to be passed to the closer
+    :return: an ODE problem which can be further used in inference and simulation.
+    :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
+    """
+    mea = MomentExpansionApproximation(model, max_order, closer=closer, *closer_args, **closer_kwargs)
+    return mea.run()
+
+
+
 
 class MomentExpansionApproximation(ApproximationBaseClass):
     """
@@ -143,8 +170,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         solved_xs = sp.Matrix([quick_solve(eq,raw) for (eq, raw) in zip(eq_to_solve, positiv_raw_moms_symbs)])
 
         # now we want to express raw moments only in terms od central moments and means
-        # for instance if we have: :math:`x_1 = 1, x_2 = 2 +x_1, x_3 = x_2*x_1`, we should give:
-        # :math: `x_1 = 1, x_2 = 2+1, x_3 = 1*(2+1)`
+        # for instance if we have: :math:`x_1 = 1; x_2 = 2 +x_1 and  x_3 = x_2*x_1`, we should give:
+        # :math: `x_1 = 1; x_2 = 2+1 and  x_3 = 1*(2+1)`
         # To achieve this, we recursively apply substitution as many times as the highest order (minus one)
         max_order = max([p.order for p in k_counter])
 
