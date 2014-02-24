@@ -2,6 +2,7 @@ import sympy
 from sympy.core.sympify import SympifyError
 import numpy as np
 
+
 def substitute_all(sp_object, pairs):
     """
     Performs multiple substitutions in an expression
@@ -9,20 +10,46 @@ def substitute_all(sp_object, pairs):
     :param pairs: a list of pairs (a,b) where each a_i is to be substituted with b_i
     :return: the substituted expression
     """
+    if not isinstance(pairs, dict):
+        dict_pairs = dict(pairs)
+    else:
+        dict_pairs = pairs
+
     # we recurse if the object was a matrix so we apply substitution to all elements
     if isinstance(sp_object, sympy.Matrix):
-        return sp_object.applyfunc(lambda x: substitute_all(x, pairs))
+        return sp_object.applyfunc(lambda x: substitute_all(x, dict_pairs))
 
     try:
-        expr = sp_object.subs(pairs,simultaneous=True)
+        expr = sp_object.xreplace(dict_pairs)
+
     # in sympy 0.7.2, this would not work, so we do it manually
     except:
         expr =  sp_object
-        for (a,b) in pairs:
+        for (a,b) in dict_pairs.items():
             expr = sympy.Subs(expr, a, b)
         expr = expr.doit()
     return expr
 
+def quick_solve(expr, var):
+        r"""
+        A function that tries to solve a very simple equation in the quickest way.
+        For instance, an expression like :math: `2*a + 3*b + c == 0` needed to be solved for :math: `c`
+        may be simply solved by stating :math: `c = -(2*a + 3*b)`.
+        The function checks if the right hand side does not contain :math: `c`.
+        If it does, then, the classic `sympy.solve()` method is used.
+        `sympy.solve()` used simplify in the background,
+        it is therefore preferable to avoid using it.
+
+        :param expr: an expression like implicitly equal to 0
+        :param var: a variable to solve for
+        :return: the solution for `var`
+        """
+        res = -(expr - var)
+        # This may not work every time,
+        # so we fallback on the --slow-- `solve()` if we failed
+        if var in res:
+            return sp.solve(expr, var)
+        return res
 
 def to_sympy_matrix(value):
     """
@@ -85,7 +112,7 @@ def sympy_expressions_equal(expr1, expr2):
     """
     # the simplified difference is equal to zero: same expressions
     try:
-        difference = sympy.simplify(expr1 - expr2)
+        difference = sympy.simplify(sympy.expand(expr1 - expr2))
     except SympifyError:
         # Doing sympy.simplify(expr1 - expr2) raises an error if expr1 or expr2 is a matrix (for sympy 0.7.2)
         if isinstance(expr1, sympy.Matrix) or isinstance(expr2, sympy.Matrix):

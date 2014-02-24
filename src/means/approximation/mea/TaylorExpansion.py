@@ -2,6 +2,21 @@ import sympy as sp
 import itertools
 import operator
 from means.util.sympyhelpers import product
+from means.util.decorators import cache
+
+@cache
+def cached_diff(expression, var):
+    """
+    Derive expression with respect to a single variable.
+
+    :param expression: an expression to derive
+    :type: `~sympy.Expr`
+    :param var: a variable
+    :type: `~sympy.Symbol`
+    :return: the derived expression
+    :type: `~sympy.Expr`
+    """
+    return sp.Derivative(expression, var, evaluate=True)
 
 def derive_expr_from_counter_entry(expression, species, counter_entry):
     r"""
@@ -16,14 +31,25 @@ def derive_expr_from_counter_entry(expression, species, counter_entry):
 
     :return: the derived expression
     """
+
     # no derivation, we return the unchanged expression
     if sum(counter_entry) == 0:
         return expression
-    # repeat a variable as many time as its value in counter
-    diff_orders = reduce(operator.add, map(lambda v, c: [v] * c, species, counter_entry))
-    # pass this as arguments for sympy diff
-    return sp.diff(expression, *diff_orders)
 
+    # repeat a variable as many time as its value in counter
+    diff_vars = reduce(operator.add, map(lambda v, c: [v] * c, species, counter_entry))
+    out_expr = expression
+
+    for var in diff_vars:
+        # If the derivative is already 0, we can return 0
+        if out_expr.is_Integer:
+            return sp.Integer(0)
+        out_expr = cached_diff(out_expr, var)
+
+    return out_expr
+
+
+@cache
 def get_factorial_term(counter_entry):
     r"""
     Calculates  the :math:`\frac{1}{\mathbf{n!}}` of eq. 6 (see Ale et al. 2013).
@@ -56,12 +82,13 @@ def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
     """
 
     # compute derivatives :math:`\frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}}`
+
     # for EACH REACTION and EACH entry in COUNTER
-    derivs =[derive_expr_from_counter_entry(reac, species, c.n_vector) for (reac, c) in itertools.product(propensity, n_counter)]
+    derives =[derive_expr_from_counter_entry(reac, species, c.n_vector) for (reac, c) in itertools.product(propensity, n_counter)]
     # Computes the factorial terms (:math:`\frac{1}{\mathbf{n!}}`) for EACH REACTION and EACH entry in COUNTER
     # this does not depend of the reaction, so we just repeat the result for each reaction
-    factorial_terms = [get_factorial_term(c.n_vector) for (c) in n_counter] * len(propensity)
+    factorial_terms = [get_factorial_term(tuple(c.n_vector)) for c in n_counter] * len(propensity)
     # we make a matrix in which every element is the entry-wise multiplication of `derives` and factorial_terms
-    taylor_exp_matrix = sp.Matrix(len(propensity), len(n_counter), [d*f for (d, f) in zip(derivs, factorial_terms)])
+    taylor_exp_matrix = sp.Matrix(len(propensity), len(n_counter), [d*f for (d, f) in zip(derives, factorial_terms)])
     # dmu_over_dt is the product of the stoichiometry matrix by the taylor expansion matrix
     return stoichiometry_matrix * taylor_exp_matrix

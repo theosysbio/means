@@ -1,14 +1,10 @@
 import sympy as sp
-import operator
-from means.approximation.mea.eq_mixedmoments import make_k_chose_e, eq_mixedmoments
+
+from means.approximation.mea.eq_mixedmoments import make_k_chose_e
+from means.approximation.mea.eq_mixedmoments import DBetaOverDtCalculator
 from means.util.sympyhelpers import sum_of_cols, product, sympy_sum_list
 
-
-#todo del
-def all_higher_or_eq(vec_a, vec_b):
-    return all([a >= b for a, b in zip(vec_a, vec_b)])
-
-def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix):
+def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order):
     r"""
     Function used to calculate the terms required for use in equations giving the time dependence of central moments.
 
@@ -36,12 +32,14 @@ def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, 
 
     # copy dmu_mat matrix as a list of rows vectors (1/species)
     dmu_mat = [sp.Matrix(l).T for l in dmu_over_dt.tolist()]
-    #todo : tolist()
+
+    d_beta_over_dt_calculator = DBetaOverDtCalculator(propensities,n_counter,stoichiometry_matrix,species)
 
     for n_iter in n_counter:
         # skip zeroth moment
-        if n_iter.order == 0:
+        if n_iter.order == 0 or n_iter.order > max_order:
             continue
+
         n_vec = n_iter.n_vector
 
         # Find all moments in k_counter that are lower than the current n_iter
@@ -69,7 +67,7 @@ def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, 
             # e_counter contains elements of k_counter lower than the current k_iter
             e_counter = [k for k in k_counter if k_iter >= k and k.order > 0]
 
-            dbeta_over_dt = eq_mixedmoments(propensities, n_counter, stoichiometry_matrix, species, k_iter, e_counter)
+            dbeta_over_dt = d_beta_over_dt_calculator.get(k_iter, e_counter)
 
             # Calculate beta, dbeta_over_dt terms in equation 9
             if len(e_counter) == 0:

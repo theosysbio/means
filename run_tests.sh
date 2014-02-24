@@ -11,5 +11,7 @@ else
 fi
 nosetests $SLOWTESTS --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR
 cd $INOUT_DIR
-python -m means.tests.regression_tests --xunit | tee $WORKSPACE/regression_tests.xml
+
+#remove regeression tests
+#python -m means.tests.regression_tests --xunit | tee $WORKSPACE/regression_tests.xml
 
