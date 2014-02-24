@@ -1,4 +1,4 @@
-tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve"
+tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff"
 OUT="/tmp/bench.tmp"
 
 function run_python_script(){
@@ -16,7 +16,7 @@ print '{0}, {1}'.format(pb.number_of_equations, time.time() - t0);"
 
 # We generate data
 
-MAX_ORDER=9
+MAX_ORDER=4
 # csv header
 echo "method, n_ODEs, t" > $OUT
 for mo in $(seq 2 $MAX_ORDER)
