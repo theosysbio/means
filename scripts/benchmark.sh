@@ -1,4 +1,4 @@
-tags="no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff"
+tags="means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff"
 OUT="/tmp/bench.tmp"
 
 function run_python_script(){
