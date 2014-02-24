@@ -22,12 +22,12 @@ def benchmark_means(max_order):
 
 
 to_benchmark = [
-    {"git_tag":"means_no_optims", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 4},
+    #{"git_tag":"means_no_optims", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 4},
     {"git_tag":"no_simplify_and_cache_diff", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 5},
     {"git_tag":"use_xreplace", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 5},
     {"git_tag":"only_necessary_moms", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 5},
-    {"git_tag":"use_quick_solve", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6},
-    {"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6},
+    {"git_tag":"use_quick_solve", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6}
+    #{"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6},
 ]
 for tb in to_benchmark:
     tb["dt"] = []
@@ -43,7 +43,12 @@ try:
         for tb in to_benchmark:
 
             if tb["test_from"] <= max_order <= tb["test_up_to"]:
-                subprocess.Popen(['git', 'checkout', tb["git_tag"]]).communicate()
+                process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE,  )
+                out, err = process.communicate()
+                if err:
+                    print err
+                    raise Exception
+
                 time.sleep(3)
                 n_eq, dt = tb["function"](max_order)
                 print tb["git_tag"],dt,n_eq
