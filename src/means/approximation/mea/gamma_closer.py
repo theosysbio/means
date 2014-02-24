@@ -13,13 +13,13 @@ class GammaCloser(CloserBase):
         return self.__type
 
     def get_parameter_symbols(self, n_counter, k_counter):
-        '''
+        r"""
         Calculates parameters Y expressions and beta coefficients in
-        :math: `X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
+        :math:`X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
 
         :param prob_moments: the moments with symbols and moment vectors
         :return: two column matrices Y expressions and beta multipliers
-        '''
+        """
 
         gamma_type = self.type
         n_moment = self.max_order +1
@@ -102,14 +102,14 @@ class GammaCloser(CloserBase):
         return Y_exprs, beta_multipliers
 
     def compute_raw_moments(self, n_counter, k_counter):
-        '''
-        Compute :math: `X_i`
-        Gamma type 1: :math: `X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
-        Gamma type 2: :math: `X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
+        r"""
+        Compute :math:`X_i`
+        Gamma type 1: :math:`X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
+        Gamma type 2: :math:`X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
 
         :param problem_moments: moment matrix with central moment symbols
         :return:
-        '''
+        """
 
         alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_counter, k_counter)
 
@@ -119,14 +119,14 @@ class GammaCloser(CloserBase):
 
 
     def gamma_factorial(self, expr, n):
-        r'''
-        Compute :math: `\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
+        r"""
+        Compute :math:`\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
         See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished
 
         :param expr:
         :param n:
         :return:
-        '''
+        """
         if n == 0:
             return 1
         return product([expr+i for i in range(n)])

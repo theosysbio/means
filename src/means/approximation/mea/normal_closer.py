@@ -8,14 +8,15 @@ from zero_closer import CloserBase
 class NormalCloser(CloserBase):
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
-        '''
+        r"""
         Compute second order moments i.e. variances and covariances
         Covariances equal to 0 in univariate case
+
         :param q_counter: moment matrix
         :param sp1_idx: index of one species
         :param sp2_idx: index of another species
         :return: second order moments matrix of size n_species by n_species
-        '''
+        """
 
         # The diagonal positions in the matrix are the variances
         if sp1_idx == sp2_idx:
@@ -31,14 +32,14 @@ class NormalCloser(CloserBase):
 
 
     def compute_one_closed_central_moment(self, moment, covariance_matrix):
-        '''
+        r"""
         Compute each row of closed central moment based on Isserlis' Theorem of calculating higher order moments
         of multivariate normal distribution in terms of covariance matrix
 
         :param moment: moment matrix
         :param covariance_matrix: matrix containing variances and covariances
         :return:  each row of closed central moment
-        '''
+        """
 
         # If moment order is odd, higher order moments equals 0
         if moment.order % 2 != 0:
@@ -78,12 +79,13 @@ class NormalCloser(CloserBase):
         return sp.Matrix(out_mat)
 
     def generate_partitions(self, k, list_for_par, accum=[[]], index=0):
-        '''
+        r"""
+
         :param list_for_par: the list for partition
         :param accum: should be [[]] as each partition pair consists of lists within a list
         :param index: the index of item in list to start partition.should start from 0
         :return: a list of non-repetitive partition pairs, each partition pair contains 2 indices for variance
-        '''
+        """
         if index == len(list_for_par):
             if (k == 0):
                 return accum

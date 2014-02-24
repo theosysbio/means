@@ -40,14 +40,15 @@ class LogNormalCloser(CloserBase):
         return out_mat
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
-        '''
+        r"""
         Compute second order moments i.e. variances and covariances
         Covariances equal to 0 in univariate case
+
         :param q_counter: moment matrix
         :param sp1_idx: index of one species
         :param sp2_idx: index of another species
         :return: second order moments matrix of size n_species by n_species
-        '''
+        """
         # The diagonal positions in the matrix are the variances
         if sp1_idx == sp2_idx:
             return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 2 and q.order == 2][0]
@@ -55,24 +56,23 @@ class LogNormalCloser(CloserBase):
         return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 1 and q.n_vector[sp2_idx] == 1 and q.order == 2][0]
 
     def get_log_covariance(self, log_variance_mat, log_expectation_symbols, covariance_matrix, x, y):
-        '''
-        Compute log covariances
+        r"""
+        Compute log covariances according to:\\
+
+        :math:`\log{(Cov(x_i,x_j))} = \frac { 1 + Cov(x_i,x_j)}{\exp[\log \mathbb{E}(x_i) + \log \mathbb{E}(x_j)+\frac{1}{2} (\log Var(x_i) + \log Var(x_j)]}`
+
         :param log_variance_mat: a column matrix of log variance
         :param log_expectation_symbols: a column matrix of log expectations
         :param covariance_matrix: a matrix of covariances
         :param x: x-coordinate in matrix of log variances and log covariances
         :param y: y-coordinate in matrix of log variances and log covariances
         :return: a matrix of log covariances and log variances
-        '''
+        """
         # The diagonal of the return matrix includes all the log variances
         if x == y:
             return log_variance_mat[x,x]
         # log covariances are calculated if not on the diagonal of the return matrix
         elif self.is_multivariate:
-
-            # :math: ' \log (Cov(x_i,x_j)) = \frac { 1 + Cov(x_i,x_j)} \
-            # { \exp ( \log \mathbb{E} (x_i) + \log \mathbb{E} (x_j) + \
-            # \frac {\logVar(x_i) + \logVar(x_j)} {2})}'
             denom = sp.exp(log_expectation_symbols[x] +
                            log_expectation_symbols[y] +
                            (log_variance_mat[x,x] + log_variance_mat[y, y])/ sp.Integer(2))

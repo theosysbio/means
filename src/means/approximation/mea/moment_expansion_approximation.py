@@ -1,4 +1,3 @@
-from assimulo import problem
 import itertools
 import sympy as sp
 from means.approximation.ode_problem import ODEProblem
@@ -18,11 +17,12 @@ from zero_closer import ZeroCloser
 def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
-    It performs moment expansion approximation as described in [Ale et al. 2013] up to a given order of moment.
+    It performs moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
     It returns a set of ODEs describing the time derivative of the modeled moments.
 
-    .. [Ale et al. 2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
-     "A general moment expansion method for stochastic kinetic models." The Journal of chemical physics 138.17 (2013): 174101.
+    .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
+     "A general moment expansion method for stochastic kinetic models."\
+      The Journal of chemical physics 138.17 (2013): 174101.
 
     :param model: The model to be approximated
     :type: A :class:`~means.approximation.model.Model`
@@ -32,7 +32,7 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
     :param closer_args: arguments to be passed to the closer
     :param closer_kwargs: keyword arguments to be passed to the closer
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
+    :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
     """
     mea = MomentExpansionApproximation(model, max_order, closer=closer, *closer_args, **closer_kwargs)
     return mea.run()
@@ -41,18 +41,18 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
 
 
 class MomentExpansionApproximation(ApproximationBaseClass):
-    """
-    A class to perform moment expansion approximation as described in [Ale et al. 2013] up to a given order of moment.
+    r"""
+    A class to perform moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
 
-    .. [Ale et al. 2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf. "A general moment expansion method for stochastic kinetic models." The Journal of chemical physics 138.17 (2013): 174101.
+    .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
+     "A general moment expansion method for stochastic kinetic models."\
+      The Journal of chemical physics 138.17 (2013): 174101.
     """
     def __init__(self, model, max_order, closer='zero', *closer_args, **closer_kwargs):
 
-        """
-
+        r"""
         :param model: The model to be approximated
         :type: A :class:`~means.approximation.model.Model`
-
         :param max_order: the highest order of central moments in the resulting ODEs
         :param closer: a string describing the type of closure to use
         :type: string
@@ -92,11 +92,12 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         return self.__closer
 
     def run(self):
-        """
+        r"""
         Overrides the default run() method.
         Performs the complete analysis
+
         :return: an ODE problem which can be further used in inference and simulation.
-        :rtype: :class:`~means.approximation.ode_problem.ODETermBase`
+        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
         """
         max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix
@@ -150,9 +151,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         return mfk
 
     def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
-        """
+        r"""
         Takes the expressions for central moments, and substitute the symbols representing raw moments,
         by equivalent expressions in terms of central moment
+
         :param central_moments_exprs: a matrix of expressions for central moments.
         :param central_from_raw_exprs: central moment expressed in terms of raw moments
         :param n_counter: the counter for central moments
@@ -188,7 +190,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         return out_exprs
 
     def generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
-        """
+        r"""
         Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter)
         Each is a list of "Moment" objects. Therefore, they are represented by both a vector of integer
         and a symbol.
