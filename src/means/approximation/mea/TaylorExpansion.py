@@ -43,7 +43,7 @@ def derive_expr_from_counter_entry(expression, species, counter_entry):
     for var in diff_vars:
         # If the derivative is already 0, we can return 0
         if out_expr.is_Integer:
-            return out_expr
+            return sp.Integer(0)
         out_expr = cached_diff(out_expr, var)
 
     return out_expr
