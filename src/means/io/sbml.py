@@ -15,12 +15,23 @@ def _parse_reaction(libsbml_reaction):
 
 
 def read_sbml(filename):
+    """
+    Read the model from a SBML file.
+
+    Currently does not support reading models with multiple compartments
+
+    :param filename: SBML filename to read the model from
+    :return: A fully created model instance
+    :rtype: ::class::`means.Model`
+    """
     import libsbml
 
     reader = libsbml.SBMLReader()
     document = reader.readSBML(filename)
 
     sbml_model = document.getModel()
+    if sbml_model.getNumCompartments() > 1:
+        raise Exception("Sorry, we currently do not support SBML models with multiple compartments")
 
     species = sympy.symbols([s.getId() for s in sbml_model.getListOfSpecies()])
     reactions = map(_parse_reaction, sbml_model.getListOfReactions())
