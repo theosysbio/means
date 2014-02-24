@@ -1,5 +1,6 @@
 import subprocess
 import time
+import sys
 
 GIT_HEAD = "mea_performance"
 
@@ -45,9 +46,10 @@ try:
             if tb["test_from"] <= max_order <= tb["test_up_to"]:
                 process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE,  )
                 out, err = process.communicate()
-                if err:
-                    print err
-                    raise Exception
+                # if err:
+                #     print "??"
+                #     sys.stderr("Failed to switch branch, the error was:")
+                #     raise Exception
 
                 time.sleep(3)
                 n_eq, dt = tb["function"](max_order)
