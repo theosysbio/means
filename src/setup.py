@@ -15,7 +15,8 @@ setup(
               'means.plotting',
               'means.simulation',
               'means.util',
-              'means.tests'],
+              'means.tests',
+              'means.io'],
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
