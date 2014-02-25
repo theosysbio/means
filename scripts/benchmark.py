@@ -67,7 +67,7 @@ try:
                 n_eq, dt = tb["function"](max_order)
                 print tb["git_tag"],dt,n_eq
                 tb["dt"].append(dt)
-                tb["n_eq"].append(dt)
+                tb["n_eq"].append(n_eq)
 
 except KeyboardInterrupt:
     pass
