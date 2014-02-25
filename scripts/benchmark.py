@@ -14,6 +14,7 @@ def git_swing(branch=GIT_HEAD):
         out, err = process.communicate()
         time.sleep(1)
         if process.returncode != 0:
+            print "GIT ERROR:"
             print err
             exit(1)
 
