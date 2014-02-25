@@ -97,7 +97,7 @@ try:
                 git_swing(tb["git_tag"])
                 t0 = time.time()
                 n_eq = tb["function"](max_order)
-                dt = t0 = time.time()
+                dt = t0 - time.time()
                 tb["dt"].append(dt)
                 tb["n_eq"].append(n_eq)
                 print tb["git_tag"], n_eq, dt
