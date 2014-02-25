@@ -1,12 +1,13 @@
 import re
 import sympy
+from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal
 
 __all__ = ['Model']
 
-class Model(SerialisableObject):
+class Model(SerialisableObject, LatexPrintableObject):
     """
     Stores the model of reactions we want to analyse
     """
