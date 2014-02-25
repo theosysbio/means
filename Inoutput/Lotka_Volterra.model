@@ -1,0 +1,7 @@
+!model
+species: [Pred, Prey]
+constants: [k_1, k_2, k_3]
+stoichiometry_matrix:
+- [0, 1, -1]
+- [1, -1, 0]
+propensities: [Prey*k_1, Pred*Prey*k_2, Pred*k_3]
