@@ -380,85 +380,10 @@ class ODEProblem(SerialisableObject):
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
-def parse_problem(input_filename, from_string=False):
+class ODEProblemLatexWriter(object):
     """
-    Parses model from the `input_filename` file and returns it
-    :param input_filename:
-    :param from_string: True if a string containing the file data is passed instead of a filename
-    :return: Parsed `ODEProblem` object
-    :rtype: ODEProblem
+    A class to write formated LaTeX equations representing a problem
     """
-
-    # Strings to identify appropriate fields of the file
-    STRING_RIGHT_HAND = 'RHS of equations:'
-    STRING_LEFT_HAND = 'LHS:'
-    STRING_CONSTANT = 'Constants:'
-    STRING_MOM = 'List of moments:'
-
-    if not from_string:
-        infile = open(input_filename)
-        try:
-            lines = infile.readlines()    #read input data
-        finally:
-            infile.close()
-    else:
-        lines = input_filename.split("\n")
-
-    method = lines[0].rstrip()
-
-    all_fields = dict()
-    field = None
-   # cut the file into chunks. The lines containing ":" are field headers
-    for i, line in enumerate(lines):
-        if ":" in line:
-            field = line.rstrip()
-            all_fields[field]=[]
-        elif field:
-            rsline = line.rstrip()
-            if rsline:
-                all_fields[field].append(rsline)
-
-    # now we query all the fields we need
-
-    try:
-        right_hand_side = sympy.Matrix(sympy.sympify([l for l in all_fields[STRING_RIGHT_HAND]]))
-    except KeyError:
-        print 'The field "' + STRING_RIGHT_HAND + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        left_hand_side = sympy.Matrix(sympy.sympify([l for l in all_fields[STRING_LEFT_HAND]]))
-    except KeyError:
-        print 'The field "' + STRING_LEFT_HAND + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        constants = all_fields[STRING_CONSTANT]
-    except KeyError:
-        print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        n_vecs = [list(eval(l)) for l in all_fields[STRING_MOM]]
-    except KeyError:
-        print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
-        raise
-
-    moment_terms = [Moment(nv,lhs) for (nv,lhs) in zip(n_vecs, left_hand_side)]
-    # TODO: remove this hack below, where I read the variance position from the symbol name
-    # Replace this with explicitly storing them alongside list of moments
-    variance_terms = []
-    for lhs in left_hand_side[len(moment_terms):]:
-        str_lhs = str(lhs)
-        position = int(str_lhs[2]), int(str_lhs[3])
-        variance_terms.append(VarianceTerm(lhs, position))
-    ode_terms = moment_terms + variance_terms
-
-    return ODEProblem(method, ode_terms, right_hand_side, constants)
-
-
-class ODEProblemWriter(object):
-    """
-    A file writer for :class:`~means.approximation.ode_problem.ODEProblem` objects.
-    """
-
     def __init__(self, problem):
         """
         :param problem: the problem to be written
@@ -473,64 +398,6 @@ class ODEProblemWriter(object):
         self._N_EQS = 'Number of equations:'
         self._STRING_MOM = 'List of moments:'
 
-    def build_out_string_list(self):
-        """
-        Makes a list of strings, one for each line, to be writen to a file later.
-        :return: the list of string to be written
-        """
-
-        #empty lines are added in order to mimic the output from the original code
-
-        left_hand_side = self._problem.ode_lhs_terms
-
-        lines = [self._problem.method]
-        lines += [""]
-        lines += [self._STRING_RIGHT_HAND]
-        lines += [str(expr) for expr in self._problem.right_hand_side]
-
-        lines += [""]
-
-        lines += [self._STRING_LEFT_HAND]
-        lines += [str(lhs.symbol) for lhs in left_hand_side]
-
-        lines += [""]
-
-        lines += [self._STRING_CONSTANT]
-        lines += [str(expr) for expr in self._problem.constants]
-
-        n_var = self._problem.number_of_species
-
-        lines += [self._N_VARIABLE, str(n_var)]
-
-        # number of mom only relevant for MEA
-        if(self._problem.method == "MEA"):
-            n_mom = max([lhs.order for lhs in left_hand_side])
-            lines += [self._N_MOMENTS, str(n_mom)]
-
-        lines += [""]
-        lines += [self._N_EQS, str(self._problem.number_of_equations)]
-        lines += [""]
-        lines += [self._STRING_MOM]
-        lines += ["[" + str(lhs) + "]" for lhs in left_hand_side if isinstance(lhs, Moment)]
-        return lines
-
-
-
-    def write_to(self, output_file):
-
-        """
-        Public method to write the problem to a given file
-        :param output_file: the name of the file. It will be created if needed
-        """
-        lines = self.build_out_string_list()
-        with open(output_file, 'w') as file:
-            for l in lines:
-                file.write(l+"\n")
-
-class ODEProblemLatexWriter(ODEProblemWriter):
-    """
-    A class to write formated LaTeX equations representing a problem
-    """
     def build_out_string_list(self):
 
         """
