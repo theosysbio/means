@@ -240,7 +240,7 @@ def test_notebook(nb, generate_png_diffs=True):
             outs = collapse_stream_outputs(outs)
             cell_outputs = collapse_stream_outputs(cell.outputs)
             for out, ref in zip(outs, cell_outputs):
-                if not compare_outputs(out, ref, generate_png_s=generate_png_diffs):
+                if not compare_outputs(out, ref, generate_png_diffs=generate_png_diffs):
                     failed = True
             if failed:
                 failures += 1
