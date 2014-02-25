@@ -72,7 +72,7 @@ try:
                 n_eq, dt = tb["function"](max_order)
                 tb["dt"].append(dt)
                 tb["n_eq"].append(n_eq)
-
+                print tb["git_tag"], n_eq, dt
                 # row = pd.DataFrame([dict(tag=tb["git_tag"], n_eq=n_eq, time=dt), ])
                 # df = df.append(row, ignore_index=True)
 
