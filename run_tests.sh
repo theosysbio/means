@@ -13,6 +13,6 @@ else
    SLOWTESTS=""
 fi
 nosetests $SLOWTESTS --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR
-nosetests --with-xunit --xunit-file="nosetests-notebooks.xml" $EXAMPLES_DIR
+nosetests --with-xunit --xunit-file="notebook-tests.xml" $EXAMPLES_DIR
 cd $INOUT_DIR
 
