@@ -19,7 +19,10 @@ class ODETermBase(Descriptor):
 
     def __init__(self, symbol):
         super(ODETermBase, self).__init__()
-        #if isinstance(symbol, sympy.Basic):
+        # Sometimes we want to code the moment as sympy.Integer(1) for instance to reduce number of calculations
+        if not isinstance(symbol, sympy.Symbol) and not isinstance(symbol, sympy.Integer):
+            symbol = sympy.Symbol(symbol)
+
         self._symbol = symbol
 
     @property
@@ -81,6 +84,11 @@ class VarianceTerm(ODETermBase):
     def _repr_latex_(self):
         return '${0}$ (Variance term $V_{{{0}, {1}}})'.format(self.symbol, self.position[0], self.position[1])
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.symbol == other.symbol and self.position == other.position
 
 class Moment(ODETermBase):
     """
@@ -337,7 +345,6 @@ class ODEProblem(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-
         return self.constants == other.constants \
                    and other.ode_lhs_terms == self.ode_lhs_terms \
                    and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
