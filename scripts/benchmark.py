@@ -39,7 +39,7 @@ def benchmark_means(max_order):
         "from means.approximation.mea import MomentExpansionApproximation",
         "from means.examples.sample_models import MODEL_P53",
         "pb = MomentExpansionApproximation(MODEL_P53, %i, 'log-normal').run()",
-        "print '{0}'.format(pb.number_of_equations"
+        "print '{0}'.format(pb.number_of_equations)"
     ])
 
     script = str % max_order
