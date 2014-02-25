@@ -56,7 +56,7 @@ def benchmark_means(max_order):
     process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
     out, err = process.communicate()
     print out,err
-    #return int(out.rstrip())
+    return int(out.rstrip())
 
 
 def plot_all(dic):
@@ -73,7 +73,7 @@ def plot_all(dic):
 
 
 to_benchmark = [
-    {"git_tag": None, "legend":"matlab package", "function":benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
+    #{"git_tag": None, "legend":"matlab package", "function":benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
     {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
     {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
     {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
@@ -97,13 +97,12 @@ try:
                 git_swing(tb["git_tag"])
                 t0 = time.time()
                 n_eq = tb["function"](max_order)
-                dt = t0 - time.time()
+                dt = time.time() - t0
                 tb["dt"].append(dt)
                 tb["n_eq"].append(n_eq)
                 print tb["git_tag"], n_eq, dt
 
-except KeyboardInterrupt:
-    pass
+
 finally:
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
     time.sleep(1)
