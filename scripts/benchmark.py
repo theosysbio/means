@@ -23,9 +23,9 @@ def benchmark_means(max_order):
 def plot_all(dic):
     pl.figure()
     for d in dic:
-        pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle="-",label=d["legend"])
+        pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle='--', marker='o',label=d["legend"])
         print zip(d["n_eq"], d["dt"])
-    #pl.legend(loc='upper left')
+    pl.legend(loc='upper left')
     pl.show()
 
 
