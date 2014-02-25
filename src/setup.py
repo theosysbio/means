@@ -27,6 +27,7 @@ setup(
         "sympy>=0.7.4.1",
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
-        "Assimulo==trunk"
+        "PyYAML>=3.10",
+        "Assimulo==trunk",
     ],
 )
