@@ -45,7 +45,7 @@ def diff_png(a64, b64, generate_diff_images=True):
         diff = 255
     else:
         diff = np.mean(np.abs(a_data - b_data))
-    if diff > 0:
+    if diff > 1e-6:
         digest = hashlib.sha1(a64).digest()
         if generate_diff_images:
             prefix = 'ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
@@ -112,7 +112,7 @@ def compare_outputs(test, ref,
         elif key == 'png':
             diff = diff_png(test[key], ref[key],
                             generate_diff_images=generate_png_diffs)
-            if diff > 0:
+            if diff > 1e-6:
                 print "png mismatch %s" % key
                 print "%2.3f%% disagree" % diff
                 return False
@@ -240,7 +240,7 @@ def test_notebook(nb, generate_png_diffs=True):
             outs = collapse_stream_outputs(outs)
             cell_outputs = collapse_stream_outputs(cell.outputs)
             for out, ref in zip(outs, cell_outputs):
-                if not compare_outputs(out, ref, generate_png_diffs=generate_png_diffs):
+                if not compare_outputs(out, ref, generate_png_s=generate_png_diffs):
                     failed = True
             if failed:
                 failures += 1
