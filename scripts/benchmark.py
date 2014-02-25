@@ -17,22 +17,31 @@ def git_swing(branch=GIT_HEAD):
             exit(1)
 
 
-def benchmark_matlab():
+def benchmark_matlab(max_order):
 
 
     str=";".join([
         "cd('/home/quentin/matlab/momentexpansion_matlab/equations')",
         "[MFK,M,CentralMoments] = MFK_create_symbolic_automatic_lognormal(%i, 1)",
-        "n_eq = len(MFK)",
-        "disp(n_eq)"
+        "n_eq = length(MFK)",
+        "disp(n_eq);"
+        "exit();"
     ])
 
-    script = str % max_order
-    process = subprocess.Popen(['matlab', '-nodesktop', '-nodesktop', '-r', script], stdout=subprocess.PIPE)
-    out, err = process.communicate()
+    script = (str % max_order)
+    process = subprocess.Popen(['matlab', '-nodesktop', '-nodisplay', '-r', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process.wait()
 
-    print out
+    out_str = process.stdout.read()
 
+    for os in out_str.split("\n"):
+        s = os.strip().rstrip()
+        try:
+            res = int(s)
+        except:
+            pass
+    # return the last int
+    return res
 
 def benchmark_means(max_order):
     str="\n".join([
@@ -46,8 +55,8 @@ def benchmark_means(max_order):
 
     process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
     out, err = process.communicate()
-    print out
-    return int(out.rstrip())
+    print out,err
+    #return int(out.rstrip())
 
 
 def plot_all(dic):
@@ -64,13 +73,13 @@ def plot_all(dic):
 
 
 to_benchmark = [
-    #{"git_tag":"means_no_optims", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
-    # {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
-    # {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
-    {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
     {"git_tag": None, "legend":"matlab package", "function":benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
-    #{"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
-    #{"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
+    {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
+    {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
+    {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
+    {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
+    {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
+    {"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
 ]
 
 
@@ -92,8 +101,6 @@ try:
                 tb["dt"].append(dt)
                 tb["n_eq"].append(n_eq)
                 print tb["git_tag"], n_eq, dt
-                # row = pd.DataFrame([dict(tag=tb["git_tag"], n_eq=n_eq, time=dt), ])
-                # df = df.append(row, ignore_index=True)
 
 except KeyboardInterrupt:
     pass
