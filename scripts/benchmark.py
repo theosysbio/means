@@ -12,7 +12,7 @@ def git_swing(branch=GIT_HEAD):
         process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = process.communicate()
         time.sleep(1)
-        if process.returncode != 0 :
+        if process.returncode != 0:
             print err
             exit(1)
 
@@ -55,7 +55,6 @@ def benchmark_means(max_order):
 
     process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
     out, err = process.communicate()
-    print out,err
     return int(out.rstrip())
 
 
@@ -107,8 +106,8 @@ finally:
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
     time.sleep(1)
     
-# We ensure we switch back to our branch
-plot_all(to_benchmark)
-exit(0)
+    # We ensure we switch back to our branch
+    plot_all(to_benchmark)
+    exit(0)
 
 
