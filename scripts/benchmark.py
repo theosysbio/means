@@ -25,8 +25,8 @@ def benchmark_means(max_order):
     return int(n_eqs), round(float(t),3)
 
 def plot_all_ggplot(df):
-    print ggplot(df, aes(x="n_eq", y="time", group="tag", colour="tag", shape="tag")) +\
-    geom_line(size=1.5) + geom_point(size=3, fill='white')
+    print ggplot(df, aes(x="n_eq", y="time", group="tag", colour="tag")) +\
+    geom_line() + geom_point()
     
 
 def plot_all(dic):
