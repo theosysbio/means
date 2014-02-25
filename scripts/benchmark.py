@@ -1,6 +1,8 @@
 import subprocess
 import time
-import pylab as pl
+#import pylab as pl
+from ggplot import ggplot, aes
+from ggplot.geoms import *
 import pandas as pd
 
 GIT_HEAD = "mea_performance"
@@ -21,6 +23,12 @@ def benchmark_means(max_order):
     out, err = process.communicate()
     n_eqs, t = out.rstrip().split(",")
     return int(n_eqs), round(float(t),3)
+
+def plot_all_ggplot(df):
+    print ggplot(df, aes(x="max_order", y="time", group="tag", colour="tag", shape="tag")) +\
+    geom_line() + geom_point() + geom_line(size=1.5) +\
+    geom_point(size=3, fill='white')
+    
 
 def plot_all(dic):
     pl.figure()
@@ -70,12 +78,11 @@ try:
 except KeyboardInterrupt:
     pass
 finally:
-    print df
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
     time.sleep(1)
     
 # We ensure we switch back to our branch
-plot_all(to_benchmark)
+plot_all_ggplot(df)
 exit(0)
 
 
