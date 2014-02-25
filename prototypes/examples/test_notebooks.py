@@ -10,7 +10,10 @@ def check_notebook_with_assertion(file_name):
 
 
 def test_notebooks_in_current_dir():
-    for dirpath, __, files in os.walk("."):
+    # We use __file__ as the script is usually run from different directory
+    # use relpath so the test names appear nicer and location independent in output
+    current_directory = os.path.relpath(os.path.dirname(__file__))
+    for dirpath, __, files in os.walk(current_directory):
         for file_name in files:
             if file_name.endswith('.ipynb'):
 
