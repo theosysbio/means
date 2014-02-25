@@ -3,7 +3,7 @@
 
 # <codecell>
 
-%pylab inline
+#%pylab inline
 
 # <codecell>
 
