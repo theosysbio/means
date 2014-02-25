@@ -1,11 +1,12 @@
 import re
 import sympy
+from means.io.serialise import SerialisableObject
 
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal
 
 __all__ = ['Model']
 
-class Model(object):
+class Model(SerialisableObject):
     """
     Stores the model of reactions we want to analyse
     """
@@ -16,6 +17,7 @@ class Model(object):
     __propensities = None
     __stoichiometry_matrix = None
 
+    yaml_tag = u'!model'
 
     def __init__(self, constants, species, propensities, stoichiometry_matrix):
         """
@@ -113,6 +115,14 @@ class Model(object):
                    and self.stoichiometry_matrix == other.stoichiometry_matrix \
                    and sympy_expressions_equal(self.propensities,other.propensities)
 
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('species', map(str, data.species)), ('constants', map(str, data.constants)),
+                   ('stoichiometry_matrix', map(lambda x: map(int, x), data.stoichiometry_matrix.tolist())),
+                   ('propensities', map(str, data.propensities))]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
 
 
 def parse_model(input_filename):

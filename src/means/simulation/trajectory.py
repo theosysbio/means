@@ -1,5 +1,6 @@
 import numpy as np
 from means.approximation.ode_problem import Descriptor
+from means.io.serialise import SerialisableObject
 
 
 class SensitivityTerm(Descriptor):
@@ -13,6 +14,8 @@ class SensitivityTerm(Descriptor):
     """
     _ode_term = None
     _parameter = None
+
+    yaml_tag = '!sensitivity-term'
 
     def __init__(self, ode_term, parameter):
         """
@@ -46,13 +49,22 @@ class SensitivityTerm(Descriptor):
 
         return self.ode_term == other.ode_term and self.parameter == other.parameter
 
-class Trajectory(object):
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('ode_term', data.ode_term),
+                   ('parameter', data.parameter)]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+class Trajectory(SerialisableObject):
     """
     A single simulated or observed trajectory for an ODE term.
     """
     _timepoints = None
     _values = None
     _description = None
+
+    yaml_tag = u'!trajectory'
 
     def __init__(self, timepoints, values, description):
         """
@@ -123,6 +135,14 @@ class Trajectory(object):
         return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
             and self.description == other.description
 
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('timepoints', data.timepoints),
+                   ('values', data.values),
+                   ('description', data.description)]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
 class TrajectoryWithSensitivityData(Trajectory):
     """
     An extension to :class:`~means.simulation.simulate.Trajectory` that provides data about the sensitivity
@@ -131,6 +151,7 @@ class TrajectoryWithSensitivityData(Trajectory):
     """
 
     _sensitivity_data = None
+    yaml_tag = '!trajectory-with-sensitivity'
 
     def __init__(self, timepoints, values, description, sensitivity_data):
         """
@@ -195,6 +216,13 @@ class TrajectoryWithSensitivityData(Trajectory):
                                               label=label,
                                                     *args, **kwargs))
 
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('timepoints', data.timepoints),
+                   ('values', data.values),
+                   ('description', data.description),
+                   ('sensitivity_data', data.sensitivity_data)]
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
 
 
 class PerturbedTerm(Descriptor):

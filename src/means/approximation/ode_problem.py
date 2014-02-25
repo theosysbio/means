@@ -1,13 +1,14 @@
 import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
+from means.io.serialise import SerialisableObject
 
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
 from means.util.decorators import memoised_property
 from means.util.sympyhelpers import sympy_expressions_equal
 
-class Descriptor(object):
-    pass
+class Descriptor(SerialisableObject):
+    yaml_tag = u"!descriptor"
 
 class ODETermBase(Descriptor):
     """
@@ -60,6 +61,8 @@ class VarianceTerm(ODETermBase):
     """
     _position = None
 
+    yaml_tag = '!variance-term'
+
     def __init__(self, symbol, position):
         """
         Creates a Descriptor for a particular ODE in the system that signifies that that particular equation
@@ -90,12 +93,20 @@ class VarianceTerm(ODETermBase):
 
         return self.symbol == other.symbol and self.position == other.position
 
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('symbol', str(data.symbol)), ('position', data.position)]
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+
 class Moment(ODETermBase):
     """
     An annotator for ODE expressions that describes that a particular expression in a set of ODEs corresponds to a Moment
     of the probability distribution. The particular moment is described by :attr:`Moment.n_vector`.
     """
     __n_vector = None
+
+    yaml_tag = u'!moment'
 
     def __init__(self, n_vector, symbol=None):
         """
@@ -175,7 +186,12 @@ class Moment(ODETermBase):
     def _repr_latex_(self):
         return '{0}($[{1}]$, symbol=${2}$)'.format(self.__class__.__name__, ', '.join(map(str, self.n_vector)), self.symbol)
 
-class ODEProblem(object):
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('symbol', str(data.symbol)), ('n_vector', data.n_vector.tolist())]
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+class ODEProblem(SerialisableObject):
     """
     Stores the left and right hand side equations to be simulated
 
@@ -187,6 +203,8 @@ class ODEProblem(object):
     __descriptions_dict = None
     __constants = None
     __ordered_descriptions_of_lhs_terms = None
+
+    yaml_tag = '!problem'
 
     def __init__(self, method, ode_lhs_terms, right_hand_side, constants):
         """
@@ -349,7 +367,14 @@ class ODEProblem(object):
                    and other.ode_lhs_terms == self.ode_lhs_terms \
                    and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
 
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('method', data.method),
+                   ('constants', map(str, data.constants)),
+                   ('ode_lhs_terms', list(data.ode_lhs_terms)),
+                   ('right_hand_side', map(str, data.right_hand_side))]
 
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
 
 def parse_problem(input_filename, from_string=False):
     """

@@ -1,1 +1,1 @@
-from sbml import read_sbml
+#from sbml import read_sbml
