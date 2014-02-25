@@ -6,9 +6,9 @@ from means.approximation.lna.lna import LinearNoiseApproximation
 from means.inference.hypercube import hypercube
 from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
-from means.model.model import parse_model
+from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import parse_problem, ODEProblemWriter, ODEProblemLatexWriter
+from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
 from means.inference.sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
 
@@ -128,7 +128,7 @@ def run():
 
         model = None
         try:
-            model = parse_model(model_file)
+            model = Model.from_file(model_file)
         except IOError as e:
             print "\n  Error:\n  Cannot open {0!r}. Got {1!r}\n" \
                   "Please try again with correct model filename.\n".format(model_file, e)
@@ -142,10 +142,8 @@ def run():
 
         problem = approximation.run()
 
-        ode_writer = ODEProblemWriter(problem)
-        ode_writer.write_to(ODEout)
-        tex_writer = ODEProblemLatexWriter(problem)
-        tex_writer.write_to('.'.join([ODEout, "tex"]))
+        problem.to_file(ODEout)
+        problem.output_latex('.'.join([ODEout, 'tex']))
 
     if solve and infer:
         print "\n  Error:\n  Please choose EITHER --solve or --infer but not both.\n"
@@ -157,7 +155,7 @@ def run():
             sys.exit(1)
 
         [t,param,initcond,vary, varyic, limits] = paramtime(tpfile,restart, limit)
-        problem = parse_problem(ODEout)  # TODO: os.path.join
+        problem = ODEProblem.from_file(ODEout)
 
         solution, momlist = simulate(problem,
                                          trajout,t,param,initcond, maxorder)
@@ -184,7 +182,7 @@ def run():
                                             "Please try again with correct experimental data filename.\n"
             sys.exit(1)
 
-        problem = parse_problem(ODEout)
+        problem = ODEProblem.from_file(ODEout)
         # read sample data from file and get indices for mean/variances in CVODE output
         (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
 

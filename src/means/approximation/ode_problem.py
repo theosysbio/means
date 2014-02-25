@@ -1,13 +1,15 @@
 import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
+from means.io.latex import LatexPrintableObject
+from means.io.serialise import SerialisableObject
 
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
 from means.util.decorators import memoised_property
 from means.util.sympyhelpers import sympy_expressions_equal
 
-class Descriptor(object):
-    pass
+class Descriptor(SerialisableObject):
+    yaml_tag = u"!descriptor"
 
 class ODETermBase(Descriptor):
     """
@@ -19,7 +21,14 @@ class ODETermBase(Descriptor):
 
     def __init__(self, symbol):
         super(ODETermBase, self).__init__()
-        #if isinstance(symbol, sympy.Basic):
+
+        # Sometimes we want to code the moment as sympy.Integer(1) for instance to reduce number of calculations
+        if isinstance(symbol, int):
+            symbol = sympy.Integer(symbol)
+
+        if symbol is not None and not isinstance(symbol, sympy.Symbol) and not isinstance(symbol, sympy.Integer):
+            symbol = sympy.Symbol(symbol)
+
         self._symbol = symbol
 
     @property
@@ -57,6 +66,8 @@ class VarianceTerm(ODETermBase):
     """
     _position = None
 
+    yaml_tag = '!variance-term'
+
     def __init__(self, symbol, position):
         """
         Creates a Descriptor for a particular ODE in the system that signifies that that particular equation
@@ -81,6 +92,17 @@ class VarianceTerm(ODETermBase):
     def _repr_latex_(self):
         return '${0}$ (Variance term $V_{{{0}, {1}}})'.format(self.symbol, self.position[0], self.position[1])
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.symbol == other.symbol and self.position == other.position
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('symbol', str(data.symbol)), ('position', data.position)]
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
 
 class Moment(ODETermBase):
     """
@@ -88,6 +110,8 @@ class Moment(ODETermBase):
     of the probability distribution. The particular moment is described by :attr:`Moment.n_vector`.
     """
     __n_vector = None
+
+    yaml_tag = u'!moment'
 
     def __init__(self, n_vector, symbol=None):
         """
@@ -167,7 +191,12 @@ class Moment(ODETermBase):
     def _repr_latex_(self):
         return '{0}($[{1}]$, symbol=${2}$)'.format(self.__class__.__name__, ', '.join(map(str, self.n_vector)), self.symbol)
 
-class ODEProblem(object):
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('symbol', str(data.symbol)), ('n_vector', data.n_vector.tolist())]
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+class ODEProblem(SerialisableObject, LatexPrintableObject):
     """
     Stores the left and right hand side equations to be simulated
 
@@ -179,6 +208,8 @@ class ODEProblem(object):
     __descriptions_dict = None
     __constants = None
     __ordered_descriptions_of_lhs_terms = None
+
+    yaml_tag = '!problem'
 
     def __init__(self, method, ode_lhs_terms, right_hand_side, constants):
         """
@@ -334,191 +365,23 @@ class ODEProblem(object):
         lines.append(r"\end{align*}")
         return "\n".join(lines)
 
+    @property
+    def latex(self):
+        STRING_RIGHT_HAND = 'RHS of equations:'
+        STRING_MOM = 'List of moments:'
 
-    def __neq__(self, other):
-        return not  other == self
-
-    def __eq__(self, other):
-        if set(other.constants) ^ set(self.constants):
-            return False
-        if sympy.Matrix(other.ode_lhs_terms) != sympy.Matrix(self.ode_lhs_terms):
-            return False
-        if not sympy_expressions_equal(other.right_hand_side, self.right_hand_side):
-            return False
-        return True
-
-
-
-def parse_problem(input_filename, from_string=False):
-    """
-    Parses model from the `input_filename` file and returns it
-    :param input_filename:
-    :param from_string: True if a string containing the file data is passed instead of a filename
-    :return: Parsed `ODEProblem` object
-    :rtype: ODEProblem
-    """
-
-    # Strings to identify appropriate fields of the file
-    STRING_RIGHT_HAND = 'RHS of equations:'
-    STRING_LEFT_HAND = 'LHS:'
-    STRING_CONSTANT = 'Constants:'
-    STRING_MOM = 'List of moments:'
-
-    if not from_string:
-        infile = open(input_filename)
-        try:
-            lines = infile.readlines()    #read input data
-        finally:
-            infile.close()
-    else:
-        lines = input_filename.split("\n")
-
-    method = lines[0].rstrip()
-
-    all_fields = dict()
-    field = None
-   # cut the file into chunks. The lines containing ":" are field headers
-    for i, line in enumerate(lines):
-        if ":" in line:
-            field = line.rstrip()
-            all_fields[field]=[]
-        elif field:
-            rsline = line.rstrip()
-            if rsline:
-                all_fields[field].append(rsline)
-
-    # now we query all the fields we need
-
-    try:
-        right_hand_side = sympy.Matrix(sympy.sympify([l for l in all_fields[STRING_RIGHT_HAND]]))
-    except KeyError:
-        print 'The field "' + STRING_RIGHT_HAND + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        left_hand_side = sympy.Matrix(sympy.sympify([l for l in all_fields[STRING_LEFT_HAND]]))
-    except KeyError:
-        print 'The field "' + STRING_LEFT_HAND + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        constants = all_fields[STRING_CONSTANT]
-    except KeyError:
-        print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
-        raise
-    try:
-        n_vecs = [list(eval(l)) for l in all_fields[STRING_MOM]]
-    except KeyError:
-        print 'The field "' + STRING_CONSTANT + '" is not in the input file "' + input_filename +'"'
-        raise
-
-    moment_terms = [Moment(nv,lhs) for (nv,lhs) in zip(n_vecs, left_hand_side)]
-    # TODO: remove this hack below, where I read the variance position from the symbol name
-    # Replace this with explicitly storing them alongside list of moments
-    variance_terms = []
-    for lhs in left_hand_side[len(moment_terms):]:
-        str_lhs = str(lhs)
-        position = int(str_lhs[2]), int(str_lhs[3])
-        variance_terms.append(VarianceTerm(lhs, position))
-    ode_terms = moment_terms + variance_terms
-
-    return ODEProblem(method, ode_terms, right_hand_side, constants)
-
-
-class ODEProblemWriter(object):
-    """
-    A file writer for :class:`~means.approximation.ode_problem.ODEProblem` objects.
-    """
-
-    def __init__(self, problem):
-        """
-        :param problem: the problem to be written
-        :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
-        """
-        self._problem = problem
-        self._STRING_RIGHT_HAND = 'RHS of equations:'
-        self._STRING_LEFT_HAND = 'LHS:'
-        self._STRING_CONSTANT = 'Constants:'
-        self._N_VARIABLE = 'Number of variables:'
-        self._N_MOMENTS = 'Number of moments:'
-        self._N_EQS = 'Number of equations:'
-        self._STRING_MOM = 'List of moments:'
-
-    def build_out_string_list(self):
-        """
-        Makes a list of strings, one for each line, to be writen to a file later.
-        :return: the list of string to be written
-        """
-
-        #empty lines are added in order to mimic the output from the original code
-
-        left_hand_side = self._problem.ode_lhs_terms
-
-        lines = [self._problem.method]
-        lines += [""]
-        lines += [self._STRING_RIGHT_HAND]
-        lines += [str(expr) for expr in self._problem.right_hand_side]
-
-        lines += [""]
-
-        lines += [self._STRING_LEFT_HAND]
-        lines += [str(lhs.symbol) for lhs in left_hand_side]
-
-        lines += [""]
-
-        lines += [self._STRING_CONSTANT]
-        lines += [str(expr) for expr in self._problem.constants]
-
-        n_var = self._problem.number_of_species
-
-        lines += [self._N_VARIABLE, str(n_var)]
-
-        # number of mom only relevant for MEA
-        if(self._problem.method == "MEA"):
-            n_mom = max([lhs.order for lhs in left_hand_side])
-            lines += [self._N_MOMENTS, str(n_mom)]
-
-        lines += [""]
-        lines += [self._N_EQS, str(self._problem.number_of_equations)]
-        lines += [""]
-        lines += [self._STRING_MOM]
-        lines += ["[" + str(lhs) + "]" for lhs in left_hand_side if isinstance(lhs, Moment)]
-        return lines
-
-
-
-    def write_to(self, output_file):
-
-        """
-        Public method to write the problem to a given file
-        :param output_file: the name of the file. It will be created if needed
-        """
-        lines = self.build_out_string_list()
-        with open(output_file, 'w') as file:
-            for l in lines:
-                file.write(l+"\n")
-
-class ODEProblemLatexWriter(ODEProblemWriter):
-    """
-    A class to write formated LaTeX equations representing a problem
-    """
-    def build_out_string_list(self):
-
-        """
-        Overrides the default method and provides latex expressions instead of plain text
-        :return: LaTeX formated list of strings
-        """
-        left_hand_side = self._problem.ode_lhs_terms
+        left_hand_side = self.ode_lhs_terms
         preamble = ["\documentclass{article}"]
         preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
-        lines += ["\section*{%s}" % self._STRING_RIGHT_HAND]
+        lines += ["\section*{%s}" % STRING_RIGHT_HAND]
 
         lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
-                    for (rhs, lhs) in zip(self._problem.right_hand_side, left_hand_side)]
+                    for (rhs, lhs) in zip(self.right_hand_side, left_hand_side)]
 
         lines += [r"\\"] * 5
 
-        lines += ["\section*{%s}" % self._STRING_MOM]
-        #ordered_moments = sorted([(i,m) for (m,i) in self._problem.moment_dic.items()])
+        lines += ["\section*{%s}" % STRING_MOM]
 
 
         lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
@@ -526,4 +389,21 @@ class ODEProblemLatexWriter(ODEProblemWriter):
 
         lines += ["\end{document}"]
 
-        return preamble + lines
+        return '\n'.join(preamble + lines)
+
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.constants == other.constants \
+                   and other.ode_lhs_terms == self.ode_lhs_terms \
+                   and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = [('method', data.method),
+                   ('constants', map(str, data.constants)),
+                   ('ode_lhs_terms', list(data.ode_lhs_terms)),
+                   ('right_hand_side', map(str, data.right_hand_side))]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)

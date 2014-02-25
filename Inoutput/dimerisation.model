@@ -1,0 +1,6 @@
+!model
+species: [y_0]
+constants: [c_0, c_1, c_2]
+stoichiometry_matrix:
+- [-2, 2]
+propensities: [c_0*y_0*(y_0 - 1), c_1*(0.5*c_2 - 0.5*y_0)]
