@@ -24,7 +24,8 @@ def plot_all(dic):
     pl.figure()
     for d in dic:
         pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle="-",label=d["legend"])
-    pl.legend(loc='upper left')
+        print zip(d["n_eq"], d["dt"])
+    #pl.legend(loc='upper left')
     pl.show()
 
 
@@ -53,21 +54,24 @@ try:
             if tb["test_from"] <= max_order <= tb["test_up_to"]:
                 process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 out, err = process.communicate()
-                print err
+                if process.returncode != 0 :
+                    print err
+                    exit(1)
+
                 # if err:
                 #     print "??"
                 #     sys.stderr("Failed to switch branch, the error was:")
                 #     raise Exception
 
-                time.sleep(3)
+                time.sleep(1)
                 n_eq, dt = tb["function"](max_order)
                 print tb["git_tag"],dt,n_eq
                 tb["dt"].append(dt)
                 tb["n_eq"].append(dt)
 
-finally:
+except KeyboardInterrupt:
     # We ensure we switch back to our branch
-    time.sleep(3)
+    time.sleep(1)
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
     plot_all(to_benchmark)
     exit(0)
