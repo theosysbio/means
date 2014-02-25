@@ -15,7 +15,8 @@ setup(
               'means.plotting',
               'means.simulation',
               'means.util',
-              'means.tests'],
+              'means.tests',
+              'means.io'],
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
@@ -26,6 +27,7 @@ setup(
         "sympy>=0.7.4.1",
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
-        "Assimulo==trunk"
+        "PyYAML>=3.10",
+        "Assimulo==trunk",
     ],
 )

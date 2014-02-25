@@ -1,38 +1,33 @@
 import sympy as sp
 import operator
-from zero_closer import ParametricCloser
-from means.util.sympyhelpers import substitute_all
+from zero_closer import CloserBase
+from means.util.sympyhelpers import substitute_all, product
 
-class GammaCloser(ParametricCloser):
-    def __init__(self, n_moments, type=0):
-        super(GammaCloser, self).__init__(n_moments)
+class GammaCloser(CloserBase):
+    def __init__(self, max_order, type=1):
+        super(GammaCloser, self).__init__(max_order, multivariate = (type > 0))
         self.__type = type
-        self.__is_multivariate = (self.type > 0)
-
-
-    @property
-    def is_multivariate(self):
-        return self.__is_multivariate
 
     @property
     def type(self):
         return self.__type
 
-
-    def get_parameter_symbols(self, prob_moments):
-        '''
+    def get_parameter_symbols(self, n_counter, k_counter):
+        r"""
         Calculates parameters Y expressions and beta coefficients in
-        :math: `X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
-
+        :math:`X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
 
         :param prob_moments: the moments with symbols and moment vectors
         :return: two column matrices Y expressions and beta multipliers
-        '''
+        """
 
         gamma_type = self.type
-        n_moment = self.n_moments
+        n_moment = self.max_order +1
 
-        n_species = len([None for pm in prob_moments if pm.order == 1])
+        expectation_symbols = sp.Matrix([n.symbol for n in k_counter if n.order == 1])
+
+        n_species = len(expectation_symbols)
+
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
 
@@ -46,10 +41,10 @@ class GammaCloser(ParametricCloser):
             beta_in_matrix = sp.Matrix(symbolic_species[1:])
 
         # E() and Var() symbols for each species have already been made in prob_moments matrix
-        expectation_symbols = sp.Matrix([n.symbol for n in prob_moments if n.order == 1])
+
         variance_symbols = []
         for sp_idx in range(n_species):
-            variance_symbols += [p.symbol for p in prob_moments if p.n_vector[sp_idx] == 2 and p.order == 2]
+            variance_symbols += [p.symbol for p in n_counter if p.n_vector[sp_idx] == 2 and p.order == 2]
         variance_symbols = sp.Matrix(variance_symbols)
 
         # Compute :math:  `\beta_i = Var(X_i)/\mathbb{E}(X_i) \bar\alpha_i = \mathbb{E}(X_i)^2/Var(X_i)`
@@ -80,16 +75,15 @@ class GammaCloser(ParametricCloser):
         # determined by the corresponding row in the moment matrix
         Y_exprs = []
         beta_multipliers = []
-        for mom in prob_moments:
-            if mom.order < 2:
-                continue
-            Y_exprs.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
-            beta_multipliers.append(reduce(operator.mul, [(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
+
+        positive_n_counter = [n for n in n_counter if n.order > 0]
+        for mom in positive_n_counter:
+            Y_exprs.append(product([(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
+            beta_multipliers.append(product([(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
 
 
-        Y_exprs = sp.Matrix(Y_exprs)
+        Y_exprs = sp.Matrix(Y_exprs).applyfunc(sp.expand)
         beta_multipliers = sp.Matrix(beta_multipliers)
-        Y_exprs = Y_exprs.applyfunc(sp.expand)
 
         # Substitute alpha expressions in place of symbolic species Ys
         # by going through all powers up to the moment order for closure
@@ -107,30 +101,32 @@ class GammaCloser(ParametricCloser):
 
         return Y_exprs, beta_multipliers
 
-    def compute_raw_moments(self, problem_moments):
-        '''
-        Compute :math: `X_i`
-        Gamma type 1: :math: `X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
-        Gamma type 2: :math: `X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
+    def compute_raw_moments(self, n_counter, k_counter):
+        r"""
+        Compute :math:`X_i`
+        Gamma type 1: :math:`X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
+        Gamma type 2: :math:`X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
 
         :param problem_moments: moment matrix with central moment symbols
         :return:
-        '''
+        """
 
-        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(problem_moments)
+        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_counter, k_counter)
+
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat
 
+
     def gamma_factorial(self, expr, n):
-        '''
-        Compute :math: `\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
+        r"""
+        Compute :math:`\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
         See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished
 
         :param expr:
         :param n:
         :return:
-        '''
+        """
         if n == 0:
             return 1
-        return reduce(operator.mul, [expr+i for i in range(n)])
+        return product([expr+i for i in range(n)])

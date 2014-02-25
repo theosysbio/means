@@ -2,23 +2,21 @@ import sympy as sp
 import operator
 import copy
 from means.util.sympyhelpers import product
-from zero_closer import ParametricCloser
+from zero_closer import CloserBase
 
 
-
-import itertools
-
-class NormalCloser(ParametricCloser):
+class NormalCloser(CloserBase):
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
-        '''
+        r"""
         Compute second order moments i.e. variances and covariances
         Covariances equal to 0 in univariate case
+
         :param q_counter: moment matrix
         :param sp1_idx: index of one species
         :param sp2_idx: index of another species
         :return: second order moments matrix of size n_species by n_species
-        '''
+        """
 
         # The diagonal positions in the matrix are the variances
         if sp1_idx == sp2_idx:
@@ -34,14 +32,14 @@ class NormalCloser(ParametricCloser):
 
 
     def compute_one_closed_central_moment(self, moment, covariance_matrix):
-        '''
+        r"""
         Compute each row of closed central moment based on Isserlis' Theorem of calculating higher order moments
         of multivariate normal distribution in terms of covariance matrix
 
         :param moment: moment matrix
         :param covariance_matrix: matrix containing variances and covariances
         :return:  each row of closed central moment
-        '''
+        """
 
         # If moment order is odd, higher order moments equals 0
         if moment.order % 2 != 0:
@@ -73,20 +71,21 @@ class NormalCloser(ParametricCloser):
             return sum(each_row)
 
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, k_counter, problem_moments):
-        n_species = len([None for pm in problem_moments if pm.order == 1])
-        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(problem_moments,x,y))
-        n_counter = [n for n in problem_moments if n.order > 1]
-        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in n_counter]
+    def compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+        n_species = len([None for pm in k_counter if pm.order == 1])
+        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
+        positive_n_counter = [n for n in n_counter if n.order > 1]
+        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
         return sp.Matrix(out_mat)
 
     def generate_partitions(self, k, list_for_par, accum=[[]], index=0):
-        '''
+        r"""
+
         :param list_for_par: the list for partition
         :param accum: should be [[]] as each partition pair consists of lists within a list
         :param index: the index of item in list to start partition.should start from 0
         :return: a list of non-repetitive partition pairs, each partition pair contains 2 indices for variance
-        '''
+        """
         if index == len(list_for_par):
             if (k == 0):
                 return accum

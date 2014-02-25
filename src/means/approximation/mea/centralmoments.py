@@ -4,7 +4,7 @@ from means.approximation.mea.eq_mixedmoments import make_k_chose_e
 from means.approximation.mea.eq_mixedmoments import DBetaOverDtCalculator
 from means.util.sympyhelpers import sum_of_cols, product, sympy_sum_list
 
-def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix):
+def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order):
     r"""
     Function used to calculate the terms required for use in equations giving the time dependence of central moments.
 
@@ -37,8 +37,9 @@ def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, 
 
     for n_iter in n_counter:
         # skip zeroth moment
-        if n_iter.order == 0:
+        if n_iter.order == 0 or n_iter.order > max_order:
             continue
+
         n_vec = n_iter.n_vector
 
         # Find all moments in k_counter that are lower than the current n_iter
