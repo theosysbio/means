@@ -55,7 +55,7 @@ to_benchmark = [
 #means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff
 highest_max_order = max([tb["test_up_to"] for tb in to_benchmark])
 
-df = pd.DataFrame(columns=("tag", "n_eq", "time"))
+#df = pd.DataFrame(columns=("tag", "n_eq", "time"))
 try:
     for max_order in range(1,highest_max_order + 1):
         print "# -------------------------"
