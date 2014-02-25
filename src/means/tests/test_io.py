@@ -119,9 +119,9 @@ class TestSerialisation(unittest.TestCase):
         t = TrajectoryWithSensitivityData([1, 2, 3], [-1, -2, -3], term, sensitivity_data=[x, y])
         self._roundtrip(t)
 
-class TestSerialisationStringIO(TestSerialisation):
 
-     def _roundtrip(self, object_):
+class TestSerialisationStringIO(TestSerialisation):
+    def _roundtrip(self, object_):
         s = StringIO()
         try:
             object_.to_file(s)
@@ -135,13 +135,43 @@ class TestSerialisationStringIO(TestSerialisation):
             s.close()
 
 
-class TestSerialisationFileIO(TestSerialisation):
+    def test_deserialisation_of_wrong_class_fails(self):
+        """
+        Given a file where a model object has been serialised, assert that
+        deserialisation of that file into a trajectory object fails with ValueError
+        :return:
+        """
 
+        s = StringIO()
+        try:
+            MODEL_P53.to_file(s)
+            self.assertRaises(ValueError, Trajectory.from_file, s)
+        finally:
+            s.close()
+
+
+
+class TestSerialisationFileIO(TestSerialisation):
     def _roundtrip(self, object_):
         __, tmp_file = mkstemp()
         try:
             object_.to_file(tmp_file)
             new_object = object_.__class__.from_file(tmp_file)
             self.assertEqual(object_, new_object)
+        finally:
+            os.unlink(tmp_file)
+
+
+    def test_deserialisation_of_wrong_class_fails(self):
+        """
+        Given a file where a model object has been serialised, assert that
+        deserialisation of that file into a trajectory object fails with ValueError
+        :return:
+        """
+
+        __, tmp_file = mkstemp()
+        try:
+            MODEL_P53.to_file(tmp_file)
+            self.assertRaises(ValueError, Trajectory.from_file, tmp_file)
         finally:
             os.unlink(tmp_file)
