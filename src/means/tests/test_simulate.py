@@ -8,6 +8,7 @@ import numpy as np
 import random
 from sympy import Symbol, MutableDenseMatrix, symbols, Float
 
+
 class ConstantDerivativesProblem(ODEProblem):
     def __init__(self):
         super(ConstantDerivativesProblem, self).__init__(method=None,
@@ -28,8 +29,8 @@ class TestSimulate(unittest.TestCase):
                                          initial_conditions=[3, 2],
                                          timepoints=[0, 1, 2, 3])
         trajectories_dict = {trajectory.description.symbol: trajectory for trajectory in trajectories}
-        y_1_trajectory = trajectories_dict['y_1']
-        y_2_trajectory = trajectories_dict['y_2']
+        y_1_trajectory = trajectories_dict[Symbol('y_1')]
+        y_2_trajectory = trajectories_dict[Symbol('y_2')]
 
         assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
         assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
@@ -63,13 +64,13 @@ class TestSimulate(unittest.TestCase):
 
         trajectories_dict = {trajectory.description.symbol: trajectory for trajectory in trajectories}
 
-        assert_array_almost_equal(trajectories_dict['Pred'].values, np.array([2.00000000e+02, 2.52230012e+01,
-                                                                              4.30324933e+00, -6.17462164e-01,
-                                                                              1.95071783e-01]))
+        assert_array_almost_equal(trajectories_dict[Symbol('Pred')].values, np.array([2.00000000e+02, 2.52230012e+01,
+                                                                                      4.30324933e+00, -6.17462164e-01,
+                                                                                      1.95071783e-01]))
 
-        assert_array_almost_equal(trajectories_dict['Prey'].values, np.array([1.00000000e+01, -1.77761036e-02,
-                                                                              3.65911320e-03, -2.78905874e-03,
-                                                                              -3.02892609e-03]))
+        assert_array_almost_equal(trajectories_dict[Symbol('Prey')].values, np.array([1.00000000e+01, -1.77761036e-02,
+                                                                                      3.65911320e-03, -2.78905874e-03,
+                                                                                      -3.02892609e-03]))
 
 
 class TestSimulateWithSensitivities(unittest.TestCase):

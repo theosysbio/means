@@ -20,8 +20,12 @@ class ODETermBase(Descriptor):
 
     def __init__(self, symbol):
         super(ODETermBase, self).__init__()
+
         # Sometimes we want to code the moment as sympy.Integer(1) for instance to reduce number of calculations
-        if not isinstance(symbol, sympy.Symbol) and not isinstance(symbol, sympy.Integer):
+        if isinstance(symbol, int):
+            symbol = sympy.Integer(symbol)
+
+        if symbol is not None and not isinstance(symbol, sympy.Symbol) and not isinstance(symbol, sympy.Integer):
             symbol = sympy.Symbol(symbol)
 
         self._symbol = symbol
