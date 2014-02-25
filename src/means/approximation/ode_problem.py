@@ -338,8 +338,8 @@ class ODEProblem(object):
         if not isinstance(other, self.__class__):
             return False
 
-        return self.constants != other.constants \
-                   and sympy.Matrix(other.ode_lhs_terms) != sympy.Matrix(self.ode_lhs_terms) \
+        return self.constants == other.constants \
+                   and other.ode_lhs_terms == self.ode_lhs_terms \
                    and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
 
 
