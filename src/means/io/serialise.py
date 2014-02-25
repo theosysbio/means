@@ -15,6 +15,9 @@ _ODE_PROBLEM_TAG = '!problem'
 _NUMPY_ARRAY_TAG = '!nparray'
 _MOMENT_TAG = '!moment'
 _VARIANCE_TERM_TAG = '!variance-term'
+_TRAJECTORY_TAG = '!trajectory'
+_TRAJECTORY_WITH_SENSITIVITY_TAG = '!trajectory-with-sensitivities'
+_SENSITIVITY_TERM_TAG = '!sensitivity-term'
 
 #-- Special dump functions --------------------------------------------------------------------------------------------
 class MeansDumper(Dumper):
@@ -29,7 +32,12 @@ class MeansDumper(Dumper):
         self.add_representer(means.Model, _model_representer)
         self.add_representer(means.approximation.ODEProblem, _problem_representer)
         self.add_representer(means.approximation.ode_problem.Moment, _moment_representer)
-        self.add_representer(means.approximation.ode_problem.VarianceTerm, _variance_term)
+        self.add_representer(means.approximation.ode_problem.VarianceTerm, _variance_term_representer)
+        self.add_representer(means.simulation.SensitivityTerm, _sensitivity_term_representer)
+        self.add_representer(means.simulation.Trajectory, _trajectory_representer)
+        self.add_representer(means.simulation.TrajectoryWithSensitivityData,
+                             _trajectory_with_sensitivity_data_representer)
+
 
 class MeansLoader(Loader):
 
@@ -40,6 +48,10 @@ class MeansLoader(Loader):
         self.add_constructor(_ODE_PROBLEM_TAG, _generic_constructor(means.approximation.ODEProblem))
         self.add_constructor(_MOMENT_TAG, _generic_constructor(means.approximation.ode_problem.Moment))
         self.add_constructor(_VARIANCE_TERM_TAG, _generic_constructor(means.approximation.ode_problem.VarianceTerm))
+        self.add_constructor(_TRAJECTORY_TAG, _generic_constructor(means.simulation.Trajectory))
+        self.add_constructor(_TRAJECTORY_WITH_SENSITIVITY_TAG,
+                             _generic_constructor(means.simulation.TrajectoryWithSensitivityData))
+        self.add_constructor(_SENSITIVITY_TERM_TAG, _generic_constructor(means.simulation.SensitivityTerm))
 
 def dump(object):
     return yaml.dump(object, Dumper=MeansDumper)
@@ -80,7 +92,7 @@ def _ndarray_representer(dumper, data):
     :type data: :class:`numpy.ndarray`
     :return:
     """
-    mapping = [('p_object', data.tolist()), ('dtype', data.dtype.name)]
+    mapping = [('object', data.tolist()), ('dtype', data.dtype.name)]
     return dumper.represent_mapping(_NUMPY_ARRAY_TAG, mapping)
 
 #-- Representers/Constructors for Descriptor objects ------------------------------------------------------------------
@@ -95,7 +107,7 @@ def _moment_representer(dumper, data):
     mapping = [('symbol', str(data.symbol)), ('n_vector', data.n_vector.tolist())]
     return dumper.represent_mapping(_MOMENT_TAG, mapping)
 
-def _variance_term(dumper, data):
+def _variance_term_representer(dumper, data):
     """
     Representer for moment object
     :param dumper:
@@ -105,6 +117,12 @@ def _variance_term(dumper, data):
     """
     mapping = [('symbol', str(data.symbol)), ('position', data.position)]
     return dumper.represent_mapping(_VARIANCE_TERM_TAG, mapping)
+
+def _sensitivity_term_representer(dumper, data):
+    mapping = [('ode_term', data.ode_term),
+               ('parameter', data.parameter)]
+
+    return dumper.represent_mapping(_SENSITIVITY_TERM_TAG, mapping)
 
 #-- Representers/Constructors for ODEProblem objects -------------------------------------------------------------------
 def _problem_representer(dumper, data):
@@ -121,3 +139,18 @@ def _problem_representer(dumper, data):
                ('right_hand_side', map(str, data.right_hand_side))]
 
     return dumper.represent_mapping(_ODE_PROBLEM_TAG, mapping)
+
+#-- Represetners/Constructors for Trajectory objects ------------------------------------------------------------------
+def _trajectory_representer(dumper, data):
+
+    mapping = [('timepoints', data.timepoints),
+               ('values', data.values),
+               ('description', data.description)]
+    return dumper.represent_mapping(_TRAJECTORY_TAG, mapping)
+
+def _trajectory_with_sensitivity_data_representer(dumper, data):
+    mapping = [('timepoints', data.timepoints),
+               ('values', data.values),
+               ('description', data.description),
+               ('sensitivity_data', data.sensitivity_data)]
+    return dumper.represent_mapping(_TRAJECTORY_WITH_SENSITIVITY_TAG, mapping)

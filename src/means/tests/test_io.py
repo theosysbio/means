@@ -5,6 +5,7 @@ from means.approximation.ode_problem import Moment, VarianceTerm
 from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
                                          MODEL_HES1, MODEL_DIMERISATION
+from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 import numpy as np
 
 
@@ -99,3 +100,16 @@ class TestSerialisation(unittest.TestCase):
 
         problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
         self._roundtrip(problem)
+
+
+    def test_trajectory_serialisation(self):
+        t = Trajectory([1, 2, 3], [3, 2, 1], Moment([1,2,3], 'x'))
+        self._roundtrip(t)
+
+    def test_trajectory_with_sensitivities_serialisation(self):
+        term = Moment([1, 0, 0], 'x')
+        x = Trajectory([1, 2, 3], [3, 2, 1], SensitivityTerm(term, 'x'))
+        y = Trajectory([1, 2, 3], [7, 8, 9], SensitivityTerm(term, 'y'))
+        t = TrajectoryWithSensitivityData([1, 2, 3], [-1, -2, -3], term, sensitivity_data=[x, y])
+        self._roundtrip(t)
+

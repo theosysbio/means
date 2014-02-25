@@ -40,6 +40,12 @@ class SensitivityTerm(Descriptor):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.ode_term == other.ode_term and self.parameter == other.parameter
+
 class Trajectory(object):
     """
     A single simulated or observed trajectory for an ODE term.
@@ -111,6 +117,9 @@ class Trajectory(object):
         return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
         return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
             and self.description == other.description
 
@@ -153,7 +162,7 @@ class TrajectoryWithSensitivityData(Trajectory):
         return self._sensitivity_data
 
     def __eq__(self, other):
-        return isinstance(other, TrajectoryWithSensitivityData) and \
+        return isinstance(other, self.__class__) and \
                super(TrajectoryWithSensitivityData, self).__eq__(other) and \
                self.sensitivity_data == other.sensitivity_data
 
@@ -185,6 +194,7 @@ class TrajectoryWithSensitivityData(Trajectory):
             plt.gca().add_patch(plt.Rectangle((0, 0), 0, 0, alpha=alpha,
                                               label=label,
                                                     *args, **kwargs))
+
 
 
 class PerturbedTerm(Descriptor):
