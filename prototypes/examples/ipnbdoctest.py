@@ -31,6 +31,7 @@ except ImportError:
 
 from IPython.nbformat.current import reads, NotebookNode
 
+PNG_DIFF_TOLERANCE = 1e-4
 
 def png_b64_to_ndarray(a64):
     """convert PNG output into a np.ndarray using pypng"""
@@ -45,18 +46,19 @@ def diff_png(a64, b64, generate_diff_images=True):
         diff = 255
     else:
         diff = np.mean(np.abs(a_data - b_data))
-    if diff > 1e-6:
+    diff /= 255.0
+    if diff > PNG_DIFF_TOLERANCE:
         digest = hashlib.sha1(a64).digest()
         if generate_diff_images:
             prefix = 'ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
             png.from_array(a_data, mode='RGBA;8').save(prefix + 'original.png')
             png.from_array(b_data, mode='RGBA;8').save(prefix + 'modified.png')
-        if diff < 255 and generate_diff_images:
+        if diff < 1 and generate_diff_images:
             png.from_array(255 - np.abs(b_data - a_data), mode='RGBA;8').save(
                            prefix + 'diff.png')
             print 'diff png saved to %s-diff.png' % prefix
 
-    return diff / 255.
+    return diff
 
 
 def sanitize(s):
@@ -112,9 +114,9 @@ def compare_outputs(test, ref,
         elif key == 'png':
             diff = diff_png(test[key], ref[key],
                             generate_diff_images=generate_png_diffs)
-            if diff > 1e-6:
+            if diff > PNG_DIFF_TOLERANCE:
                 print "png mismatch %s" % key
-                print "%2.3f%% disagree" % diff
+                print "%2.6f%% disagree" % diff
                 return False
         elif key not in skip_compare and sanitize(test[key]) != sanitize(ref[key]):
             print "mismatch %s:" % key
