@@ -1,8 +1,7 @@
 import re
-
 import sympy
 
-from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols
+from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal
 
 __all__ = ['Model']
 
@@ -105,6 +104,14 @@ class Model(object):
         lines.append(r"\text{{Propensities}} &= {0} \\".format(sympy.latex(self.propensities)))
         lines.append(r"\end{align*}")
         return "\n".join(lines)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.species == other.species and self.propensities == other.propensities \
+                   and self.stoichiometry_matrix == other.stoichiometry_matrix \
+                   and sympy_expressions_equal(self.propensities,other.propensities)
 
 
 
