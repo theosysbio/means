@@ -22,7 +22,7 @@ def benchmark_means(max_order):
     return int(n_eqs), round(float(t),3)
 def plot_all(dic):
     pl.figure()
-    for i in dic:
+    for d in dic:
         pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle="-",label=d["legend"])
     pl.legend(loc='upper left')
     pl.show()
@@ -51,7 +51,7 @@ try:
         for tb in to_benchmark:
 
             if tb["test_from"] <= max_order <= tb["test_up_to"]:
-                process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE,  )
+                process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 out, err = process.communicate()
                 print err
                 # if err:
