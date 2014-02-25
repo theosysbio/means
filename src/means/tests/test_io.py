@@ -1,3 +1,4 @@
+import os
 import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
 from means.approximation import ODEProblem
@@ -7,11 +8,16 @@ from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODE
                                          MODEL_HES1, MODEL_DIMERISATION
 from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 import numpy as np
+from StringIO import StringIO
+from tempfile import mkstemp
 
 
 class TestSerialisation(unittest.TestCase):
 
+
+
     def _roundtrip(self, object_):
+        # Check dump/load works
         self.assertEquals(load(dump(object_)), object_)
 
     def test_model_serialisation_works(self):
@@ -113,3 +119,29 @@ class TestSerialisation(unittest.TestCase):
         t = TrajectoryWithSensitivityData([1, 2, 3], [-1, -2, -3], term, sensitivity_data=[x, y])
         self._roundtrip(t)
 
+class TestSerialisationStringIO(TestSerialisation):
+
+     def _roundtrip(self, object_):
+        s = StringIO()
+        try:
+            object_.to_file(s)
+
+            # Reset the file pointer so we can read from it
+            s.seek(0)
+
+            new_object = object_.__class__.from_file(s)
+            self.assertEqual(object_, new_object)
+        finally:
+            s.close()
+
+
+class TestSerialisationFileIO(TestSerialisation):
+
+    def _roundtrip(self, object_):
+        __, tmp_file = mkstemp()
+        try:
+            object_.to_file(tmp_file)
+            new_object = object_.__class__.from_file(tmp_file)
+            self.assertEqual(object_, new_object)
+        finally:
+            os.unlink(tmp_file)

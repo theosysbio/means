@@ -24,6 +24,47 @@ class SerialisableObject(yaml.YAMLObject):
         mapping = loader.construct_mapping(node, deep=True)
         return cls(**mapping)
 
+    def to_file(self, file_):
+        """
+        Save the object to the file, specified by filename `file_` or the buffer provided in `file_`
+        :param file_: filename of the file to save the object to, or already open file buffer
+        """
+        if isinstance(file_, basestring):
+            file_ = open(file_, 'w')
+            we_opened = True
+        else:
+            we_opened = False
+
+        try:
+            file_.write(dump(self))
+        finally:
+            if we_opened:
+                file_.close()
+
+    @classmethod
+    def from_file(cls, file_):
+        """
+        Create new instance of the object from the file.
+        :param file_: the filename of the file to read from or already opened file buffer
+        :rtype: cls
+        """
+        if isinstance(file_, basestring):
+            file_ = open(file_, 'r')
+            we_opened = True
+        else:
+            we_opened = False
+
+        try:
+            object_ = load(file_.read())
+        finally:
+            if we_opened:
+                file_.close()
+
+        if not isinstance(object_, cls):
+            raise ValueError('Expected to read {0!r} object, but got {1!r} instead'.format(cls, type(object_)))
+
+        return object_
+
 
 class MeansDumper(Dumper):
     def __init__(self, stream, default_style=None, default_flow_style=None, canonical=None, indent=None, width=None,
