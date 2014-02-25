@@ -1,6 +1,7 @@
 import subprocess
 import time
 import pylab as pl
+import math
 # from ggplot import ggplot, aes
 # from ggplot.geoms import *
 # import pandas as pd
@@ -60,10 +61,10 @@ def benchmark_means(max_order):
 
 def plot_all(dic):
     pl.figure()
-    pl.ylabel('time(s)')
+    pl.ylabel('log_10(dt) (s)')
     pl.xlabel('number of ODEs')
     for d in dic:
-        pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle='--', marker='o',label=d["legend"])
+        pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle='--', marker='o', label=d["legend"])
         print zip(d["n_eq"], d["dt"])
     pl.legend(loc='upper left')
     pl.show()
@@ -96,8 +97,8 @@ try:
                 git_swing(tb["git_tag"])
                 t0 = time.time()
                 n_eq = tb["function"](max_order)
-                dt = time.time() - t0
-                tb["dt"].append(dt)
+                logdt = round(math.log(time.time() - t0, 10), 4)
+                tb["dt"].append(logdt)
                 tb["n_eq"].append(n_eq)
                 print tb["git_tag"], n_eq, dt
 
