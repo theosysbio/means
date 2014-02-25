@@ -46,7 +46,7 @@ def benchmark_means(max_order):
 
     process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
     out, err = process.communicate()
-
+    print out
     return int(out.rstrip())
 
 
