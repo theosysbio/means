@@ -1,6 +1,7 @@
 import subprocess
 import time
 import pylab as pl
+import pandas as pd
 
 GIT_HEAD = "mea_performance"
 
@@ -20,10 +21,11 @@ def benchmark_means(max_order):
     out, err = process.communicate()
     n_eqs, t = out.rstrip().split(",")
     return int(n_eqs), round(float(t),3)
+
 def plot_all(dic):
     pl.figure()
     pl.ylabel('time(s)')
-    pl.xlabel('max order')
+    pl.xlabel('number of ODEs')
     for d in dic:
         pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle='--', marker='o',label=d["legend"])
         print zip(d["n_eq"], d["dt"])
@@ -46,7 +48,7 @@ to_benchmark = [
 #means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff
 highest_max_order = max([tb["test_up_to"] for tb in to_benchmark])
 
-
+df = pd.DataFrame(columns=("tag", "n_eq", "time"))
 try:
     for max_order in range(1,highest_max_order + 1):
         print "# -------------------------"
@@ -59,21 +61,16 @@ try:
                 if process.returncode != 0 :
                     print err
                     exit(1)
-
-                # if err:
-                #     print "??"
-                #     sys.stderr("Failed to switch branch, the error was:")
-                #     raise Exception
-
                 time.sleep(1)
                 n_eq, dt = tb["function"](max_order)
                 print tb["git_tag"],dt,n_eq
-                tb["dt"].append(dt)
-                tb["n_eq"].append(n_eq)
+                row = pd.DataFrame([dict(tag=tb["git_tag"], n_eq=n_eq, time=dt), ])
+                df = df.append(row, ignore_index=True)
 
 except KeyboardInterrupt:
     pass
 finally:
+    print df
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
     time.sleep(1)
     
