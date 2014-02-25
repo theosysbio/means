@@ -4,29 +4,50 @@ import pylab as pl
 # from ggplot import ggplot, aes
 # from ggplot.geoms import *
 # import pandas as pd
-
+MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
 GIT_HEAD = "mea_performance"
+
+def git_swing(branch=GIT_HEAD):
+    if branch:
+        process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        out, err = process.communicate()
+        time.sleep(1)
+        if process.returncode != 0 :
+            print err
+            exit(1)
+
+
+def benchmark_matlab():
+
+
+    str=";".join([
+        "cd('/home/quentin/matlab/momentexpansion_matlab/equations')",
+        "[MFK,M,CentralMoments] = MFK_create_symbolic_automatic_lognormal(%i, 1)",
+        "n_eq = len(MFK)",
+        "disp(n_eq)"
+    ])
+
+    script = str % max_order
+    process = subprocess.Popen(['matlab', '-nodesktop', '-nodesktop', '-r', script], stdout=subprocess.PIPE)
+    out, err = process.communicate()
+
+    print out
+
 
 def benchmark_means(max_order):
     str="\n".join([
-        "import time",
         "from means.approximation.mea import MomentExpansionApproximation",
         "from means.examples.sample_models import MODEL_P53",
-        "t0 = time.time()",
         "pb = MomentExpansionApproximation(MODEL_P53, %i, 'log-normal').run()",
-        "print '{0}, {1}'.format(pb.number_of_equations, time.time() - t0)"
+        "print '{0}'.format(pb.number_of_equations"
     ])
 
     script = str % max_order
 
     process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
     out, err = process.communicate()
-    n_eqs, t = out.rstrip().split(",")
-    return int(n_eqs), round(float(t),3)
 
-# def plot_all_ggplot(df):
-#     print ggplot(df, aes(x="n_eq", y="time", group="tag", colour="tag")) +\
-#     geom_line() + geom_point()
+    return int(out.rstrip())
 
 
 def plot_all(dic):
@@ -46,8 +67,9 @@ to_benchmark = [
     #{"git_tag":"means_no_optims", "legend":"my legend", "function":benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
     # {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
     # {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
-    {"git_tag":"only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
-    {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
+    {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
+    {"git_tag": None, "legend":"matlab package", "function":benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
+    #{"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
     #{"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
 ]
 
@@ -57,19 +79,16 @@ highest_max_order = max([tb["test_up_to"] for tb in to_benchmark])
 
 #df = pd.DataFrame(columns=("tag", "n_eq", "time"))
 try:
-    for max_order in range(1,highest_max_order + 1):
+    for max_order in range(1, highest_max_order + 1):
         print "# -------------------------"
         print "# Testing for max_order = {0}".format(max_order)
         for tb in to_benchmark:
 
             if tb["test_from"] <= max_order <= tb["test_up_to"]:
-                process = subprocess.Popen(['git', 'checkout', tb["git_tag"]], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-                out, err = process.communicate()
-                if process.returncode != 0 :
-                    print err
-                    exit(1)
-                time.sleep(1)
-                n_eq, dt = tb["function"](max_order)
+                git_swing(tb["git_tag"])
+                t0 = time.time()
+                n_eq = tb["function"](max_order)
+                dt = t0 = time.time()
                 tb["dt"].append(dt)
                 tb["n_eq"].append(n_eq)
                 print tb["git_tag"], n_eq, dt
