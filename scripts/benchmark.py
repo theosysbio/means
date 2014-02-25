@@ -1,9 +1,9 @@
 import subprocess
 import time
-#import pylab as pl
-from ggplot import ggplot, aes
-from ggplot.geoms import *
-import pandas as pd
+import pylab as pl
+# from ggplot import ggplot, aes
+# from ggplot.geoms import *
+# import pandas as pd
 
 GIT_HEAD = "mea_performance"
 
@@ -24,10 +24,10 @@ def benchmark_means(max_order):
     n_eqs, t = out.rstrip().split(",")
     return int(n_eqs), round(float(t),3)
 
-def plot_all_ggplot(df):
-    print ggplot(df, aes(x="n_eq", y="time", group="tag", colour="tag")) +\
-    geom_line() + geom_point()
-    
+# def plot_all_ggplot(df):
+#     print ggplot(df, aes(x="n_eq", y="time", group="tag", colour="tag")) +\
+#     geom_line() + geom_point()
+
 
 def plot_all(dic):
     pl.figure()
@@ -70,9 +70,11 @@ try:
                     exit(1)
                 time.sleep(1)
                 n_eq, dt = tb["function"](max_order)
-                print tb["git_tag"],dt,n_eq
-                row = pd.DataFrame([dict(tag=tb["git_tag"], n_eq=n_eq, time=dt), ])
-                df = df.append(row, ignore_index=True)
+                tb["dt"].append(dt)
+                tb["n_eq"].append(n_eq)
+
+                # row = pd.DataFrame([dict(tag=tb["git_tag"], n_eq=n_eq, time=dt), ])
+                # df = df.append(row, ignore_index=True)
 
 except KeyboardInterrupt:
     pass
@@ -81,7 +83,7 @@ finally:
     time.sleep(1)
     
 # We ensure we switch back to our branch
-plot_all_ggplot(df)
+plot_all(to_benchmark)
 exit(0)
 
 
