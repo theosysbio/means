@@ -70,10 +70,13 @@ try:
                 tb["n_eq"].append(dt)
 
 except KeyboardInterrupt:
-    # We ensure we switch back to our branch
-    time.sleep(1)
+    pass
+finally:
     subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
-    plot_all(to_benchmark)
-    exit(0)
+    time.sleep(1)
+    
+# We ensure we switch back to our branch
+plot_all(to_benchmark)
+exit(0)
 
 
