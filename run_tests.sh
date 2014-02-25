@@ -6,6 +6,7 @@ pip install --quiet pylint
 # Needed to run nosetests for notebooks
 pip install --quiet IPython
 pip install --quiet pyzmq
+pip install --quiet pypng
 
 if [ "$1" == "with-slow-tests" ]; then
    SLOWTESTS="--no-skip"
