@@ -101,7 +101,7 @@ try:
                 logdt = round(math.log10(time.time() - t0),4)
                 tb["dt"].append(logdt)
                 tb["n_eq"].append(n_eq)
-                print tb["git_tag"], n_eq, dt
+                print tb["git_tag"], n_eq, logdt
 
 
 finally:
