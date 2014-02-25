@@ -21,7 +21,7 @@ def benchmark_matlab(max_order):
 
 
     str=";".join([
-        "cd('/home/quentin/matlab/momentexpansion_matlab/equations')",
+        "cd('{0}')".format(MATLAB_PKG_DIR),
         "[MFK,M,CentralMoments] = MFK_create_symbolic_automatic_lognormal(%i, 1)",
         "n_eq = length(MFK)",
         "disp(n_eq);"
@@ -78,8 +78,8 @@ to_benchmark = [
     {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
     {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
     {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
-    {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
-    {"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
+    {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
+    {"git_tag":"custom_diff", "legend":"my legend", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
 ]
 
 
