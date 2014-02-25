@@ -8,7 +8,7 @@ from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
 from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import ODEProblemLatexWriter, ODEProblem
+from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
 from means.inference.sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
 
@@ -143,8 +143,7 @@ def run():
         problem = approximation.run()
 
         problem.to_file(ODEout)
-        tex_writer = ODEProblemLatexWriter(problem)
-        tex_writer.write_to('.'.join([ODEout, "tex"]))
+        problem.output_latex('.'.join([ODEout, 'tex']))
 
     if solve and infer:
         print "\n  Error:\n  Please choose EITHER --solve or --infer but not both.\n"
