@@ -152,7 +152,8 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         variable_parameters = {'c_0': (0.0, 0.001),
                                'c_1': (0.0, 0.5),
-                               'c_2': (260.0, 330.0)}
+                               'c_2': (260.0, 330.0),
+                               'y_0': (290.0, 320.0)}
 
         optimiser_method = 'gamma'
 
