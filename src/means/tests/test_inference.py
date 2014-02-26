@@ -60,6 +60,45 @@ class TestInferenceForRegressions(unittest.TestCase):
                                                  Moment([2]))]
         self.observed_timepoints = np.arange(0, 20, 0.5)
 
+    def test_params_with_variability_creation(self):
+
+        class ParameterInferenceStub(ParameterInference):
+            def __init__(self):
+                pass
+
+
+        pi_stub = ParameterInferenceStub()
+
+        def compare(variables, correct_values_with_variability, correct_constraints):
+
+            values_with_variability, constraints = pi_stub._generate_values_with_variability_and_constraints(
+                self.dimer_problem.constants,
+                parameters,
+                variables)
+
+            self.assertEqual(values_with_variability, correct_values_with_variability)
+            self.assertEqual(constraints, correct_constraints)
+
+        parameters = [0.001, 0.5, 330.0]
+
+        expected_values_with_variability = zip(parameters, [False, True, True])
+        expected_constraints = [None, (329, 330)]
+
+        string_keys = {'c_1': None, 'c_2': (329, 330)}
+        compare(string_keys, expected_values_with_variability, expected_constraints)
+
+        symbol_keys = {Symbol('c_1'): None, Symbol('c_2'): (329, 330)}
+        compare(symbol_keys, expected_values_with_variability, expected_constraints)
+
+        set_keys = {'c_0', 'c_1'}
+        compare(set_keys, zip(parameters, [True, True, False]), [None, None])
+
+        list_keys = ['c_0']
+        compare(list_keys, zip(parameters, [True, False, False]), [None])
+
+
+
+
     def test_sum_of_squares(self):
 
         params_with_variability = [(0.001, True), (0.5, True), (330.0, True)]
@@ -108,23 +147,29 @@ class TestInferenceForRegressions(unittest.TestCase):
         self.assertAlmostEqual(distance, 0.350924941344)
 
     def test_gamma_inference(self):
-        params_with_variability = [(0.0003553578523702354, True), (0.29734640303161364, True), (306.2260484701648, True)]
-        initcond_with_variability = [(304.7826314512718, True), (0, False)]
+        starting_params = [0.0003553578523702354, 0.29734640303161364, 306.2260484701648]
+        starting_initial_conditions = [304.7826314512718, 0.0]
+
+        variable_parameters = {'c_0': (0.0, 0.001),
+                               'c_1': (0.0, 0.5),
+                               'c_2': (260.0, 330.0)}
 
         optimiser_method = 'gamma'
-        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       starting_params,
+                                       starting_initial_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
+
         parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
+        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
+                                                            zip(starting_params, [True, True, True]),
+                                                            zip(starting_initial_conditions, [True, False]))
 
         assert_array_almost_equal(opt_param, [9.8148438195906734e-05, 0.11551859499768752, 260.00000014956925])
         assert_array_almost_equal(opt_initconds, [300.51956949425931, 0])
