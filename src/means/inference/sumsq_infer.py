@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
+from sympy import Symbol
 
 from means.util.decorators import memoised_property
 from means.inference.gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
@@ -163,6 +164,9 @@ def sum_of_squares_distance(simulated_trajectories, observed_trajectories_lookup
 def constraints_are_satisfied(current_guess, limits):
     if limits is not None:
         for value, limit in zip(current_guess, limits):
+            if limit is None:
+                continue
+
             lower_limit = limit[0]
             upper_limit = limit[1]
             if lower_limit:
@@ -195,25 +199,93 @@ class ParameterInference(object):
     __observed_trajectories = None
     _method = None
 
-    def __init__(self, problem, starting_parameters_with_variability, starting_conditions_with_variability,
-                 constraints, observed_timepoints, observed_trajectories, method='sum_of_squares'):
+    def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
+        Generates the `values_with_variability` formatted list
+        from the provided symbols, starting values and variable parameters
+
+        :param symbols: The symbols defining each of the values in the starting values list
+        :param starting_values: the actual starting values
+        :param variable_parameters: a dictionary/set/list of variables that are variable
+                                    if dictionary provided, the contents should be `symbol: range` where range is
+                                    a tuple ``(min_val, max_val)`` of allowed parameter values or ``None`` for no limit.
+                                    if set/list provided, the ranges will be assumed to be ``None`` for each of
+                                    the parameters
+        :type variable_parameters: dict|iterable
+        :return:
+        """
+        values_with_variability = []
+        constraints = []
+
+        if not isinstance(variable_parameters, dict):
+            # Convert non/dict representations to Dict with nones
+            variable_parameters = {p: None for p in variable_parameters}
+
+        for parameter, parameter_value in zip(symbols, starting_values):
+            try:
+                constraint = variable_parameters[parameter]
+                variable = True
+            except KeyError:
+                try:
+                    constraint = variable_parameters[str(parameter)]
+                    variable = True
+                except KeyError:
+                    constraint = None
+                    variable = False
+
+            values_with_variability.append((parameter_value, variable))
+            if variable:
+                constraints.append(constraint)
+
+        return values_with_variability, constraints
+
+    def _validate_variable_parameters(self, problem, variable_parameters):
+        if not variable_parameters:
+            raise ValueError("No variable parameters specified, nothing to infer")
+
+        if not isinstance(variable_parameters, dict):
+            variable_parameters = {p: None for p in variable_parameters}
+
+        variable_parameters_symbolic = {}
+        for parameter, range_ in variable_parameters.iteritems():
+            if not isinstance(parameter, Symbol):
+                parameter = Symbol(parameter)
+            if range_ is not None:
+                try:
+                    range_ = tuple(map(float, range_))
+                except (TypeError, ValueError):
+                    raise ValueError('Invalid range provided for {0!r} - '
+                                     'expected tuple of floats, got {1!r}'.format(parameter, range_))
+
+                if len(range_) != 2:
+                    raise ValueError('Invalid range provided for {0!r} - '
+                                     'expected tuple of length two, got: {1!r}'.format(parameter, range_))
+
+            variable_parameters_symbolic[parameter] = range_
+
+        for parameter in variable_parameters_symbolic:
+            if parameter not in problem.left_hand_side and parameter not in problem.constants:
+                raise KeyError('Unknown variable parameter {0!r} provided. '
+                               'It is not in the problem\'s parameter list, nor in the left-hand-side of equations')
+
+        return variable_parameters_symbolic
+
+
+    def __init__(self, problem, starting_parameters, starting_conditions,
+                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares'):
+        """
+
         :param problem: ODEProblem to infer data for
         :type problem: ODEProblem
-        :param starting_parameters_with_variability: List of tuples (value, is_variable) for each parameter in ODEProblem
-                                     specification.
-                                    - value is the starting value for that parameter
-                                    - is_variable is a boolean True/False signifying whether the constant can be varied
-                                      during inference
-        :param starting_conditions_with_variability: similar list of tuples as `starting_parameters`,
-                                    but for each of the LHS equations in the problem
-        :param constraints:         List of tuples (lower_bound, upper_bound) for each of the variable parameters.
-                                    TODO:  Maybe a better way exists to specify these constraints.
-                                    This is a bit weird way: we specify only variable ones.
-                                    I am thinking somewhat about a container class Parameter(value, variable, constraints)
-                                    Can be none if no constraints present, similarly each of the bounds can be None,
-                                    if unspecified
-        :param observed_timepoints:   Timepoints for which we have data for
+        :param starting_parameters: A list of starting values for each of the model's parameters
+        :type starting_parameters: iterable
+        :param starting_conditions: A list of starting vlaues for each of the initial conditions.
+                                    All unspecified initial conditions will be set to zero
+        :type starting_conditions: iterable
+        :param variable_parameters: A dictionary of variable parameters, in the format
+                                    ``{parameter_symbol: (min_value, max_value)}`` where the range
+                                    ``(min_value, max_value)`` is the range of the allowed parameter values.
+                                    If the range is None, parameters are assumed to be unbounded.
         :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
         :param method: Method of calculating the data fit. Currently supported values are
               - 'sum_of_squares' -  min sum of squares optimisation
@@ -223,11 +295,27 @@ class ParameterInference(object):
         """
         self.__problem = problem
 
-        assert(len(starting_parameters_with_variability) == len(problem.constants))
-        assert(len(starting_conditions_with_variability) == problem.number_of_equations)
+        variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
+
+        assert(len(starting_parameters) == len(problem.constants))
+
+        if len(starting_conditions) < problem.number_of_equations:
+            starting_conditions = starting_conditions[:] \
+                                  + [0.0] * (problem.number_of_equations - len(starting_conditions))
+
+
+        starting_parameters_with_variability, parameter_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.constants, starting_parameters,
+                                                                   variable_parameters)
+
+        starting_conditions_with_variability, initial_condition_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.left_hand_side, starting_conditions,
+                                                                   variable_parameters)
 
         self.__starting_parameters_with_variability = starting_parameters_with_variability
         self.__starting_conditions_with_variability = starting_conditions_with_variability
+
+        constraints = parameter_constraints + initial_condition_constraints
 
         assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
                                                                      starting_parameters_with_variability +
@@ -256,7 +344,6 @@ class ParameterInference(object):
         problem = self.problem
         starting_conditions_with_variability = self.starting_conditions_with_variability
         starting_parameters_with_variability = self.starting_parameters_with_variability
-        simulation_type = problem.method
 
         timepoints_to_simulate = self.observed_timepoints
 
