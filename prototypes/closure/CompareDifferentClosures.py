@@ -41,7 +41,7 @@ import pickle
     
 all_results = []
 try:
-    for max_order in range(2,9):
+    for max_order in range(2,11):
         for cl_arg in closer_args:
             print "simulating for max_order = {0} and closer = {1}".format(max_order, cl_arg)
             probl = run_mea(MODEL_P53, max_order, **cl_arg)
