@@ -7,7 +7,7 @@ import math
 import os
 
 MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
-GIT_HEAD = "mea_performance"
+GIT_HEAD = "master"
 
 
 
@@ -24,7 +24,7 @@ class MyFigure(ReportUnit):
             {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":self.benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
             {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":self.benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
             {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":self.benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
-            {"git_tag":"custom_diff", "legend":"use custom differentiation", "function":self.benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
+            {"git_tag":"custom_diff", "legend":"current: use custom differentiation", "function":self.benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
         ]
 
         #means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff
@@ -70,11 +70,8 @@ class MyFigure(ReportUnit):
         ])
 
         script = str % max_order
-        print "means"
         process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
-        print "means"
         out, err = process.communicate()
-        print "means"
         if process.returncode != 0:
             raise Exception("could not run python benchmark")
 
