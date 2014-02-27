@@ -45,10 +45,8 @@ class MyFigure(ReportUnit):
 
 
         finally:
-            print "wth"
             subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
             time.sleep(1)
-            print "wth"
             self.out_object = to_benchmark
 
     def git_swing(self, branch=GIT_HEAD):
