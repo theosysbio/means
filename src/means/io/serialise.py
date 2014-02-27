@@ -46,7 +46,6 @@ class SerialisableObject(yaml.YAMLObject):
         """
         Create new instance of the object from the file.
         :param file_: the filename of the file to read from or already opened file buffer
-        :rtype: cls
         """
         if isinstance(file_, basestring):
             file_ = open(file_, 'r')
