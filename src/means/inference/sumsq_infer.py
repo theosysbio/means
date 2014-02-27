@@ -192,6 +192,7 @@ def some_params_are_negative(problem, parameters, initial_conditions):
 class InferenceResult(object):
 
     __problem = None
+    __observed_trajectories = None
     __starting_parameters = None
     __starting_initial_conditions = None
 
@@ -204,12 +205,32 @@ class InferenceResult(object):
     __warning_flag = None
     __solutions = None
 
+    _simulation = None
 
-    def __init__(self, problem, starting_parameters, starting_initial_conditions,
+
+    def __init__(self, problem, observed_trajectories, starting_parameters, starting_initial_conditions,
                  optimal_parameters, optimal_initial_conditions, distance_at_minimum, iterations_taken,
-                 function_calls_made, warning_flag, solutions):
+                 function_calls_made, warning_flag, solutions, simulation):
 
+        """
+
+        :param problem:
+        :param observed_trajectories:
+        :param starting_parameters:
+        :param starting_initial_conditions:
+        :param optimal_parameters:
+        :param optimal_initial_conditions:
+        :param distance_at_minimum:
+        :param iterations_taken:
+        :param function_calls_made:
+        :param warning_flag:
+        :param solutions:
+        :param simulation:
+        :type simulation: :class:`means.simulation.Simulation`
+        """
         self.__problem = problem
+
+        self.__observed_trajectories = observed_trajectories
         self.__starting_parameters = starting_parameters
         self.__starting_initial_conditions = starting_initial_conditions
         self.__optimal_parameters = optimal_parameters
@@ -219,10 +240,15 @@ class InferenceResult(object):
         self.__warning_flag = warning_flag
         self.__function_calls_made = function_calls_made
         self.__solutions = solutions
+        self._simulation = simulation
 
     @property
     def problem(self):
         return self.__problem
+
+    @property
+    def observed_trajectories(self):
+        return self.__observed_trajectories
 
     @property
     def starting_parameters(self):
@@ -235,6 +261,8 @@ class InferenceResult(object):
     @property
     def optimal_parameters(self):
         return self.__optimal_parameters
+
+
 
     @property
     def optimal_initial_conditions(self):
@@ -265,6 +293,34 @@ class InferenceResult(object):
         """
         return self.__solutions
 
+    def plot(self):
+        from matplotlib import pyplot as plt
+        observed_trajectories = self.observed_trajectories
+        starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
+                                                                 self.starting_initial_conditions,
+                                                                 observed_trajectories[0].timepoints)
+        optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
+                                                                self.optimal_initial_conditions,
+                                                                observed_trajectories[0].timepoints)
+
+        for observed_trajectory in observed_trajectories:
+            plt.figure()
+            plt.title(observed_trajectory.description)
+            observed_trajectory.plot('+', label="Observed data")
+            for trajectory in starting_trajectories:
+                if trajectory.description == observed_trajectory.description:
+                    trajectory.plot(label="Starting Trajectory")
+                    break
+
+            for trajectory in optimal_trajectories:
+                if trajectory.description == observed_trajectory.description:
+                    trajectory.plot(label="Optimal Trajectory")
+                    break
+
+            plt.legend()
+
+
+
     def __unicode__(self):
         return u"""
         {self.__class__!r}
@@ -290,7 +346,7 @@ class ParameterInference(object):
     __observed_timepoints = None
     __observed_trajectories = None
     _method = None
-    _simulator = None
+    _simulation = None
 
     def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
@@ -421,7 +477,7 @@ class ParameterInference(object):
         self.__observed_trajectories = observed_trajectories
 
         self._method = method
-        self._simulator = Simulation(self.problem, **simulation_kwargs)
+        self._simulation = Simulation(self.problem, **simulation_kwargs)
 
     @memoised_property
     def _distance_between_trajectories_function(self):
@@ -455,7 +511,7 @@ class ParameterInference(object):
             if some_params_are_negative(problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
-            simulator = self._simulator
+            simulator = self._simulation
             simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                current_initial_conditions,
                                                                timepoints_to_simulate)
@@ -476,14 +532,15 @@ class ParameterInference(object):
             solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
                                                     self.starting_conditions_with_variability))
 
-        result = InferenceResult(problem,
+        result = InferenceResult(problem, self.observed_trajectories,
                                  self.starting_parameters, self.starting_conditions,
                                  optimal_parameters, optimal_initial_conditions,
                                  distance_at_minimum,
                                  iterations_taken,
                                  function_calls_made,
                                  warning_flag,
-                                 solutions)
+                                 solutions,
+                                 self._simulation)
         return result
 
     @property
@@ -499,7 +556,7 @@ class ParameterInference(object):
 
     @property
     def starting_parameters(self):
-        return [x[0] for x in self.starting_conditions_with_variability]
+        return [x[0] for x in self.starting_parameters_with_variability]
 
     @property
     def starting_conditions_with_variability(self):
