@@ -265,6 +265,22 @@ class InferenceResult(object):
         """
         return self.__solutions
 
+    def __unicode__(self):
+        return u"""
+        {self.__class__!r}
+        Optimal Parameters: {self.optimal_parameters!r}
+        Optimal Initial conditions: {self.optimal_initial_conditions!r}
+        Distance at Minimum: {self.distance_at_minimum!r}
+
+        Iterations taken: {self.iterations_taken!r}
+        """.format(self=self)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return unicode(self).encode('utf8')
+
 class ParameterInference(object):
 
     __problem = None
