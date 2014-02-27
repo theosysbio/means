@@ -31,7 +31,7 @@ except ImportError:
 
 from IPython.nbformat.current import reads, NotebookNode
 
-PNG_DIFF_TOLERANCE = 1e-4
+PNG_DIFF_TOLERANCE = 1e-2
 
 def png_b64_to_ndarray(a64):
     """convert PNG output into a np.ndarray using pypng"""
