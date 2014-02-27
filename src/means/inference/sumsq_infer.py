@@ -293,29 +293,66 @@ class InferenceResult(object):
         """
         return self.__solutions
 
-    def plot(self):
+    @memoised_property
+    def starting_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+
+        starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
+                                                                 self.starting_initial_conditions, timepoints)
+        return starting_trajectories
+
+    @memoised_property
+    def optimal_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+        optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
+                                                                self.optimal_initial_conditions, timepoints)
+
+        return optimal_trajectories
+
+    @memoised_property
+    def intermediate_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+        return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
+
+    def plot(self, plot_intermediate_solutions=False):
+        """
+        Plot the inference result.
+
+        :param plot_intermediate_solutions: plot the trajectories resulting from the intermediate solutions as well
+        """
         from matplotlib import pyplot as plt
         observed_trajectories = self.observed_trajectories
-        starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
-                                                                 self.starting_initial_conditions,
-                                                                 observed_trajectories[0].timepoints)
-        optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
-                                                                self.optimal_initial_conditions,
-                                                                observed_trajectories[0].timepoints)
+
+        starting_trajectories = self.starting_trajectories
+        optimal_trajectories = self.optimal_trajectories
+
+        if plot_intermediate_solutions:
+            intermediate_trajectories = self.intermediate_trajectories
+        else:
+            intermediate_trajectories = []
 
         for observed_trajectory in observed_trajectories:
             plt.figure()
-            plt.title(observed_trajectory.description)
+            description = observed_trajectory.description
+            plt.title(description)
             observed_trajectory.plot('+', label="Observed data")
             for trajectory in starting_trajectories:
-                if trajectory.description == observed_trajectory.description:
-                    trajectory.plot(label="Starting Trajectory")
+                if trajectory.description == description:
+                    trajectory.plot(label="Starting trajectory")
                     break
 
             for trajectory in optimal_trajectories:
-                if trajectory.description == observed_trajectory.description:
-                    trajectory.plot(label="Optimal Trajectory")
+                if trajectory.description == description:
+                    trajectory.plot(label="Optimal trajectory")
                     break
+
+            for i, intermediate_trajectories in enumerate(intermediate_trajectories):
+                for trajectory in intermediate_trajectories:
+                    if trajectory.description == description:
+                        # Only add the label once
+                        label = 'Intermediate trajectories' if i == 0 else ''
+                        trajectory.plot(label=label, alpha=0.1, color='red')
+
 
             plt.legend()
 
