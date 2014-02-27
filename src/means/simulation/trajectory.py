@@ -1,7 +1,8 @@
 import numpy as np
 from means.approximation.ode_problem import Descriptor
 from means.io.serialise import SerialisableObject
-
+import operator
+import numbers
 
 class SensitivityTerm(Descriptor):
     r"""
@@ -134,6 +135,42 @@ class Trajectory(SerialisableObject):
 
         return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
             and self.description == other.description
+
+    def __add__(self, other):
+        return self._arithmetic_operation(other, operator.add)
+    def __div__(self, other):
+        return self._arithmetic_operation(other, operator.div)
+    def __mul__(self, other):
+        return self._arithmetic_operation(other, operator.mul)
+    def __sub__(self, other):
+        return self._arithmetic_operation(other, operator.sub)
+    def __pow__(self, other):
+        return self._arithmetic_operation(other, operator.pow)
+
+    def __radd__(self, other):
+        # for `sum()`    to work
+        return self + other
+
+
+    def _arithmetic_operation(self, other, operation):
+        """
+        Applies an operation between the values of a trajectories and a scalar or between
+        the respective values of two trajectories. In the latter case, trajectories should have
+        equal descriptions and time points
+        """
+        if isinstance(other, Trajectory):
+            if self.description != other.description:
+                raise Exception("Cannot add trajectories with different descriptions")
+            if not np.array_equal(self.timepoints, other.timepoints):
+                raise Exception("Cannot add trajectories with different time points")
+            new_values = operation(self.values, other.values)
+        elif isinstance(other, numbers.Real):
+            new_values = operation(self.values, float(other))
+        else:
+            raise Exception("Arithmetic operations is between two `Trajectory` objects or a `Trajectory` and a scalar.")
+
+        return Trajectory(self.timepoints, new_values, self.description)
+
 
     @classmethod
     def to_yaml(cls, dumper, data):
