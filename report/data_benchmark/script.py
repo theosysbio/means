@@ -10,61 +10,7 @@ MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
 GIT_HEAD = "master"
 
 
-
-class MyFigure(ReportUnit):
-    def __init__(self):
-        super(MyFigure, self).__init__()
-
-    def run(self):
-        open("git_lock.tmp", "w").write("dummy")
-        to_benchmark = [
-            #{"git_tag": None, "legend":"matlab package", "function":self.benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
-            {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":self.benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
-            {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":self.benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
-            {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":self.benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
-            {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":self.benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
-            {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":self.benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
-            {"git_tag":"custom_diff", "legend":"current: use custom differentiation", "function":self.benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
-        ]
-
-        #means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff
-        highest_max_order = max([tb["test_up_to"] for tb in to_benchmark])
-        #df = pd.DataFrame(columns=("tag", "n_eq", "time"))
-        try:
-            for max_order in range(1, highest_max_order + 1):
-                print "# -------------------------"
-                print "# Testing for max_order = {0}".format(max_order)
-                for tb in to_benchmark:
-
-                    if tb["test_from"] <= max_order <= tb["test_up_to"]:
-                        self.git_swing(tb["git_tag"])
-                        t0 = time.time()
-                        n_eq = tb["function"](max_order)
-                        logdt = round(math.log10(time.time() - t0),4)
-                        tb["dt"].append(logdt)
-                        tb["n_eq"].append(n_eq)
-                        print tb["git_tag"], n_eq, logdt
-
-
-        finally:
-            subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
-            time.sleep(1)
-            self.out_object = to_benchmark
-            os.remove("git_lock.tmp")
-            return
-        
-
-    def git_swing(self, branch=GIT_HEAD):
-        if branch:
-            process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-            out, err = process.communicate()
-
-            time.sleep(1)
-            if process.returncode != 0:
-                print "GIT ERROR:"
-                raise Exception()
-
-    def benchmark_means(self, max_order):
+    def benchmark_means(max_order):
         str="\n".join([
             "from means.approximation.mea import MomentExpansionApproximation",
             "from means.examples.sample_models import MODEL_P53",
@@ -81,7 +27,7 @@ class MyFigure(ReportUnit):
         return int(out.rstrip())
 
 
-    def benchmark_matlab(self, max_order):
+    def benchmark_matlab(max_order):
 
 
         str=";".join([
@@ -106,5 +52,62 @@ class MyFigure(ReportUnit):
                 pass
         # return the last int
         return res
+
+
+class MyFigure(ReportUnit):
+    def __init__(self):
+        super(MyFigure, self).__init__()
+
+    def run(self):
+        open("git_lock.tmp", "w").write("dummy")
+        to_benchmark = [
+            #{"git_tag": None, "legend":"matlab package", "function":benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
+            {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
+            {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
+            {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
+            {"git_tag": "only_necessary_moms", "legend":"we do not remove highest order moments", "function":benchmark_means, "test_from": 1, "test_up_to": 5, "dt":[], "n_eq":[]},
+            {"git_tag":"use_quick_solve", "legend":"use custom function instead of `solve`", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]},
+            {"git_tag":"custom_diff", "legend":"current: use custom differentiation", "function":benchmark_means, "test_from": 1, "test_up_to": 6, "dt":[], "n_eq":[]}
+        ]
+
+        #means_no_optims no_simplify_and_cache_diff use_xreplace only_necessary_moms use_quick_solve custom_diff
+        highest_max_order = max([tb["test_up_to"] for tb in to_benchmark])
+        #df = pd.DataFrame(columns=("tag", "n_eq", "time"))
+        try:
+            for max_order in range(1, highest_max_order + 1):
+                print "# -------------------------"
+                print "# Testing for max_order = {0}".format(max_order)
+                for tb in to_benchmark:
+
+                    if tb["test_from"] <= max_order <= tb["test_up_to"]:
+                        self.git_swing(tb["git_tag"])
+                        t0 = time.time()
+                        n_eq = tb["function"](max_order)
+                        logdt = round(math.log10(time.time() - t0),4)
+                        tb["dt"].append(logdt)
+                        tb["n_eq"].append(n_eq)
+                        print tb["git_tag"], n_eq, logdt
+
+
+        finally:
+            subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
+            time.sleep(1)
+
+            self.out_object = to_benchmark
+            os.remove("git_lock.tmp")
+            return
+        
+
+    def git_swing(self, branch=GIT_HEAD):
+        if branch:
+            process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            out, err = process.communicate()
+
+            time.sleep(1)
+            if process.returncode != 0:
+                print "GIT ERROR:"
+                raise Exception()
+
+
 
 MyFigure()
