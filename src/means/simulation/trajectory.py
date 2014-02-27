@@ -126,6 +126,15 @@ class Trajectory(SerialisableObject):
         label = str(label)
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
 
+    def resample(self, new_timepoints, extrapolate=False):
+        if not extrapolate:
+            if min(self.timepoints) > min(new_timepoints):
+                raise Exception("Some of the new time points are before any time points. If you really want to extrapolate, use `extrapolate=True`")
+            if max(self.timepoints) < max(new_timepoints):
+                raise Exception("Some of the new time points are after any time points. If you really want to extrapolate, use `extrapolate=True`")
+        new_values = np.interp(new_timepoints, self.timepoints, self.values)
+        return Trajectory(new_timepoints, new_values, self.description)
+
     def __repr__(self):
         return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
 
