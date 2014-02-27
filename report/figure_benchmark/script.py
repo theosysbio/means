@@ -4,6 +4,7 @@ from report_unit import ReportUnit
 import subprocess
 import time
 import math
+import os
 
 MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
 GIT_HEAD = "mea_performance"
@@ -15,6 +16,7 @@ class MyFigure(ReportUnit):
         super(MyFigure, self).__init__()
 
     def run(self):
+        open("git_lock.tmp", "w").write("dummy")
         to_benchmark = [
             #{"git_tag": None, "legend":"matlab package", "function":self.benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
             {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":self.benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
