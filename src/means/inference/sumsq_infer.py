@@ -290,6 +290,7 @@ class ParameterInference(object):
     __observed_timepoints = None
     __observed_trajectories = None
     _method = None
+    _simulator = None
 
     def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
@@ -364,7 +365,8 @@ class ParameterInference(object):
 
 
     def __init__(self, problem, starting_parameters, starting_conditions,
-                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares'):
+                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 **simulation_kwargs):
         """
 
         :param problem: ODEProblem to infer data for
@@ -384,6 +386,7 @@ class ParameterInference(object):
               - 'gamma' - maximum likelihood optimisation assuming gamma distribution
               - 'normal'- maximum likelihood optimisation assuming normal distribution
               - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
         """
         self.__problem = problem
 
@@ -418,6 +421,7 @@ class ParameterInference(object):
         self.__observed_trajectories = observed_trajectories
 
         self._method = method
+        self._simulator = Simulation(self.problem, **simulation_kwargs)
 
     @memoised_property
     def _distance_between_trajectories_function(self):
@@ -451,7 +455,7 @@ class ParameterInference(object):
             if some_params_are_negative(problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
-            simulator = Simulation(self.problem)
+            simulator = self._simulator
             simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                current_initial_conditions,
                                                                timepoints_to_simulate)
