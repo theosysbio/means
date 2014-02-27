@@ -53,8 +53,10 @@ class MyFigure(ReportUnit):
 
     def git_swing(self, branch=GIT_HEAD):
         if branch:
+            print "swing"
             process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = process.communicate()
+            print "swing"
             time.sleep(1)
             if process.returncode != 0:
                 print "GIT ERROR:"
