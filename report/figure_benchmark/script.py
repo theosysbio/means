@@ -16,7 +16,7 @@ class MyFigure(ReportUnit):
 
     def run(self):
         to_benchmark = [
-            {"git_tag": None, "legend":"matlab package", "function":self.benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
+            #{"git_tag": None, "legend":"matlab package", "function":self.benchmark_matlab, "test_from": 1, "test_up_to": 3, "dt":[], "n_eq":[]},
             {"git_tag":"means_no_optims", "legend":"means, no optimisation", "function":self.benchmark_means, "test_from": 2, "test_up_to": 4, "dt":[], "n_eq":[]},
             {"git_tag":"no_simplify_and_cache_diff", "legend":"`simplify()` has been removed.", "function":self.benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
             {"git_tag":"use_xreplace", "legend":"`xreplace()` is being used instead of `substitute()`", "function":self.benchmark_means, "test_from": 2, "test_up_to": 5, "dt":[], "n_eq":[]},
@@ -45,6 +45,7 @@ class MyFigure(ReportUnit):
 
 
         finally:
+            print "wth"
             subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
             time.sleep(1)
             self.out_object = to_benchmark
