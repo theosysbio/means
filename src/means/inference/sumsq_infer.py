@@ -361,10 +361,13 @@ class InferenceResult(object):
     def __unicode__(self):
         return u"""
         {self.__class__!r}
+        Starting Parameters: {self.starting_parameters!r}
         Optimal Parameters: {self.optimal_parameters!r}
-        Optimal Initial conditions: {self.optimal_initial_conditions!r}
-        Distance at Minimum: {self.distance_at_minimum!r}
 
+        Starting Initial Conditions: {self.starting_initial_conditions!r}
+        Optimal Initial Conditions: {self.optimal_initial_conditions!r}
+
+        Distance at Minimum: {self.distance_at_minimum!r}
         Iterations taken: {self.iterations_taken!r}
         """.format(self=self)
 
