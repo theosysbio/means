@@ -136,7 +136,28 @@ class Trajectory(SerialisableObject):
         return Trajectory(new_timepoints, new_values, self.description)
 
     def __repr__(self):
-        return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
+
+        n_edge_items = 4
+        precision = 3
+
+        if len(self.timepoints) <= 2*n_edge_items:
+            timepoint_to_print = ", ".join([str(round(i,precision)) for i in self.timepoints])
+            values_to_print = ", ".join([str(round(i,precision)) for i in self.values])
+        else:
+            left_time = ", ".join([str(round(i,precision)) for i in self.timepoints[0: n_edge_items]])
+            right_time = ", ".join([str(round(i,precision)) for i in self.timepoints[-n_edge_items: len(self.timepoints)]])
+
+            timepoint_to_print = "{0}, ...,{1}".format(left_time, right_time)
+            left_values = ", ".join([str(round(i,precision)) for i in self.values[0: n_edge_items]])
+            right_values = ", ".join([str(round(i,precision)) for i in self.values[-n_edge_items: len(self.values)]])
+            values_to_print = "{0}, ...,{1}".format(left_values, right_values)
+
+        return '{0} object\ndescription: {1}\ntime points: [{2}]\nvalues: [{3}]\n)'.format(
+            self.__class__.__name__,
+            self.description,
+            timepoint_to_print,
+            values_to_print)
+
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
