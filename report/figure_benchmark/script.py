@@ -6,7 +6,7 @@ import time
 import math
 
 MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
-GIT_HEAD = "master"
+GIT_HEAD = "mea_performance"
 
 
 
