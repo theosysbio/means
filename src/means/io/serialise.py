@@ -1,10 +1,8 @@
 import yaml
 import numpy as np
 
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
+# CLoader and CDumper do not support custom serialisation logic, do not use
+from yaml import Loader, Dumper
 
 _NUMPY_ARRAY_TAG = '!nparray'
 
