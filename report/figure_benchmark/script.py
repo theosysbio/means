@@ -50,6 +50,7 @@ class MyFigure(ReportUnit):
             subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
             time.sleep(1)
             self.out_object = to_benchmark
+            os.remove("git_lock.tmp")
 
     def git_swing(self, branch=GIT_HEAD):
         if branch:
