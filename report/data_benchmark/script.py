@@ -10,48 +10,48 @@ MATLAB_PKG_DIR="/home/quentin/matlab/momentexpansion_matlab/equations"
 GIT_HEAD = "master"
 
 
-    def benchmark_means(max_order):
-        str="\n".join([
-            "from means.approximation.mea import MomentExpansionApproximation",
-            "from means.examples.sample_models import MODEL_P53",
-            "pb = MomentExpansionApproximation(MODEL_P53, %i, 'log-normal').run()",
-            "print '{0}'.format(pb.number_of_equations)"
-        ])
+def benchmark_means(max_order):
+    str="\n".join([
+        "from means.approximation.mea import MomentExpansionApproximation",
+        "from means.examples.sample_models import MODEL_P53",
+        "pb = MomentExpansionApproximation(MODEL_P53, %i, 'log-normal').run()",
+        "print '{0}'.format(pb.number_of_equations)"
+    ])
 
-        script = str % max_order
-        process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
-        out, err = process.communicate()
-        if process.returncode != 0:
-            raise Exception("could not run python benchmark")
+    script = str % max_order
+    process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
+    out, err = process.communicate()
+    if process.returncode != 0:
+        raise Exception("could not run python benchmark")
 
-        return int(out.rstrip())
-
-
-    def benchmark_matlab(max_order):
+    return int(out.rstrip())
 
 
-        str=";".join([
-            "cd('{0}')".format(MATLAB_PKG_DIR),
-            "[MFK,M,CentralMoments] = MFK_create_symbolic_automatic_lognormal(%i, 1)",
-            "n_eq = length(MFK)",
-            "disp(n_eq);"
-            "exit();"
-        ])
+def benchmark_matlab(max_order):
 
-        script = (str % max_order)
-        process = subprocess.Popen(['matlab', '-nodesktop', '-nodisplay', '-r', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.wait()
 
-        out_str = process.stdout.read()
+    str=";".join([
+        "cd('{0}')".format(MATLAB_PKG_DIR),
+        "[MFK,M,CentralMoments] = MFK_create_symbolic_automatic_lognormal(%i, 1)",
+        "n_eq = length(MFK)",
+        "disp(n_eq);"
+        "exit();"
+    ])
 
-        for os in out_str.split("\n"):
-            s = os.strip().rstrip()
-            try:
-                res = int(s)
-            except:
-                pass
-        # return the last int
-        return res
+    script = (str % max_order)
+    process = subprocess.Popen(['matlab', '-nodesktop', '-nodisplay', '-r', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process.wait()
+
+    out_str = process.stdout.read()
+
+    for os in out_str.split("\n"):
+        s = os.strip().rstrip()
+        try:
+            res = int(s)
+        except:
+            pass
+    # return the last int
+    return res
 
 
 class MyFigure(ReportUnit):
