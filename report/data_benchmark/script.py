@@ -51,6 +51,7 @@ class MyFigure(ReportUnit):
             time.sleep(1)
             self.out_object = to_benchmark
             os.remove("git_lock.tmp")
+            exit(1)
 
     def git_swing(self, branch=GIT_HEAD):
         if branch:
