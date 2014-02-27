@@ -152,7 +152,7 @@ class Trajectory(SerialisableObject):
             right_values = ", ".join([str(round(i,precision)) for i in self.values[-n_edge_items: len(self.values)]])
             values_to_print = "{0}, ...,{1}".format(left_values, right_values)
 
-        return '{0} object\ndescription: {1}\ntime points: [{2}]\nvalues: [{3}]\n)'.format(
+        return '{0} object\ndescription: {1}\ntime points: [{2}]\nvalues: [{3}]'.format(
             self.__class__.__name__,
             self.description,
             timepoint_to_print,
