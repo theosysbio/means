@@ -3,14 +3,47 @@ import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
 from means.approximation import ODEProblem
 from means.approximation.ode_problem import Moment, VarianceTerm
+from means.inference.sumsq_infer import InferenceResult
 from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
                                          MODEL_HES1, MODEL_DIMERISATION
-from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
+from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm, Simulation
 import numpy as np
 from StringIO import StringIO
 from tempfile import mkstemp
 
+def _sample_problem():
+    lhs_terms = [Moment(np.array([1, 0, 0]), symbol='y_0'),
+                 Moment(np.array([0, 1, 0]), symbol='y_1'),
+                 Moment(np.array([0, 0, 1]), symbol='y_2'),
+                 Moment(np.array([0, 0, 2]), symbol='yx1'),
+                 Moment(np.array([0, 1, 1]), symbol='yx2'),
+                 Moment(np.array([0, 2, 0]), symbol='yx3'),
+                 Moment(np.array([1, 0, 1]), symbol='yx4'),
+                 Moment(np.array([1, 1, 0]), symbol='yx5'),
+                 Moment(np.array([2, 0, 0]), symbol='yx6')]
+    constants = ['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6']
+
+    c_0 = Symbol('c_0')
+    c_1 = Symbol('c_1')
+    y_0 = Symbol('y_0')
+    c_2 = Symbol('c_2')
+    y_2 = Symbol('y_2')
+    c_6 = Symbol('c_6')
+    yx4 = Symbol('yx4')
+    yx6 = Symbol('yx6')
+    c_3 = Symbol('c_3')
+    c_4 = Symbol('c_4')
+    y_1 = Symbol('y_1')
+    c_5 = Symbol('c_5')
+    yx2 = Symbol('yx2')
+    yx1 = Symbol('yx1')
+    yx3 = Symbol('yx3')
+    yx5 = Symbol('yx5')
+    rhs = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0) + yx4*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)) + yx6*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*c_4*y_1*y_2 + c_4*y_1 + 2*c_4*yx2 - 2*c_5*y_2**2 + c_5*y_2 - 2*c_5*yx1 - 2*y_2*(c_4*y_1 - c_5*y_2)], [c_3*y_0*y_2 + c_3*yx4 + c_4*y_1**2 - c_4*y_1*y_2 - c_4*y_1 + c_4*yx3 - c_5*y_1*y_2 - y_1*(c_4*y_1 - c_5*y_2) - y_2*(c_3*y_0 - c_4*y_1) + yx2*(-c_4 - c_5)], [2*c_3*y_0*y_1 + c_3*y_0 + 2*c_3*yx5 - 2*c_4*y_1**2 + c_4*y_1 - 2*c_4*yx3 - 2*y_1*(c_3*y_0 - c_4*y_1)], [c_0*y_2 - c_1*y_0*y_2 - c_2*y_0*y_2**2/(c_6 + y_0) - c_2*y_0*yx1/(c_6 + y_0) + c_4*y_0*y_1 + c_4*yx5 - c_5*y_0*y_2 - y_0*(c_4*y_1 - c_5*y_2) - y_2*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(-c_1 + 2*c_2*y_0*y_2/(c_6 + y_0)**2 - 2*c_2*y_2/(c_6 + y_0) - c_5 - y_2*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-c_2*y_0*y_2**2/(c_6 + y_0)**3 + c_2*y_2**2/(c_6 + y_0)**2 - y_2*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [c_0*y_1 - c_1*y_0*y_1 - c_2*y_0*y_1*y_2/(c_6 + y_0) - c_2*y_0*yx2/(c_6 + y_0) + c_3*y_0**2 - c_4*y_0*y_1 - y_0*(c_3*y_0 - c_4*y_1) - y_1*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(c_2*y_0*y_1/(c_6 + y_0)**2 - c_2*y_1/(c_6 + y_0) - y_1*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx5*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0) - c_4) + yx6*(-c_2*y_0*y_1*y_2/(c_6 + y_0)**3 + c_2*y_1*y_2/(c_6 + y_0)**2 + c_3 - y_1*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [2*c_0*y_0 + c_0 - 2*c_1*y_0**2 + c_1*y_0 - 2*c_2*y_0**2*y_2/(c_6 + y_0) + c_2*y_0*y_2/(c_6 + y_0) - 2*y_0*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(2*c_2*y_0**2/(c_6 + y_0)**2 - 4*c_2*y_0/(c_6 + y_0) - c_2*y_0/(c_6 + y_0)**2 + c_2/(c_6 + y_0) - 2*y_0*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-2*c_1 - 2*c_2*y_0**2*y_2/(c_6 + y_0)**3 + 4*c_2*y_0*y_2/(c_6 + y_0)**2 + c_2*y_0*y_2/(c_6 + y_0)**3 - 2*c_2*y_2/(c_6 + y_0) - c_2*y_2/(c_6 + y_0)**2 - 2*y_0*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))]])
+
+    problem = ODEProblem(method='MEA', ode_lhs_terms=lhs_terms, right_hand_side=rhs, constants=constants)
+    return problem
 
 class TestSerialisation(unittest.TestCase):
 
@@ -34,36 +67,7 @@ class TestSerialisation(unittest.TestCase):
         self._roundtrip(MODEL_DIMERISATION)
 
     def test_odeproblem_serialisation_works(self):
-        lhs_terms = [Moment(np.array([1, 0, 0]), symbol='y_0'),
-                     Moment(np.array([0, 1, 0]), symbol='y_1'),
-                     Moment(np.array([0, 0, 1]), symbol='y_2'),
-                     Moment(np.array([0, 0, 2]), symbol='yx1'),
-                     Moment(np.array([0, 1, 1]), symbol='yx2'),
-                     Moment(np.array([0, 2, 0]), symbol='yx3'),
-                     Moment(np.array([1, 0, 1]), symbol='yx4'),
-                     Moment(np.array([1, 1, 0]), symbol='yx5'),
-                     Moment(np.array([2, 0, 0]), symbol='yx6')]
-        constants = ['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6']
-
-        c_0 = Symbol('c_0')
-        c_1 = Symbol('c_1')
-        y_0 = Symbol('y_0')
-        c_2 = Symbol('c_2')
-        y_2 = Symbol('y_2')
-        c_6 = Symbol('c_6')
-        yx4 = Symbol('yx4')
-        yx6 = Symbol('yx6')
-        c_3 = Symbol('c_3')
-        c_4 = Symbol('c_4')
-        y_1 = Symbol('y_1')
-        c_5 = Symbol('c_5')
-        yx2 = Symbol('yx2')
-        yx1 = Symbol('yx1')
-        yx3 = Symbol('yx3')
-        yx5 = Symbol('yx5')
-        rhs = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0) + yx4*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)) + yx6*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*c_4*y_1*y_2 + c_4*y_1 + 2*c_4*yx2 - 2*c_5*y_2**2 + c_5*y_2 - 2*c_5*yx1 - 2*y_2*(c_4*y_1 - c_5*y_2)], [c_3*y_0*y_2 + c_3*yx4 + c_4*y_1**2 - c_4*y_1*y_2 - c_4*y_1 + c_4*yx3 - c_5*y_1*y_2 - y_1*(c_4*y_1 - c_5*y_2) - y_2*(c_3*y_0 - c_4*y_1) + yx2*(-c_4 - c_5)], [2*c_3*y_0*y_1 + c_3*y_0 + 2*c_3*yx5 - 2*c_4*y_1**2 + c_4*y_1 - 2*c_4*yx3 - 2*y_1*(c_3*y_0 - c_4*y_1)], [c_0*y_2 - c_1*y_0*y_2 - c_2*y_0*y_2**2/(c_6 + y_0) - c_2*y_0*yx1/(c_6 + y_0) + c_4*y_0*y_1 + c_4*yx5 - c_5*y_0*y_2 - y_0*(c_4*y_1 - c_5*y_2) - y_2*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(-c_1 + 2*c_2*y_0*y_2/(c_6 + y_0)**2 - 2*c_2*y_2/(c_6 + y_0) - c_5 - y_2*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-c_2*y_0*y_2**2/(c_6 + y_0)**3 + c_2*y_2**2/(c_6 + y_0)**2 - y_2*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [c_0*y_1 - c_1*y_0*y_1 - c_2*y_0*y_1*y_2/(c_6 + y_0) - c_2*y_0*yx2/(c_6 + y_0) + c_3*y_0**2 - c_4*y_0*y_1 - y_0*(c_3*y_0 - c_4*y_1) - y_1*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(c_2*y_0*y_1/(c_6 + y_0)**2 - c_2*y_1/(c_6 + y_0) - y_1*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx5*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0) - c_4) + yx6*(-c_2*y_0*y_1*y_2/(c_6 + y_0)**3 + c_2*y_1*y_2/(c_6 + y_0)**2 + c_3 - y_1*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [2*c_0*y_0 + c_0 - 2*c_1*y_0**2 + c_1*y_0 - 2*c_2*y_0**2*y_2/(c_6 + y_0) + c_2*y_0*y_2/(c_6 + y_0) - 2*y_0*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(2*c_2*y_0**2/(c_6 + y_0)**2 - 4*c_2*y_0/(c_6 + y_0) - c_2*y_0/(c_6 + y_0)**2 + c_2/(c_6 + y_0) - 2*y_0*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-2*c_1 - 2*c_2*y_0**2*y_2/(c_6 + y_0)**3 + 4*c_2*y_0*y_2/(c_6 + y_0)**2 + c_2*y_0*y_2/(c_6 + y_0)**3 - 2*c_2*y_2/(c_6 + y_0) - c_2*y_2/(c_6 + y_0)**2 - 2*y_0*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))]])
-
-        problem = ODEProblem(method='MEA', ode_lhs_terms=lhs_terms, right_hand_side=rhs, constants=constants)
+        problem = _sample_problem()
         self._roundtrip(problem)
 
     def test_ode_problem_lna_serialisation_works(self):
@@ -118,6 +122,23 @@ class TestSerialisation(unittest.TestCase):
         y = Trajectory([1, 2, 3], [7, 8, 9], SensitivityTerm(term, 'y'))
         t = TrajectoryWithSensitivityData([1, 2, 3], [-1, -2, -3], term, sensitivity_data=[x, y])
         self._roundtrip(t)
+
+    def test_inference_result_serialisation(self):
+        problem = _sample_problem()
+        r = InferenceResult(problem=problem,
+                            observed_trajectories=[Trajectory([1,2], [2,3], Moment([1, 0, 0], 'x'))],
+                            starting_parameters=[1, 2, 3, 4, 5, 6],
+                            starting_initial_conditions=[3, 2, 1],
+                            optimal_parameters=[15, 16, -17, 18, 19, 20],
+                            optimal_initial_conditions=[-15, -16, -18],
+                            distance_at_minimum=15.8,
+                            iterations_taken=100,
+                            function_calls_made=180,
+                            warning_flag=None,
+                            solutions=[[([1, 2, 3, 4, 5, 6], [3, 2, 1]), ([3, 2, 1, 0, -1, -2], [1, 2, 3])]],
+                            simulation=Simulation(problem)
+                            )
+        self._roundtrip(r)
 
 
 class TestSerialisationStringIO(TestSerialisation):

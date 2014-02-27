@@ -381,9 +381,6 @@ class InferenceResult(SerialisableObject):
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        solutions = []
-        for a, b in data.solutions:
-            solutions.append((list(a), list(b)))
 
         mapping = [('problem', data.problem),
                    ('observed_trajectories', data.observed_trajectories),
@@ -395,10 +392,26 @@ class InferenceResult(SerialisableObject):
                    ('iterations_taken', data.iterations_taken),
                    ('function_calls_made', data.function_calls_made),
                    ('warning_flag', data.warning_flag),
-                   ('solutions', solutions),
+                   ('solutions', data.solutions),
                    ('simulation', data._simulation)]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.problem == other.problem and self.observed_trajectories == other.observed_trajectories\
+            and self.starting_parameters == other.starting_parameters \
+            and self.starting_initial_conditions == other.starting_initial_conditions \
+            and self.optimal_parameters == other.optimal_parameters \
+            and self.optimal_initial_conditions == other.optimal_initial_conditions \
+            and self.distance_at_minimum == other.distance_at_minimum \
+            and self.iterations_taken == other.iterations_taken \
+            and self.function_calls_made == other.function_calls_made \
+            and self.warning_flag == other.warning_flag \
+            and self.solutions == other.solutions \
+            and self._simulation == other._simulation
 
 class ParameterInference(object):
 

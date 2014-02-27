@@ -161,6 +161,14 @@ class Simulation(SerialisableObject):
     def problem(self):
         return self.__problem
 
+    @property
+    def solver(self):
+        return self._solver
+
+    @property
+    def solver_options(self):
+        return self._solver_options
+
     @classmethod
     def to_yaml(cls, dumper, data):
 
@@ -170,6 +178,12 @@ class Simulation(SerialisableObject):
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.problem == other.problem and self.solver == other.solver \
+            and self.solver_options == other.solver_options
 
 class SimulationWithSensitivities(Simulation):
     """
