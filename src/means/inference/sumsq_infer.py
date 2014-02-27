@@ -189,6 +189,82 @@ def some_params_are_negative(problem, parameters, initial_conditions):
 
     return False
 
+class InferenceResult(object):
+
+    __problem = None
+    __starting_parameters = None
+    __starting_initial_conditions = None
+
+    __optimal_parameters = None
+    __optimal_initial_conditions = None
+
+    __distance_at_minimum = None
+    __iterations_taken = None
+    __function_calls_made = None
+    __warning_flag = None
+    __solutions = None
+
+
+    def __init__(self, problem, starting_parameters, starting_initial_conditions,
+                 optimal_parameters, optimal_initial_conditions, distance_at_minimum, iterations_taken,
+                 function_calls_made, warning_flag, solutions):
+
+        self.__problem = problem
+        self.__starting_parameters = starting_parameters
+        self.__starting_initial_conditions = starting_initial_conditions
+        self.__optimal_parameters = optimal_parameters
+        self.__optimal_initial_conditions = optimal_initial_conditions
+        self.__distance_at_minimum = distance_at_minimum
+        self.__iterations_taken = iterations_taken
+        self.__warning_flag = warning_flag
+        self.__function_calls_made = function_calls_made
+        self.__solutions = solutions
+
+    @property
+    def problem(self):
+        return self.__problem
+
+    @property
+    def starting_parameters(self):
+        return self.__starting_parameters
+
+    @property
+    def starting_initial_conditions(self):
+        return self.__starting_initial_conditions
+
+    @property
+    def optimal_parameters(self):
+        return self.__optimal_parameters
+
+    @property
+    def optimal_initial_conditions(self):
+        return self.__starting_initial_conditions
+
+    @property
+    def distance_at_minimum(self):
+        return self.distance_at_minimum
+
+    @property
+    def iterations_taken(self):
+        return self.__iterations_taken
+
+    @property
+    def function_calls_made(self):
+        return self.__function_calls_made
+
+    @property
+    def warning_flag(self):
+        return self.__warning_flag
+
+    @property
+    def solutions(self):
+        """
+        Solutions at each each iteration of optimisation.
+        :return: a list of (parameters, conditions) pairs
+        :rtype: list[tuple]
+        """
+        return self.__solutions
+
 class ParameterInference(object):
 
     __problem = None
@@ -367,8 +443,27 @@ class ParameterInference(object):
             dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
             return dist
 
-        result = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True)
+        optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs \
+            = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True)
 
+        optimal_parameters, optimal_initial_conditions = extract_params_from_i0(optimised_data,
+                                                                                self.starting_parameters_with_variability,
+                                                                                self.starting_conditions_with_variability)
+
+        solutions = []
+
+        for v in all_vecs:
+            solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
+                                                    self.starting_conditions_with_variability))
+
+        result = InferenceResult(problem,
+                                 self.starting_parameters, self.starting_conditions,
+                                 optimal_parameters, optimal_initial_conditions,
+                                 distance_at_minimum,
+                                 iterations_taken,
+                                 function_calls_made,
+                                 warning_flag,
+                                 solutions)
         return result
 
     @property
