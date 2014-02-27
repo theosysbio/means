@@ -5,7 +5,6 @@ from means.approximation.ode_problem import Moment, ODEProblem
 import numpy as np
 from means.inference import ParameterInference
 # We need renaming as otherwise nose picks it up as a test
-from means.inference.sumsq_infer import extract_params_from_i0
 from means.simulation import Trajectory
 
 
@@ -200,15 +199,11 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        self.observed_timepoints,
                                        self.observed_trajectories,
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
+        inference_result = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
-                                                            zip(parameters, [True, True, True]),
-                                                            zip(initial_conditions, [True, False]))
-
-        assert_array_almost_equal(opt_param, [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
-        assert_array_almost_equal(opt_initconds, [300.986186470956, 0])
-        self.assertAlmostEqual(distance, 0.0107977081308)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.986186470956, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.0107977081308)
 
     def test_sum_of_squares_means_only(self):
 
@@ -226,15 +221,12 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
+        inference_result = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
-                                                            zip(parameters, [True, True, True]),
-                                                            zip(initial_conditions, [True, False]))
-
-        assert_array_almost_equal(opt_param, [0.00017664682228204413, 0.043856182869604673, 495.49530551533815])
-        assert_array_almost_equal(opt_initconds, [301.27426546880224, 0])
-        self.assertAlmostEqual(distance, 0.350924941344)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00017664682228204413, 0.043856182869604673,
+                                                                        495.49530551533815])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [301.27426546880224, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.350924941344)
 
     def test_gamma_inference(self):
         starting_params = [0.0003553578523702354, 0.29734640303161364, 306.2260484701648]
@@ -256,15 +248,12 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
 
-        parameters, distance, iterations, evaluations, __ = inference.infer()
+        inference_result = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
-                                                            zip(starting_params, [True, True, True]),
-                                                            zip(starting_initial_conditions, [True, False]))
-
-        assert_array_almost_equal(opt_param, [9.8148438195906734e-05, 0.11551859499768752, 260.00000014956925])
-        assert_array_almost_equal(opt_initconds, [300.51956949425931, 0])
-        self.assertAlmostEqual(distance, 115.362403987, places=3)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.8148438195906734e-05, 0.11551859499768752,
+                                                                        260.00000014956925])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.51956949425931, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.362403987, places=3)
 
     def test_normal_inference(self):
         starting_params = [0.0003553578523702354, 0.29734640303161364, 306.2260484701648]
@@ -284,15 +273,13 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
-                                                            zip(starting_params, [True, True, True]),
-                                                            zip(starting_conditions, [True, False]))
+        inference_result = inference.infer()
 
-        assert_array_almost_equal(opt_param, [9.5190703395740974e-05, 0.10494581837857614, 260.00255131904339])
-        assert_array_almost_equal(opt_initconds, [298.81392432779984, 0])
-        self.assertAlmostEqual(distance, 115.687969964)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.5190703395740974e-05, 0.10494581837857614,
+                                                                        260.00255131904339])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [298.81392432779984, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.687969964)
 
     def test_lognormal_inference(self):
         starting_params = [0.0008721146403084233, 0.34946447118966373, 285.8232870026351]
@@ -312,15 +299,13 @@ class TestInferenceForRegressions(unittest.TestCase):
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters),
-                                                            zip(starting_params, [True, True, True]),
-                                                            zip(starting_conditions, [True, False]))
+        inference_result = inference.infer()
 
-        assert_array_almost_equal(opt_param, [0.00097039430700166115, 9.1893721957377865e-07, 303.48309650132126])
-        assert_array_almost_equal(opt_initconds, [290.06297620238149, 0])
-        self.assertAlmostEqual(distance, 2090.53271923)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00097039430700166115, 9.1893721957377865e-07,
+                                                                        303.48309650132126])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [290.06297620238149, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 2090.53271923)
 
 
 

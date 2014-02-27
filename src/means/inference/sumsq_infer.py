@@ -238,11 +238,11 @@ class InferenceResult(object):
 
     @property
     def optimal_initial_conditions(self):
-        return self.__starting_initial_conditions
+        return self.__optimal_initial_conditions
 
     @property
     def distance_at_minimum(self):
-        return self.distance_at_minimum
+        return self.__distance_at_minimum
 
     @property
     def iterations_taken(self):
@@ -444,7 +444,7 @@ class ParameterInference(object):
             return dist
 
         optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs \
-            = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True)
+            = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True, retall=True)
 
         optimal_parameters, optimal_initial_conditions = extract_params_from_i0(optimised_data,
                                                                                 self.starting_parameters_with_variability,
