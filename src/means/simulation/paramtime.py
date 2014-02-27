@@ -17,7 +17,7 @@ def param_limits(line):
     return limits
 
 
-def paramtime(tpfile, restart, limit):
+def paramtime(tpfile, restart, limit, problem):
     infile = open(tpfile)
     lines = infile.readlines()
 
@@ -25,11 +25,13 @@ def paramtime(tpfile, restart, limit):
     initcond = None
     vary = None
     varyic = None
-    if limit == True:
-        limits = []
-    else:
-        limits = None
 
+    limits_parameters = None
+    limits_initial_conditions = None
+
+    if not limit:
+        limits_parameters = [None] * len(problem.constants)
+        limits_initial_conditions = [None] * len(problem.left_hand_side)
     for i in range(len(lines)):
         if lines[i].startswith('Timepoints:'):
             # Reads timepoints from the parameters file
@@ -110,13 +112,33 @@ def paramtime(tpfile, restart, limit):
             if lines[i].startswith('Set parameter limits:'):
                 upper_p = param_limits(lines[i + 1])
                 lower_p = param_limits(lines[i + 2])
-                limits = zip(lower_p, upper_p)
+                limits_parameters = zip(lower_p, upper_p)
                 # Used to set bounds for allowed initial condition values if running constrained optimisation.
             # Set upper and lower bounds for the allowed ranges as described by 'Set parameter limits'
             if lines[i].startswith('Set initial conditions limits:'):
                 upper_ic = param_limits(lines[i + 1])
                 lower_ic = param_limits(lines[i + 2])
-                limits.extend(zip(lower_ic, upper_ic))
+                limits_initial_conditions = zip(lower_ic, upper_ic)
 
-    return [t, param, initcond, vary, varyic, limits]
+    if limit:
+        if limits_parameters is None:
+            raise Exception("Limit option is set, "
+                            "but could not read parameter limits from the file {0!r}".format(tpfile))
+        if limits_initial_conditions is None:
+            raise Exception("Limit option is set, "
+                            "but could not read initial condition limits from the file {0!r}".format(tpfile))
+
+    variable_parameters = {}
+    for parameter, is_variable, range_ in zip(problem.constants, vary, limits_parameters):
+        if not is_variable:
+            continue
+        variable_parameters[parameter] = range_
+
+    for initial_conditions, is_variable, range_ in zip(problem.left_hand_side, varyic, limits_initial_conditions):
+        if not is_variable:
+            continue
+        variable_parameters[initial_conditions] = range_
+
+
+    return t, param, initcond, variable_parameters
 

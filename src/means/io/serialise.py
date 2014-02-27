@@ -6,15 +6,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-
-_MODEL_TAG = '!model'
-_ODE_PROBLEM_TAG = '!problem'
 _NUMPY_ARRAY_TAG = '!nparray'
-_MOMENT_TAG = '!moment'
-_VARIANCE_TERM_TAG = '!variance-term'
-_TRAJECTORY_TAG = '!trajectory'
-_TRAJECTORY_WITH_SENSITIVITY_TAG = '!trajectory-with-sensitivities'
-_SENSITIVITY_TERM_TAG = '!sensitivity-term'
 
 #-- Special dump functions --------------------------------------------------------------------------------------------
 class SerialisableObject(yaml.YAMLObject):
@@ -74,6 +66,7 @@ class MeansDumper(Dumper):
                                           tags)
 
         self.add_representer(np.ndarray, _ndarray_representer)
+        self.add_multi_representer(np.float, _numpy_float_representer)
 
 
 class MeansLoader(Loader):
@@ -109,3 +102,20 @@ def _ndarray_representer(dumper, data):
     """
     mapping = [('object', data.tolist()), ('dtype', data.dtype.name)]
     return dumper.represent_mapping(_NUMPY_ARRAY_TAG, mapping)
+
+def _numpy_float_representer(dumper, data):
+    """
+    Get rid of the annoying representations of simple numbers, ie::
+
+        !!python/object/apply:numpy.core.multiarray.scalar
+          - !!python/object/apply:numpy.dtype
+            args: [f8, 0, 1]
+            state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+          - !!binary |
+            /Knx0k1iQD8=
+
+    :param dumper:
+    :param data:
+    :return:
+    """
+    return dumper.represent_data(float(data))

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
 from sympy import Symbol
+from means.io.serialise import SerialisableObject
 
 from means.util.decorators import memoised_property
 from means.inference.gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
@@ -189,7 +190,7 @@ def some_params_are_negative(problem, parameters, initial_conditions):
 
     return False
 
-class InferenceResult(object):
+class InferenceResult(SerialisableObject):
 
     __problem = None
     __observed_trajectories = None
@@ -207,6 +208,7 @@ class InferenceResult(object):
 
     _simulation = None
 
+    yaml_tag = '!inference-result'
 
     def __init__(self, problem, observed_trajectories, starting_parameters, starting_initial_conditions,
                  optimal_parameters, optimal_initial_conditions, distance_at_minimum, iterations_taken,
@@ -376,6 +378,27 @@ class InferenceResult(object):
 
     def __str__(self):
         return unicode(self).encode('utf8')
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        solutions = []
+        for a, b in data.solutions:
+            solutions.append((list(a), list(b)))
+
+        mapping = [('problem', data.problem),
+                   ('observed_trajectories', data.observed_trajectories),
+                   ('starting_parameters', data.starting_parameters),
+                   ('starting_initial_conditions', data.starting_initial_conditions),
+                   ('optimal_parameters', data.optimal_parameters),
+                   ('optimal_initial_conditions', data.optimal_initial_conditions),
+                   ('distance_at_minimum', data.distance_at_minimum),
+                   ('iterations_taken', data.iterations_taken),
+                   ('function_calls_made', data.function_calls_made),
+                   ('warning_flag', data.warning_flag),
+                   ('solutions', solutions),
+                   ('simulation', data._simulation)]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
 
 class ParameterInference(object):
 
