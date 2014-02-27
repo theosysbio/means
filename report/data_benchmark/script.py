@@ -92,7 +92,9 @@ class MyFigure(ReportUnit):
         finally:
             subprocess.Popen(['git', 'checkout', GIT_HEAD]).communicate()
             time.sleep(1)
-
+            for tb in to_benchmark:
+                tb["function"] = None
+                
             self.out_object = to_benchmark
             os.remove("git_lock.tmp")
             return

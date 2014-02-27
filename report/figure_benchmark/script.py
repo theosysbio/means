@@ -10,7 +10,7 @@ class MyFigure(ReportUnit):
         super(MyFigure, self).__init__()
 
     def run(self):
-        with open("../figure_benchmark.pickle") as f:
+        with open("../data_benchmark.pickle") as f:
             dic = pickle.load(f)
         pl.figure()
         pl.ylabel('log_10(dt) (s)')
@@ -21,7 +21,7 @@ class MyFigure(ReportUnit):
         pl.show()
 
 
-        self.out_object = to_benchmark
+        self.out_object = None
 
 
 
