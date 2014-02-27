@@ -53,15 +53,13 @@ class MyFigure(ReportUnit):
 
     def git_swing(self, branch=GIT_HEAD):
         if branch:
-            print "swing"
             process = subprocess.Popen(['git', 'checkout', branch], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = process.communicate()
-            print "swing"
+
             time.sleep(1)
             if process.returncode != 0:
                 print "GIT ERROR:"
-                print err
-                exit(1)
+                raise Exception()
 
     def benchmark_means(self, max_order):
         str="\n".join([
@@ -72,9 +70,14 @@ class MyFigure(ReportUnit):
         ])
 
         script = str % max_order
-
+        print "means"
         process = subprocess.Popen(['python', '-c', script], stdout=subprocess.PIPE)
+        print "means"
         out, err = process.communicate()
+        print "means"
+        if process.returncode != 0:
+            raise Exception("could not run python benchmark")
+
         return int(out.rstrip())
 
 
