@@ -12,6 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
+from sympy import Symbol
+from means.io.serialise import SerialisableObject
 
 from means.util.decorators import memoised_property
 from means.inference.gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
@@ -163,6 +165,9 @@ def sum_of_squares_distance(simulated_trajectories, observed_trajectories_lookup
 def constraints_are_satisfied(current_guess, limits):
     if limits is not None:
         for value, limit in zip(current_guess, limits):
+            if limit is None:
+                continue
+
             lower_limit = limit[0]
             upper_limit = limit[1]
             if lower_limit:
@@ -185,6 +190,229 @@ def some_params_are_negative(problem, parameters, initial_conditions):
 
     return False
 
+class InferenceResult(SerialisableObject):
+
+    __problem = None
+    __observed_trajectories = None
+    __starting_parameters = None
+    __starting_initial_conditions = None
+
+    __optimal_parameters = None
+    __optimal_initial_conditions = None
+
+    __distance_at_minimum = None
+    __iterations_taken = None
+    __function_calls_made = None
+    __warning_flag = None
+    __solutions = None
+
+    _simulation = None
+
+    yaml_tag = '!inference-result'
+
+    def __init__(self, problem, observed_trajectories, starting_parameters, starting_initial_conditions,
+                 optimal_parameters, optimal_initial_conditions, distance_at_minimum, iterations_taken,
+                 function_calls_made, warning_flag, solutions, simulation):
+
+        """
+
+        :param problem:
+        :param observed_trajectories:
+        :param starting_parameters:
+        :param starting_initial_conditions:
+        :param optimal_parameters:
+        :param optimal_initial_conditions:
+        :param distance_at_minimum:
+        :param iterations_taken:
+        :param function_calls_made:
+        :param warning_flag:
+        :param solutions:
+        :param simulation:
+        :type simulation: :class:`means.simulation.Simulation`
+        """
+        self.__problem = problem
+
+        self.__observed_trajectories = observed_trajectories
+        self.__starting_parameters = starting_parameters
+        self.__starting_initial_conditions = starting_initial_conditions
+        self.__optimal_parameters = optimal_parameters
+        self.__optimal_initial_conditions = optimal_initial_conditions
+        self.__distance_at_minimum = distance_at_minimum
+        self.__iterations_taken = iterations_taken
+        self.__warning_flag = warning_flag
+        self.__function_calls_made = function_calls_made
+        self.__solutions = solutions
+        self._simulation = simulation
+
+    @property
+    def problem(self):
+        return self.__problem
+
+    @property
+    def observed_trajectories(self):
+        return self.__observed_trajectories
+
+    @property
+    def starting_parameters(self):
+        return self.__starting_parameters
+
+    @property
+    def starting_initial_conditions(self):
+        return self.__starting_initial_conditions
+
+    @property
+    def optimal_parameters(self):
+        return self.__optimal_parameters
+
+
+
+    @property
+    def optimal_initial_conditions(self):
+        return self.__optimal_initial_conditions
+
+    @property
+    def distance_at_minimum(self):
+        return self.__distance_at_minimum
+
+    @property
+    def iterations_taken(self):
+        return self.__iterations_taken
+
+    @property
+    def function_calls_made(self):
+        return self.__function_calls_made
+
+    @property
+    def warning_flag(self):
+        return self.__warning_flag
+
+    @property
+    def solutions(self):
+        """
+        Solutions at each each iteration of optimisation.
+        :return: a list of (parameters, conditions) pairs
+        :rtype: list[tuple]
+        """
+        return self.__solutions
+
+    @memoised_property
+    def starting_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+
+        starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
+                                                                 self.starting_initial_conditions, timepoints)
+        return starting_trajectories
+
+    @memoised_property
+    def optimal_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+        optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
+                                                                self.optimal_initial_conditions, timepoints)
+
+        return optimal_trajectories
+
+    @memoised_property
+    def intermediate_trajectories(self):
+        timepoints = self.observed_trajectories[0].timepoints
+        return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
+
+    def plot(self, plot_intermediate_solutions=False):
+        """
+        Plot the inference result.
+
+        :param plot_intermediate_solutions: plot the trajectories resulting from the intermediate solutions as well
+        """
+        from matplotlib import pyplot as plt
+        observed_trajectories = self.observed_trajectories
+
+        starting_trajectories = self.starting_trajectories
+        optimal_trajectories = self.optimal_trajectories
+
+        if plot_intermediate_solutions:
+            intermediate_trajectories = self.intermediate_trajectories
+        else:
+            intermediate_trajectories = []
+
+        for observed_trajectory in observed_trajectories:
+            plt.figure()
+            description = observed_trajectory.description
+            plt.title(description)
+            observed_trajectory.plot('+', label="Observed data")
+            for trajectory in starting_trajectories:
+                if trajectory.description == description:
+                    trajectory.plot(label="Starting trajectory")
+                    break
+
+            for trajectory in optimal_trajectories:
+                if trajectory.description == description:
+                    trajectory.plot(label="Optimal trajectory")
+                    break
+
+            for i, intermediate_trajectories in enumerate(intermediate_trajectories):
+                for trajectory in intermediate_trajectories:
+                    if trajectory.description == description:
+                        # Only add the label once
+                        label = 'Intermediate trajectories' if i == 0 else ''
+                        trajectory.plot(label=label, alpha=0.1, color='red')
+
+
+            plt.legend()
+
+
+
+    def __unicode__(self):
+        return u"""
+        {self.__class__!r}
+        Starting Parameters: {self.starting_parameters!r}
+        Optimal Parameters: {self.optimal_parameters!r}
+
+        Starting Initial Conditions: {self.starting_initial_conditions!r}
+        Optimal Initial Conditions: {self.optimal_initial_conditions!r}
+
+        Distance at Minimum: {self.distance_at_minimum!r}
+        Iterations taken: {self.iterations_taken!r}
+        """.format(self=self)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return unicode(self).encode('utf8')
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+
+        mapping = [('problem', data.problem),
+                   ('observed_trajectories', data.observed_trajectories),
+                   ('starting_parameters', data.starting_parameters),
+                   ('starting_initial_conditions', data.starting_initial_conditions),
+                   ('optimal_parameters', data.optimal_parameters),
+                   ('optimal_initial_conditions', data.optimal_initial_conditions),
+                   ('distance_at_minimum', data.distance_at_minimum),
+                   ('iterations_taken', data.iterations_taken),
+                   ('function_calls_made', data.function_calls_made),
+                   ('warning_flag', data.warning_flag),
+                   ('solutions', data.solutions),
+                   ('simulation', data._simulation)]
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.problem == other.problem and self.observed_trajectories == other.observed_trajectories\
+            and self.starting_parameters == other.starting_parameters \
+            and self.starting_initial_conditions == other.starting_initial_conditions \
+            and self.optimal_parameters == other.optimal_parameters \
+            and self.optimal_initial_conditions == other.optimal_initial_conditions \
+            and self.distance_at_minimum == other.distance_at_minimum \
+            and self.iterations_taken == other.iterations_taken \
+            and self.function_calls_made == other.function_calls_made \
+            and self.warning_flag == other.warning_flag \
+            and self.solutions == other.solutions \
+            and self._simulation == other._simulation
+
 class ParameterInference(object):
 
     __problem = None
@@ -194,40 +422,127 @@ class ParameterInference(object):
     __observed_timepoints = None
     __observed_trajectories = None
     _method = None
+    _simulation = None
 
-    def __init__(self, problem, starting_parameters_with_variability, starting_conditions_with_variability,
-                 constraints, observed_timepoints, observed_trajectories, method='sum_of_squares'):
+    def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
+        Generates the `values_with_variability` formatted list
+        from the provided symbols, starting values and variable parameters
+
+        :param symbols: The symbols defining each of the values in the starting values list
+        :param starting_values: the actual starting values
+        :param variable_parameters: a dictionary/set/list of variables that are variable
+                                    if dictionary provided, the contents should be `symbol: range` where range is
+                                    a tuple ``(min_val, max_val)`` of allowed parameter values or ``None`` for no limit.
+                                    if set/list provided, the ranges will be assumed to be ``None`` for each of
+                                    the parameters
+        :type variable_parameters: dict|iterable
+        :return:
+        """
+        values_with_variability = []
+        constraints = []
+
+        if not isinstance(variable_parameters, dict):
+            # Convert non/dict representations to Dict with nones
+            variable_parameters = {p: None for p in variable_parameters}
+
+        for parameter, parameter_value in zip(symbols, starting_values):
+            try:
+                constraint = variable_parameters[parameter]
+                variable = True
+            except KeyError:
+                try:
+                    constraint = variable_parameters[str(parameter)]
+                    variable = True
+                except KeyError:
+                    constraint = None
+                    variable = False
+
+            values_with_variability.append((parameter_value, variable))
+            if variable:
+                constraints.append(constraint)
+
+        return values_with_variability, constraints
+
+    def _validate_variable_parameters(self, problem, variable_parameters):
+        if not variable_parameters:
+            raise ValueError("No variable parameters specified, nothing to infer")
+
+        if not isinstance(variable_parameters, dict):
+            variable_parameters = {p: None for p in variable_parameters}
+
+        variable_parameters_symbolic = {}
+        for parameter, range_ in variable_parameters.iteritems():
+            if not isinstance(parameter, Symbol):
+                parameter = Symbol(parameter)
+            if range_ is not None:
+                try:
+                    range_ = tuple(map(float, range_))
+                except (TypeError, ValueError):
+                    raise ValueError('Invalid range provided for {0!r} - '
+                                     'expected tuple of floats, got {1!r}'.format(parameter, range_))
+
+                if len(range_) != 2:
+                    raise ValueError('Invalid range provided for {0!r} - '
+                                     'expected tuple of length two, got: {1!r}'.format(parameter, range_))
+
+            variable_parameters_symbolic[parameter] = range_
+
+        for parameter in variable_parameters_symbolic:
+            if parameter not in problem.left_hand_side and parameter not in problem.constants:
+                raise KeyError('Unknown variable parameter {0!r} provided. '
+                               'It is not in the problem\'s parameter list, nor in the left-hand-side of equations')
+
+        return variable_parameters_symbolic
+
+
+    def __init__(self, problem, starting_parameters, starting_conditions,
+                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 **simulation_kwargs):
+        """
+
         :param problem: ODEProblem to infer data for
         :type problem: ODEProblem
-        :param starting_parameters_with_variability: List of tuples (value, is_variable) for each parameter in ODEProblem
-                                     specification.
-                                    - value is the starting value for that parameter
-                                    - is_variable is a boolean True/False signifying whether the constant can be varied
-                                      during inference
-        :param starting_conditions_with_variability: similar list of tuples as `starting_parameters`,
-                                    but for each of the LHS equations in the problem
-        :param constraints:         List of tuples (lower_bound, upper_bound) for each of the variable parameters.
-                                    TODO:  Maybe a better way exists to specify these constraints.
-                                    This is a bit weird way: we specify only variable ones.
-                                    I am thinking somewhat about a container class Parameter(value, variable, constraints)
-                                    Can be none if no constraints present, similarly each of the bounds can be None,
-                                    if unspecified
-        :param observed_timepoints:   Timepoints for which we have data for
+        :param starting_parameters: A list of starting values for each of the model's parameters
+        :type starting_parameters: iterable
+        :param starting_conditions: A list of starting vlaues for each of the initial conditions.
+                                    All unspecified initial conditions will be set to zero
+        :type starting_conditions: iterable
+        :param variable_parameters: A dictionary of variable parameters, in the format
+                                    ``{parameter_symbol: (min_value, max_value)}`` where the range
+                                    ``(min_value, max_value)`` is the range of the allowed parameter values.
+                                    If the range is None, parameters are assumed to be unbounded.
         :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
         :param method: Method of calculating the data fit. Currently supported values are
               - 'sum_of_squares' -  min sum of squares optimisation
               - 'gamma' - maximum likelihood optimisation assuming gamma distribution
               - 'normal'- maximum likelihood optimisation assuming normal distribution
               - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
         """
         self.__problem = problem
 
-        assert(len(starting_parameters_with_variability) == len(problem.constants))
-        assert(len(starting_conditions_with_variability) == problem.number_of_equations)
+        variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
+
+        assert(len(starting_parameters) == len(problem.constants))
+
+        if len(starting_conditions) < problem.number_of_equations:
+            starting_conditions = starting_conditions[:] \
+                                  + [0.0] * (problem.number_of_equations - len(starting_conditions))
+
+
+        starting_parameters_with_variability, parameter_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.constants, starting_parameters,
+                                                                   variable_parameters)
+
+        starting_conditions_with_variability, initial_condition_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.left_hand_side, starting_conditions,
+                                                                   variable_parameters)
 
         self.__starting_parameters_with_variability = starting_parameters_with_variability
         self.__starting_conditions_with_variability = starting_conditions_with_variability
+
+        constraints = parameter_constraints + initial_condition_constraints
 
         assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
                                                                      starting_parameters_with_variability +
@@ -238,6 +553,7 @@ class ParameterInference(object):
         self.__observed_trajectories = observed_trajectories
 
         self._method = method
+        self._simulation = Simulation(self.problem, **simulation_kwargs)
 
     @memoised_property
     def _distance_between_trajectories_function(self):
@@ -256,7 +572,6 @@ class ParameterInference(object):
         problem = self.problem
         starting_conditions_with_variability = self.starting_conditions_with_variability
         starting_parameters_with_variability = self.starting_parameters_with_variability
-        simulation_type = problem.method
 
         timepoints_to_simulate = self.observed_timepoints
 
@@ -272,7 +587,7 @@ class ParameterInference(object):
             if some_params_are_negative(problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
-            simulator = Simulation(self.problem)
+            simulator = self._simulation
             simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                current_initial_conditions,
                                                                timepoints_to_simulate)
@@ -280,8 +595,28 @@ class ParameterInference(object):
             dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
             return dist
 
-        result = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True)
+        optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs \
+            = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True, retall=True)
 
+        optimal_parameters, optimal_initial_conditions = extract_params_from_i0(optimised_data,
+                                                                                self.starting_parameters_with_variability,
+                                                                                self.starting_conditions_with_variability)
+
+        solutions = []
+
+        for v in all_vecs:
+            solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
+                                                    self.starting_conditions_with_variability))
+
+        result = InferenceResult(problem, self.observed_trajectories,
+                                 self.starting_parameters, self.starting_conditions,
+                                 optimal_parameters, optimal_initial_conditions,
+                                 distance_at_minimum,
+                                 iterations_taken,
+                                 function_calls_made,
+                                 warning_flag,
+                                 solutions,
+                                 self._simulation)
         return result
 
     @property
@@ -297,7 +632,7 @@ class ParameterInference(object):
 
     @property
     def starting_parameters(self):
-        return [x[0] for x in self.starting_conditions_with_variability]
+        return [x[0] for x in self.starting_parameters_with_variability]
 
     @property
     def starting_conditions_with_variability(self):

@@ -6,6 +6,7 @@ and method (moment expansion or LNA)
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy
+from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 
@@ -28,7 +29,7 @@ def validate_problem(problem):
 
 
 
-class Simulation(object):
+class Simulation(SerialisableObject):
     """
     Class that allows to perform simulations of the trajectories for a particular problem.
     Implements all ODE solvers supported by Assimulo_ package.
@@ -40,6 +41,8 @@ class Simulation(object):
     _postprocessing = None
     _solver_options = None
     _solver = None
+
+    yaml_tag = '!simulation'
 
     def __init__(self, problem, solver='cvode', **solver_options):
         """
@@ -157,6 +160,30 @@ class Simulation(object):
     @property
     def problem(self):
         return self.__problem
+
+    @property
+    def solver(self):
+        return self._solver
+
+    @property
+    def solver_options(self):
+        return self._solver_options
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+
+        mapping = [('problem', data.problem),
+                   ('solver', data._solver)]
+        mapping.extend(data._solver_options.items())
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.problem == other.problem and self.solver == other.solver \
+            and self.solver_options == other.solver_options
 
 class SimulationWithSensitivities(Simulation):
     """

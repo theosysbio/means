@@ -4,6 +4,7 @@ import sys
 
 from means.approximation.lna.lna import LinearNoiseApproximation
 from means.inference.hypercube import hypercube
+from means.io.serialise import to_file
 from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
 from means.model.model import Model
@@ -44,7 +45,6 @@ def printOptions():
 
     print "\n Graph options:"
     print "  --plot\tPlot simulated or inferred moment trajectories."
-    print "  --plottitle\tSpecify plot title."
 
     print "\n  --help\tPrints out this list of options.\n"
 
@@ -89,7 +89,6 @@ def run():
             elif option[0:10]=='timeparam=':tpfile=option[10:]
             elif option == 'sim' : solve = True
             elif option == 'plot' : plot = True
-            elif option[0:10] == 'plottitle=' : plottitle = option[10:]
             elif option[0:7] == 'simout=' : trajout = option[7:]
             elif option[0:9] == 'maxorder=' : maxorder = int(option[9:])
             elif option == 'infer' : infer = True
@@ -154,11 +153,10 @@ def run():
             print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
             sys.exit(1)
 
-        [t,param,initcond,vary, varyic, limits] = paramtime(tpfile,restart, limit)
         problem = ODEProblem.from_file(ODEout)
+        t,param,initcond, __ = paramtime(tpfile,restart, limit, problem)
 
-        solution, momlist = simulate(problem,
-                                         trajout,t,param,initcond, maxorder)
+        solution, momlist = simulate(problem, trajout, t, param, initcond, maxorder)
 
         if plot:
             graphbuilder(solution,ODEout,plottitle,t,momlist)
@@ -187,7 +185,7 @@ def run():
         (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
 
         try:
-            [t, param, initcond, vary, varyic, limits] = paramtime(tpfile, restart, limit)
+            t, param, initcond, variable_parameters = paramtime(tpfile, restart, limit, problem)
         except ValueError:
             print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
                   'for all parameter values.'.format(tpfile)
@@ -208,27 +206,22 @@ def run():
                 diff = problem.number_of_equations - len(initcond_n)
                 initcond_n += [0] * diff
                 initcond_full = initcond_n
-                varyic += [False] * diff
-
-            params_with_variability = zip(param_n, vary)
-            initcond_with_variability = zip(initcond_n, varyic)
 
             optimiser_method = distribution if distribution else 'sum_of_squares'
-            optimiser = ParameterInference(problem, params_with_variability,
-                                           initcond_with_variability, limits,
+            optimiser = ParameterInference(problem, param_n,
+                                           initcond_n, variable_parameters,
                                            observed_timepoints,
                                            observed_trajectories,
                                            method=optimiser_method)
             result = optimiser.infer()
 
-            restart_results.append([result, observed_trajectories, param_n, initcond_n])
+            restart_results.append(result)
 
-        restart_results.sort(key=lambda x: x[0][1], reverse=False)
-
-        # write results to file (default name 'inference.txt') and plot graph if selected
-        write_inference_results(restart_results, t, vary, initcond_full, varyic, inferfile)
+        restart_results.sort(key=lambda x: x.distance_at_minimum, reverse=False)
+        to_file(restart_results, inferfile)
         if plot:
-            graph(problem, restart_results[0], observed_trajectories, t, initcond_full, vary, varyic, plottitle)
-
+            from matplotlib import pyplot as plt
+            restart_results[0].plot()
+            plt.show()
 
 run()

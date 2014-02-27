@@ -5,7 +5,6 @@ from means.approximation.ode_problem import Moment, ODEProblem
 import numpy as np
 from means.inference import ParameterInference
 # We need renaming as otherwise nose picks it up as a test
-from means.inference.sumsq_infer import extract_params_from_i0
 from means.simulation import Trajectory
 
 
@@ -60,125 +59,253 @@ class TestInferenceForRegressions(unittest.TestCase):
                                                  Moment([2]))]
         self.observed_timepoints = np.arange(0, 20, 0.5)
 
+    def test_params_with_variability_creation(self):
+
+        class ParameterInferenceStub(ParameterInference):
+            def __init__(self):
+                pass
+
+
+        pi_stub = ParameterInferenceStub()
+
+        def compare(variables, correct_values_with_variability, correct_constraints):
+
+            values_with_variability, constraints = pi_stub._generate_values_with_variability_and_constraints(
+                self.dimer_problem.constants,
+                parameters,
+                variables)
+
+            self.assertEqual(values_with_variability, correct_values_with_variability)
+            self.assertEqual(constraints, correct_constraints)
+
+        parameters = [0.001, 0.5, 330.0]
+
+        expected_values_with_variability = zip(parameters, [False, True, True])
+        expected_constraints = [None, (329, 330)]
+
+        symbol_keys = {Symbol('c_1'): None, Symbol('c_2'): (329, 330)}
+        compare(symbol_keys, expected_values_with_variability, expected_constraints)
+
+    def test_initialisation_of_variable_parameters(self):
+        parameters = [0.001, 0.5, 330.0]
+        initial_conditions = [320.0, 0]
+
+        def check_initialisation(variable_parameters, expected_parameters_with_variability,
+                                   expected_initial_conditions_with_variability, expected_constraints):
+            p = ParameterInference(self.dimer_problem, parameters, initial_conditions,
+                                   variable_parameters, [1, 2, 3], [1, 2, 3])
+
+            self.assertEquals(p.starting_parameters_with_variability, expected_parameters_with_variability)
+            self.assertEqual(p.starting_conditions_with_variability, expected_initial_conditions_with_variability)
+            self.assertEqual(p.constraints, expected_constraints)
+
+        symbol_keys = {Symbol('c_1'): None, Symbol('c_2'): (329, 330), Symbol('y_0'): [319, 321]}
+        check_initialisation(symbol_keys, zip(parameters, [False, True, True]), zip(initial_conditions, [True, False]),
+                             [None, (329, 330), (319, 321)])
+
+        string_keys = {'c_1': None, 'c_2': (329, 330), 'y_0': [319, 321]}
+        check_initialisation(string_keys, zip(parameters, [False, True, True]), zip(initial_conditions, [True, False]),
+                             [None, (329, 330), (319, 321)])
+
+        mixed_keys = {'c_1': None, Symbol('c_2'): (329, 330), Symbol('y_0'): [319, 321]}
+        check_initialisation(mixed_keys, zip(parameters, [False, True, True]), zip(initial_conditions, [True, False]),
+                             [None, (329, 330), (319, 321)])
+
+        set_keys = {'c_0', 'c_1'}
+        check_initialisation(set_keys, zip(parameters, [True, True, False]), zip(initial_conditions, [False, False]),
+                             [None, None])
+
+        list_keys = ['c_2']
+        check_initialisation(list_keys, zip(parameters, [False, False, True]), zip(initial_conditions, [False, False]),
+                             [None])
+
+    def test_initialisation_with_no_variable_parameters_specified_fails(self):
+        """
+        Given that we are trying to initialise our ParameterInference with no variable parameters
+        We should raise a ValueError as, well, there is no variables to work with then, is there?
+        """
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          None,  # No variable parameters
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          [],  # No variable parameters
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {},  # No variable parameters
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          set(),  # No variable parameters
+                          [1, 2, 3], [1, 2, 3])
+
+    def test_initialisation_with_parameters_that_do_not_exist_fails(self):
+        """
+        Given some variable parameters that do not exist in ODE, the intialisation of ParameterInference should fail
+        with KeyError
+        """
+
+        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, 'y_1': (1, 2)},  # y_1 is nowhere to be found in the Problem parameters
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          ['y_0', 'y_1'],  # y_1 is nowhere to be found in the Problem parameters
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, Symbol('y_1'): (1, 2)},  # y_1 is nowhere to be found in the Problem parameters
+                          [1, 2, 3], [1, 2, 3])
+        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          ['y_0', Symbol('y_1')],  # y_1 is nowhere to be found in the Problem parameters
+                          [1, 2, 3], [1, 2, 3])
+
+    def test_initialisation_fails_with_funny_ranges(self):
+        """
+        Given initialisation of ParameterInference with a variable whose range is not None or a two-element iterable,
+        initialisation should fail with ValueError
+        """
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, 'c_0': (1, 2, 3)},  # 1, 2, 3 is not a range
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, 'c_0': [1]},  # neither is 1
+                          [1, 2, 3], [1, 2, 3])
+
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, 'c_0': 'from one to two'},  # no string parsing just now
+                          [1, 2, 3], [1, 2, 3])
+
+        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+                          {'y_0': None, 'c_0': 'xy'},  # Two letter strings should also fail
+                          [1, 2, 3], [1, 2, 3])
+
     def test_sum_of_squares(self):
 
-        params_with_variability = [(0.001, True), (0.5, True), (330.0, True)]
-        initcond_with_variability = [(320.0, True), (0, False)]
+        parameters = [0.001, 0.5, 330.0]
+        initial_conditions = [320.0, 0]
 
         optimiser_method = 'sum_of_squares'
-        constraints = None
+        variable_parameters = ['c_0', 'c_1', 'c_2', 'y_0']
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       parameters,
+                                       initial_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        self.observed_trajectories,
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
+        inference_result = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
-
-        assert_array_almost_equal(opt_param, [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
-        assert_array_almost_equal(opt_initconds, [300.986186470956, 0])
-        self.assertAlmostEqual(distance, 0.0107977081308)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.986186470956, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.0107977081308)
 
     def test_sum_of_squares_means_only(self):
 
-        params_with_variability = [(0.001, True), (0.5, True), (330.0, True)]
-        initcond_with_variability = [(320.0, True), (0, False)]
+        parameters = [0.001, 0.5, 330.0]
+        initial_conditions = [320.0, 0]
 
         optimiser_method = 'sum_of_squares'
-        constraints = None
+        variable_parameters = ['c_0', 'c_1', 'c_2', 'y_0']
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       parameters,
+                                       initial_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
+        inference_result = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
-
-        assert_array_almost_equal(opt_param, [0.00017664682228204413, 0.043856182869604673, 495.49530551533815])
-        assert_array_almost_equal(opt_initconds, [301.27426546880224, 0])
-        self.assertAlmostEqual(distance, 0.350924941344)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00017664682228204413, 0.043856182869604673,
+                                                                        495.49530551533815])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [301.27426546880224, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.350924941344)
 
     def test_gamma_inference(self):
-        params_with_variability = [(0.0003553578523702354, True), (0.29734640303161364, True), (306.2260484701648, True)]
-        initcond_with_variability = [(304.7826314512718, True), (0, False)]
+        starting_params = [0.0003553578523702354, 0.29734640303161364, 306.2260484701648]
+        starting_initial_conditions = [304.7826314512718, 0.0]
+
+        variable_parameters = {'c_0': (0.0, 0.001),
+                               'c_1': (0.0, 0.5),
+                               'c_2': (260.0, 330.0),
+                               'y_0': (290.0, 320.0)}
 
         optimiser_method = 'gamma'
-        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       starting_params,
+                                       starting_initial_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
+        inference_result = inference.infer()
 
-        assert_array_almost_equal(opt_param, [9.8148438195906734e-05, 0.11551859499768752, 260.00000014956925])
-        assert_array_almost_equal(opt_initconds, [300.51956949425931, 0])
-        self.assertAlmostEqual(distance, 115.362403987, places=3)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.8148438195906734e-05, 0.11551859499768752,
+                                                                        260.00000014956925])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.51956949425931, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.362403987, places=3)
 
     def test_normal_inference(self):
-        params_with_variability = zip([0.0003553578523702354, 0.29734640303161364, 306.2260484701648],
-                                      [True, True, True])
-        initcond_with_variability = zip([304.7826314512718, 0],
-                                        [True, False])
+        starting_params = [0.0003553578523702354, 0.29734640303161364, 306.2260484701648]
+        starting_conditions = [304.7826314512718, 0]
 
         optimiser_method = 'normal'
-        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
+        variable_parameters = {'c_0': (0.0, 0.001),
+                               'c_1': (0.0, 0.5),
+                               'c_2': (260.0, 330.0),
+                               'y_0': (290.0, 320.0)}
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       starting_params,
+                                       starting_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
+        inference_result = inference.infer()
 
-        assert_array_almost_equal(opt_param, [9.5190703395740974e-05, 0.10494581837857614, 260.00255131904339])
-        assert_array_almost_equal(opt_initconds, [298.81392432779984, 0])
-        self.assertAlmostEqual(distance, 115.687969964)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.5190703395740974e-05, 0.10494581837857614,
+                                                                        260.00255131904339])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [298.81392432779984, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.687969964)
 
     def test_lognormal_inference(self):
-        params_with_variability = zip([0.0008721146403084233, 0.34946447118966373, 285.8232870026351],
-                                      [True, True, True])
-        initcond_with_variability = zip([309.6216092798371, 0],
-                                        [True, False])
+        starting_params = [0.0008721146403084233, 0.34946447118966373, 285.8232870026351]
+        starting_conditions = [309.6216092798371, 0]
 
         optimiser_method = 'lognormal'
-        constraints = [(0.0, 0.001), (0.0, 0.5), (260.0, 330.0), (290.0, 320.0)]
+        variable_parameters = {'c_0': (0.0, 0.001),
+                               'c_1': (0.0, 0.5),
+                               'c_2': (260.0, 330.0),
+                               'y_0': (290.0, 320.0)}
 
         inference = ParameterInference(self.dimer_problem,
-                                       params_with_variability,
-                                       initcond_with_variability,
-                                       constraints,
+                                       starting_params,
+                                       starting_conditions,
+                                       variable_parameters,
                                        self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
-        parameters, distance, iterations, evaluations, __ = inference.infer()
 
-        (opt_param, opt_initconds) = extract_params_from_i0(list(parameters), params_with_variability, initcond_with_variability)
+        inference_result = inference.infer()
 
-        assert_array_almost_equal(opt_param, [0.00097039430700166115, 9.1893721957377865e-07, 303.48309650132126])
-        assert_array_almost_equal(opt_initconds, [290.06297620238149, 0])
-        self.assertAlmostEqual(distance, 2090.53271923)
+        assert_array_almost_equal(inference_result.optimal_parameters, [0.00097039430700166115, 9.1893721957377865e-07,
+                                                                        303.48309650132126])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [290.06297620238149, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 2090.53271923)
 
 
 
