@@ -602,7 +602,7 @@ class InferenceWithRestarts(object):
     def __init__(self, problem, number_of_samples,
                  starting_parameter_ranges, starting_conditions_ranges,
                  variable_parameters, observed_trajectories, method='sum_of_squares',
-                 return_intermediate_solutions=False,
+                 return_intermediate_solutions=False, number_of_processes=1,
                  **simulation_kwargs):
         """
 
@@ -625,6 +625,8 @@ class InferenceWithRestarts(object):
         :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
                                               routine considered as well.
         :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
+        :param number_of_processes: If set to more than 1, the inference routines will be paralellised
+                                    using ``multiprocessing`` module
         """
 
         self.__problem = problem
@@ -656,6 +658,7 @@ class InferenceWithRestarts(object):
         self.__method = method
         self._return_intermediate_solutions = return_intermediate_solutions
         self.__simulation_kwargs = simulation_kwargs
+        self._number_of_processes = int(number_of_processes)
 
     @memoised_property
     def _inference_objects(self):
@@ -680,8 +683,21 @@ class InferenceWithRestarts(object):
         return inference_objects
 
     def infer(self):
+        if self._number_of_processes <= 1:
+            results = map(lambda x: x.infer(), self._inference_objects)
+        else:
+            import multiprocessing
 
-        results = [x.infer() for x in self._inference_objects]
+            inference_objects = self._inference_objects
+            p = multiprocessing.Pool(self._number_of_processes, initializer=_pool_initialiser,
+                                     initargs=[inference_objects])
+            results = p.map(_apply_infer, range(len(inference_objects)))
+            p.close()
+
+            results = [inference._result_from_raw_result(raw_result)
+                       for inference, raw_result in zip(inference_objects, results)]
+
+
         results = sorted(results, key=lambda x: x.distance_at_minimum)
 
         return InferenceResultsCollection(results)
@@ -722,7 +738,18 @@ class InferenceWithRestarts(object):
         return self.__simulation_kwargs
 
 
+def _pool_initialiser(objects):
+    global inference_objects  # Global is ok here as this function will be called for each process on separate threads
+    inference_objects = objects
 
+def _apply_infer(object_id):
+    """
+    Used in the InferenceWithRestarts class.
+    Needs to be in global scope for multiprocessing module to pick it up
+
+    """
+    global inference_objects
+    return inference_objects[object_id]._infer_raw()
 
 
 class Inference(object):
@@ -895,7 +922,7 @@ class Inference(object):
     def _distance_between_trajectories_function(self):
         return get_distance_function(self.method)
 
-    def infer(self):
+    def _infer_raw(self):
 
         initial_guess = _to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
         observed_trajectories_lookup = self.observed_trajectories_lookup
@@ -919,9 +946,15 @@ class Inference(object):
                 return MAX_DIST
 
             simulator = self._simulation
-            simulated_trajectories = simulator.simulate_system(current_parameters,
-                                                               current_initial_conditions,
-                                                               timepoints_to_simulate)
+            try:
+                simulated_trajectories = simulator.simulate_system(current_parameters,
+                                                                   current_initial_conditions,
+                                                                   timepoints_to_simulate)
+            except Exception as e:
+                print 'Warning: got {0!r} while simulating with '  \
+                      'parameters={1!r}, initial_conditions={2!r}. ' \
+                      'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
+                return MAX_DIST
 
             dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
             return dist
@@ -948,7 +981,14 @@ class Inference(object):
         else:
             solutions=None
 
-        result = InferenceResult(problem, self.observed_trajectories,
+        return optimal_parameters, optimal_initial_conditions, \
+               distance_at_minimum, iterations_taken, function_calls_made, warning_flag, solutions
+
+    def _result_from_raw_result(self, raw_result):
+        optimal_parameters, optimal_initial_conditions, \
+               distance_at_minimum, iterations_taken, function_calls_made, warning_flag, solutions = raw_result
+
+        result = InferenceResult(self.problem, self.observed_trajectories,
                                  self.starting_parameters, self.starting_conditions,
                                  optimal_parameters, optimal_initial_conditions,
                                  distance_at_minimum,
@@ -958,6 +998,11 @@ class Inference(object):
                                  solutions,
                                  self._simulation)
         return result
+
+
+    def infer(self):
+        raw_result = self._infer_raw()
+        return self._result_from_raw_result(raw_result)
 
     @property
     def problem(self):
