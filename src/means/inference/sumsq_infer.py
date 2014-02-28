@@ -317,13 +317,23 @@ class InferenceResult(SerialisableObject):
         timepoints = self.observed_trajectories[0].timepoints
         return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
 
-    def plot(self, plot_intermediate_solutions=False, filter_plots_function=None):
+    def plot(self, plot_intermediate_solutions=False, filter_plots_function=None, legend=True,
+             kwargs_observed_data=None, kwargs_starting_trajectories=None, kwargs_optimal_trajectories=None,
+             kwargs_intermediate_trajectories=None):
         """
         Plot the inference result.
 
         :param plot_intermediate_solutions: plot the trajectories resulting from the intermediate solutions as well
         :param filter_plots_function: A function that takes a trajectory object and returns True if it should be
                                       plotted and false if not. None plots all available trajectories
+        :param legend: Whether to draw the legend or not
+        :param kwargs_observed_data: Kwargs to be passed to the ``trajectory.plot`` function for the observed data
+        :param kwargs_starting_trajectories: kwargs to be passed to the ``trajectory.plot`` function for the starting
+                                             trajectories
+        :param kwargs_optimal_trajectories: kwargs to be passed to the ``trajectory.plot`` function for the optimal
+                                            trajectories
+        :param kwargs_intermediate_trajectories: kwargs to be passed to the ``trajectory.plot`` function for the
+                                            intermediate trajectories
         """
         from matplotlib import pyplot as plt
         if filter_plots_function is None:
@@ -339,7 +349,31 @@ class InferenceResult(SerialisableObject):
         else:
             intermediate_trajectories_list = []
 
+        def initialise_default_kwargs(kwargs, default_data):
+            if kwargs is None:
+                kwargs = {}
+
+            for key, value in default_data.iteritems():
+                if key not in kwargs:
+                    kwargs[key] = value
+
+            return kwargs
+
         trajectories_by_description = {}
+        kwargs_observed_data = initialise_default_kwargs(kwargs_observed_data, {'label': "Observed data", 'marker': '+',
+                                                                                'color': 'black', 'linestyle': 'None'})
+
+        kwargs_optimal_trajectories = initialise_default_kwargs(kwargs_optimal_trajectories,
+                                                                {'label': "Optimised Trajectory", 'color': 'blue'})
+
+        kwargs_starting_trajectories = initialise_default_kwargs(kwargs_starting_trajectories,
+                                                                 {'label': "Starting trajectory", 'color': 'green'})
+
+        kwargs_intermediate_trajectories = initialise_default_kwargs(kwargs_intermediate_trajectories,
+                                                                     {'label': 'Intermediate Trajectories',
+                                                                      'alpha': 0.1, 'color': 'cyan'}
+                                                                     )
+
         for trajectory in observed_trajectories:
             if not filter_plots_function(trajectory):
                 continue
@@ -350,8 +384,7 @@ class InferenceResult(SerialisableObject):
                 list_ = []
                 trajectories_by_description[trajectory.description] = list_
 
-            list_.append((trajectory, {'label': "Observed data", 'marker': '+',
-                                       'color': 'black', 'linestyle': 'None'}))
+            list_.append((trajectory, kwargs_observed_data))
 
         for trajectory in starting_trajectories:
             if not filter_plots_function(trajectory):
@@ -363,7 +396,7 @@ class InferenceResult(SerialisableObject):
                 list_ = []
                 trajectories_by_description[trajectory.description] = list_
 
-            list_.append((trajectory, {'label': "Starting trajectory", 'color': 'green'}))
+            list_.append((trajectory, kwargs_starting_trajectories))
 
         seen_intermediate_trajectories = set()
         for i, intermediate_trajectories in enumerate(intermediate_trajectories_list):
@@ -372,15 +405,20 @@ class InferenceResult(SerialisableObject):
                     continue
 
                 seen = trajectory.description in seen_intermediate_trajectories
+                kwargs = kwargs_intermediate_trajectories.copy()
                 # Only set label once
                 if not seen:
-                    label = 'Intermediate Trajectories'
                     seen_intermediate_trajectories.add(trajectory.description)
                 else:
-                    label = ''
+                    kwargs['label'] = ''
 
-                list_ = trajectories_by_description.get(trajectory.description, [])
-                list_.append((trajectory, {'label': label, 'alpha': 0.1, 'color': 'cyan'}))
+                try:
+                    list_ = trajectories_by_description[trajectory.description]
+                except KeyError:
+                    list_ = []
+
+                trajectories_by_description[trajectory.description] = list_
+                list_.append((trajectory, kwargs))
 
 
         for trajectory in optimal_trajectories:
@@ -393,19 +431,18 @@ class InferenceResult(SerialisableObject):
                 list_ = []
                 trajectories_by_description[trajectory.description] = list_
 
-            list_.append((trajectory, {'label': "Optimal Trajectory", 'color': 'blue'}))
+            list_.append((trajectory, kwargs_optimal_trajectories))
 
         for description, trajectories_list in trajectories_by_description.iteritems():
-            plt.figure()
+            if len(trajectories_by_description) > 1:
+                plt.figure()
             plt.title(description)
 
             for trajectory, kwargs in trajectories_list:
                 trajectory.plot(**kwargs)
 
-            plt.legend()
-
-        plt.show()
-
+            if legend:
+                plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
 
 
     def __unicode__(self):
@@ -469,6 +506,11 @@ class InferenceResultsCollection(object):
 
     @property
     def results(self):
+        """
+
+        :return: The results of performed inferences
+        :rtype: list[:class:`InferenceResult`]
+        """
         return self.__inference_results
 
     @property
@@ -494,6 +536,44 @@ class InferenceResultsCollection(object):
     def __repr__(self):
         return str(self)
 
+
+    def plot(self):
+        from matplotlib import pyplot as plt
+
+        trajectory_descriptions = [x.description for x in self.results[0].starting_trajectories]
+
+
+        # Plot in reverse order so the best one is always on top
+        reversed_results = list(reversed(self.results))
+        # Plot all but last one (as the alpha will change)
+
+        # Let's make worse results fade
+        alpha = 0.2
+
+        for description in trajectory_descriptions:
+            plt.figure()
+            plt.title(description)
+            f = lambda trajectory: trajectory.description == description
+            first = True
+            for result in reversed_results[:-1]:
+                if first:
+                    label_starting = 'Alternative Starting Trajectories'
+                    label_optimal = 'Alternative Optimised Trajectories'
+                    first = False
+                else:
+                    label_starting = ''
+                    label_optimal = ''
+
+                result.plot(filter_plots_function=f,
+                            legend=False, kwargs_starting_trajectories={'alpha': alpha, 'label': label_starting},
+                            kwargs_optimal_trajectories={'alpha': alpha, 'label': label_optimal},
+                            # Do not draw observed data, it is the same for all
+                            kwargs_observed_data={'label': '', 'alpha': 0},
+                            plot_intermediate_solutions=False)
+
+            self.best.plot(filter_plots_function=f, plot_intermediate_solutions=False,
+                           kwargs_starting_trajectories={'label': 'Best Starting Trajectory'},
+                           kwargs_optimal_trajectories={'label': 'Best Optimised Trajectory'})
 
 class InferenceWithRestarts(object):
 
