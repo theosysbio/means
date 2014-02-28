@@ -3,16 +3,13 @@ import os
 import sys
 
 from means.approximation.lna.lna import LinearNoiseApproximation
-from means.inference.hypercube import hypercube
-from means.io.serialise import to_file
 from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
 from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
-from means.inference.sumsq_infer import parse_experimental_data_file, ParameterInference, InferenceWithRestarts
-
+from means.inference.inference import parse_experimental_data_file, ParameterInference, InferenceWithRestarts
 
 def printOptions():
     print "\nList of possible options:"

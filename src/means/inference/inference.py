@@ -6,26 +6,24 @@
 # differences) between the sample data moments and moments 
 # calculated using MFK at each of the specified timepoints.
 #################################################################
-from math import sqrt
 
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
 from sympy import Symbol
+
+from means.inference.distances import get_distance_function
 from means.inference.hypercube import hypercube
 from means.io.serialise import SerialisableObject
-
 from means.util.decorators import memoised_property
-from means.inference.gamma_infer import _distribution_distance, SUPPORTED_DISTRIBUTIONS
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
+
 
 # value returned if parameters, means or variances < 0
 FTOL = 0.000001
 MAX_DIST = float('inf')
 
-def to_guess(parameters_with_variability, initial_conditions_with_variability):
+def _to_guess(parameters_with_variability, initial_conditions_with_variability):
     """
     Creates a list of variables to infer, based on the values in vary/varyic (0=fixed, 1=optimised).
 
@@ -40,7 +38,7 @@ def to_guess(parameters_with_variability, initial_conditions_with_variability):
 
 
 
-def extract_params_from_i0(only_variable_parameters, parameters_with_variability, initial_conditions_with_variability):
+def _extract_params_from_i0(only_variable_parameters, parameters_with_variability, initial_conditions_with_variability):
     """
     Used within the distance/cost function to create the current kinetic parameter and initial condition vectors
     to be used during that interaction, using current values in i0.
@@ -146,24 +144,9 @@ def _mom_indices(problem, mom_names):
 
     return mom_index_list, moments_list
 
-def sum_of_squares_distance(simulated_trajectories, observed_trajectories_lookup):
-    dist = 0
-    for simulated_trajectory in simulated_trajectories:
-        observed_trajectory = None
-        try:
-            observed_trajectory = observed_trajectories_lookup[simulated_trajectory.description]
-        except KeyError:
-            continue
 
-        deviations = observed_trajectory.values - simulated_trajectory.values
-        # Drop NaNs arising from missing datapoints
-        deviations = deviations[~np.isnan(deviations)]
 
-        dist += np.sum(np.square(deviations))
-
-    return dist
-
-def constraints_are_satisfied(current_guess, limits):
+def _constraints_are_satisfied(current_guess, limits):
     if limits is not None:
         for value, limit in zip(current_guess, limits):
             if limit is None:
@@ -180,7 +163,7 @@ def constraints_are_satisfied(current_guess, limits):
 
     return True
 
-def some_params_are_negative(problem, parameters, initial_conditions):
+def _some_params_are_negative(problem, parameters, initial_conditions):
     number_of_species = problem.number_of_species
     if any(i < 0 for i in parameters):     # parameters cannot be negative
         return True
@@ -774,10 +757,14 @@ class ParameterInference(object):
                                     If the range is None, parameters are assumed to be unbounded.
         :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
         :param method: Method of calculating the data fit. Currently supported values are
-              - 'sum_of_squares' -  min sum of squares optimisation
-              - 'gamma' - maximum likelihood optimisation assuming gamma distribution
-              - 'normal'- maximum likelihood optimisation assuming normal distribution
-              - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+              `'sum_of_squares'`
+                    minimisation of the sum of squares distance between trajectories
+              `'gamma'`
+                    maximum likelihood optimisation assuming gamma distribution
+              `'normal'`
+                    maximum likelihood optimisation assuming normal distribution
+              `'lognormal'`
+                    maximum likelihood optimisation assuming lognormal distribution
         :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
                                               routine considered as well.
         :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
@@ -905,16 +892,11 @@ class ParameterInference(object):
 
     @memoised_property
     def _distance_between_trajectories_function(self):
-        if self.method == 'sum_of_squares':
-            return sum_of_squares_distance
-        elif self.method in SUPPORTED_DISTRIBUTIONS:
-            return lambda x, y: _distribution_distance(x, y, self.method)
-        else:
-            raise ValueError('Unsupported method {0!r}'.format(self.method))
+        return get_distance_function(self.method)
 
     def infer(self):
 
-        initial_guess = to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
+        initial_guess = _to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
         observed_trajectories_lookup = self.observed_trajectories_lookup
 
         problem = self.problem
@@ -928,11 +910,11 @@ class ParameterInference(object):
             if not self._constraints_are_satisfied(current_guess):
                 return MAX_DIST
 
-            current_parameters, current_initial_conditions = extract_params_from_i0(current_guess,
+            current_parameters, current_initial_conditions = _extract_params_from_i0(current_guess,
                                                                         starting_parameters_with_variability,
                                                                         starting_conditions_with_variability)
 
-            if some_params_are_negative(problem, current_parameters, current_initial_conditions):
+            if _some_params_are_negative(problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
             simulator = self._simulation
@@ -952,7 +934,7 @@ class ParameterInference(object):
             optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag = result
             all_vecs = None
 
-        optimal_parameters, optimal_initial_conditions = extract_params_from_i0(optimised_data,
+        optimal_parameters, optimal_initial_conditions = _extract_params_from_i0(optimised_data,
                                                                                 self.starting_parameters_with_variability,
                                                                                 self.starting_conditions_with_variability)
 
@@ -960,7 +942,7 @@ class ParameterInference(object):
             solutions = []
 
             for v in all_vecs:
-                solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
+                solutions.append(_extract_params_from_i0(v, self.starting_parameters_with_variability,
                                                         self.starting_conditions_with_variability))
         else:
             solutions=None
@@ -1004,7 +986,7 @@ class ParameterInference(object):
         return self.__constraints
 
     def _constraints_are_satisfied(self, current_guess):
-        return constraints_are_satisfied(current_guess, self.constraints)
+        return _constraints_are_satisfied(current_guess, self.constraints)
 
 
     @property
