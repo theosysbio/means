@@ -3,7 +3,7 @@ from numpy.testing import assert_array_almost_equal
 from sympy import Symbol, Float, MutableDenseMatrix
 from means.approximation.ode_problem import Moment, ODEProblem
 import numpy as np
-from means.inference import ParameterInference
+from means.inference import Inference
 # We need renaming as otherwise nose picks it up as a test
 from means.simulation import Trajectory
 
@@ -57,16 +57,15 @@ class TestInferenceForRegressions(unittest.TestCase):
                                                      , 100.3083751, 100.43411443, 100.54924568, 100.65466632,
                                                      100.75119251],
                                                  Moment([2]))]
-        self.observed_timepoints = np.arange(0, 20, 0.5)
 
     def test_params_with_variability_creation(self):
 
-        class ParameterInferenceStub(ParameterInference):
+        class InferenceStub(Inference):
             def __init__(self):
                 pass
 
 
-        pi_stub = ParameterInferenceStub()
+        pi_stub = InferenceStub()
 
         def compare(variables, correct_values_with_variability, correct_constraints):
 
@@ -92,8 +91,8 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         def check_initialisation(variable_parameters, expected_parameters_with_variability,
                                    expected_initial_conditions_with_variability, expected_constraints):
-            p = ParameterInference(self.dimer_problem, parameters, initial_conditions,
-                                   variable_parameters, [1, 2, 3], [1, 2, 3])
+            p = Inference(self.dimer_problem, parameters, initial_conditions,
+                                   variable_parameters, [Trajectory([1, 2, 3], [1,2,3], 'x')])
 
             self.assertEquals(p.starting_parameters_with_variability, expected_parameters_with_variability)
             self.assertEqual(p.starting_conditions_with_variability, expected_initial_conditions_with_variability)
@@ -121,66 +120,66 @@ class TestInferenceForRegressions(unittest.TestCase):
 
     def test_initialisation_with_no_variable_parameters_specified_fails(self):
         """
-        Given that we are trying to initialise our ParameterInference with no variable parameters
+        Given that we are trying to initialise our Inference with no variable parameters
         We should raise a ValueError as, well, there is no variables to work with then, is there?
         """
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           None,  # No variable parameters
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           [],  # No variable parameters
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {},  # No variable parameters
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           set(),  # No variable parameters
                           [1, 2, 3], [1, 2, 3])
 
     def test_initialisation_with_parameters_that_do_not_exist_fails(self):
         """
-        Given some variable parameters that do not exist in ODE, the intialisation of ParameterInference should fail
+        Given some variable parameters that do not exist in ODE, the intialisation of Inference should fail
         with KeyError
         """
 
-        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(KeyError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, 'y_1': (1, 2)},  # y_1 is nowhere to be found in the Problem parameters
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(KeyError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           ['y_0', 'y_1'],  # y_1 is nowhere to be found in the Problem parameters
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(KeyError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, Symbol('y_1'): (1, 2)},  # y_1 is nowhere to be found in the Problem parameters
                           [1, 2, 3], [1, 2, 3])
-        self.assertRaises(KeyError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(KeyError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           ['y_0', Symbol('y_1')],  # y_1 is nowhere to be found in the Problem parameters
                           [1, 2, 3], [1, 2, 3])
 
     def test_initialisation_fails_with_funny_ranges(self):
         """
-        Given initialisation of ParameterInference with a variable whose range is not None or a two-element iterable,
+        Given initialisation of Inference with a variable whose range is not None or a two-element iterable,
         initialisation should fail with ValueError
         """
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, 'c_0': (1, 2, 3)},  # 1, 2, 3 is not a range
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, 'c_0': [1]},  # neither is 1
                           [1, 2, 3], [1, 2, 3])
 
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, 'c_0': 'from one to two'},  # no string parsing just now
                           [1, 2, 3], [1, 2, 3])
 
-        self.assertRaises(ValueError, ParameterInference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
+        self.assertRaises(ValueError, Inference, self.dimer_problem, [0.001, 0.5, 330.0], [320.0, 0],
                           {'y_0': None, 'c_0': 'xy'},  # Two letter strings should also fail
                           [1, 2, 3], [1, 2, 3])
 
@@ -192,11 +191,10 @@ class TestInferenceForRegressions(unittest.TestCase):
         optimiser_method = 'sum_of_squares'
         variable_parameters = ['c_0', 'c_1', 'c_2', 'y_0']
 
-        inference = ParameterInference(self.dimer_problem,
+        inference = Inference(self.dimer_problem,
                                        parameters,
                                        initial_conditions,
                                        variable_parameters,
-                                       self.observed_timepoints,
                                        self.observed_trajectories,
                                        method=optimiser_method)
         inference_result = inference.infer()
@@ -213,11 +211,10 @@ class TestInferenceForRegressions(unittest.TestCase):
         optimiser_method = 'sum_of_squares'
         variable_parameters = ['c_0', 'c_1', 'c_2', 'y_0']
 
-        inference = ParameterInference(self.dimer_problem,
+        inference = Inference(self.dimer_problem,
                                        parameters,
                                        initial_conditions,
                                        variable_parameters,
-                                       self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
@@ -239,11 +236,10 @@ class TestInferenceForRegressions(unittest.TestCase):
 
         optimiser_method = 'gamma'
 
-        inference = ParameterInference(self.dimer_problem,
+        inference = Inference(self.dimer_problem,
                                        starting_params,
                                        starting_initial_conditions,
                                        variable_parameters,
-                                       self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
@@ -265,11 +261,10 @@ class TestInferenceForRegressions(unittest.TestCase):
                                'c_2': (260.0, 330.0),
                                'y_0': (290.0, 320.0)}
 
-        inference = ParameterInference(self.dimer_problem,
+        inference = Inference(self.dimer_problem,
                                        starting_params,
                                        starting_conditions,
                                        variable_parameters,
-                                       self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
@@ -291,11 +286,10 @@ class TestInferenceForRegressions(unittest.TestCase):
                                'c_2': (260.0, 330.0),
                                'y_0': (290.0, 320.0)}
 
-        inference = ParameterInference(self.dimer_problem,
+        inference = Inference(self.dimer_problem,
                                        starting_params,
                                        starting_conditions,
                                        variable_parameters,
-                                       self.observed_timepoints,
                                        # Only means trajectory
                                        [self.observed_trajectories[0]],
                                        method=optimiser_method)
