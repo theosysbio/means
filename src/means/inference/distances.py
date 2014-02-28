@@ -10,8 +10,6 @@ def _supported_distances_lookup():
             'normal': normal,
             'lognormal': lognormal}
 
-SUPPORTED_DISTANCES = sorted(_supported_distances_lookup().keys())
-
 def get_distance_function(distance):
     """
     Returns the distance function from the string name provided

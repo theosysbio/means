@@ -18,6 +18,7 @@ from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
+__all__ = ['Inference', 'InferenceWithRestarts']
 
 # value returned if parameters, means or variances < 0
 FTOL = 0.000001
@@ -667,7 +668,7 @@ class InferenceWithRestarts(object):
             starting_parameters = variables[:len(self.starting_parameter_ranges)]
             starting_conditions = variables[len(self.starting_parameter_ranges):]
 
-            inference_objects.append(ParameterInference(self.problem,
+            inference_objects.append(Inference(self.problem,
                                                         starting_parameters,
                                                         starting_conditions,
                                                         self.variable_parameters,
@@ -724,7 +725,7 @@ class InferenceWithRestarts(object):
 
 
 
-class ParameterInference(object):
+class Inference(object):
 
     __problem = None
     __starting_parameters_with_variability = None

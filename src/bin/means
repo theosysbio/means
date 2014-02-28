@@ -9,7 +9,7 @@ from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
-from means.inference.inference import parse_experimental_data_file, ParameterInference, InferenceWithRestarts
+from means.inference.inference import parse_experimental_data_file, Inference, InferenceWithRestarts
 
 def printOptions():
     print "\nList of possible options:"
@@ -195,7 +195,7 @@ def run():
                                               observed_trajectories,
                                               method=optimiser_method)
         else:
-            inference = ParameterInference(problem, param,
+            inference = Inference(problem, param,
                                            initcond, variable_parameters,
                                            observed_trajectories,
                                            method=optimiser_method)
