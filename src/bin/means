@@ -220,8 +220,6 @@ def run():
         restart_results.sort(key=lambda x: x.distance_at_minimum, reverse=False)
         to_file(restart_results, inferfile)
         if plot:
-            from matplotlib import pyplot as plt
             restart_results[0].plot()
-            plt.show()
 
 run()

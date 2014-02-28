@@ -317,47 +317,94 @@ class InferenceResult(SerialisableObject):
         timepoints = self.observed_trajectories[0].timepoints
         return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
 
-    def plot(self, plot_intermediate_solutions=False):
+    def plot(self, plot_intermediate_solutions=False, filter_plots_function=None):
         """
         Plot the inference result.
 
         :param plot_intermediate_solutions: plot the trajectories resulting from the intermediate solutions as well
+        :param filter_plots_function: A function that takes a trajectory object and returns True if it should be
+                                      plotted and false if not. None plots all available trajectories
         """
         from matplotlib import pyplot as plt
+        if filter_plots_function is None:
+            filter_plots_function = lambda x: True
+
         observed_trajectories = self.observed_trajectories
 
         starting_trajectories = self.starting_trajectories
         optimal_trajectories = self.optimal_trajectories
 
         if plot_intermediate_solutions:
-            intermediate_trajectories = self.intermediate_trajectories
+            intermediate_trajectories_list = self.intermediate_trajectories
         else:
-            intermediate_trajectories = []
+            intermediate_trajectories_list = []
 
-        for observed_trajectory in observed_trajectories:
+        trajectories_by_description = {}
+        for trajectory in observed_trajectories:
+            if not filter_plots_function(trajectory):
+                continue
+
+            try:
+                list_ = trajectories_by_description[trajectory.description]
+            except KeyError:
+                list_ = []
+                trajectories_by_description[trajectory.description] = list_
+
+            list_.append((trajectory, {'label': "Observed data", 'marker': '+',
+                                       'color': 'black', 'linestyle': 'None'}))
+
+        for trajectory in starting_trajectories:
+            if not filter_plots_function(trajectory):
+                continue
+
+            try:
+                list_ = trajectories_by_description[trajectory.description]
+            except KeyError:
+                list_ = []
+                trajectories_by_description[trajectory.description] = list_
+
+            list_.append((trajectory, {'label': "Starting trajectory", 'color': 'green'}))
+
+        seen_intermediate_trajectories = set()
+        for i, intermediate_trajectories in enumerate(intermediate_trajectories_list):
+            for trajectory in intermediate_trajectories:
+                if not filter_plots_function(trajectory):
+                    continue
+
+                seen = trajectory.description in seen_intermediate_trajectories
+                # Only set label once
+                if not seen:
+                    label = 'Intermediate Trajectories'
+                    seen_intermediate_trajectories.add(trajectory.description)
+                else:
+                    label = ''
+
+                list_ = trajectories_by_description.get(trajectory.description, [])
+                list_.append((trajectory, {'label': label, 'alpha': 0.1, 'color': 'cyan'}))
+
+
+        for trajectory in optimal_trajectories:
+            if not filter_plots_function(trajectory):
+                continue
+
+            try:
+                list_ = trajectories_by_description[trajectory.description]
+            except KeyError:
+                list_ = []
+                trajectories_by_description[trajectory.description] = list_
+
+            list_.append((trajectory, {'label': "Optimal Trajectory", 'color': 'blue'}))
+
+        for description, trajectories_list in trajectories_by_description.iteritems():
             plt.figure()
-            description = observed_trajectory.description
             plt.title(description)
-            observed_trajectory.plot('+', label="Observed data")
-            for trajectory in starting_trajectories:
-                if trajectory.description == description:
-                    trajectory.plot(label="Starting trajectory")
-                    break
 
-            for trajectory in optimal_trajectories:
-                if trajectory.description == description:
-                    trajectory.plot(label="Optimal trajectory")
-                    break
-
-            for i, intermediate_trajectories in enumerate(intermediate_trajectories):
-                for trajectory in intermediate_trajectories:
-                    if trajectory.description == description:
-                        # Only add the label once
-                        label = 'Intermediate trajectories' if i == 0 else ''
-                        trajectory.plot(label=label, alpha=0.1, color='red')
-
+            for trajectory, kwargs in trajectories_list:
+                trajectory.plot(**kwargs)
 
             plt.legend()
+
+        plt.show()
 
 
 
