@@ -589,7 +589,6 @@ class InferenceWithRestarts(object):
     __starting_parameter_ranges = None
     __starting_conditions_ranges = None
     __variable_parameters = None
-    __observed_timepoints = None
     __observed_trajectories = None
     _return_intermediate_solutions = None
 
@@ -613,7 +612,7 @@ class InferenceWithRestarts(object):
 
     def __init__(self, problem, number_of_samples,
                  starting_parameter_ranges, starting_conditions_ranges,
-                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 variable_parameters, observed_trajectories, method='sum_of_squares',
                  return_intermediate_solutions=False,
                  **simulation_kwargs):
         """
@@ -661,8 +660,10 @@ class InferenceWithRestarts(object):
         self.__starting_conditions_ranges = starting_conditions_ranges
 
         self.__variable_parameters = variable_parameters
-        self.__observed_timepoints = observed_timepoints
         self.__observed_trajectories = observed_trajectories
+        if not observed_trajectories:
+            raise ValueError('No observed trajectories provided. Need at least one to perform parameter inference')
+
         self.__method = method
         self._return_intermediate_solutions = return_intermediate_solutions
         self.__simulation_kwargs = simulation_kwargs
@@ -682,7 +683,6 @@ class InferenceWithRestarts(object):
                                                         starting_parameters,
                                                         starting_conditions,
                                                         self.variable_parameters,
-                                                        self.observed_timepoints,
                                                         self.observed_trajectories,
                                                         method=self.method,
                                                         return_intermediate_solutions=self._return_intermediate_solutions,
@@ -721,10 +721,6 @@ class InferenceWithRestarts(object):
         return self.__variable_parameters
 
     @property
-    def observed_timepoints(self):
-        return self.__observed_timepoints
-
-    @property
     def observed_trajectories(self):
         return self.__observed_trajectories
 
@@ -755,7 +751,7 @@ class ParameterInference(object):
     __simulation_kwargs = None
 
     def __init__(self, problem, starting_parameters, starting_conditions,
-                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 variable_parameters, observed_trajectories, method='sum_of_squares',
                  return_intermediate_solutions=False,
                  **simulation_kwargs):
         """
@@ -810,8 +806,11 @@ class ParameterInference(object):
                                                                      starting_conditions_with_variability)))
         self.__constraints = constraints
 
-        self.__observed_timepoints = observed_timepoints
         self.__observed_trajectories = observed_trajectories
+        if not observed_trajectories:
+            raise ValueError('No observed trajectories provided. Need at least one to perform parameter inference')
+
+        self.__observed_timepoints = observed_trajectories[0].timepoints
 
         self._method = method
         self.__simulation_kwargs = simulation_kwargs
