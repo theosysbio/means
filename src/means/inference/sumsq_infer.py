@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.optimize import fmin
 from sympy import Symbol
+from means.inference.hypercube import hypercube
 from means.io.serialise import SerialisableObject
 
 from means.util.decorators import memoised_property
@@ -413,6 +414,151 @@ class InferenceResult(SerialisableObject):
             and self.solutions == other.solutions \
             and self._simulation == other._simulation
 
+class InferenceResultsCollection(object):
+    __inference_results = None
+
+    def __init__(self, inference_results):
+        self.__inference_results = sorted(inference_results, key=lambda x: x.distance_at_minimum)
+
+    @property
+    def results(self):
+        return self.__inference_results
+
+    @property
+    def number_of_results(self):
+        return len(self.results)
+
+    @property
+    def best(self):
+        return self.__inference_results[0]
+
+    def __unicode__(self):
+        return u"""
+        {self.__class__!r}
+
+        Number of inference results in collection: {self.number_of_results}
+        Best:
+        {self.best!r}
+        """.format(self=self)
+
+    def __str__(self):
+        return unicode(self).encode("utf8")
+
+    def __repr__(self):
+        return str(self)
+
+
+class InferenceWithRestarts(object):
+
+    __problem = None
+    __number_of_samples = None
+    __starting_parameter_ranges = None
+    __starting_conditions_ranges = None
+    __variable_parameters = None
+    __observed_timepoints = None
+    __observed_trajectories = None
+
+    __method = None
+    __simulation_kwargs = None
+
+    def __init__(self, problem, number_of_samples,
+                 starting_parameter_ranges, starting_conditions_ranges,
+                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 **simulation_kwargs):
+        """
+
+        :param problem:
+        :param starting_parameter_ranges:
+        :param starting_conditions_ranges:
+        :param variable_parameters:
+        :param observed_timepoints:
+        :param observed_trajectories:
+        :param method:
+        :param simulation_kwargs:
+        """
+
+        self.__problem = problem
+        self.__number_of_samples = number_of_samples
+        self.__starting_parameter_ranges = starting_parameter_ranges
+        self.__starting_conditions_ranges = starting_conditions_ranges
+
+        self.__variable_parameters = variable_parameters
+        self.__observed_timepoints = observed_timepoints
+        self.__observed_trajectories = observed_trajectories
+        self.__method = method
+        self.__simulation_kwargs = simulation_kwargs
+
+    @memoised_property
+    def _inference_objects(self):
+
+        full_list_of_ranges = self.starting_parameter_ranges[:] + self.starting_conditions_ranges[:]
+        variables_collection = hypercube(self.number_of_samples, full_list_of_ranges)
+
+        inference_objects = []
+        for variables in variables_collection:
+            starting_parameters = variables[:len(self.starting_parameter_ranges)]
+            starting_conditions = variables[len(self.starting_parameter_ranges):]
+
+            inference_objects.append(ParameterInference(self.problem,
+                                                        starting_parameters,
+                                                        starting_conditions,
+                                                        self.variable_parameters,
+                                                        self.observed_timepoints,
+                                                        self.observed_trajectories,
+                                                        method=self.method,
+                                                        **self.simulation_kwargs))
+
+        return inference_objects
+
+    def infer(self):
+
+        results = [x.infer() for x in self._inference_objects]
+        results = sorted(results, key=lambda x: x.distance_at_minimum)
+
+        return InferenceResultsCollection(results)
+
+    @property
+    def problem(self):
+        """
+        :rtype: ODEProblem
+        """
+        return self.__problem
+
+    @property
+    def number_of_samples(self):
+        return self.__number_of_samples
+
+    @property
+    def starting_parameter_ranges(self):
+        return self.__starting_parameter_ranges
+
+    @property
+    def starting_conditions_ranges(self):
+        return self.__starting_conditions_ranges
+
+    @property
+    def variable_parameters(self):
+        return self.__variable_parameters
+
+    @property
+    def observed_timepoints(self):
+        return self.__observed_timepoints
+
+    @property
+    def observed_trajectories(self):
+        return self.__observed_trajectories
+
+    @property
+    def method(self):
+        return self.__method
+
+    @property
+    def simulation_kwargs(self):
+        return self.__simulation_kwargs
+
+
+
+
 class ParameterInference(object):
 
     __problem = None
@@ -423,6 +569,75 @@ class ParameterInference(object):
     __observed_trajectories = None
     _method = None
     _simulation = None
+
+    __simulation_kwargs = None
+
+    def __init__(self, problem, starting_parameters, starting_conditions,
+                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 **simulation_kwargs):
+        """
+
+        :param problem: ODEProblem to infer data for
+        :type problem: ODEProblem
+        :param starting_parameters: A list of starting values for each of the model's parameters
+        :type starting_parameters: iterable
+        :param starting_conditions: A list of starting vlaues for each of the initial conditions.
+                                    All unspecified initial conditions will be set to zero
+        :type starting_conditions: iterable
+        :param variable_parameters: A dictionary of variable parameters, in the format
+                                    ``{parameter_symbol: (min_value, max_value)}`` where the range
+                                    ``(min_value, max_value)`` is the range of the allowed parameter values.
+                                    If the range is None, parameters are assumed to be unbounded.
+        :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
+        :param method: Method of calculating the data fit. Currently supported values are
+              - 'sum_of_squares' -  min sum of squares optimisation
+              - 'gamma' - maximum likelihood optimisation assuming gamma distribution
+              - 'normal'- maximum likelihood optimisation assuming normal distribution
+              - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
+        """
+        self.__problem = problem
+
+        variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
+
+        assert(len(starting_parameters) == len(problem.constants))
+
+        if len(starting_conditions) < problem.number_of_equations:
+            starting_conditions = starting_conditions[:] \
+                                  + [0.0] * (problem.number_of_equations - len(starting_conditions))
+
+
+        starting_parameters_with_variability, parameter_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.constants, starting_parameters,
+                                                                   variable_parameters)
+
+        starting_conditions_with_variability, initial_condition_constraints = \
+            self._generate_values_with_variability_and_constraints(self.problem.left_hand_side, starting_conditions,
+                                                                   variable_parameters)
+
+        self.__starting_parameters_with_variability = starting_parameters_with_variability
+        self.__starting_conditions_with_variability = starting_conditions_with_variability
+
+        constraints = parameter_constraints + initial_condition_constraints
+
+        assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
+                                                                     starting_parameters_with_variability +
+                                                                     starting_conditions_with_variability)))
+        self.__constraints = constraints
+
+        self.__observed_timepoints = observed_timepoints
+        self.__observed_trajectories = observed_trajectories
+
+        self._method = method
+        self.__simulation_kwargs = simulation_kwargs
+
+    @memoised_property
+    def _simulation(self):
+        return Simulation(self.problem, **self.simulation_kwargs)
+
+    @property
+    def simulation_kwargs(self):
+        return self.__simulation_kwargs
 
     def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
@@ -496,64 +711,6 @@ class ParameterInference(object):
         return variable_parameters_symbolic
 
 
-    def __init__(self, problem, starting_parameters, starting_conditions,
-                 variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
-                 **simulation_kwargs):
-        """
-
-        :param problem: ODEProblem to infer data for
-        :type problem: ODEProblem
-        :param starting_parameters: A list of starting values for each of the model's parameters
-        :type starting_parameters: iterable
-        :param starting_conditions: A list of starting vlaues for each of the initial conditions.
-                                    All unspecified initial conditions will be set to zero
-        :type starting_conditions: iterable
-        :param variable_parameters: A dictionary of variable parameters, in the format
-                                    ``{parameter_symbol: (min_value, max_value)}`` where the range
-                                    ``(min_value, max_value)`` is the range of the allowed parameter values.
-                                    If the range is None, parameters are assumed to be unbounded.
-        :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
-        :param method: Method of calculating the data fit. Currently supported values are
-              - 'sum_of_squares' -  min sum of squares optimisation
-              - 'gamma' - maximum likelihood optimisation assuming gamma distribution
-              - 'normal'- maximum likelihood optimisation assuming normal distribution
-              - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
-        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
-        """
-        self.__problem = problem
-
-        variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
-
-        assert(len(starting_parameters) == len(problem.constants))
-
-        if len(starting_conditions) < problem.number_of_equations:
-            starting_conditions = starting_conditions[:] \
-                                  + [0.0] * (problem.number_of_equations - len(starting_conditions))
-
-
-        starting_parameters_with_variability, parameter_constraints = \
-            self._generate_values_with_variability_and_constraints(self.problem.constants, starting_parameters,
-                                                                   variable_parameters)
-
-        starting_conditions_with_variability, initial_condition_constraints = \
-            self._generate_values_with_variability_and_constraints(self.problem.left_hand_side, starting_conditions,
-                                                                   variable_parameters)
-
-        self.__starting_parameters_with_variability = starting_parameters_with_variability
-        self.__starting_conditions_with_variability = starting_conditions_with_variability
-
-        constraints = parameter_constraints + initial_condition_constraints
-
-        assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
-                                                                     starting_parameters_with_variability +
-                                                                     starting_conditions_with_variability)))
-        self.__constraints = constraints
-
-        self.__observed_timepoints = observed_timepoints
-        self.__observed_trajectories = observed_trajectories
-
-        self._method = method
-        self._simulation = Simulation(self.problem, **simulation_kwargs)
 
     @memoised_property
     def _distance_between_trajectories_function(self):
