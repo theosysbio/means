@@ -501,8 +501,10 @@ class InferenceResult(SerialisableObject):
             and self.solutions == other.solutions \
             and self._simulation == other._simulation
 
-class InferenceResultsCollection(object):
+class InferenceResultsCollection(SerialisableObject):
     __inference_results = None
+
+    yaml_tag = '!serialisable-results-collection'
 
     def __init__(self, inference_results):
         self.__inference_results = sorted(inference_results, key=lambda x: x.distance_at_minimum)
@@ -594,6 +596,7 @@ class InferenceWithRestarts(object):
 
     __method = None
     __simulation_kwargs = None
+
 
     def _validate_range(self, range_):
         validated_range = []
