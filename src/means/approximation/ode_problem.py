@@ -284,6 +284,10 @@ class ODEProblem(SerialisableObject, LatexPrintableObject):
         return self.__constants
 
     @property
+    def number_of_parameters(self):
+        return len(self.constants)
+
+    @property
     def method(self):
         return self.__method
 

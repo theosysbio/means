@@ -3,7 +3,7 @@ import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
 from means.approximation import ODEProblem
 from means.approximation.ode_problem import Moment, VarianceTerm
-from means.inference.sumsq_infer import InferenceResult
+from means.inference.inference import InferenceResult
 from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
                                          MODEL_HES1, MODEL_DIMERISATION
