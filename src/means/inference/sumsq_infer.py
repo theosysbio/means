@@ -604,9 +604,11 @@ class InferenceWithRestarts(object):
             try:
                 item = tuple(map(float, item))
             except (ValueError, TypeError):
-                raise ValueError('Invalid range provided: expected ``(min_value, max_value)`` got {0!r}'.format(item))
+                raise ValueError('Invalid range provided: expected ``(min_value, max_value)``, '
+                                 'where min_value and max_value are both floats, got {0!r} instead'.format(item))
             if len(item) != 2 or item[0] > item[1]:
-                raise ValueError('Invalid range provided: expected: ``(min_value, max_value)`` got {0!r}'.format(item))
+                raise ValueError('Invalid range provided: expected: ``(min_value, max_value)`` '
+                                 'where ``min_value < max_value``, got {0!r} instead'.format(item))
 
             validated_range.append(item)
 
