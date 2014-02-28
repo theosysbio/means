@@ -292,7 +292,7 @@ class InferenceResult(SerialisableObject):
         """
         Solutions at each each iteration of optimisation.
         :return: a list of (parameters, conditions) pairs
-        :rtype: list[tuple]
+        :rtype: list[tuple]|None
         """
         return self.__solutions
 
@@ -314,10 +314,13 @@ class InferenceResult(SerialisableObject):
 
     @memoised_property
     def intermediate_trajectories(self):
+        if self.solutions is None:
+            return []
+
         timepoints = self.observed_trajectories[0].timepoints
         return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
 
-    def plot(self, plot_intermediate_solutions=False, filter_plots_function=None, legend=True,
+    def plot(self, plot_intermediate_solutions=True, filter_plots_function=None, legend=True,
              kwargs_observed_data=None, kwargs_starting_trajectories=None, kwargs_optimal_trajectories=None,
              kwargs_intermediate_trajectories=None):
         """
@@ -576,6 +579,10 @@ class InferenceResultsCollection(object):
                            kwargs_optimal_trajectories={'label': 'Best Optimised Trajectory'})
 
 class InferenceWithRestarts(object):
+    """
+    Parameter Inference Method that utilises multiple seed points for the optimisation.
+
+    """
 
     __problem = None
     __number_of_samples = None
@@ -584,35 +591,80 @@ class InferenceWithRestarts(object):
     __variable_parameters = None
     __observed_timepoints = None
     __observed_trajectories = None
+    _return_intermediate_solutions = None
 
     __method = None
     __simulation_kwargs = None
 
+    def _validate_range(self, range_):
+        validated_range = []
+        for item in range_:
+            try:
+                item = tuple(map(float, item))
+            except (ValueError, TypeError):
+                raise ValueError('Invalid range provided: expected ``(min_value, max_value)`` got {0!r}'.format(item))
+            if len(item) != 2 or item[0] > item[1]:
+                raise ValueError('Invalid range provided: expected: ``(min_value, max_value)`` got {0!r}'.format(item))
+
+            validated_range.append(item)
+
+        return validated_range
+
+
     def __init__(self, problem, number_of_samples,
                  starting_parameter_ranges, starting_conditions_ranges,
                  variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 return_intermediate_solutions=False,
                  **simulation_kwargs):
         """
 
-        :param problem:
-        :param starting_parameter_ranges:
-        :param starting_conditions_ranges:
-        :param variable_parameters:
-        :param observed_timepoints:
-        :param observed_trajectories:
-        :param method:
-        :param simulation_kwargs:
+        :param problem: Problem to infer parameters for
+        :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
+        :param number_of_samples: Number of the starting points to randomly pick
+        :param starting_parameter_ranges: Valid initialisation ranges for the parameters
+        :param starting_conditions_ranges: Valid initialisation ranges for the initial conditions.
+                                           If some initial conditions are not set, they will default to 0.
+        :param variable_parameters: A dictionary of variable parameters, in the format
+                                    ``{parameter_symbol: (min_value, max_value)}`` where the range
+                                    ``(min_value, max_value)`` is the range of the allowed parameter values.
+                                    If the range is None, parameters are assumed to be unbounded.
+        :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
+        :param method: Method of calculating the data fit. Currently supported values are
+              - 'sum_of_squares' -  min sum of squares optimisation
+              - 'gamma' - maximum likelihood optimisation assuming gamma distribution
+              - 'normal'- maximum likelihood optimisation assuming normal distribution
+              - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+        :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
+                                              routine considered as well.
+        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
         """
 
         self.__problem = problem
         self.__number_of_samples = number_of_samples
+
+
+        starting_parameter_ranges = self._validate_range(starting_parameter_ranges)
         self.__starting_parameter_ranges = starting_parameter_ranges
+
+        if len(starting_parameter_ranges) != problem.number_of_parameters:
+            raise ValueError('Incorrect number of parameter ranges provided. '
+                             'Expected exactly {0}, got {1}'.format(problem.number_of_parameters,
+                                                            len(starting_parameter_ranges)))
+
+        starting_conditions_ranges = self._validate_range(starting_conditions_ranges)
+
+        if len(starting_conditions_ranges) > problem.number_of_equations:
+            raise ValueError('Incorrect number of parameter ranges provided. '
+                             'Expected at most {0}, got {1}'.format(problem.number_of_equations,
+                                                                    len(starting_conditions_ranges)))
+
         self.__starting_conditions_ranges = starting_conditions_ranges
 
         self.__variable_parameters = variable_parameters
         self.__observed_timepoints = observed_timepoints
         self.__observed_trajectories = observed_trajectories
         self.__method = method
+        self._return_intermediate_solutions = return_intermediate_solutions
         self.__simulation_kwargs = simulation_kwargs
 
     @memoised_property
@@ -633,6 +685,7 @@ class InferenceWithRestarts(object):
                                                         self.observed_timepoints,
                                                         self.observed_trajectories,
                                                         method=self.method,
+                                                        return_intermediate_solutions=self._return_intermediate_solutions,
                                                         **self.simulation_kwargs))
 
         return inference_objects
@@ -686,6 +739,7 @@ class InferenceWithRestarts(object):
 
 
 
+
 class ParameterInference(object):
 
     __problem = None
@@ -696,11 +750,13 @@ class ParameterInference(object):
     __observed_trajectories = None
     _method = None
     _simulation = None
+    __return_itnermediate_solutions = None
 
     __simulation_kwargs = None
 
     def __init__(self, problem, starting_parameters, starting_conditions,
                  variable_parameters, observed_timepoints, observed_trajectories, method='sum_of_squares',
+                 return_intermediate_solutions=False,
                  **simulation_kwargs):
         """
 
@@ -721,6 +777,8 @@ class ParameterInference(object):
               - 'gamma' - maximum likelihood optimisation assuming gamma distribution
               - 'normal'- maximum likelihood optimisation assuming normal distribution
               - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
+        :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
+                                              routine considered as well.
         :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
         """
         self.__problem = problem
@@ -757,6 +815,8 @@ class ParameterInference(object):
 
         self._method = method
         self.__simulation_kwargs = simulation_kwargs
+
+        self._return_intermediate_solutions = return_intermediate_solutions
 
     @memoised_property
     def _simulation(self):
@@ -879,18 +939,27 @@ class ParameterInference(object):
             dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
             return dist
 
-        optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs \
-            = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True, retall=True)
+        result = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True,
+                      retall=self._return_intermediate_solutions)
+
+        if self._return_intermediate_solutions:
+            optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs = result
+        else:
+            optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag = result
+            all_vecs = None
 
         optimal_parameters, optimal_initial_conditions = extract_params_from_i0(optimised_data,
                                                                                 self.starting_parameters_with_variability,
                                                                                 self.starting_conditions_with_variability)
 
-        solutions = []
+        if all_vecs is not None:
+            solutions = []
 
-        for v in all_vecs:
-            solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
-                                                    self.starting_conditions_with_variability))
+            for v in all_vecs:
+                solutions.append(extract_params_from_i0(v, self.starting_parameters_with_variability,
+                                                        self.starting_conditions_with_variability))
+        else:
+            solutions=None
 
         result = InferenceResult(problem, self.observed_trajectories,
                                  self.starting_parameters, self.starting_conditions,
