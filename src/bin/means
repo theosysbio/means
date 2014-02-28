@@ -11,7 +11,7 @@ from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
-from means.inference.sumsq_infer import parse_experimental_data_file, ParameterInference
+from means.inference.sumsq_infer import parse_experimental_data_file, ParameterInference, InferenceWithRestarts
 
 
 def printOptions():
@@ -190,36 +190,22 @@ def run():
             print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
                   'for all parameter values.'.format(tpfile)
             sys.exit(1)
+        optimiser_method = distribution if distribution else 'sum_of_squares'
+
         if restart:
-            all_params = hypercube(int(nRestart), param[:] + initcond[:])
-            # TODO: hypercube is a bit funny in how it returns stuff
-            all_params = [(x[:len(param)], x[len(param):]) for x in all_params]
+            inference = InferenceWithRestarts(problem, int(nRestart),
+                                              param, initcond, variable_parameters,
+                                              observed_trajectories,
+                                              method=optimiser_method)
         else:
-            all_params = [(param, initcond)]
-
-        restart_results = []
-        for param_n, initcond_n in all_params:
-             # FIXME: this should not be here
-            if len(initcond_n) != problem.number_of_equations:
-                # This just applies padding of [0, False] to unspecified initconditions
-                # consider moving it to appropriate parse function instead
-                diff = problem.number_of_equations - len(initcond_n)
-                initcond_n += [0] * diff
-                initcond_full = initcond_n
-
-            optimiser_method = distribution if distribution else 'sum_of_squares'
-            optimiser = ParameterInference(problem, param_n,
-                                           initcond_n, variable_parameters,
-                                           observed_timepoints,
+            inference = ParameterInference(problem, param,
+                                           initcond, variable_parameters,
                                            observed_trajectories,
                                            method=optimiser_method)
-            result = optimiser.infer()
-
-            restart_results.append(result)
-
-        restart_results.sort(key=lambda x: x.distance_at_minimum, reverse=False)
-        to_file(restart_results, inferfile)
+        result = inference.infer()
+        result.to_file(inferfile)
         if plot:
-            restart_results[0].plot()
-
+            from matplotlib import pyplot as plt
+            result.plot()
+            plt.show()
 run()

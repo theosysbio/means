@@ -50,7 +50,7 @@ def paramtime(tpfile, restart, limit, problem):
             params = lines[i + 1].rstrip()
             if params != '':
                 params = params.split()
-                param = [float(p) for p in params]
+                param = map(float, params)
 
             # Or, if random restarts are used, two lines signifying upper and lower limits for starting values respectively
             # TODO: what happens when two lines given but restart not used?
@@ -58,10 +58,10 @@ def paramtime(tpfile, restart, limit, problem):
             if restart:
                 params = lines[i + 2].rstrip()
                 params = params.split()
-                param1 = [float(p) for p in params]
+                param1 = map(float, params)
                 pranges = []
                 for j in range(len(param)):
-                    pranges.append((param[j], param1[j]))
+                    pranges.append((param1[j], param[j]))
                 param = pranges
 
                 # At this point param is either a list of floats, if --random not used,
@@ -85,7 +85,7 @@ def paramtime(tpfile, restart, limit, problem):
                 initcond1 = [float(ic) for ic in initconds]
                 icranges = []
                 for j in range(len(initcond)):
-                    icranges.append((initcond[j], initcond1[j]))
+                    icranges.append((initcond1[j], initcond[j]))
                 initcond = icranges
 
         # Fixed versus variable moments (1) means variable
