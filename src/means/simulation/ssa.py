@@ -22,7 +22,7 @@ class SSASimulator(SerialisableObject):
     def reset_random_seed(self, random_seed=None):
         self.__rng = np.random.RandomState(random_seed)
 
-    def simulate_system(self, parameters, initial_conditions, tmax):
+    def simulate_system(self, parameters, initial_conditions, t_max):
 
         """
         Performs one SSA simulation for the given parameters and initial conditions.
@@ -34,7 +34,7 @@ class SSASimulator(SerialisableObject):
                         Must be in the same order as these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
 
-        :param tmax: The time when the simulation should stop. The simulation will
+        :param t_max: The time when the simulation should stop. The simulation will
          stop before if no species are present (since, in this case, no reaction can occur)
 
         :return:
@@ -50,7 +50,7 @@ class SSASimulator(SerialisableObject):
                                                         propensities, modules="numpy")
 
         # perform one stochastic simulation
-        time_points, species_over_time = self._gssa(initial_conditions,tmax)
+        time_points, species_over_time = self._gssa(initial_conditions,t_max)
 
         # build trajectories
         trajectories = [Trajectory(time_points,spot,desc) for
@@ -59,6 +59,15 @@ class SSASimulator(SerialisableObject):
         return trajectories
 
     def _gssa(self, initial_conditions, t_max):
+
+        """
+        This function is inspired from Yoav Ram's code available at:
+        http://nbviewer.ipython.org/github/yoavram/ipython-notebooks/blob/master/GSSA.ipynb
+
+        :param initial_conditions: the initial conditions of the system
+        :param t_max:  the time when the simulation should stop
+        :return:
+        """
 
         # set the initial conditions and t0 = 0.
         species_over_time = [np.array(initial_conditions).astype("int16")]
