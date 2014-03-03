@@ -24,7 +24,7 @@ class UniqueNameInitialisationMixin(object):
 class SolverException(Exception):
 
     def __init__(self, base_exception):
-        message = '{0}: {1}'.format(base_exception.__class__.__name__, base_exception.message)
+        message = '{0.__class__.__name__}: {0!s}'.format(base_exception)
         super(SolverException, self).__init__(message)
 
 def available_solvers(with_sensitivity_support=False):
