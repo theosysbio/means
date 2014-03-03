@@ -6,11 +6,9 @@ class ClosureBase(object):
 
     _max_order = None
 
-
     def __init__(self,max_order,multivariate=True):
         self._max_order = max_order
         self.__is_multivariate = multivariate
-
 
     @property
     def is_multivariate(self):
@@ -25,13 +23,12 @@ class ClosureBase(object):
                                   `compute_closed_raw_moments()` is not implemented. ")
 
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
-        """
+        r"""
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
-
-        :param closed_raw_moments: the expression of all raw moments (expect 0th) in terms of
         parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
+
         :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-        :param k_counter: a list of `Moment` object corresponding to raw moment symbols an descriptors
+        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
         :return: the central moments where raw moments have been replaced by parametric expressions
         :rtype: sympy.Matrix
         """
@@ -49,6 +46,17 @@ class ClosureBase(object):
 
 
     def close(self, mfk, central_from_raw_exprs, n_counter, k_counter):
+
+        """
+        In MFK, replaces symbol for high order (order == max_order+1) by parametric expressions.
+        That is expressions depending on lower order moments such as means, variances, covariances and so on.
+
+        :param mfk: the right hand side equations containing symbols for high order central moments
+        :param central_from_raw_exprs: expressions of central moments in terms of raw moments
+        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :return: the modified MFK
+        """
 
         # we obtain expressions for central moments in terms of variances/covariances
         closed_central_moments = self._compute_closed_central_moments(central_from_raw_exprs, n_counter, k_counter)
@@ -71,7 +79,7 @@ class ClosureBase(object):
         '''
         In univariate case, set the cross-terms to 0.
         :param closed_central_moments: matrix of closed central moment
-        :param prob_moments: moment matrix
+        :param n_counter: a list of moment symbols
         :return:  a matrix of new closed central moments with cross-terms equal to 0
         '''
         positive_n_counter = [n for n in n_counter if n.order > 1]
@@ -87,14 +95,16 @@ class ScalarClosure(ClosureBase):
         super(ScalarClosure,self).__init__(max_order, False)
         self.__value = value
 
+    @property
+    def value(self):
+        return self.__value
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         """
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 
-        :param closed_raw_moments: the expression of all raw moments (expect 0th) in terms of
-        parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
+
         :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-        :param k_counter: a list of `Moment` object corresponding to raw moment symbols an descriptors
+        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
         :return: the central moments where raw moments have been replaced by parametric expressions
         :rtype: sympy.Matrix
         """

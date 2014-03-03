@@ -7,7 +7,7 @@ from closure_scalar import ClosureBase
 
 class NormalClosure(ClosureBase):
 
-    def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
+    def _get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         r"""
         Compute second order moments i.e. variances and covariances
         Covariances equal to 0 in univariate case
@@ -31,7 +31,7 @@ class NormalClosure(ClosureBase):
             return sp.Integer(0)
 
 
-    def compute_one_closed_central_moment(self, moment, covariance_matrix):
+    def _compute_one_closed_central_moment(self, moment, covariance_matrix):
         r"""
         Compute each row of closed central moment based on Isserlis' Theorem of calculating higher order moments
         of multivariate normal distribution in terms of covariance matrix
@@ -61,7 +61,7 @@ class NormalClosure(ClosureBase):
         # For even moment order other than 2, generate a list of partitions of the indices of covariances
         else:
             each_row = []
-            for idx_pair in self.generate_partitions(len(list_for_partition)/2,list_for_partition):
+            for idx_pair in self._generate_partitions(len(list_for_partition)/2,list_for_partition):
                 # Retrieve the pairs of covariances using the pairs of partitioned indices
                 l = [covariance_matrix[i, j] for i,j in idx_pair]
                 # Calculate the product of each pair of covariances
@@ -73,12 +73,13 @@ class NormalClosure(ClosureBase):
 
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         n_species = len([None for pm in k_counter if pm.order == 1])
-        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
+        covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self._get_covariance_symbol(n_counter,x,y))
         positive_n_counter = [n for n in n_counter if n.order > 1]
-        out_mat = [self.compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
+        out_mat = [self._compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
         return sp.Matrix(out_mat)
 
-    def generate_partitions(self, k, list_for_par, accum=[[]], index=0):
+    #todo use sympy built in partitions
+    def _generate_partitions(self, k, list_for_par, accum=[[]], index=0):
         r"""
 
         :param list_for_par: the list for partition
@@ -98,12 +99,12 @@ class NormalClosure(ClosureBase):
         for set_i in range(len(accum)):
             clone_new = copy.deepcopy(accum)
             clone_new[set_i].append([element])
-            result.extend(self.generate_partitions(k - 1, list_for_par, clone_new, index + 1))
+            result.extend(self._generate_partitions(k - 1, list_for_par, clone_new, index + 1))
 
             for elem_i in range(len(accum[set_i])):
                 clone_new = copy.deepcopy(accum)
                 clone_new[set_i][elem_i].append(element)
-                result.extend(self.generate_partitions(k, list_for_par,clone_new, index + 1))
+                result.extend(self._generate_partitions(k, list_for_par,clone_new, index + 1))
 
         return [row for row in result if all([(len(r) == 2) for r in row])]
 

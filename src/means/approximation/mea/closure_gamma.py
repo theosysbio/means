@@ -4,14 +4,14 @@ from means.util.sympyhelpers import substitute_all, product
 
 class GammaClosure(ClosureBase):
     def __init__(self, max_order, type=1):
-        super(GammaClosure, self).__init__(max_order, multivariate = (type > 0))
+        super(GammaClosure, self).__init__(max_order, multivariate=(type > 0))
         self.__type = type
 
     @property
     def type(self):
         return self.__type
 
-    def get_parameter_symbols(self, n_counter, k_counter):
+    def _get_parameter_symbols(self, n_counter, k_counter):
         r"""
         Calculates parameters Y expressions and beta coefficients in
         :math:`X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
@@ -91,7 +91,7 @@ class GammaClosure(ClosureBase):
             Y_to_substitute = [sp.Symbol("Y_{0}".format(i))**n for n in range(2, n_moment+1)]
 
             # Obtain alpha term for higher older moments :math: `\mathbb{E}(X_i^m) = (\bar\alpha_i)_m\beta_i^m`
-            alpha_m = [self.gamma_factorial(a,n) for n in range(2, n_moment+1)]
+            alpha_m = [self._gamma_factorial(a,n) for n in range(2, n_moment+1)]
 
             # Substitute alpha term for symbolic species
             subs_pairs += zip(Y_to_substitute, alpha_m)
@@ -110,14 +110,14 @@ class GammaClosure(ClosureBase):
         :return:
         """
 
-        alpha_multipliers, beta_multipliers = self.get_parameter_symbols(n_counter, k_counter)
+        alpha_multipliers, beta_multipliers = self._get_parameter_symbols(n_counter, k_counter)
 
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
         return out_mat
 
 
-    def gamma_factorial(self, expr, n):
+    def _gamma_factorial(self, expr, n):
         r"""
         Compute :math:`\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
         See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished

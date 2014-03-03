@@ -14,8 +14,8 @@ def eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities,
         \mathbf{ {n \choose k} } (-1)^{ \mathbf{n-k} } [ \alpha \frac{d\beta}{dt} + \beta \frac{d\alpha}{dt} ]
 
 
-    :param n_counter: see `fcount` function
-    :param k_counter: see `fcount` function
+    :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+    :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
     :param dmu_over_dt: du/dt in paper
     :param species: species matrix: y_0, y_1,..., y_d
     :param propensities: propensities matrix

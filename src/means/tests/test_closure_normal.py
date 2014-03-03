@@ -403,6 +403,6 @@ class TestNormalCloser(unittest.TestCase):
 
 
         closer = NormalClosure(3, multivariate=True)
-        answer = [p for p in closer.generate_partitions(2, test_list_for_partition)]
+        answer = [p for p in closer._generate_partitions(2, test_list_for_partition)]
         self.assertEqual(answer, expected)
 

@@ -16,7 +16,7 @@ def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
 
     :param species: the name of the variables (typically `['y_0', 'y_1', ..., 'y_n']`)
     :param propensity: the reactions describes by the model
-    :param n_counter: a list of central moments
+    :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`s corresponding central moments
     :param stoichiometry_matrix: the stoichiometry matrix
     :return: a matrix in which each row corresponds to a reaction, and each column to an element of counter.
     """

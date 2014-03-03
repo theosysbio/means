@@ -92,33 +92,33 @@ class TestLogNormalCloser(unittest.TestCase):
 
 
         closer = LogNormalClosure(2, multivariate=True)
-        answer = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 0,1)
+        answer = closer._get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 0,1)
 
         self.assertEqual(answer, expected)
 
-        answer1 = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
-        answer2 = closer.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
+        answer1 = closer._get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
+        answer2 = closer._get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, 1,2)
         #logcovariance between species 1 and 2  ==  covariance between sp. 2 and 1
         self.assertEqual(answer1, answer2)
 
     def test_get_covariance_symbol(self):
         closer = LogNormalClosure(3,multivariate=True)
         expected = sympy.Symbol("yx3")
-        answer = closer.get_covariance_symbol(self.__n_counter, 1, 2)
+        answer = closer._get_covariance_symbol(self.__n_counter, 1, 2)
         self.assertEqual(answer, expected)
 
     def test_get_covariance_symbol2(self):
         closer = LogNormalClosure(3,multivariate=True)
         expected = sympy.Symbol("yx6")
-        answer = closer.get_covariance_symbol(self.__n_counter, 1, 0)
+        answer = closer._get_covariance_symbol(self.__n_counter, 1, 0)
         self.assertEqual(answer, expected)
 
     def test_get_covariance_symbol_is_triangular(self):
         closer = LogNormalClosure(3,multivariate=True)
 
         #covariance between species 1 and 2  ==  covariance between sp. 2 and 1
-        answer1 =closer.get_covariance_symbol(self.__n_counter, 1, 0)
-        answer2 = closer.get_covariance_symbol(self.__n_counter, 0, 1)
+        answer1 =closer._get_covariance_symbol(self.__n_counter, 1, 0)
+        answer2 = closer._get_covariance_symbol(self.__n_counter, 0, 1)
         self.assertEqual(answer1, answer2)
 
 

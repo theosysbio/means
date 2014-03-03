@@ -11,7 +11,7 @@ class LogNormalClosure(ClosureBase):
         n_species = len(expectation_symbols)
 
         # The covariance expressed in terms of central moment symbols (typically, yxNs, where N is an integer)
-        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
+        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self._get_covariance_symbol(n_counter,x,y))
 
         # Variances is the diagonal of covariance matrix
         variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
@@ -27,7 +27,7 @@ class LogNormalClosure(ClosureBase):
 
         # Assign log covariances and log variances in the matrix log_covariance matrix based on matrix indices
         log_covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: \
-                self.get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
+                self._get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
 
         # The n_vectors (e.g. [0,2,0]) of the central moments
         pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1 ]
@@ -39,7 +39,7 @@ class LogNormalClosure(ClosureBase):
         out_mat = out_mat.applyfunc(lambda x: sp.exp(x))
         return out_mat
 
-    def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
+    def _get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         r"""
         Compute second order moments i.e. variances and covariances
         Covariances equal to 0 in univariate case
@@ -55,7 +55,7 @@ class LogNormalClosure(ClosureBase):
         # Covariances are found if the moment order is 2 and the moment vector contains double 1
         return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 1 and q.n_vector[sp2_idx] == 1 and q.order == 2][0]
 
-    def get_log_covariance(self, log_variance_mat, log_expectation_symbols, covariance_matrix, x, y):
+    def _get_log_covariance(self, log_variance_mat, log_expectation_symbols, covariance_matrix, x, y):
         r"""
         Compute log covariances according to:\\
 

@@ -136,6 +136,15 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         return out_problem
 
     def _generate_problem_left_hand_side(self, n_counter, k_counter):
+        """
+        Generate the left hand sise of the ODEs. This is simply the symbols for the correspondnig moments.
+        Note that, in principle, they are in of course fact the time derivative of the moments.
+
+        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :return:
+        """
+
         # concatenate the symbols for first order raw moments (means)
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
@@ -145,11 +154,15 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
     def _generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
         """
+        Generate the Mass Fluctuation Kinetics (i.e. the right hand side of the ODEs)
+
         :param central_moments:
-        :param n_counter:
         :param dmu_over_dt:
-        :return: the right hand side of the final ODEs
+        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+
+        :return:
         """
+
         # symbols for central moments
         central_moments_symbols = sp.Matrix([n.symbol for n in n_counter])
 
@@ -169,9 +182,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         :param central_moments_exprs: a matrix of expressions for central moments.
         :param central_from_raw_exprs: central moment expressed in terms of raw moments
-        :param n_counter: the counter for central moments
-        :param k_counter: the counter for raw moments
-        :return: expression of central moments without raw moment
+        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :return: expressions for central moments without raw moment
         """
         positiv_raw_moms_symbs = [raw.symbol for raw in k_counter if raw.order > 1]
         # The symbols for the corresponding central moment
@@ -203,13 +216,14 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
     def _generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
         r"""
-        Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter)
-        Each is a list of "Moment" objects. Therefore, they are represented by both a vector of integer
-        and a symbol.
+        Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter).
+        Each is a list of :class:`~means.approximation.ode_problem.Moment`s.
+        Therefore, each :class:`~means.approximation.ode_problem.Moments` is represented by both
+        a vector of integer and a symbol.
 
         :param max_order: the maximal order of moment to be computer
         :param species: the name of the species
-        :return: a pair of lists of Moments
+        :return: a pair of lists of :class:`~means.approximation.ode_problem.Moment`s
         """
         n_moments = max_order + 1
         # first order moments are always 1
