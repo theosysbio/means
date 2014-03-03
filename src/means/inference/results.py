@@ -3,8 +3,6 @@ from means.util.decorators import memoised_property
 
 class ConvergenceStatusBase(SerialisableObject):
 
-
-
     def __init__(self, convergence_achieved):
         self.__convergence_achieved = convergence_achieved
 
@@ -132,6 +130,9 @@ class InferenceResultsCollection(SerialisableObject):
     def __len__(self):
         return len(self.results)
 
+    def __getitem__(self, item):
+        return self.results[item]
+
     @property
     def number_of_results(self):
         return len(self.results)
@@ -197,10 +198,7 @@ class InferenceResultsCollection(SerialisableObject):
 
 class InferenceResult(SerialisableObject):
 
-    __problem = None
-    __observed_trajectories = None
-    __starting_parameters = None
-    __starting_initial_conditions = None
+    __inference = None
 
     __optimal_parameters = None
     __optimal_initial_conditions = None
@@ -211,56 +209,49 @@ class InferenceResult(SerialisableObject):
     __warning_flag = None
     __solutions = None
 
-    _simulation = None
-
     yaml_tag = '!inference-result'
 
-    def __init__(self, problem, observed_trajectories, starting_parameters, starting_initial_conditions,
+    def __init__(self, inference,
                  optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status,
-                 solutions, simulation):
+                 solutions):
 
         """
 
-        :param problem:
-        :param observed_trajectories:
-        :param starting_parameters:
-        :param starting_initial_conditions:
+        :param inference:
         :param optimal_parameters:
         :param optimal_initial_conditions:
         :param distance_at_minimum:
         :param convergence_status:
         :type convergence_status: :class:`ConvergenceStatusBase`
         :param solutions:
-        :param simulation:
-        :type simulation: :class:`means.simulation.Simulation`
         """
-        self.__problem = problem
-
-        self.__observed_trajectories = observed_trajectories
-        self.__starting_parameters = starting_parameters
-        self.__starting_initial_conditions = starting_initial_conditions
+        self.__inference = inference
         self.__optimal_parameters = optimal_parameters
         self.__optimal_initial_conditions = optimal_initial_conditions
         self.__distance_at_minimum = distance_at_minimum
         self.__convergence_status = convergence_status
         self.__solutions = solutions
-        self._simulation = simulation
+
+    @property
+    def inference(self):
+        return self.__inference
 
     @property
     def problem(self):
-        return self.__problem
+        return self.inference.problem
+
 
     @property
     def observed_trajectories(self):
-        return self.__observed_trajectories
+        return self.inference.observed_trajectories
 
     @property
     def starting_parameters(self):
-        return self.__starting_parameters
+        return self.inference.starting_parameters
 
     @property
     def starting_initial_conditions(self):
-        return self.__starting_initial_conditions
+        return self.inference.starting_conditions
 
     @property
     def optimal_parameters(self):
@@ -292,7 +283,7 @@ class InferenceResult(SerialisableObject):
         timepoints = self.observed_trajectories[0].timepoints
 
         try:
-            starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
+            starting_trajectories = self.inference.simulation.simulate_system(self.starting_parameters,
                                                                      self.starting_initial_conditions, timepoints)
         # TODO: change exception type
         except Exception as e:
@@ -305,7 +296,7 @@ class InferenceResult(SerialisableObject):
     def optimal_trajectories(self):
         timepoints = self.observed_trajectories[0].timepoints
         try:
-            optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
+            optimal_trajectories = self.inference.simulation.simulate_system(self.optimal_parameters,
                                                                     self.optimal_initial_conditions, timepoints)
         except Exception as e:
             print 'Warning: got {0!r} when obtaining optimal trajectories, they will not be plotted'.format(e)
@@ -319,7 +310,7 @@ class InferenceResult(SerialisableObject):
             return []
 
         timepoints = self.observed_trajectories[0].timepoints
-        simulation = self._simulation
+        simulation = self.inference.simulation
         trajectories_collection = []
 
         for parameters, initial_conditions in self.solutions:
@@ -486,16 +477,12 @@ class InferenceResult(SerialisableObject):
     @classmethod
     def to_yaml(cls, dumper, data):
 
-        mapping = [('problem', data.problem),
-                   ('observed_trajectories', data.observed_trajectories),
-                   ('starting_parameters', data.starting_parameters),
-                   ('starting_initial_conditions', data.starting_initial_conditions),
+        mapping = [('inference', data.inference),
                    ('optimal_parameters', data.optimal_parameters),
                    ('optimal_initial_conditions', data.optimal_initial_conditions),
                    ('distance_at_minimum', data.distance_at_minimum),
                    ('convergence_status', data.convergence_status),
-                   ('solutions', data.solutions),
-                   ('simulation', data._simulation)]
+                   ('solutions', data.solutions)]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
@@ -503,12 +490,9 @@ class InferenceResult(SerialisableObject):
         if not isinstance(other, self.__class__):
             return False
 
-        return self.problem == other.problem and self.observed_trajectories == other.observed_trajectories\
-            and self.starting_parameters == other.starting_parameters \
-            and self.starting_initial_conditions == other.starting_initial_conditions \
+        return self.inference == other.inference \
             and self.optimal_parameters == other.optimal_parameters \
             and self.optimal_initial_conditions == other.optimal_initial_conditions \
             and self.distance_at_minimum == other.distance_at_minimum \
             and self.convergence_status == other.convergence_status \
             and self.solutions == other.solutions \
-            and self._simulation == other._simulation

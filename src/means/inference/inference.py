@@ -286,12 +286,12 @@ class InferenceWithRestarts(object):
             starting_conditions = variables[len(self.starting_parameter_ranges):]
 
             inference_objects.append(Inference(self.problem,
-                                                        starting_parameters,
-                                                        starting_conditions,
-                                                        self.variable_parameters,
-                                                        self.observed_trajectories,
-                                                        method=self.method,
-                                                        ))
+                                                starting_parameters,
+                                                starting_conditions,
+                                                self.variable_parameters,
+                                                self.observed_trajectories,
+                                                method=self.method,
+                                                ))
 
         return inference_objects
 
@@ -623,7 +623,7 @@ class Inference(SerialisableObject):
                                                          self.observed_timepoints,
                                                          self.observed_trajectories_lookup,
                                                          self._distance_between_trajectories_function,
-                                                         self._simulation,
+                                                         self.simulation,
                                                          exception_limit=solver_exceptions_limit)
 
         try:
@@ -667,13 +667,9 @@ class Inference(SerialisableObject):
     def _result_from_raw_result(self, raw_result):
         optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions = raw_result
 
-        result = InferenceResult(self.problem, self.observed_trajectories,
-                                 self.starting_parameters, self.starting_conditions,
-                                 optimal_parameters, optimal_initial_conditions,
-                                 distance_at_minimum,
-                                 convergence_status,
-                                 solutions,
-                                 self._simulation)
+        result = InferenceResult(self, optimal_parameters, optimal_initial_conditions,
+                                 distance_at_minimum, convergence_status,
+                                 solutions)
         return result
 
 
@@ -718,7 +714,7 @@ class Inference(SerialisableObject):
         return self._simulation_kwargs.copy()
 
     @memoised_property
-    def _simulation(self):
+    def simulation(self):
         return Simulation(self.problem, **self.simulation_kwargs)
 
     @property
