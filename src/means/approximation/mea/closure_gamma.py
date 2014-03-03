@@ -1,11 +1,10 @@
 import sympy as sp
-import operator
-from zero_closer import CloserBase
+from closure_scalar import ClosureBase
 from means.util.sympyhelpers import substitute_all, product
 
-class GammaCloser(CloserBase):
+class GammaClosure(ClosureBase):
     def __init__(self, max_order, type=1):
-        super(GammaCloser, self).__init__(max_order, multivariate = (type > 0))
+        super(GammaClosure, self).__init__(max_order, multivariate = (type > 0))
         self.__type = type
 
     @property
@@ -101,7 +100,7 @@ class GammaCloser(CloserBase):
 
         return Y_exprs, beta_multipliers
 
-    def compute_raw_moments(self, n_counter, k_counter):
+    def _compute_raw_moments(self, n_counter, k_counter):
         r"""
         Compute :math:`X_i`
         Gamma type 1: :math:`X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`

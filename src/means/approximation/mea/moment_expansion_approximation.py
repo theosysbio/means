@@ -1,16 +1,21 @@
 import itertools
 import sympy as sp
+
 from means.approximation.ode_problem import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment
-from TaylorExpansion import generate_dmu_over_dt
-from centralmoments import eq_centralmoments
+
+# helper functions
+from dmu_over_dt import generate_dmu_over_dt
+from eq_central_moments import eq_central_moments
 from raw_to_central import raw_to_central
 from means.util.sympyhelpers import substitute_all, quick_solve
-from gamma_closer import GammaCloser
-from log_normal_closer import LogNormalCloser
-from normal_closer import NormalCloser
-from zero_closer import ZeroCloser
+
+# the different closure methods:
+from closure_gamma import GammaClosure
+from closure_log_normal import LogNormalClosure
+from closure_normal import NormalClosure
+from closure_scalar import ScalarClosure
 
 
 
@@ -18,26 +23,9 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
     It performs moment expansion approximation (MEA) as described in [Ale2013]_ up to a given order of moment.
-    In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
-    See :class: `means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
+    See :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
     about the options.
 
-    It returns a set of ODEs describing the time derivative of the modeled moments.
-
-
-    .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
-     "A general moment expansion method for stochastic kinetic models."\
-      The Journal of chemical physics 138.17 (2013): 174101.
-
-    :param model: The model to be approximated
-    :type: A :class:`~means.approximation.model.Model`
-
-    :param max_order: the highest order of central moments in the resulting ODEs
-    :param closer: a string describing the type of closure to use
-    :type: string
-
-    :param closer_args: arguments to be passed to the closer
-    :param closer_kwargs: keyword arguments to be passed to the closer
     :return: an ODE problem which can be further used in inference and simulation.
     :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
     """
@@ -50,6 +38,7 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
 class MomentExpansionApproximation(ApproximationBaseClass):
     r"""
     A class to perform moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
+    In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
 
     .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
      "A general moment expansion method for stochastic kinetic models."\
@@ -59,26 +48,26 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         r"""
         :param model: The model to be approximated
-        :type: A :class:`~means.approximation.model.Model`
+        :type model: :class:`~means.model.model.Model`
 
         :param max_order: the highest order of central moments in the resulting ODEs
         :param closer: a string describing the type of closure to use. Currently, the supported closures are:
 
             `'zero'`
                 higher order central moments are set to zero.
-                See :class:`~means.approximation.zero_closer.ZeroCloser`.
+                See :class:`~means.approximation.mea.zero_closer.ZeroCloser`.
             `'normal'`
                 uses normal distribution to compute last order central moments.
-                See :class:`~means.approximation.normal_closer.NormalCloser`.
+                See :class:`~means.approximation.mea.normal_closer.NormalCloser`.
             `'log-normal'`
                 uses log-normal distribution.
-                See :class:`~means.approximation.log_normal_closer.LogNormalCloser`.
+                See :class:`~means.approximation.mea.log_normal_closer.LogNormalCloser`.
             `'gamma'`
                 EXPERIMENTAL,
                 uses gamma distribution.
-                See :class:`~means.approximation.gamma_closer.GammaCloser`.
+                See :class:`~means.approximation.mea.gamma_closer.GammaCloser`.
 
-        :type: string
+        :type closer: string
         :param closer_args: arguments to be passed to the closer
         :param closer_kwargs: keyword arguments to be passed to the closer
         """
@@ -93,10 +82,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         # A dictionary of "option -> closer". this allows a generic handling for closer without having to add
         # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
-        supported_closers = {"log-normal": LogNormalCloser,
-                             "zero": ZeroCloser,
-                             "normal": NormalCloser,
-                             "gamma": GammaCloser}
+        supported_closers = {"log-normal": LogNormalClosure,
+                             "zero": ScalarClosure,
+                             "normal": NormalClosure,
+                             "gamma": GammaClosure}
 
         # We initialise the closer for this approximator
         try:
@@ -131,7 +120,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # dmu_over_dt has row per species and one col per element of n_counter (eq. 6)
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
         # Calculate expressions to use in central moments equations (eq. 9)
-        central_moments_exprs = eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
+        central_moments_exprs = eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order)
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
@@ -241,7 +230,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         k_counter_descriptors = [i for i in itertools.product(range(n_moments + 1), repeat=len(species))
                                  if 1 < sum(i) <= n_moments]
 
-        #this mimics matlab sorting
+        #this mimics the order in the original code
         k_counter_descriptors = sorted(k_counter_descriptors,lambda x,y: sum(x) - sum(y))
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
         k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]))

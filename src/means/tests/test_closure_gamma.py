@@ -1,6 +1,6 @@
 import unittest
 import sympy
-from means.approximation.mea.gamma_closer import GammaCloser
+from means.approximation.mea.closure_gamma import GammaClosure
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
@@ -10,7 +10,7 @@ from means.util.sympyhelpers import to_sympy_matrix
 import unittest
 from means.approximation.ode_problem import Moment
 import sympy
-from means.approximation.mea.log_normal_closer import LogNormalCloser
+from means.approximation.mea.closure_log_normal import LogNormalClosure
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 
@@ -112,7 +112,7 @@ class TestLogNormalCloser(unittest.TestCase):
             ["(c_0*y_0 ** 6*y_2+c_1*y_0 ** 7*y_2+c_2*y_0 ** 6*y_2 ** 2+3*c_2*c_6 ** 2*y_0 ** 4*y_2 ** 2+c_2*c_6 ** 3*y_0 ** 3*y_2 ** 2+4*c_0*c_6*y_0 ** 5*y_2+4*c_1*c_6*y_0 ** 6*y_2-2*c_2*y_0 ** 6*y_2*yx5-2*c_1*y_0 ** 6*y_2*yx7+6*c_0*c_6 ** 2*y_0 ** 4*y_2+4*c_0*c_6 ** 3*y_0 ** 3*y_2+c_0*c_6 ** 4*y_0 ** 2*y_2+6*c_1*c_6 ** 2*y_0 ** 5*y_2+4*c_1*c_6 ** 3*y_0 ** 4*y_2+c_1*c_6 ** 4*y_0 ** 3*y_2+3*c_2*c_6*y_0 ** 5*y_2 ** 2-2*c_2*c_6 ** 2*yx2*yx7 ** 2-4*c_2*c_6 ** 3*yx2*yx7 ** 2+2*c_2*c_6 ** 2*y_0 ** 3*y_2*yx5+c_2*c_6 ** 3*y_0 ** 2*y_2*yx5+2*c_2*c_6*y_0*y_2 ** 2*yx7 ** 2-6*c_2*c_6 ** 2*y_0 ** 4*y_2*yx5-2*c_2*c_6 ** 3*y_0 ** 3*y_2*yx5-12*c_1*c_6 ** 2*y_0 ** 4*y_2*yx7-8*c_1*c_6 ** 3*y_0 ** 3*y_2*yx7-2*c_1*c_6 ** 4*y_0 ** 2*y_2*yx7-c_2*c_6*y_0 ** 3*y_2 ** 2*yx7-2*c_2*c_6*y_0 ** 4*y_2 ** 2*yx7-4*c_2*c_6*y_0 ** 2*yx2*yx7 ** 2-8*c_2*c_6 ** 2*y_0*yx2*yx7 ** 2+4*c_2*c_6*y_0 ** 2*y_2 ** 2*yx7 ** 2+4*c_2*c_6 ** 2*y_0*y_2 ** 2*yx7 ** 2-c_2*c_6 ** 2*y_0 ** 2*y_2 ** 2*yx7-4*c_2*c_6 ** 2*y_0 ** 3*y_2 ** 2*yx7-2*c_2*c_6 ** 3*y_0 ** 2*y_2 ** 2*yx7+c_2*c_6*y_0 ** 4*y_2*yx5-6*c_2*c_6*y_0 ** 5*y_2*yx5-8*c_1*c_6*y_0 ** 5*y_2*yx7-2*c_2*c_6*y_0*yx2*yx7 ** 2)/(y_0 ** 2*y_2*(c_6+y_0) ** 4)"]
         ])
 
-        closer = GammaCloser(max_order, type=1)
+        closer = GammaClosure(max_order, type=1)
         answer = closer.close(self.__mfk, central_from_raw_exprs, self.__n_counter, self.__k_counter)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
@@ -150,7 +150,7 @@ class TestLogNormalCloser(unittest.TestCase):
             ["c_3*yx7-c_1*yx6-c_4*yx6-(c_2*y_0*yx3)/(c_6+y_0)-(c_2*y_2*yx6)/(c_6+y_0)+(c_2*y_0*y_2*yx6)/(c_6+y_0) ** 2"],
             ["(c_0*y_0 ** 5+c_1*y_0 ** 6+c_2*y_0 ** 5*y_2-2*c_2*y_0 ** 5*yx5-2*c_1*y_0 ** 5*yx7+6*c_0*c_6 ** 2*y_0 ** 3+4*c_0*c_6 ** 3*y_0 ** 2+6*c_1*c_6 ** 2*y_0 ** 4+4*c_1*c_6 ** 3*y_0 ** 3+c_1*c_6 ** 4*y_0 ** 2+4*c_0*c_6*y_0 ** 4+c_0*c_6 ** 4*y_0+4*c_1*c_6*y_0 ** 5+3*c_2*c_6*y_0 ** 4*y_2+c_2*c_6*y_0 ** 3*yx5+c_2*c_6 ** 3*y_0*yx5-6*c_2*c_6*y_0 ** 4*yx5-8*c_1*c_6*y_0 ** 4*yx7-2*c_1*c_6 ** 4*y_0*yx7+2*c_2*c_6*y_2*yx7 ** 2+3*c_2*c_6 ** 2*y_0 ** 3*y_2+c_2*c_6 ** 3*y_0 ** 2*y_2+2*c_2*c_6 ** 2*y_0 ** 2*yx5-6*c_2*c_6 ** 2*y_0 ** 3*yx5-2*c_2*c_6 ** 3*y_0 ** 2*yx5-12*c_1*c_6 ** 2*y_0 ** 3*yx7-8*c_1*c_6 ** 3*y_0 ** 2*yx7+4*c_2*c_6 ** 2*y_2*yx7 ** 2-4*c_2*c_6 ** 2*y_0 ** 2*y_2*yx7+4*c_2*c_6*y_0*y_2*yx7 ** 2-c_2*c_6*y_0 ** 2*y_2*yx7-c_2*c_6 ** 2*y_0*y_2*yx7-2*c_2*c_6*y_0 ** 3*y_2*yx7-2*c_2*c_6 ** 3*y_0*y_2*yx7)/(y_0*(c_6+y_0) ** 4)"]
         ])
-        closer = GammaCloser(max_order, type=0)
+        closer = GammaClosure(max_order, type=0)
         answer = closer.close(self.__mfk, central_from_raw_exprs, self.__n_counter, self.__k_counter)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 

@@ -2,7 +2,7 @@ import unittest
 
 import sympy
 
-from means.approximation.mea.centralmoments import eq_centralmoments
+from means.approximation.mea.eq_central_moments import eq_central_moments
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
@@ -59,7 +59,7 @@ class CentralMomentsTestCase(unittest.TestCase):
                                              [0, 0, 0, 0, 1, -1]])
 
 
-        answer = eq_centralmoments(counter, mcounter, m, species, propensities, stoichiometry_matrix, 2)
+        answer = eq_central_moments(counter, mcounter, m, species, propensities, stoichiometry_matrix, 2)
 
         expected = to_sympy_matrix([
             [" 2*c_4*y_1*y_2 + c_4*y_1 - 2*c_5*y_2**2 + c_5*y_2 - 2*y_1*(c_4*y_1 - c_5*y_2)","               -2*c_5","                2*c_4","      0","                                                                                                                                                 0","                                                             0","                                                                                                                                                                                                                    0"],
@@ -110,6 +110,6 @@ class CentralMomentsTestCase(unittest.TestCase):
         ["-c_0*y_0*y_1*(y_0 + y_1 - 181) + c_1*y_1*(-y_0 - y_1 + 301) + c_2*y_0*(-y_0 - y_1 + 301) - c_2*y_2*(-y_0 - y_1 + 301) - y_1*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))"," -c_0*y_0 - c_1"," -c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1 - c_2"," -c_2"],
         ["-2*c_0*y_0**2*(y_0 + y_1 - 181) + c_0*y_0*(y_0 + y_1 - 181) + 2*c_1*y_0*(-y_0 - y_1 + 301) + c_1*(-y_0 - y_1 + 301) - 2*y_2*(-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301))"," 0"," -4*c_0*y_0 + 2*c_0*y_2 + c_0 - 2*c_1"," -4*c_0*y_0 + 2*c_0*y_2 - 2*c_0*(y_0 + y_1 - 181) + c_0 - 2*c_1"]
         ])
-        answer = eq_centralmoments(counter, mcounter, m, species, propensities, stoichiometry_matrix, 2)
+        answer = eq_central_moments(counter, mcounter, m, species, propensities, stoichiometry_matrix, 2)
 
         assert_sympy_expressions_equal(answer, expected)

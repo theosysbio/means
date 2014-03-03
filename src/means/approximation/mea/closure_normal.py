@@ -2,10 +2,10 @@ import sympy as sp
 import operator
 import copy
 from means.util.sympyhelpers import product
-from zero_closer import CloserBase
+from closure_scalar import ClosureBase
 
 
-class NormalCloser(CloserBase):
+class NormalClosure(ClosureBase):
 
     def get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         r"""
@@ -71,7 +71,7 @@ class NormalCloser(CloserBase):
             return sum(each_row)
 
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+    def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         n_species = len([None for pm in k_counter if pm.order == 1])
         covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self.get_covariance_symbol(n_counter,x,y))
         positive_n_counter = [n for n in n_counter if n.order > 1]

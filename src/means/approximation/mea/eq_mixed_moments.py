@@ -1,25 +1,17 @@
 #####################################################################
-# Called by centralmoments.py
+# Called by eq_central_moments.py
 # Provides the terms needed for equation 11 in Angelique's paper
 # This gives the expressions for dB/dt in equation 9, these are the 
 # time dependencies of the mixed moments
 ####################################################################
 import itertools
-from means.util.sympyhelpers import sum_of_cols, product
+
 import sympy as sp
-from means.approximation.mea.TaylorExpansion import derive_expr_from_counter_entry
-from means.approximation.mea.TaylorExpansion import get_factorial_term
+
+from means.approximation.mea.mea_helpers import get_one_over_n_factorial, derive_expr_from_counter_entry, make_k_chose_e
+from means.util.sympyhelpers import sum_of_cols, product
 from means.util.decorators import cache
 
-def make_k_chose_e(e_vec, k_vec):
-    """
-    Computes the product k chose e
-
-    :param e_vec: the vector e
-    :param k_vec: the vector k
-    :return: a scalar
-    """
-    return product([sp.factorial(k) / (sp.factorial(e) * sp.factorial(k - e)) for e,k in zip(e_vec, k_vec)])
 
 class DBetaOverDtCalculator(object):
     def __init__(self, propensities, n_counter, stoichoimetry_matrix, species):
@@ -114,7 +106,7 @@ class DBetaOverDtCalculator(object):
 
 
         # Computes the factorial terms for EACH entry in COUNTER
-        factorial_terms = sp.Matrix([get_factorial_term(tuple(c.n_vector)) for c in self.__n_counter])
+        factorial_terms = sp.Matrix([get_one_over_n_factorial(tuple(c.n_vector)) for c in self.__n_counter])
 
         # Element wise product of the two vectors
         te_vector= derives.multiply_elementwise(factorial_terms)

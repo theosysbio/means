@@ -1,10 +1,9 @@
 import sympy as sp
-
-from means.approximation.mea.eq_mixedmoments import make_k_chose_e
-from means.approximation.mea.eq_mixedmoments import DBetaOverDtCalculator
+from means.approximation.mea.eq_mixed_moments import DBetaOverDtCalculator
+from means.approximation.mea.mea_helpers import make_k_chose_e
 from means.util.sympyhelpers import sum_of_cols, product, sympy_sum_list
 
-def eq_centralmoments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order):
+def eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities, stoichiometry_matrix, max_order):
     r"""
     Function used to calculate the terms required for use in equations giving the time dependence of central moments.
 

@@ -1,9 +1,9 @@
 import sympy as sp
-from zero_closer import CloserBase
+from closure_scalar import ClosureBase
 
-class LogNormalCloser(CloserBase):
+class LogNormalClosure(ClosureBase):
 
-    def compute_raw_moments(self, n_counter, k_counter):
+    def _compute_raw_moments(self, n_counter, k_counter):
 
         # The symbols for expectations are simply the first order raw moments.
         expectation_symbols = [pm.symbol for pm in k_counter if pm.order == 1]

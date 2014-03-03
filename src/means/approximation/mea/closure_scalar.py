@@ -1,9 +1,12 @@
 import sympy as sp
 from means.util.sympyhelpers import substitute_all
 
-class CloserBase(object):
+
+class ClosureBase(object):
 
     _max_order = None
+
+
     def __init__(self,max_order,multivariate=True):
         self._max_order = max_order
         self.__is_multivariate = multivariate
@@ -17,11 +20,11 @@ class CloserBase(object):
     def max_order(self):
         return self._max_order
 
-    def compute_raw_moments(self, n_counter, k_counter):
+    def _compute_raw_moments(self, n_counter, k_counter):
         raise NotImplementedError("ParametricCloser is an abstract class.\
                                   `compute_closed_raw_moments()` is not implemented. ")
 
-    def compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+    def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         """
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 
@@ -33,7 +36,7 @@ class CloserBase(object):
         :rtype: sympy.Matrix
         """
 
-        closed_raw_moments = self.compute_raw_moments(n_counter, k_counter)
+        closed_raw_moments = self._compute_raw_moments(n_counter, k_counter)
         assert(len(central_from_raw_exprs) == len(closed_raw_moments))
         # raw moment lef hand side symbol
         raw_symbols = [raw.symbol for raw in k_counter if raw.order > 1]
@@ -48,7 +51,7 @@ class CloserBase(object):
     def close(self, mfk, central_from_raw_exprs, n_counter, k_counter):
 
         # we obtain expressions for central moments in terms of variances/covariances
-        closed_central_moments = self.compute_closed_central_moments(central_from_raw_exprs, n_counter, k_counter)
+        closed_central_moments = self._compute_closed_central_moments(central_from_raw_exprs, n_counter, k_counter)
         # set mixed central moment to zero iff univariate
         closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments, n_counter)
 
@@ -78,8 +81,13 @@ class CloserBase(object):
             return [0 if n.is_mixed else ccm for n,ccm in zip(positive_n_counter, closed_central_moments)]
 
 
-class ZeroCloser(CloserBase):
-    def compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+class ScalarClosure(ClosureBase):
+
+    def __init__(self,max_order,value=0):
+        super(ScalarClosure,self).__init__(max_order, False)
+        self.__value = value
+
+    def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         """
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 
@@ -91,5 +99,5 @@ class ZeroCloser(CloserBase):
         :rtype: sympy.Matrix
         """
 
-        closed_central_moments = sp.Matrix([sp.Integer(0)] * len(central_from_raw_exprs))
+        closed_central_moments = sp.Matrix([sp.Integer(self.__value)] * len(central_from_raw_exprs))
         return closed_central_moments

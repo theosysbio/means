@@ -1,14 +1,12 @@
 import operator
 import sympy as sp
-from eq_mixedmoments import make_k_chose_e
+from means.approximation.mea.mea_helpers import make_k_chose_e
 
-def make_beta(k_vec):
-    return sp.Symbol('x_' + "_".join([str(k) for k in k_vec]))
 
-def make_alpha(n_vec, k_vec, ymat):
+def _make_alpha(n_vec, k_vec, ymat):
     return reduce(operator.mul,  [y ** (n - m) for y,n,m in zip(ymat, n_vec, k_vec)])
 
-def make_min_one_pow_n_minus_k(n_vec, k_vec):
+def _make_min_one_pow_n_minus_k(n_vec, k_vec):
     return reduce(operator.mul, [(-1) ** (n - k) for (n,k) in zip(n_vec, k_vec)])
 
 def raw_to_central(n_counter, species, k_counter):
@@ -49,9 +47,9 @@ def raw_to_central(n_counter, species, k_counter):
         # (n k) binomial term in equation 9
         n_choose_k_vec = [make_k_chose_e(k_vec.n_vector, n_vec) for k_vec in k_lower]
         # (-1)^(n-k) term in equation 9
-        minus_one_pow_n_min_k_vec = [make_min_one_pow_n_minus_k(n_vec, k_vec.n_vector)  for k_vec in k_lower ]
+        minus_one_pow_n_min_k_vec = [_make_min_one_pow_n_minus_k(n_vec, k_vec.n_vector)  for k_vec in k_lower ]
         # alpha term in equation 9
-        alpha_vec = [make_alpha(n_vec, k_vec.n_vector, species) for k_vec in k_lower]
+        alpha_vec = [_make_alpha(n_vec, k_vec.n_vector, species) for k_vec in k_lower]
         # beta term in equation 9
         beta_vec = [k_vec.symbol for k_vec in k_lower]
         # let us multiply all terms

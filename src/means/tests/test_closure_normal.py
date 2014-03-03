@@ -1,6 +1,6 @@
 import unittest
 import sympy
-from means.approximation.mea.normal_closer import NormalCloser
+from means.approximation.mea.closure_normal import NormalClosure
 from means.approximation.ode_problem import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
@@ -164,7 +164,7 @@ class TestNormalCloserMom4(unittest.TestCase):
         ])
 
 
-        closer = NormalCloser(max_order, multivariate=True)
+        closer = NormalClosure(max_order, multivariate=True)
         answer = closer.close(self.__mfk, central_from_raw_exprs,self.__n_counter, k_counter)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
@@ -384,7 +384,7 @@ class TestNormalCloser(unittest.TestCase):
             ["c_3*yx7-c_1*yx6-c_4*yx6-(c_2*y_0*yx3)/(c_6+y_0)-(c_2*y_2*yx6)/(c_6+y_0)+(c_2*y_0*y_2*yx6)/(c_6+y_0) ** 2"],
             ["(c_0*c_6 ** 3+c_0*y_0 ** 3+c_1*y_0 ** 4+c_2*y_0 ** 3*y_2-2*c_2*y_0 ** 3*yx5-2*c_1*y_0 ** 3*yx7+3*c_1*c_6 ** 2*y_0 ** 2+3*c_0*c_6*y_0 ** 2+3*c_0*c_6 ** 2*y_0+3*c_1*c_6*y_0 ** 3+c_1*c_6 ** 3*y_0+c_2*c_6 ** 2*yx5-2*c_1*c_6 ** 3*yx7+c_2*c_6*y_0*yx5-c_2*c_6*y_2*yx7+2*c_2*c_6*y_0 ** 2*y_2+c_2*c_6 ** 2*y_0*y_2-4*c_2*c_6*y_0 ** 2*yx5-2*c_2*c_6 ** 2*y_0*yx5-6*c_1*c_6*y_0 ** 2*yx7-6*c_1*c_6 ** 2*y_0*yx7-2*c_2*c_6 ** 2*y_2*yx7-2*c_2*c_6*y_0*y_2*yx7)/(c_6+y_0) ** 3"]
         ])
-        closer = NormalCloser(max_order, multivariate=True)
+        closer = NormalClosure(max_order, multivariate=True)
         answer = closer.close(self.__mfk, central_from_raw_exprs,self.__n_counter, k_counter)
 
         self.assertTrue(sympy_expressions_equal(answer, expected))
@@ -402,7 +402,7 @@ class TestNormalCloser(unittest.TestCase):
                      [sympy.Symbol('C'),sympy.Symbol('D')]]]
 
 
-        closer = NormalCloser(3, multivariate=True)
+        closer = NormalClosure(3, multivariate=True)
         answer = [p for p in closer.generate_partitions(2, test_list_for_partition)]
         self.assertEqual(answer, expected)
 
