@@ -3,6 +3,7 @@ import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
 from means.approximation import ODEProblem
 from means.approximation.ode_problem import Moment, VarianceTerm
+from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus
 from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
@@ -136,6 +137,19 @@ class TestSerialisation(unittest.TestCase):
                             solutions=[[([1, 2, 3, 4, 5, 6], [3, 2, 1]), ([3, 2, 1, 0, -1, -2], [1, 2, 3])]],
                             simulation=Simulation(problem)
                             )
+        self._roundtrip(r)
+
+    def test_inference_serialisation(self):
+
+        problem = _sample_problem()
+        r = Inference(problem=problem,
+                      starting_parameters=[1, 2, 3, 4, 5, 6, 7],
+                      starting_conditions=[1,2,3],
+                      variable_parameters=['c_0', 'c_1'],
+                      observed_trajectories=[Trajectory([1,2], [2,3], Moment([1, 0, 0], 'x'))],
+                      method='gamma',
+                      maxh=0.01) # Some simulation kwargs
+
         self._roundtrip(r)
 
 

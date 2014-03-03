@@ -15,6 +15,7 @@ from means.inference.distances import get_distance_function
 from means.inference.hypercube import hypercube
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
+from means.io.serialise import SerialisableObject
 from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory, SolverException
@@ -368,7 +369,7 @@ def _multiprocessing_apply_infer(object_id):
     global inference_objects, inference_args, inference_kwargs
     return inference_objects[object_id]._infer_raw(*inference_args, **inference_kwargs)
 
-class Inference(object):
+class Inference(SerialisableObject):
 
     __problem = None
     __starting_parameters_with_variability = None
@@ -377,6 +378,27 @@ class Inference(object):
     __observed_timepoints = None
     __observed_trajectories = None
     _method = None
+    _variable_parameters = None
+
+    yaml_tag = '!inference'
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        # Variable parameters are assumed to be validated here and only in {symbol : range_} format
+        variable_parameters = data.variable_parameters
+        # Convert key to string as sympy is a bit too smart and does not allow sorting symbols
+        variable_parameters = {str(key): value for key, value in variable_parameters.iteritems()}
+
+        mapping = [('problem', data.problem),
+                   ('starting_parameters', data.starting_parameters),
+                   ('starting_conditions', data.starting_conditions),
+                   ('variable_parameters', variable_parameters),
+                   ('observed_trajectories', data.observed_trajectories),
+                   ('method', data.method)]
+
+        mapping.extend(data.simulation_kwargs.items())
+
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
 
     def __init__(self, problem, starting_parameters, starting_conditions,
                  variable_parameters, observed_trajectories, method='sum_of_squares', **simulation_kwargs):
@@ -408,6 +430,7 @@ class Inference(object):
         self.__problem = problem
 
         variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
+        self._variable_parameters = variable_parameters
 
         assert(len(starting_parameters) == len(problem.constants))
 
@@ -714,5 +737,22 @@ class Inference(object):
         return {trajectory.description: trajectory for trajectory in self.observed_trajectories}
 
     @property
+    def variable_parameters(self):
+        return self._variable_parameters
+
+    @property
     def method(self):
         return self._method
+
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+             return False
+
+        return self.problem == other.problem \
+               and self.starting_conditions == other.starting_conditions \
+               and self.starting_parameters == other.starting_parameters \
+               and self.variable_parameters == other.variable_parameters \
+               and self.observed_trajectories == other.observed_trajectories \
+               and self.method == other.method \
+               and self.simulation_kwargs == other.simulation_kwargs
