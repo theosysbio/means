@@ -126,6 +126,12 @@ class InferenceResultsCollection(SerialisableObject):
         """
         return self.__inference_results
 
+    def __iter__(self):
+        return iter(self.results)
+
+    def __len__(self):
+        return len(self.results)
+
     @property
     def number_of_results(self):
         return len(self.results)
