@@ -13,12 +13,14 @@ from sympy import Symbol
 
 from means.inference.distances import get_distance_function
 from means.inference.hypercube import hypercube
+from means.inference.parallelisation import raw_results_in_parallel
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
 from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory, SolverException
+
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
@@ -306,14 +308,9 @@ class InferenceWithRestarts(object):
         if number_of_processes == 1:
             results = map(lambda x: x.infer(*args, **kwargs), self._inference_objects)
         else:
-            import multiprocessing
-
             inference_objects = self._inference_objects
-            p = multiprocessing.Pool(number_of_processes, initializer=_multiprocessing_pool_initialiser,
-                                     initargs=[inference_objects, args, kwargs])
-            results = p.map(_multiprocessing_apply_infer, range(len(inference_objects)))
-            p.close()
-
+            results = raw_results_in_parallel(self._inference_objects, number_of_processes, *args,
+                                              **kwargs)
             results = [inference._result_from_raw_result(raw_result)
                        for inference, raw_result in zip(inference_objects, results)]
 
@@ -352,22 +349,6 @@ class InferenceWithRestarts(object):
     @property
     def method(self):
         return self.__method
-
-
-def _multiprocessing_pool_initialiser(objects, infer_args, infer_kwargs):
-    global inference_objects  # Global is ok here as this function will be called for each process on separate threads
-    inference_objects = objects
-    global inference_args, inference_kwargs
-    inference_args, inference_kwargs = infer_args, infer_kwargs
-
-def _multiprocessing_apply_infer(object_id):
-    """
-    Used in the InferenceWithRestarts class.
-    Needs to be in global scope for multiprocessing module to pick it up
-
-    """
-    global inference_objects, inference_args, inference_kwargs
-    return inference_objects[object_id]._infer_raw(*inference_args, **inference_kwargs)
 
 class Inference(SerialisableObject):
 
