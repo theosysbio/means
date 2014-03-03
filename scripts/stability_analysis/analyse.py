@@ -1,6 +1,7 @@
 import cPickle as pickle
 from collections import OrderedDict
 import pandas as pd
+from pandas.tools.plotting import scatter_matrix
 import os
 from worker import MODEL
 
@@ -18,10 +19,10 @@ def compile_data_from_dir(dirname):
 
         row = OrderedDict()
         for symbol, parameter in zip(MODEL.constants, parameters):
-            row[symbol] = parameter
+            row[str(symbol)] = parameter
 
         for symbol, initial_condition in zip(MODEL.species, initial_conditions):
-            row[symbol] = initial_condition
+            row[str(symbol)] = initial_condition
         exception = data['exception']
         row['exception'] = exception
         for key, value in kwargs.iteritems():
@@ -31,7 +32,10 @@ def compile_data_from_dir(dirname):
 
     return pd.DataFrame(df)
 
+def heatmap_matrix(data):
+    pd.tools.plotting.scatter_matrix()
+
 if __name__ == '__main__':
-    DATA = compile_data_from_dir('.data')
+    data = compile_data_from_dir('.data')
 
 
