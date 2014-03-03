@@ -13,11 +13,11 @@ import numpy as np
 MODEL = MODEL_P53
 
 RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
-INITIAL_CONDITIONS = [10, 20, 30]
+INITIAL_CONDITIONS = [70, 30, 60]
 TMAX = 40
 TIME_RANGE = np.arange(0,TMAX,.1)
-N_SSA = 200
-MAX_ORDER = 5
+N_SSA = 3000
+MAX_ORDER = 6
 
 
 
@@ -26,28 +26,28 @@ MAX_ORDER = 5
 # and calculate the means per species
 
 
+ssa_simulator = SSASimulator(MODEL)
+def get_one_ssa_traj(i):
+    print i
+    # here the trick it to set the random seed according to i so that
+    # we have different results for different processes
+    ssa_simulator.reset_random_seed(i)
+    one_run_trajectories = ssa_simulator.simulate_system(RATES, INITIAL_CONDITIONS, TMAX)
+    one_run_trajectories = [tr.resample(TIME_RANGE) for tr in one_run_trajectories]
+    return one_run_trajectories
 
-# <codecell>
 
 class MyData(ReportUnit):
 
-    def get_one_ssa_traj(self, i):
-        print i
-        # here the trick it to set the random seed according to i so that
-        # we have different results for different processes
-        self.ssa_simulator.reset_random_seed(i)
-        one_run_trajectories = self.ssa_simulator.simulate_system(RATES, INITIAL_CONDITIONS, TMAX)
-        one_run_trajectories = [tr.resample(TIME_RANGE) for tr in one_run_trajectories]
-        return one_run_trajectories
 
     def get_all_sss_means(self):
-        self.ssa_simulator = SSASimulator(MODEL)
-        # pool = multiprocessing.Pool(processes=4)
-        # trajectories = pool.map(self.get_one_ssa_traj, [i for i in range(N_SSA)])
-        # #
-        # pool.close()
-        # pool.join()
-        trajectories = map(self.get_one_ssa_traj, [i for i in range(N_SSA)])
+
+        pool = multiprocessing.Pool(processes=4)
+        trajectories = pool.map(get_one_ssa_traj, [i for i in range(N_SSA)])
+
+        pool.close()
+        pool.join()
+        #trajectories = map(self.get_one_ssa_traj, [i for i in range(N_SSA)])
 
         mean_trajectories = [sum(trajs)/len(trajs) for trajs in zip(*trajectories)]
         return mean_trajectories
@@ -93,8 +93,6 @@ class MyData(ReportUnit):
 
                     self.out_object.append(result)
 
-
-        
 
 
 MyData()
