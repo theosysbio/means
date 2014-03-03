@@ -18,8 +18,16 @@ MODEL_DIMERISATION = Model(constants=['c_0', 'c_1', 'c_2'],
                            propensities=['c_0*y_0*(y_0-1)',
                                          'c_1*((1.0/2)*(c_2-y_0))'])
 
-MODEL_P53 = Model(constants=['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'],
-                  species=['y_0', 'y_1', 'y_2'],
+MODEL_P53 = Model(constants=['c_0',   # P53 production rate
+                             'c_1',   # MDM2-independent p53 degradation rate
+                             'c_2',   # saturating p53 degradation rate
+                             'c_3',   # P53-dependent MDM2 production rate
+                             'c_4',   # MDM2 maturation rate
+                             'c_5',   # MDM2 degradation rate
+                             'c_6'],  # P53 threshold of degradation by MDM2
+                  species=['y_0',   # Concentration of p53
+                           'y_1',   # Concentration of MDM2 precursor
+                           'y_2'],  # Concentration of MDM2
                   stoichiometry_matrix=[[1, -1, -1, 0, 0, 0],
                                         [0, 0, 0, 1, -1, 0],
                                         [0, 0, 0, 0, 1, -1]],
