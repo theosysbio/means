@@ -17,8 +17,13 @@ from zero_closer import ZeroCloser
 def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
-    It performs moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
+    It performs moment expansion approximation (MEA) as described in [Ale2013]_ up to a given order of moment.
+    In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
+    See :class: `means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
+    about the options.
+
     It returns a set of ODEs describing the time derivative of the modeled moments.
+
 
     .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
      "A general moment expansion method for stochastic kinetic models."\
@@ -26,9 +31,11 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
 
     :param model: The model to be approximated
     :type: A :class:`~means.approximation.model.Model`
+
     :param max_order: the highest order of central moments in the resulting ODEs
     :param closer: a string describing the type of closure to use
     :type: string
+
     :param closer_args: arguments to be passed to the closer
     :param closer_kwargs: keyword arguments to be passed to the closer
     :return: an ODE problem which can be further used in inference and simulation.
@@ -53,8 +60,24 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         r"""
         :param model: The model to be approximated
         :type: A :class:`~means.approximation.model.Model`
+
         :param max_order: the highest order of central moments in the resulting ODEs
-        :param closer: a string describing the type of closure to use
+        :param closer: a string describing the type of closure to use. Currently, the supported closures are:
+
+            `'zero'`
+                higher order central moments are set to zero.
+                See :class:`~means.approximation.zero_closer.ZeroCloser`.
+            `'normal'`
+                uses normal distribution to compute last order central moments.
+                See :class:`~means.approximation.normal_closer.NormalCloser`.
+            `'log-normal'`
+                uses log-normal distribution.
+                See :class:`~means.approximation.log_normal_closer.LogNormalCloser`.
+            `'gamma'`
+                EXPERIMENTAL,
+                uses gamma distribution.
+                See :class:`~means.approximation.gamma_closer.GammaCloser`.
+
         :type: string
         :param closer_args: arguments to be passed to the closer
         :param closer_kwargs: keyword arguments to be passed to the closer
@@ -94,7 +117,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     def run(self):
         r"""
         Overrides the default run() method.
-        Performs the complete analysis
+        Performs the complete analysis on the model specified during initialisation.
 
         :return: an ODE problem which can be further used in inference and simulation.
         :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
@@ -104,7 +127,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         propensities = self.model.propensities
         species = self.model.species
         # compute n_counter and k_counter; the "n" and "k" vectors in equations, respectively.
-        n_counter, k_counter = self.generate_n_and_k_counters(max_order, species)
+        n_counter, k_counter = self._generate_n_and_k_counters(max_order, species)
         # dmu_over_dt has row per species and one col per element of n_counter (eq. 6)
         dmu_over_dt = generate_dmu_over_dt(species, propensities, n_counter, stoichiometry_matrix)
         # Calculate expressions to use in central moments equations (eq. 9)
@@ -112,18 +135,18 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Expresses central moments in terms of raw moments (and central moments) (eq. 8)
         central_from_raw_exprs = raw_to_central(n_counter, species, k_counter)
         # Substitute raw moment, in central_moments, with expressions depending only on central moments
-        central_moments_exprs = self.substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
+        central_moments_exprs = self._substitute_raw_with_central(central_moments_exprs, central_from_raw_exprs, n_counter, k_counter)
         # Get final right hand side expressions for each moment in a vector
-        mfk = self.generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
+        mfk = self._generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
         # Applies moment expansion closure, that is replaces last order central moments by parametric expressions
         mfk = self.closer.close(mfk, central_from_raw_exprs, n_counter, k_counter)
         # These are the left hand sign symbols referring to the mfk
-        prob_lhs = self.generate_problem_left_hand_side(n_counter,k_counter)
+        prob_lhs = self._generate_problem_left_hand_side(n_counter,k_counter)
         # Finally, we build the problem
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
         return out_problem
 
-    def generate_problem_left_hand_side(self, n_counter, k_counter):
+    def _generate_problem_left_hand_side(self, n_counter, k_counter):
         # concatenate the symbols for first order raw moments (means)
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
@@ -131,7 +154,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         return prob_moments_over_dt
 
-    def generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
+    def _generate_mass_fluctuation_kinetics(self, central_moments, dmu_over_dt, n_counter):
         """
         :param central_moments:
         :param n_counter:
@@ -150,7 +173,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         return mfk
 
-    def substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
+    def _substitute_raw_with_central(self, central_moments_exprs, central_from_raw_exprs, n_counter, k_counter):
         r"""
         Takes the expressions for central moments, and substitute the symbols representing raw moments,
         by equivalent expressions in terms of central moment
@@ -189,7 +212,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         return out_exprs
 
-    def generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
+    def _generate_n_and_k_counters(self, max_order, species, central_symbols_prefix="yx", raw_symbols_prefix="x_"):
         r"""
         Makes a counter for central moments (n_counter) and a counter for raw moment (k_counter)
         Each is a list of "Moment" objects. Therefore, they are represented by both a vector of integer
