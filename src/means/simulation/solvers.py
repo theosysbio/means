@@ -21,6 +21,12 @@ class UniqueNameInitialisationMixin(object):
     def unique_name(self):
         return NotImplemented
 
+class SolverException(Exception):
+
+    def __init__(self, base_exception):
+        message = '{0}: {1}'.format(base_exception.__class__.__name__, base_exception.message)
+        super(SolverException, self).__init__(message)
+
 def available_solvers(with_sensitivity_support=False):
     members = inspect.getmembers(sys.modules[__name__])
 
@@ -162,8 +168,8 @@ class SolverBase(object):
         :param solver_exception: the exception raised by the solver
         :type solver_exception: Exception
         """
-        # By default just reraise it
-        raise solver_exception
+        # By default just re-raise it with our wrapper
+        raise SolverException(solver_exception)
 
     def _default_solver_instance(self):
         raise NotImplementedError

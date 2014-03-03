@@ -17,7 +17,7 @@ from means.inference.results import InferenceResultsCollection, InferenceResult,
     NormalConvergenceStatus
 from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
-from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
+from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory, SolverException
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
@@ -569,9 +569,7 @@ class Inference(object):
                 simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                    current_initial_conditions,
                                                                    self.timepoints_to_simulate)
-            #FIXME: this should only catch specific solver exceptions i.e. CVODEError - refactor simulate
-            # to throw only an unified SolverException for all of the different ones
-            except Exception as e:
+            except SolverException as e:
                 print 'Warning: got {0!r} while simulating with '  \
                       'parameters={1!r}, initial_conditions={2!r}. ' \
                       'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
