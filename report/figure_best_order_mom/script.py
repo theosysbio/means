@@ -3,6 +3,10 @@ sys.path.append("../utils")
 from report_unit import ReportUnit
 import pylab as pl
 import pickle
+
+# this rejects unstable trajectories
+REJECTED_TRAJ_THRESHOLD = 10e5
+
 class MyFigureA(ReportUnit):
     def __init__(self):
         super(MyFigureA, self).__init__()
@@ -109,7 +113,11 @@ class MyFigureB(ReportUnit):
         for d in list_of_dict:
             if d["method"] == "SSA":
                 continue
-            d["distance_to_ref"] = self.calc_distance(d["trajectories"])
+            if max(d["trajectories"][0].values) > REJECTED_TRAJ_THRESHOLD:
+                d["distance_to_ref"] = None
+                print  "WAS REJECTED:\n{0}\n______________________".format(d)
+            else:
+                d["distance_to_ref"] = self.calc_distance(d["trajectories"])
 
 
         for clo_arg in closer_args:
@@ -118,7 +126,8 @@ class MyFigureB(ReportUnit):
             for d in list_of_dict:
                 if d["method"] == "SSA":
                     continue
-                if d["closer"] == clo_arg["closer"]:
+
+                if d["closer"] == clo_arg["closer"] and d["distance_to_ref"]:
                     if "multivariate" in d.keys():
                         if d["multivariate"] == clo_arg["multivariate"]:
                             clo_arg["x_list"].append(d["max_order"] )
@@ -129,7 +138,7 @@ class MyFigureB(ReportUnit):
 
 
         pl.figure(figsize=(16.0, 9.0))
-        pl.ylabel('Distance to SSA (A.U.)')
+        pl.ylabel('Distance to SSA (a.u.)')
         pl.xlabel('Max order')
         for clo_arg in closer_args:
             if clo_arg["closer"] == "zero":

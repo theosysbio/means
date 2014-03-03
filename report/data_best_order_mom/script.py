@@ -18,8 +18,7 @@ TMAX = 40
 TIME_RANGE = np.arange(0,TMAX,.1)
 N_SSA = 200
 MAX_ORDER = 5
-# this rejects unstable trajectories
-REJECTED_TRAJ_THRESHOLD = 10e5
+
 
 
 # we run 10 simulations
