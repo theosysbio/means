@@ -3,7 +3,7 @@ import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
 from means.approximation import ODEProblem
 from means.approximation.ode_problem import Moment, VarianceTerm
-from means.inference.results import InferenceResult
+from means.inference.results import InferenceResult, NormalConvergenceStatus
 from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
                                          MODEL_HES1, MODEL_DIMERISATION
@@ -132,9 +132,7 @@ class TestSerialisation(unittest.TestCase):
                             optimal_parameters=[15, 16, -17, 18, 19, 20],
                             optimal_initial_conditions=[-15, -16, -18],
                             distance_at_minimum=15.8,
-                            iterations_taken=100,
-                            function_calls_made=180,
-                            warning_flag=None,
+                            convergence_status=NormalConvergenceStatus(None, 100, 180),
                             solutions=[[([1, 2, 3, 4, 5, 6], [3, 2, 1]), ([3, 2, 1, 0, -1, -2], [1, 2, 3])]],
                             simulation=Simulation(problem)
                             )

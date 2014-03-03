@@ -25,6 +25,12 @@ class ConvergenceStatusBase(SerialisableObject):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.convergence_achieved == other.convergence_achieved
+
 class NormalConvergenceStatus(ConvergenceStatusBase):
 
     yaml_tag = '!convergence-status'
@@ -56,10 +62,20 @@ class NormalConvergenceStatus(ConvergenceStatusBase):
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        mapping = ('warn_flag', data.warn_flag,
-                   'iterations_taken', data.iterations_taken,
-                   'function_calls_made', data.function_calls_made)
+        mapping = [('warn_flag', data.warn_flag),
+                   ('iterations_taken', data.iterations_taken),
+                   ('function_calls_made', data.function_calls_made)]
         return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return super(NormalConvergenceStatus, self).__eq__(other) \
+            and self.iterations_taken == other.iterations_taken\
+            and self.function_calls_made == other.function_calls_made \
+            and self.warn_flag == other.warn_flag
+
 
 class SolverErrorConvergenceStatus(ConvergenceStatusBase):
 
@@ -75,6 +91,13 @@ class SolverErrorConvergenceStatus(ConvergenceStatusBase):
     @classmethod
     def to_yaml(cls, dumper, data):
         return dumper.represent_mapping(cls.yaml_tag, {})
+
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return super(SolverErrorConvergenceStatus, self).__eq__(other)
 
 class InferenceResultsCollection(SerialisableObject):
     __inference_results = None
@@ -262,15 +285,25 @@ class InferenceResult(SerialisableObject):
     def starting_trajectories(self):
         timepoints = self.observed_trajectories[0].timepoints
 
-        starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
-                                                                 self.starting_initial_conditions, timepoints)
+        try:
+            starting_trajectories = self._simulation.simulate_system(self.starting_parameters,
+                                                                     self.starting_initial_conditions, timepoints)
+        # TODO: change exception type
+        except Exception as e:
+            print 'Warning: got {0!r} when obtaining starting trajectories, they will not be plotted'.format(e)
+            return []
+
         return starting_trajectories
 
     @memoised_property
     def optimal_trajectories(self):
         timepoints = self.observed_trajectories[0].timepoints
-        optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
-                                                                self.optimal_initial_conditions, timepoints)
+        try:
+            optimal_trajectories = self._simulation.simulate_system(self.optimal_parameters,
+                                                                    self.optimal_initial_conditions, timepoints)
+        except Exception as e:
+            print 'Warning: got {0!r} when obtaining optimal trajectories, they will not be plotted'.format(e)
+            return []
 
         return optimal_trajectories
 
@@ -280,7 +313,18 @@ class InferenceResult(SerialisableObject):
             return []
 
         timepoints = self.observed_trajectories[0].timepoints
-        return map(lambda x: self._simulation.simulate_system(x[0], x[1], timepoints), self.solutions)
+        simulation = self._simulation
+        trajectories_collection = []
+
+        for parameters, initial_conditions in self.solutions:
+            try:
+                trajectories_collection.append(simulation.simulate_system(parameters, initial_conditions, timepoints))
+            except Exception as e:
+                print "Warning: got {0!r} when trying to obtain one of the intermediate trajectories. " \
+                      "It will not be plotted".format(e)
+                continue
+
+        return trajectories_collection
 
     def plot(self, plot_intermediate_solutions=True,
              plot_observed_data=True, plot_starting_trajectory=True, plot_optimal_trajectory=True,

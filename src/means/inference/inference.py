@@ -19,6 +19,7 @@ from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory
 
+DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
 __all__ = ['Inference', 'InferenceWithRestarts']
 
@@ -30,9 +31,8 @@ class TooManySolverExceptions(Exception):
     """
     Exception that is raised when we had too many solver exceptions for the particular round of optimisation
     """
-    def __init__(self, last_guess, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(TooManySolverExceptions, self).__init__(*args, **kwargs)
-        self.last_guess = last_guess
 
 
 def _to_guess(parameters_with_variability, initial_conditions_with_variability):
@@ -202,7 +202,6 @@ class InferenceWithRestarts(object):
     _return_intermediate_solutions = None
 
     __method = None
-    __simulation_kwargs = None
 
 
     def _validate_range(self, range_):
@@ -224,9 +223,7 @@ class InferenceWithRestarts(object):
 
     def __init__(self, problem, number_of_samples,
                  starting_parameter_ranges, starting_conditions_ranges,
-                 variable_parameters, observed_trajectories, method='sum_of_squares',
-                 return_intermediate_solutions=False, number_of_processes=1,
-                 **simulation_kwargs):
+                 variable_parameters, observed_trajectories, method='sum_of_squares'):
         """
 
         :param problem: Problem to infer parameters for
@@ -245,11 +242,7 @@ class InferenceWithRestarts(object):
               - 'gamma' - maximum likelihood optimisation assuming gamma distribution
               - 'normal'- maximum likelihood optimisation assuming normal distribution
               - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
-        :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
-                                              routine considered as well.
-        :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
-        :param number_of_processes: If set to more than 1, the inference routines will be paralellised
-                                    using ``multiprocessing`` module
+
         """
 
         self.__problem = problem
@@ -279,9 +272,6 @@ class InferenceWithRestarts(object):
             raise ValueError('No observed trajectories provided. Need at least one to perform parameter inference')
 
         self.__method = method
-        self._return_intermediate_solutions = return_intermediate_solutions
-        self.__simulation_kwargs = simulation_kwargs
-        self._number_of_processes = int(number_of_processes)
 
     @memoised_property
     def _inference_objects(self):
@@ -300,20 +290,26 @@ class InferenceWithRestarts(object):
                                                         self.variable_parameters,
                                                         self.observed_trajectories,
                                                         method=self.method,
-                                                        return_intermediate_solutions=self._return_intermediate_solutions,
-                                                        **self.simulation_kwargs))
+                                                        ))
 
         return inference_objects
 
-    def infer(self):
-        if self._number_of_processes <= 1:
-            results = map(lambda x: x.infer(), self._inference_objects)
+    def infer(self, number_of_processes=1, *args, **kwargs):
+        """
+        :param number_of_processes: If set to more than 1, the inference routines will be paralellised
+                                    using ``multiprocessing`` module
+        :param args: arguments to pass to :meth:`Inference.infer`
+        :param kwargs: keyword arguments to pass to :meth:`Inference.infer`
+        :return:
+        """
+        if number_of_processes == 1:
+            results = map(lambda x: x.infer(*args, **kwargs), self._inference_objects)
         else:
             import multiprocessing
 
             inference_objects = self._inference_objects
-            p = multiprocessing.Pool(self._number_of_processes, initializer=_multiprocessing_pool_initialiser,
-                                     initargs=[inference_objects])
+            p = multiprocessing.Pool(number_of_processes, initializer=_multiprocessing_pool_initialiser,
+                                     initargs=[inference_objects, args, kwargs])
             results = p.map(_multiprocessing_apply_infer, range(len(inference_objects)))
             p.close()
 
@@ -356,14 +352,12 @@ class InferenceWithRestarts(object):
     def method(self):
         return self.__method
 
-    @property
-    def simulation_kwargs(self):
-        return self.__simulation_kwargs
 
-
-def _multiprocessing_pool_initialiser(objects):
+def _multiprocessing_pool_initialiser(objects, infer_args, infer_kwargs):
     global inference_objects  # Global is ok here as this function will be called for each process on separate threads
     inference_objects = objects
+    global inference_args, inference_kwargs
+    inference_args, inference_kwargs = infer_args, infer_kwargs
 
 def _multiprocessing_apply_infer(object_id):
     """
@@ -371,9 +365,8 @@ def _multiprocessing_apply_infer(object_id):
     Needs to be in global scope for multiprocessing module to pick it up
 
     """
-    global inference_objects
-    return inference_objects[object_id]._infer_raw()
-
+    global inference_objects, inference_args, inference_kwargs
+    return inference_objects[object_id]._infer_raw(*inference_args, **inference_kwargs)
 
 class Inference(object):
 
@@ -384,15 +377,9 @@ class Inference(object):
     __observed_timepoints = None
     __observed_trajectories = None
     _method = None
-    _simulation = None
-    __return_itnermediate_solutions = None
-
-    __simulation_kwargs = None
 
     def __init__(self, problem, starting_parameters, starting_conditions,
-                 variable_parameters, observed_trajectories, method='sum_of_squares',
-                 return_intermediate_solutions=False,
-                 **simulation_kwargs):
+                 variable_parameters, observed_trajectories, method='sum_of_squares', **simulation_kwargs):
         """
 
         :param problem: ODEProblem to infer data for
@@ -416,8 +403,6 @@ class Inference(object):
                     maximum likelihood optimisation assuming normal distribution
               `'lognormal'`
                     maximum likelihood optimisation assuming lognormal distribution
-        :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
-                                              routine considered as well.
         :param simulation_kwargs: Keyword arguments to pass to the :class:`means.simulation.Simulation` instance
         """
         self.__problem = problem
@@ -456,17 +441,8 @@ class Inference(object):
         self.__observed_timepoints = observed_trajectories[0].timepoints
 
         self._method = method
-        self.__simulation_kwargs = simulation_kwargs
+        self._simulation_kwargs = simulation_kwargs
 
-        self._return_intermediate_solutions = return_intermediate_solutions
-
-    @memoised_property
-    def _simulation(self):
-        return Simulation(self.problem, **self.simulation_kwargs)
-
-    @property
-    def simulation_kwargs(self):
-        return self.__simulation_kwargs
 
     def _generate_values_with_variability_and_constraints(self, symbols, starting_values, variable_parameters):
         """
@@ -545,65 +521,107 @@ class Inference(object):
     def _distance_between_trajectories_function(self):
         return get_distance_function(self.method)
 
-    def _infer_raw(self):
+    class _DistancesCalculator(object):
 
-        initial_guess = _to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
-        observed_trajectories_lookup = self.observed_trajectories_lookup
+        def __init__(self, problem, constraints,
+                     parameters_with_variability, initial_conditions_with_variability,
+                     timepoints_to_simulate, observed_trajectories_lookup,
+                     distance_comparison_function,
+                     simulation_instance,
+                     exception_limit):
 
-        problem = self.problem
-        starting_conditions_with_variability = self.starting_conditions_with_variability
-        starting_parameters_with_variability = self.starting_parameters_with_variability
+            self.problem = problem
+            self.constraints = constraints
 
-        timepoints_to_simulate = self.observed_timepoints
+            self.parameters_with_variability = parameters_with_variability
+            self.initial_conditions_with_variability = initial_conditions_with_variability
+            self.simulation_instance = simulation_instance
+            self.distance_comparison_function = distance_comparison_function
+            self.timepoints_to_simulate = timepoints_to_simulate
+            self.observed_trajectories_lookup = observed_trajectories_lookup
+            self.exception_limit = exception_limit
+            self.exception_count = 0
+            self.best_so_far_distance = None
+            self.best_so_far_guess = None
 
-        _distance_between_trajectories_function = self._distance_between_trajectories_function
 
-        self.exception_count = 0
-        exception_limit = 1
+        def _constraints_are_satisfied(self, current_guess):
+            return _constraints_are_satisfied(current_guess, self.constraints)
 
-        def distance(current_guess):
+        def extract_parameters_from_optimisation_guess(self, current_guess):
+            return _extract_params_from_i0(current_guess,
+                                           self.parameters_with_variability, self.initial_conditions_with_variability)
+
+        def _distance_to_simulated_trajectories(self, simulated_trajectories):
+            return self.distance_comparison_function(simulated_trajectories, self.observed_trajectories_lookup)
+
+        def __call__(self, current_guess):
             if not self._constraints_are_satisfied(current_guess):
                 return MAX_DIST
 
-            current_parameters, current_initial_conditions = _extract_params_from_i0(current_guess,
-                                                                        starting_parameters_with_variability,
-                                                                        starting_conditions_with_variability)
+            current_parameters, current_initial_conditions = self.extract_parameters_from_optimisation_guess(current_guess)
 
-            if _some_params_are_negative(problem, current_parameters, current_initial_conditions):
+            if _some_params_are_negative(self.problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
 
-            simulator = self._simulation
+            simulator = self.simulation_instance
             try:
                 simulated_trajectories = simulator.simulate_system(current_parameters,
                                                                    current_initial_conditions,
-                                                                   timepoints_to_simulate)
+                                                                   self.timepoints_to_simulate)
+            #FIXME: this should only catch specific solver exceptions i.e. CVODEError - refactor simulate
+            # to throw only an unified SolverException for all of the different ones
             except Exception as e:
+                print 'Warning: got {0!r} while simulating with '  \
+                      'parameters={1!r}, initial_conditions={2!r}. ' \
+                      'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
                 self.exception_count += 1
-                if self.exception_count < exception_limit:
-                    print 'Warning: got {0!r} while simulating with '  \
-                          'parameters={1!r}, initial_conditions={2!r}. ' \
-                          'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
-                    return MAX_DIST
+                if self.exception_limit is not None and self.exception_count > self.exception_limit:
+                    raise TooManySolverExceptions('Solver exception limit reached while exploring the inference space.')
                 else:
-                    raise TooManySolverExceptions(current_guess, 'Solver exception limit reached '
-                                                                 'while exploring the inference space.')
+                    return MAX_DIST
 
-            dist = _distance_between_trajectories_function(simulated_trajectories, observed_trajectories_lookup)
+
+            dist = self._distance_to_simulated_trajectories(simulated_trajectories)
+            # Keep track of the best-so-far score if we cancel early due to too many exceptions
+            if dist < self.best_so_far_distance:
+                self.best_so_far_distance = dist
+                self.best_so_far_guess = current_guess
+
             return dist
 
+
+    def _infer_raw(self, return_intermediate_solutions=False, solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
+
+        initial_guess = _to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
+
+        distances_calculator = self._DistancesCalculator(self.problem,
+                                                         self.constraints,
+                                                         self.starting_parameters_with_variability,
+                                                         self.starting_conditions_with_variability,
+                                                         self.observed_timepoints,
+                                                         self.observed_trajectories_lookup,
+                                                         self._distance_between_trajectories_function,
+                                                         self._simulation,
+                                                         exception_limit=solver_exceptions_limit)
+
         try:
-            result = fmin(distance, initial_guess, ftol=FTOL, disp=0, full_output=True,
-                          retall=self._return_intermediate_solutions)
+            result = fmin(distances_calculator, initial_guess, ftol=FTOL, disp=0, full_output=True,
+                          retall=return_intermediate_solutions)
         except TooManySolverExceptions as e:
-            print 'Warning: Reached maximum number of exceptions from solver. Stopping inference'
-            optimised_data = e.last_guess
+            print 'Warning: Reached maximum number of exceptions from solver. Stopping inference here'
+            if distances_calculator.best_so_far_guess is not None:
+                optimised_data = distances_calculator.best_so_far_guess
+            else:
+                optimised_data = initial_guess
+
             distance_at_minimum = MAX_DIST
             convergence_status = SolverErrorConvergenceStatus()
             all_vecs = None
         except Exception:
             raise
         else:
-            if self._return_intermediate_solutions:
+            if return_intermediate_solutions:
                 optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag, all_vecs = result
             else:
                 optimised_data, distance_at_minimum, iterations_taken, function_calls_made, warning_flag = result
@@ -611,9 +629,8 @@ class Inference(object):
 
             convergence_status = NormalConvergenceStatus(warning_flag, iterations_taken, function_calls_made)
 
-        optimal_parameters, optimal_initial_conditions = _extract_params_from_i0(optimised_data,
-                                                                                self.starting_parameters_with_variability,
-                                                                                self.starting_conditions_with_variability)
+        optimal_parameters, optimal_initial_conditions \
+            = distances_calculator.extract_parameters_from_optimisation_guess(optimised_data)
 
         if all_vecs is not None:
             solutions = []
@@ -627,8 +644,7 @@ class Inference(object):
         return optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions
 
     def _result_from_raw_result(self, raw_result):
-        optimal_parameters, optimal_initial_conditions, \
-               distance_at_minimum, convergence_status, solutions = raw_result
+        optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions = raw_result
 
         result = InferenceResult(self.problem, self.observed_trajectories,
                                  self.starting_parameters, self.starting_conditions,
@@ -640,8 +656,13 @@ class Inference(object):
         return result
 
 
-    def infer(self):
-        raw_result = self._infer_raw()
+    def infer(self, return_intermediate_solutions=False, solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
+        """
+
+        :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
+        """
+        raw_result = self._infer_raw(return_intermediate_solutions,
+                                     solver_exceptions_limit=solver_exceptions_limit)
         return self._result_from_raw_result(raw_result)
 
     @property
@@ -671,9 +692,13 @@ class Inference(object):
     def constraints(self):
         return self.__constraints
 
-    def _constraints_are_satisfied(self, current_guess):
-        return _constraints_are_satisfied(current_guess, self.constraints)
+    @property
+    def simulation_kwargs(self):
+        return self._simulation_kwargs.copy()
 
+    @memoised_property
+    def _simulation(self):
+        return Simulation(self.problem, **self.simulation_kwargs)
 
     @property
     def observed_timepoints(self):
