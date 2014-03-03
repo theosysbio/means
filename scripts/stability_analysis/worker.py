@@ -29,15 +29,15 @@ def recursively_generate_parameters(parameters_to_simulate, parameter_index, cur
                 yield result
 
 def simulation_parameters():
-    parameters_for_simulation = [np.arange(70, 90, 5),
+    parameters_for_simulation = [np.arange(70, 90, 2),
                                  [0.002],
-                                 np.arange(1.2, 2.2, 0.5),
+                                 np.arange(1.2, 2.2, 0.2),
                                  [1.1],
-                                 np.arange(0.8, 2, 0.5),
-                                 np.arange(0.8, 2, 0.5),
+                                 np.arange(0.8, 2, 0.2),
+                                 np.arange(0.8, 2, 0.2),
                                  [0.01]]
 
-    max_orders_for_simulation = [5]
+    max_orders_for_simulation = [2, 3, 4, 5]
 
 
     current_parameters_list = [None] * len(parameters_for_simulation)
@@ -100,6 +100,7 @@ def process_f(queue):
 def main():
     if not os.path.exists(OUTPUT_DATA_DIR):
         os.mkdir(OUTPUT_DATA_DIR)
+
     queue = multiprocessing.Queue()
 
     processes = []
