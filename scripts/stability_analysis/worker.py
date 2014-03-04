@@ -101,7 +101,7 @@ def process_f(queue):
             problem = means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order).run()
             problems[max_order] = problem
 
-        print 'Simulating for {0!r}'.format(kwargs)
+        #print 'Simulating for {0!r}'.format(kwargs)
         simulation = means.simulation.Simulation(problem=problem)
         exception_caught = None
         try:
@@ -130,7 +130,7 @@ def main():
 
     if mode == 'count':
         print 'Count only mode:'
-        print len(list(simulation_parameters(sys.argv[1])))
+        print len(list(simulation_parameters(param_file)))
         return
     elif mode != 'work':
         raise Exception("Unknown mode {0!r} provided".format(mode))
@@ -147,7 +147,7 @@ def main():
         process.start()
 
     count = 0
-    for parameter_set in simulation_parameters():
+    for parameter_set in simulation_parameters(param_file):
         count += 1
         queue.put(parameter_set)
 
