@@ -1,3 +1,4 @@
+from functools import wraps
 import multiprocessing
 import sys
 import means
@@ -17,6 +18,23 @@ import os
 
 TIMEPOINTS = np.arange(0, 40, 0.1)
 
+def memoised(function):
+    cache = {}
+
+    @wraps(function)
+    def f(*args, **kwargs):
+
+        key = pickle.dumps(list(args) + sorted(kwargs.items()), pickle.HIGHEST_PROTOCOL)
+        try:
+            return cache[key]
+        except KeyError:
+            answer = function(*args, **kwargs)
+            cache[key] = answer
+            return answer
+
+    return f
+
+
 def recursively_generate_parameters(parameters_to_simulate, parameter_index, current_parameter_vector):
     if parameter_index >= len(parameters_to_simulate):
         yield current_parameter_vector[:]
@@ -30,8 +48,74 @@ def recursively_generate_parameters(parameters_to_simulate, parameter_index, cur
                                                           current_parameter_vector):
                 yield result
 
-def simulation_parameters(params_file):
-    with open(params_file) as f:
+def simulation_parameters(max_orders, parameters_for_simulation):
+
+    current_parameters_list = [None] * len(parameters_for_simulation)
+
+    for parameter_set in recursively_generate_parameters(parameters_for_simulation, 0, current_parameters_list):
+        for max_order in max_orders:
+            yield {'max_order': max_order,
+                   'parameters': parameter_set,
+                   'initial_conditions': [70, 30, 90]}
+
+
+
+def _unique_filename(kwargs):
+    import hashlib
+    kwargs_as_sorted_list = sorted(kwargs.items())
+    payload = pickle.dumps(kwargs_as_sorted_list, pickle.HIGHEST_PROTOCOL)
+
+    sha_hash = hashlib.sha1(payload).hexdigest()
+    filename = '.'.join([sha_hash, 'pickle'])
+
+    return os.path.join(OUTPUT_DATA_DIR, filename)
+
+@memoised
+def _simulation_instance(max_order, simulation_kwargs):
+    problem = _problem_instance(max_order)
+    return means.simulation.Simulation(problem, **simulation_kwargs)
+
+@memoised
+def _problem_instance(max_order):
+    print 'Computing problem for max_order={0!r}'.format(max_order)
+    problem = means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order).run()
+    print 'Done'
+    return problem
+
+def process_f(queue):
+
+    while True:
+        original_kwargs = queue.get(block=True)
+
+        if original_kwargs == NO_MORE_ITEMS_TO_PROCESS:
+            print 'Got NO_MORE_ITEMS_TO_PROCESS. Dying'
+            break
+
+        filename = _unique_filename(original_kwargs)
+        if os.path.exists(filename):
+            continue
+
+        kwargs = original_kwargs.copy()
+        max_order = kwargs.pop('max_order')
+        simulation_kwargs = kwargs.pop('simulation_kwargs', {})
+        simulation = _simulation_instance(max_order, simulation_kwargs)
+
+        exception_caught = None
+        print "Simulating for {0!r}".format(kwargs)
+        try:
+            trajectories = simulation.simulate_system(timepoints=TIMEPOINTS, **kwargs)
+        except Exception as e:
+            exception_caught = e
+            trajectories = None
+
+        with open(filename, 'w') as f:
+
+            pickle.dump({'kwargs': original_kwargs,
+                         'trajectories': trajectories,
+                         'exception': exception_caught}, f)
+
+def read_parameters(prameter_filename):
+    with open(prameter_filename) as f:
         contents = f.read()
 
     parameters = yaml.load(contents)
@@ -47,81 +131,17 @@ def simulation_parameters(params_file):
                 raise
 
         parameters_for_simulation.append(param)
+    max_orders = map(int, parameters['max_orders'])
 
-    # parameters_for_simulation = [#np.arange(70, 90, 0.1),
-    #                              [90],
-    #                              [0.002],
-    #                              #np.arange(1.2, 2.2, 0.01),
-    #                              [1.7],
-    #                              [1.1],
-    #                              np.arange(0.8, 2, 0.05),
-    #                              np.arange(0.8, 2, 0.05),
-    #                              [0.01]]
-
-    max_orders_for_simulation = map(int, parameters['max_orders'])
-
-    current_parameters_list = [None] * len(parameters_for_simulation)
-
-    for parameter_set in recursively_generate_parameters(parameters_for_simulation, 0, current_parameters_list):
-        for max_order in max_orders_for_simulation:
-            yield {'max_order': max_order,
-                   'parameters': parameter_set,
-                   'initial_conditions': [70, 30, 90]}
-
-def _unique_filename(kwargs):
-    import hashlib
-    kwargs_as_sorted_list = sorted(kwargs.items())
-    payload = pickle.dumps(kwargs_as_sorted_list, pickle.HIGHEST_PROTOCOL)
-
-    sha_hash = hashlib.sha1(payload).hexdigest()
-    filename = '.'.join([sha_hash, 'pickle'])
-
-    return os.path.join(OUTPUT_DATA_DIR, filename)
-
-def process_f(queue):
-    problems = {}
-
-    while True:
-        original_kwargs = queue.get(block=True)
-
-        if original_kwargs == NO_MORE_ITEMS_TO_PROCESS:
-            print 'Got NO_MORE_ITEMS_TO_PROCESS. Dying'
-            break
-
-        filename = _unique_filename(original_kwargs)
-        if os.path.exists(filename):
-            continue
-
-        kwargs = original_kwargs.copy()
-        max_order = kwargs.pop('max_order')
-        try:
-            problem = problems[max_order]
-        except KeyError:
-            print 'Problem for max_order={0!r} not cached yet, computing it'.format(max_order)
-            problem = means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order).run()
-            problems[max_order] = problem
-
-        #print 'Simulating for {0!r}'.format(kwargs)
-        simulation = means.simulation.Simulation(problem=problem)
-        exception_caught = None
-        try:
-            trajectories = simulation.simulate_system(timepoints=TIMEPOINTS, **kwargs)
-        except Exception as e:
-            exception_caught = e
-            trajectories = None
-
-        with open(filename, 'w') as f:
-
-            pickle.dump({'kwargs': original_kwargs,
-                         'trajectories': trajectories,
-                         'exception': exception_caught}, f)
-
+    return max_orders, parameters_for_simulation
 
 def main():
     if not os.path.exists(OUTPUT_DATA_DIR):
         os.mkdir(OUTPUT_DATA_DIR)
 
     param_file = sys.argv[1]
+
+    max_orders, parameters_for_simulation = read_parameters(param_file)
 
     try:
         mode = sys.argv[2]
@@ -130,11 +150,16 @@ def main():
 
     if mode == 'count':
         print 'Count only mode:'
-        print len(list(simulation_parameters(param_file)))
+        print len(list(simulation_parameters(max_orders, parameters_for_simulation)))
         return
     elif mode != 'work':
         raise Exception("Unknown mode {0!r} provided".format(mode))
 
+    # Pre-calculate problems
+    print 'Precalculating problems'
+    for max_order in max_orders:
+        _problem_instance(max_order)
+    print 'Precalculating problems finished'
     queue = multiprocessing.Queue()
 
     processes = []
@@ -147,7 +172,7 @@ def main():
         process.start()
 
     count = 0
-    for parameter_set in simulation_parameters(param_file):
+    for parameter_set in simulation_parameters(max_orders, parameters_for_simulation):
         count += 1
         queue.put(parameter_set)
 
