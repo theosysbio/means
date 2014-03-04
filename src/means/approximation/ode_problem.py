@@ -1,6 +1,7 @@
 import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
+from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
@@ -195,7 +196,7 @@ class Moment(ODETermBase):
         mapping = [('symbol', str(data.symbol)), ('n_vector', data.n_vector.tolist())]
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
-class ODEProblem(SerialisableObject):
+class ODEProblem(SerialisableObject, LatexPrintableObject):
     """
     Stores the left and right hand side equations to be simulated
 
@@ -283,6 +284,10 @@ class ODEProblem(SerialisableObject):
         return self.__constants
 
     @property
+    def number_of_parameters(self):
+        return len(self.constants)
+
+    @property
     def method(self):
         return self.__method
 
@@ -364,6 +369,33 @@ class ODEProblem(SerialisableObject):
         lines.append(r"\end{align*}")
         return "\n".join(lines)
 
+    @property
+    def latex(self):
+        STRING_RIGHT_HAND = 'RHS of equations:'
+        STRING_MOM = 'List of moments:'
+
+        left_hand_side = self.ode_lhs_terms
+        preamble = ["\documentclass{article}"]
+        preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
+        lines = ["\\begin{document}"]
+        lines += ["\section*{%s}" % STRING_RIGHT_HAND]
+
+        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
+                    for (rhs, lhs) in zip(self.right_hand_side, left_hand_side)]
+
+        lines += [r"\\"] * 5
+
+        lines += ["\section*{%s}" % STRING_MOM]
+
+
+        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
+                       for lhs in left_hand_side if isinstance(lhs, Moment)]
+
+        lines += ["\end{document}"]
+
+        return '\n'.join(preamble + lines)
+
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -379,49 +411,3 @@ class ODEProblem(SerialisableObject):
                    ('right_hand_side', map(str, data.right_hand_side))]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
-
-class ODEProblemLatexWriter(object):
-    """
-    A class to write formated LaTeX equations representing a problem
-    """
-    def __init__(self, problem):
-        """
-        :param problem: the problem to be written
-        :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
-        """
-        self._problem = problem
-        self._STRING_RIGHT_HAND = 'RHS of equations:'
-        self._STRING_LEFT_HAND = 'LHS:'
-        self._STRING_CONSTANT = 'Constants:'
-        self._N_VARIABLE = 'Number of variables:'
-        self._N_MOMENTS = 'Number of moments:'
-        self._N_EQS = 'Number of equations:'
-        self._STRING_MOM = 'List of moments:'
-
-    def build_out_string_list(self):
-
-        """
-        Overrides the default method and provides latex expressions instead of plain text
-        :return: LaTeX formated list of strings
-        """
-        left_hand_side = self._problem.ode_lhs_terms
-        preamble = ["\documentclass{article}"]
-        preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
-        lines = ["\\begin{document}"]
-        lines += ["\section*{%s}" % self._STRING_RIGHT_HAND]
-
-        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
-                    for (rhs, lhs) in zip(self._problem.right_hand_side, left_hand_side)]
-
-        lines += [r"\\"] * 5
-
-        lines += ["\section*{%s}" % self._STRING_MOM]
-        #ordered_moments = sorted([(i,m) for (m,i) in self._problem.moment_dic.items()])
-
-
-        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
-                       for lhs in left_hand_side if isinstance(lhs, Moment)]
-
-        lines += ["\end{document}"]
-
-        return preamble + lines

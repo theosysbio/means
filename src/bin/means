@@ -3,15 +3,13 @@ import os
 import sys
 
 from means.approximation.lna.lna import LinearNoiseApproximation
-from means.inference.hypercube import hypercube
 from means.simulation.simulate import simulate
 from means.simulation.paramtime import paramtime
 from means.model.model import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import ODEProblemLatexWriter, ODEProblem
+from means.approximation.ode_problem import ODEProblem
 from means.simulation.simulate import graphbuilder
-from means.inference.sumsq_infer import write_inference_results, graph, parse_experimental_data_file, ParameterInference
-
+from means.inference.inference import parse_experimental_data_file, Inference, InferenceWithRestarts
 
 def printOptions():
     print "\nList of possible options:"
@@ -44,7 +42,6 @@ def printOptions():
 
     print "\n Graph options:"
     print "  --plot\tPlot simulated or inferred moment trajectories."
-    print "  --plottitle\tSpecify plot title."
 
     print "\n  --help\tPrints out this list of options.\n"
 
@@ -89,7 +86,6 @@ def run():
             elif option[0:10]=='timeparam=':tpfile=option[10:]
             elif option == 'sim' : solve = True
             elif option == 'plot' : plot = True
-            elif option[0:10] == 'plottitle=' : plottitle = option[10:]
             elif option[0:7] == 'simout=' : trajout = option[7:]
             elif option[0:9] == 'maxorder=' : maxorder = int(option[9:])
             elif option == 'infer' : infer = True
@@ -143,8 +139,7 @@ def run():
         problem = approximation.run()
 
         problem.to_file(ODEout)
-        tex_writer = ODEProblemLatexWriter(problem)
-        tex_writer.write_to('.'.join([ODEout, "tex"]))
+        problem.output_latex('.'.join([ODEout, 'tex']))
 
     if solve and infer:
         print "\n  Error:\n  Please choose EITHER --solve or --infer but not both.\n"
@@ -155,11 +150,10 @@ def run():
             print "\n  Error:\n  "+tpfile+"  does not exist in working directory.\n  Please try again with correct timepoint/parameter filename.\n"
             sys.exit(1)
 
-        [t,param,initcond,vary, varyic, limits] = paramtime(tpfile,restart, limit)
         problem = ODEProblem.from_file(ODEout)
+        t,param,initcond, __ = paramtime(tpfile,restart, limit, problem)
 
-        solution, momlist = simulate(problem,
-                                         trajout,t,param,initcond, maxorder)
+        solution, momlist = simulate(problem, trajout, t, param, initcond, maxorder)
 
         if plot:
             graphbuilder(solution,ODEout,plottitle,t,momlist)
@@ -188,48 +182,27 @@ def run():
         (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
 
         try:
-            [t, param, initcond, vary, varyic, limits] = paramtime(tpfile, restart, limit)
+            t, param, initcond, variable_parameters = paramtime(tpfile, restart, limit, problem)
         except ValueError:
             print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
                   'for all parameter values.'.format(tpfile)
             sys.exit(1)
+        optimiser_method = distribution if distribution else 'sum_of_squares'
+
         if restart:
-            all_params = hypercube(int(nRestart), param[:] + initcond[:])
-            # TODO: hypercube is a bit funny in how it returns stuff
-            all_params = [(x[:len(param)], x[len(param):]) for x in all_params]
+            inference = InferenceWithRestarts(problem, int(nRestart),
+                                              param, initcond, variable_parameters,
+                                              observed_trajectories,
+                                              method=optimiser_method)
         else:
-            all_params = [(param, initcond)]
-
-        restart_results = []
-        for param_n, initcond_n in all_params:
-             # FIXME: this should not be here
-            if len(initcond_n) != problem.number_of_equations:
-                # This just applies padding of [0, False] to unspecified initconditions
-                # consider moving it to appropriate parse function instead
-                diff = problem.number_of_equations - len(initcond_n)
-                initcond_n += [0] * diff
-                initcond_full = initcond_n
-                varyic += [False] * diff
-
-            params_with_variability = zip(param_n, vary)
-            initcond_with_variability = zip(initcond_n, varyic)
-
-            optimiser_method = distribution if distribution else 'sum_of_squares'
-            optimiser = ParameterInference(problem, params_with_variability,
-                                           initcond_with_variability, limits,
-                                           observed_timepoints,
+            inference = Inference(problem, param,
+                                           initcond, variable_parameters,
                                            observed_trajectories,
                                            method=optimiser_method)
-            result = optimiser.infer()
-
-            restart_results.append([result, observed_trajectories, param_n, initcond_n])
-
-        restart_results.sort(key=lambda x: x[0][1], reverse=False)
-
-        # write results to file (default name 'inference.txt') and plot graph if selected
-        write_inference_results(restart_results, t, vary, initcond_full, varyic, inferfile)
+        result = inference.infer()
+        result.to_file(inferfile)
         if plot:
-            graph(problem, restart_results[0], observed_trajectories, t, initcond_full, vary, varyic, plottitle)
-
-
+            from matplotlib import pyplot as plt
+            result.plot()
+            plt.show()
 run()

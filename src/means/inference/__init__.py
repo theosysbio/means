@@ -1,1 +1,1 @@
-from sumsq_infer import ParameterInference
+from inference import *

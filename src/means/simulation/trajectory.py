@@ -1,7 +1,8 @@
 import numpy as np
 from means.approximation.ode_problem import Descriptor
 from means.io.serialise import SerialisableObject
-
+import operator
+import numbers
 
 class SensitivityTerm(Descriptor):
     r"""
@@ -125,8 +126,38 @@ class Trajectory(SerialisableObject):
         label = str(label)
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
 
+    def resample(self, new_timepoints, extrapolate=False):
+        if not extrapolate:
+            if min(self.timepoints) > min(new_timepoints):
+                raise Exception("Some of the new time points are before any time points. If you really want to extrapolate, use `extrapolate=True`")
+            if max(self.timepoints) < max(new_timepoints):
+                raise Exception("Some of the new time points are after any time points. If you really want to extrapolate, use `extrapolate=True`")
+        new_values = np.interp(new_timepoints, self.timepoints, self.values)
+        return Trajectory(new_timepoints, new_values, self.description)
+
     def __repr__(self):
-        return '{0}({1}, {2}, {3})'.format(self.__class__.__name__, self.timepoints, self.values, self.description)
+
+        n_edge_items = 4
+        precision = 3
+
+        if len(self.timepoints) <= 2*n_edge_items:
+            timepoint_to_print = ", ".join([str(round(i,precision)) for i in self.timepoints])
+            values_to_print = ", ".join([str(round(i,precision)) for i in self.values])
+        else:
+            left_time = ", ".join([str(round(i,precision)) for i in self.timepoints[0: n_edge_items]])
+            right_time = ", ".join([str(round(i,precision)) for i in self.timepoints[-n_edge_items: len(self.timepoints)]])
+
+            timepoint_to_print = "{0}, ...,{1}".format(left_time, right_time)
+            left_values = ", ".join([str(round(i,precision)) for i in self.values[0: n_edge_items]])
+            right_values = ", ".join([str(round(i,precision)) for i in self.values[-n_edge_items: len(self.values)]])
+            values_to_print = "{0}, ...,{1}".format(left_values, right_values)
+
+        return '{0} object\ndescription: {1}\ntime points: [{2}]\nvalues: [{3}]'.format(
+            self.__class__.__name__,
+            self.description,
+            timepoint_to_print,
+            values_to_print)
+
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -134,6 +165,42 @@ class Trajectory(SerialisableObject):
 
         return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
             and self.description == other.description
+
+    def __add__(self, other):
+        return self._arithmetic_operation(other, operator.add)
+    def __div__(self, other):
+        return self._arithmetic_operation(other, operator.div)
+    def __mul__(self, other):
+        return self._arithmetic_operation(other, operator.mul)
+    def __sub__(self, other):
+        return self._arithmetic_operation(other, operator.sub)
+    def __pow__(self, other):
+        return self._arithmetic_operation(other, operator.pow)
+
+    def __radd__(self, other):
+        # for `sum()`    to work
+        return self + other
+
+
+    def _arithmetic_operation(self, other, operation):
+        """
+        Applies an operation between the values of a trajectories and a scalar or between
+        the respective values of two trajectories. In the latter case, trajectories should have
+        equal descriptions and time points
+        """
+        if isinstance(other, Trajectory):
+            if self.description != other.description:
+                raise Exception("Cannot add trajectories with different descriptions")
+            if not np.array_equal(self.timepoints, other.timepoints):
+                raise Exception("Cannot add trajectories with different time points")
+            new_values = operation(self.values, other.values)
+        elif isinstance(other, numbers.Real):
+            new_values = operation(self.values, float(other))
+        else:
+            raise Exception("Arithmetic operations is between two `Trajectory` objects or a `Trajectory` and a scalar.")
+
+        return Trajectory(self.timepoints, new_values, self.description)
+
 
     @classmethod
     def to_yaml(cls, dumper, data):

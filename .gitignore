@@ -45,7 +45,9 @@ ODEout
 ODEout.*
 model*.tex
 *.tmp
-
+*.pickle
+*.pdf
+*~
 
 
 .DS_Store
