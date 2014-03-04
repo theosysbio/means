@@ -1,7 +1,9 @@
 import multiprocessing
+import sys
 import means
 import means.examples
 import numpy as np
+import yaml
 
 NUMBER_OF_PROCESSES = multiprocessing.cpu_count()
 MODEL = means.examples.MODEL_P53
@@ -28,17 +30,35 @@ def recursively_generate_parameters(parameters_to_simulate, parameter_index, cur
                                                           current_parameter_vector):
                 yield result
 
-def simulation_parameters():
-    parameters_for_simulation = [np.arange(70, 90, 2),
-                                 [0.002],
-                                 np.arange(1.2, 2.2, 0.2),
-                                 [1.1],
-                                 np.arange(0.8, 2, 0.2),
-                                 np.arange(0.8, 2, 0.2),
-                                 [0.01]]
+def simulation_parameters(params_file):
+    with open(params_file) as f:
+        contents = f.read()
 
-    max_orders_for_simulation = [2, 3, 4, 5]
+    parameters = yaml.load(contents)
 
+    parameters_for_simulation = []
+    for param in parameters['parameters_for_simulation']:
+        try:
+            param = [float(param)]
+        except TypeError:
+            if len(param) == 3:
+                param = np.arange(*param)
+            else:
+                raise
+
+        parameters_for_simulation.append(param)
+
+    # parameters_for_simulation = [#np.arange(70, 90, 0.1),
+    #                              [90],
+    #                              [0.002],
+    #                              #np.arange(1.2, 2.2, 0.01),
+    #                              [1.7],
+    #                              [1.1],
+    #                              np.arange(0.8, 2, 0.05),
+    #                              np.arange(0.8, 2, 0.05),
+    #                              [0.01]]
+
+    max_orders_for_simulation = map(int, parameters['max_orders'])
 
     current_parameters_list = [None] * len(parameters_for_simulation)
 
@@ -100,6 +120,20 @@ def process_f(queue):
 def main():
     if not os.path.exists(OUTPUT_DATA_DIR):
         os.mkdir(OUTPUT_DATA_DIR)
+
+    param_file = sys.argv[1]
+
+    try:
+        mode = sys.argv[2]
+    except IndexError:
+        mode = 'work'
+
+    if mode == 'count':
+        print 'Count only mode:'
+        print len(list(simulation_parameters(sys.argv[1])))
+        return
+    elif mode != 'work':
+        raise Exception("Unknown mode {0!r} provided".format(mode))
 
     queue = multiprocessing.Queue()
 
