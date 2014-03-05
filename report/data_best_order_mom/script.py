@@ -16,7 +16,7 @@ RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
 INITIAL_CONDITIONS = [70, 30, 60]
 TMAX = 40
 TIME_RANGE = np.arange(0,TMAX,.1)
-N_SSA = 10
+N_SSA = int(2e4)
 MAX_ORDER = 9
 
 
@@ -28,13 +28,17 @@ MAX_ORDER = 9
 
 ssa_simulator = SSASimulator(MODEL)
 def get_one_ssa_traj(i):
-    print i
-    # here the trick it to set the random seed according to i so that
-    # we have different results for different processes
-    ssa_simulator.reset_random_seed(i)
-    one_run_trajectories = ssa_simulator.simulate_system(RATES, INITIAL_CONDITIONS, TMAX)
-    one_run_trajectories = [tr.resample(TIME_RANGE) for tr in one_run_trajectories]
-    return one_run_trajectories
+    try:
+        print i
+        # here the trick it to set the random seed according to i so that
+        # we have different results for different processes
+        ssa_simulator.reset_random_seed(i)
+        one_run_trajectories = ssa_simulator.simulate_system(RATES, INITIAL_CONDITIONS, TMAX)
+        one_run_trajectories = [tr.resample(TIME_RANGE) for tr in one_run_trajectories]
+        return one_run_trajectories
+    except KeyboardInterrupt:
+        exit(0)
+
 
 def get_one_mea_result(max_order_cl_arg):
     try:
