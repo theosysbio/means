@@ -3,7 +3,7 @@ sys.path.append("../utils")
 from report_unit import ReportUnit
 import pylab as pl
 import pickle
-
+import math
 # this rejects unstable trajectories
 REJECTED_TRAJ_THRESHOLD = 10e5
 
@@ -21,12 +21,13 @@ class MyFigureA(ReportUnit):
 
 
 
-        f, axarr = pl.subplots(n_species, max_order, sharex=True, sharey=True, figsize=(16.0, 9.0))
+        f, axarr = pl.subplots(max_order-1, n_species, sharex=True, sharey=True, figsize=(9.0, 16.0))
         #f, axarr = pl.subplots(3, max_order)
 
-        for sps in range (n_species):
 
-            for mo in range(1,max_order+1):
+
+        for mo in range(2,max_order+1):
+            for sps in range (n_species):
                 print (sps,mo)
                 for d in list_of_dict:
                     if  d["method"] == "SSA":
@@ -46,7 +47,7 @@ class MyFigureA(ReportUnit):
                         elif d["closer"] == "log-normal":
                             color="r"
                         elif d["closer"] == "normal":
-                            color="g"
+                            color="m"
                         else:
                             raise Exception("unexpected closer: {0}".format(d["closer"]))
 
@@ -64,9 +65,22 @@ class MyFigureA(ReportUnit):
                     else:
                         continue
 
-                    axarr[sps, mo-1].plot(x,y,linestyle=style, color=color, linewidth=lwd)
-                    f.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0)
-        pl.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+                    ax =axarr[mo-2, sps]
+                    ax.plot(x,y,linestyle=style, color=color, linewidth=lwd)
+                    text="species: y_{0}; max order: {1}".format(sps,mo)
+                    ax.text(0.95, 0.95, text,
+                        verticalalignment='top', horizontalalignment='right', fontsize=8, transform=ax.transAxes)
+                    if sps ==0:
+                        ax.set_ylabel('#Molecules')
+                    ax.set_xlabel('time')
+
+                    ax.tick_params(top='off', bottom='on', left='on', right='off')
+                    f.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0, wspace=0)
+
+        pl.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.05)
+        #pl.set_xticks([10, 20, 30, 40])
+        #pl.set_yticks([20, 30, 40, 50, 60, 70,80])
+
         pl.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
 
 
@@ -79,7 +93,8 @@ class MyFigureA(ReportUnit):
         #    pl.plot(d["n_eq"], d["dt"], linewidth=2.5, linestyle='--', marker='o', label=d["legend"])
         #pl.legend(loc='upper right')
         #pl.show()
-
+        #pl.legend()
+        pl.suptitle("Effect of max order an closure method on\nmoment expansion approximation", fontsize=14)
         pl.savefig('figureA.pdf')
         pl.close()
 
@@ -92,7 +107,7 @@ class MyFigureB(ReportUnit):
     def calc_distance(self, trajectories):
 
         diffs =[(s.values - t.values) ** 2 for s, t  in zip (self.ssa_reference, trajectories)]
-        return sum([sum(d) for d in diffs])
+        return math.log10(sum([sum(d) for d in diffs])/1000)
 
     def run(self):
         with open("../data_best_order_mom.pickle") as f:
@@ -138,7 +153,7 @@ class MyFigureB(ReportUnit):
 
 
         pl.figure(figsize=(16.0, 9.0))
-        pl.ylabel('Distance to SSA (a.u.)')
+        pl.ylabel('log10(Distance to GSSA) (a.u.)')
         pl.xlabel('Max order')
         for clo_arg in closer_args:
             if clo_arg["closer"] == "zero":
@@ -146,7 +161,7 @@ class MyFigureB(ReportUnit):
             elif clo_arg["closer"] == "log-normal":
                 color="r"
             elif clo_arg["closer"] == "normal":
-                color="g"
+                color="m"
             else:
                 raise Exception("unexpected closer: {0}".format(clo_arg["closer"]))
             lab = "closure: " + clo_arg["closer"]
