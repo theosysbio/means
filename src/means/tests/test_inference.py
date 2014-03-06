@@ -240,9 +240,9 @@ class TestSumOfSquaresForRegressions(_TestInferenceForRegressions):
 
     def validate_result(self, inference_result):
         assert_array_almost_equal(inference_result.optimal_parameters,
-                                  [0.00012707365867374723, 0.089230125524899603, 301.09267270531382])
-        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.986186470956, 0])
-        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.0107977081308)
+                                  [1.27230135e-04, 8.92494479e-02, 3.01257553e+02])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [301.0126933, 0.])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.43629439037027307)
 
 
 class TestSumOfSquaresMeansOnly(_TestInferenceForRegressions):
@@ -259,15 +259,16 @@ class TestSumOfSquaresMeansOnly(_TestInferenceForRegressions):
                               variable_parameters,
                               # Only means trajectory
                               [self.observed_trajectories[0]],
-                              method=optimiser_method)
+                              method=optimiser_method,
+                              # We need to increase rtol here, otherwise wildly different result happens
+                              rtol=1e-4)
 
         return inference
 
     def validate_result(self, inference_result):
-        assert_array_almost_equal(inference_result.optimal_parameters, [0.00017664682228204413, 0.043856182869604673,
-                                                                        495.49530551533815])
-        assert_array_almost_equal(inference_result.optimal_initial_conditions, [301.27426546880224, 0])
-        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.350924941344)
+        assert_array_almost_equal(inference_result.optimal_parameters, [1.76624461e-04, 4.38470086e-02, 4.95494727e+02])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [301.27848822,    0.])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 0.35724560812202583)
 
 
 class TestGammaInferenceForRegressions(_TestInferenceForRegressions):
@@ -292,10 +293,10 @@ class TestGammaInferenceForRegressions(_TestInferenceForRegressions):
         return inference
 
     def validate_result(self, inference_result):
-        assert_array_almost_equal(inference_result.optimal_parameters, [9.8148438195906734e-05, 0.11551859499768752,
-                                                                        260.00000014956925])
-        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.51956949425931, 0])
-        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.362403987, places=3)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.81661836e-05, 1.15532301e-01,
+                                                                        2.60000001e+02])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [300.49715622, 0])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.34522199054936, places=3)
 
 
 class TestNormalInferenceForRegressions(_TestInferenceForRegressions):
@@ -320,10 +321,9 @@ class TestNormalInferenceForRegressions(_TestInferenceForRegressions):
         return inference
 
     def validate_result(self, inference_result):
-        assert_array_almost_equal(inference_result.optimal_parameters, [9.5190703395740974e-05, 0.10494581837857614,
-                                                                        260.00255131904339])
-        assert_array_almost_equal(inference_result.optimal_initial_conditions, [298.81392432779984, 0])
-        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.687969964)
+        assert_array_almost_equal(inference_result.optimal_parameters, [9.87875974e-05, 1.15097593e-01, 2.60000000e+02])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions,  [300.525227, 0.])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 115.45347133557553)
 
 
 class TestLogNormalInferenceForRegressions(_TestInferenceForRegressions):
@@ -347,10 +347,10 @@ class TestLogNormalInferenceForRegressions(_TestInferenceForRegressions):
         return inference
 
     def validate_result(self, inference_result):
-        assert_array_almost_equal(inference_result.optimal_parameters, [0.00097039430700166115, 9.1893721957377865e-07,
-                                                                        303.48309650132126])
-        assert_array_almost_equal(inference_result.optimal_initial_conditions, [290.06297620238149, 0])
-        self.assertAlmostEqual(inference_result.distance_at_minimum, 2090.53271923)
+        assert_array_almost_equal(inference_result.optimal_parameters,
+             [9.66248157e-04,   2.16087646e-11,   3.19269560e+02])
+        assert_array_almost_equal(inference_result.optimal_initial_conditions, [290.00963978,    0.])
+        self.assertAlmostEqual(inference_result.distance_at_minimum, 2083.9377399579698)
 
 
 class InferenceWithRestartsStub(InferenceWithRestarts):
