@@ -4,7 +4,8 @@ from numpy.testing import assert_array_almost_equal
 import scipy.io.matlab
 import means
 import means.examples
-from nose.plugins.attrib import attr
+import numpy as np
+from means.simulation import SolverException
 
 MODELS = {'p53': means.examples.MODEL_P53}
 
@@ -73,6 +74,7 @@ class TestTrajectoriesMatch(unittest.TestCase):
                                                                    closer=closure,
                                                                    multivariate=multivariate).run()
 
+        # The test script sets maxh equivalent to 0.01 in matlab, so let's do it here as well
         simulation = means.simulation.Simulation(problem, solver='ode15s', maxh=0.01)
         results = simulation.simulate_system(parameters, initial_conditions, timepoints)
 
@@ -80,3 +82,24 @@ class TestTrajectoriesMatch(unittest.TestCase):
 
     def test_p53_3_moments_lognormal_multivariate(self):
         self._perform_test(os.path.join(os.path.dirname(__file__), 'p53_3_moments_lognormal_multivariate.mat'))
+
+class TestODE15SFailsWhereMatlabDoes(unittest.TestCase):
+
+    def test_lognormal_2_mom_fails_early(self):
+
+        problem = means.approximation.MomentExpansionApproximation(means.examples.MODEL_P53, 2, closer='log-normal')
+        problem = problem.run()
+
+        s = means.simulation.Simulation(problem, solver='ode15s', maxh=0.1)
+
+        try:
+            trajectories = s.simulate_system([90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01], [70, 30, 60],
+                                             np.arange(0, 40, 0.1))
+        except SolverException as e:
+            base_exception = e.base_exception
+            # Check that the exception occured at timepoint similar to the timepoint in MATLAB
+            self.assertAlmostEqual(base_exception.t, 17.35795, places=1)
+        else:
+            self.fail('ode15s was able to reach output without throwing and exception')
+
+

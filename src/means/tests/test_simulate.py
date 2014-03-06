@@ -57,7 +57,7 @@ class TestSimulate(unittest.TestCase):
                                                                              '-Prey*V_01*k_2 - Prey*V_10*k_2 + 2*V_11*(-Pred*k_2 + k_1) + (Prey*k_1)**1.0 + (Pred*Prey*k_2)**1.0']),
                                             constants=['k_1', 'k_2', 'k_3'])
 
-        s = Simulation(lna_for_lotka_volterra)
+        s = Simulation(lna_for_lotka_volterra, rtol=1e-4, atol=1e-4)
         np.random.seed(42)
 
         trajectories = s.simulate_system(range(3), [200, 10], [1, 2, 3, 4, 5])
@@ -114,8 +114,8 @@ class TestSimulateWithSensitivities(unittest.TestCase):
         answers = {}
 
         # Trajectory value, sensitivity wrt k_1, sensitivity wrt k_2
-        answers[Moment([1, 0], 'x_1')] = (107.948953772, -25415.3565093, 210.946558295)
-        answers[Moment([0, 1], 'x_2')] = (96.5255231141, 12707.6782547, -105.473279147)
+        answers[Moment([1, 0], 'x_1')] = (107.94814091151031, -25415.418060971126, 210.94691048709868)
+        answers[Moment([0, 1], 'x_2')] = (96.525929544244818, 12707.709030485566, -105.47345524354937)
 
         seen_answers = set()
         for trajectory in trajectories:
@@ -131,9 +131,9 @@ class TestSimulateWithSensitivities(unittest.TestCase):
 
             seen_answers.add(trajectory.description)
 
-            self.assertAlmostEqual(answer[0], trajectory.values[-1], delta=1e-6)
-            self.assertAlmostEqual(answer[1], trajectory.sensitivity_data[0].values[-1], delta=1e-6)
-            self.assertAlmostEqual(answer[2], trajectory.sensitivity_data[1].values[-1], delta=1e-6)
+            self.assertAlmostEqual(answer[0], trajectory.values[-1], places=6)
+            self.assertAlmostEqual(answer[1], trajectory.sensitivity_data[0].values[-1], places=6)
+            self.assertAlmostEqual(answer[2], trajectory.sensitivity_data[1].values[-1], places=6)
 
         self.assertEqual(len(seen_answers), len(answers), msg='Some of the trajectories for moments were not returned')
 
@@ -181,7 +181,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         problem = ODEProblem('MEA', ode_lhs_terms, right_hand_side, constants)
 
-        simulation = Simulation(problem)
+        simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
         timepoints = np.arange(0, 20.5, 0.5)
 
         parameters = [90, 0.002, 1.2, 1.1, 0.8, 0.96, 0.01]
@@ -260,7 +260,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
 
-        simulation = Simulation(problem)
+        simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
 
         timepoints = np.arange(0, 20.5, 0.5)
         parameters = [90, 0.002, 1.2, 1.1, 0.8, 0.96, 0.01]
@@ -318,7 +318,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
         initial_conditions = [301, 0, 0, 0, 0]
         timepoints = np.arange(0, 51, 1)
 
-        sim = Simulation(problem)
+        sim = Simulation(problem, rtol=1e-4, atol=1e-4)
         results = sim.simulate_system(parameters, initial_conditions, timepoints)
         results_dict = {t.description: t.values for t in results}
 
@@ -363,7 +363,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
 
-        simulation = Simulation(problem)
+        simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
 
         parameters = [0.00166, 0.001, 0.1]
         initial_conditions = [301, 0, 0, 0, 0]
