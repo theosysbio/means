@@ -36,9 +36,10 @@ class MyFigureA(ReportUnit):
                         color = "k"
                         lwd = 3
                         style="-"
-
+                        alpha=1
 
                     elif d["max_order"] == mo and d["trajectories"]:
+
                         y =d["trajectories"][sps].values
                         x =d["trajectories"][sps].timepoints
 
@@ -53,21 +54,26 @@ class MyFigureA(ReportUnit):
 
                         if not "multivariate" in d.keys():
                             style = "-"
-                            lwd=2
+                            lwd=1.5
+                            alpha=0.5
 
                         elif d["multivariate"]:
-                            style = "--"
-                            lwd=2
+                            style = "-"
+                            lwd=1.5
+                            alpha=0.3
                         else:
-                            style = ":"
-                            lwd=2
+                            style = "--"
+                            lwd=1.5
+                            alpha=1
 
                     else:
                         continue
 
                     ax =axarr[mo-2, sps]
-                    ax.plot(x,y,linestyle=style, color=color, linewidth=lwd)
+
+                    ax.plot(x,y,linestyle=style, color=color, linewidth=lwd,alpha=alpha)
                     text="species: y_{0}; max order: {1}".format(sps,mo)
+
                     ax.text(0.95, 0.95, text,
                         verticalalignment='top', horizontalalignment='right', fontsize=8, transform=ax.transAxes)
                     if sps ==0:
@@ -168,17 +174,20 @@ class MyFigureB(ReportUnit):
             if not "multivariate" in clo_arg.keys():
                 style = "-"
                 lwd=2
+                alpha= 0.5
 
             elif clo_arg["multivariate"]:
                 lab = lab +"; multivariate"
-                style = "--"
+                style = "-"
+                alpha=0.3
                 lwd=2
             else:
                 lab = lab +"; univariate"
-                style = ":"
+                style = "--"
+                alpha=1
                 lwd=2
 
-            pl.plot(clo_arg["x_list"], clo_arg["y_list"],color=color, linewidth=lwd, linestyle=style, marker='o', label=lab)
+            pl.plot(clo_arg["x_list"], clo_arg["y_list"],color=color, linewidth=lwd, linestyle=style, marker='o', label=lab, alpha=alpha)
             pl.legend()
 
 
