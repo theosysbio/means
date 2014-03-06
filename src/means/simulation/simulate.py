@@ -44,7 +44,7 @@ class Simulation(SerialisableObject):
 
     yaml_tag = '!simulation'
 
-    def __init__(self, problem, solver='cvode', **solver_options):
+    def __init__(self, problem, solver='ode15s', **solver_options):
         """
 
         :param problem: Problem to simulate
@@ -58,6 +58,9 @@ class Simulation(SerialisableObject):
                             Dopri5 solver, see :class:`assimulo.solvers.runge_kutta.Dopri5`
                        `'euler'`
                             Euler solver, see :class:`assimulo.solvers.euler.ExplicitEuler`
+                       `'ode15s`:
+                            sundials CVODE solver, with default parameters set to mimick the MATLAB's
+                            See :class:`~means.simulation.solvers.ODE15sMixin` for the list of these parameters.
                        `'lsodar'`
                             LSODAR solver, see :class:`assimulo.solvers.odepack.LSODAR`
                        `'radau5'`
@@ -74,6 +77,8 @@ class Simulation(SerialisableObject):
 
                        The list of these solvers is always accessible at runtime
                        from :meth:`Simulation.supported_solvers()` method.
+
+                       .. _`ode15s`: http://www.mathworks.ch/ch/help/matlab/ref/ode15s.html
 
         :type solver: basestring
         :param solver_options: options to set in the solver. Consult `Assimulo documentation`_ for available options
@@ -112,7 +117,7 @@ class Simulation(SerialisableObject):
         List the supported solvers for the simulations.
 
         >>> Simulation.supported_solvers()
-        ['cvode', 'dopri5', 'euler', 'lsodar', 'radau5', 'rodas', 'rungekutta34', 'rungekutta4']
+        ['cvode', 'dopri5', 'euler', 'lsodar', 'radau5', 'rodas', 'rungekutta34', 'rungekutta4', 'ode15s']
 
         :return: the names of the solvers supported for simulations
         """
@@ -193,7 +198,7 @@ class SimulationWithSensitivities(Simulation):
 
     """
 
-    def __init__(self, problem, solver='cvode', **solver_options):
+    def __init__(self, problem, solver='ode15s', **solver_options):
         """
 
         :param problem: Problem to simulate
@@ -203,6 +208,11 @@ class SimulationWithSensitivities(Simulation):
 
                        `'cvode'`
                             sundials CVode solver, as implemented in :class:`assimulo.solvers.sundials.CVode`
+                       `'ode15s`:
+                            sundials CVODE solver, with default parameters set to mimick the MATLAB's
+                            See :class:`~means.simulation.solvers.ODE15sMixin` for the list of these parameters.
+
+                       .. _`ode15s`: http://www.mathworks.ch/ch/help/matlab/ref/ode15s.html
 
                        The list of these solvers is always accessible at runtime
                        from :meth:`SimulationWithSensitivities.supported_solvers()` method.
@@ -225,7 +235,7 @@ class SimulationWithSensitivities(Simulation):
         List the supported solvers for the simulations.
 
         >>> SimulationWithSensitivities.supported_solvers()
-        ['cvode']
+        ['cvode', 'ode15s']
 
         :return: the names of the solvers supported for simulations
         """
