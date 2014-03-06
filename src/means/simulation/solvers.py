@@ -10,9 +10,6 @@ from means.util.sympyhelpers import to_one_dim_array
 
 NP_FLOATING_POINT_PRECISION = np.double
 
-RTOL = 1e-4
-ATOL = 1e-4
-
 #-- Easy initialisation utilities -------------------------------------------------------------
 
 class UniqueNameInitialisationMixin(object):
@@ -229,20 +226,61 @@ class CVodeMixin(UniqueNameInitialisationMixin, object):
 
         solver = CVode(model)
 
-        solver.iter = options.pop('iter', 'Newton')
-        solver.discr = options.pop('discr', 'BDF')
-        solver.atol = options.pop('atol', ATOL)
-        solver.rtol = options.pop('rtol', RTOL)
-        solver.linear_solver = options.pop('linear_solver', 'dense')
-
         if 'usesens' in options:
-            # TODO: Change this with regard to how Simulation CLass changes
             raise AttributeError('Cannot set \'usesens\' parameter. Use Simulation or SimulationWithSensitivities for '
                                  'sensitivity calculations')
 
         return solver
 
 class CVodeSolver(SolverBase, CVodeMixin):
+
+    def _default_solver_instance(self):
+        solver = self._cvode_instance(self._assimulo_problem, self._options)
+        # It is necessary to set usesens to false here as we are non-parametric here
+        solver.usesens = False
+        return solver
+
+
+class ODE15sMixin(CVodeMixin):
+    """
+    A CVODE solver that mimicks the parameters used in `ode15s`_ solver in MATLAB.
+
+    The different parameters that are set differently by default are:
+
+    ``discr``
+        Set to ``'BDF'`` by default
+    ``iter``
+        Set to ``'Newton'`` by default
+    ``atol``
+        Set to ``1e-4``
+    ``rtol``
+        Set to ``1e-4``
+    ``linear_solver``
+        Set to ``'dense'``
+
+    .. _`ode15s`: http://www.mathworks.ch/ch/help/matlab/ref/ode15s.html
+    """
+
+    RTOL = 1e-4
+    ATOL = 1e-4
+
+    @classmethod
+    def unique_name(cls):
+        return 'ode15s'
+
+    def _cvode_instance(self, model, options):
+        solver = super(ODE15sMixin, self)._cvode_instance(model, options)
+
+        solver.iter = options.pop('iter', 'Newton')
+        solver.discr = options.pop('discr', 'BDF')
+        # TODO: Do we need to override the tolerances??
+        solver.atol = options.pop('atol', self.ATOL)
+        solver.rtol = options.pop('rtol', self.RTOL)
+        solver.linear_solver = options.pop('linear_solver', 'dense')
+
+        return solver
+
+class ODE15sLikeSolver(SolverBase, ODE15sMixin):
 
     def _default_solver_instance(self):
         solver = self._cvode_instance(self._assimulo_problem, self._options)
@@ -472,6 +510,17 @@ class CVodeSolverWithSensitivities(SensitivitySolverBase, CVodeMixin):
         solver.usesens = True
         solver.report_continuously = True
         return solver
+
+class ODE15sSolverWithSensitivities(SensitivitySolverBase, ODE15sMixin):
+
+     def _default_solver_instance(self):
+        solver = self._cvode_instance(self._assimulo_problem, self._options)
+        # It is necessary to set usesens to true here as we are non-parametric here
+        solver.usesens = True
+        solver.report_continuously = True
+        return solver
+
+
 
 
 
