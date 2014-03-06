@@ -249,20 +249,16 @@ class ODE15sMixin(CVodeMixin):
 
     ``discr``
         Set to ``'BDF'`` by default
-    ``iter``
-        Set to ``'Newton'`` by default
     ``atol``
-        Set to ``1e-4``
+        Set to ``1e-6``
     ``rtol``
-        Set to ``1e-4``
-    ``linear_solver``
-        Set to ``'dense'``
+        Set to ``1e-3``
 
     .. _`ode15s`: http://www.mathworks.ch/ch/help/matlab/ref/ode15s.html
     """
 
-    RTOL = 1e-4
-    ATOL = 1e-4
+    ATOL = 1e-6
+    RTOL = 1e-3
 
     @classmethod
     def unique_name(cls):
@@ -271,12 +267,11 @@ class ODE15sMixin(CVodeMixin):
     def _cvode_instance(self, model, options):
         solver = super(ODE15sMixin, self)._cvode_instance(model, options)
 
-        solver.iter = options.pop('iter', 'Newton')
+        # BDF method below makes it a key similarity to the ode15s
         solver.discr = options.pop('discr', 'BDF')
-        # TODO: Do we need to override the tolerances??
         solver.atol = options.pop('atol', self.ATOL)
         solver.rtol = options.pop('rtol', self.RTOL)
-        solver.linear_solver = options.pop('linear_solver', 'dense')
+        solver.maxord = options.pop('maxord', 5)
 
         return solver
 

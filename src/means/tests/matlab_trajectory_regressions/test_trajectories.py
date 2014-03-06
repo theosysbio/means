@@ -8,7 +8,6 @@ from nose.plugins.attrib import attr
 
 MODELS = {'p53': means.examples.MODEL_P53}
 
-@unittest.skip('This test is painfully slow, skipping it by default, use --no-skip to run all tests')
 class TestTrajectoriesMatch(unittest.TestCase):
 
 
@@ -49,7 +48,7 @@ class TestTrajectoriesMatch(unittest.TestCase):
                 break
 
             matlab_trajectory = matlab_trajectories[i, :]
-            assert_array_almost_equal(trajectory.values, matlab_trajectory, decimal=1)
+            assert_array_almost_equal(trajectory.values, matlab_trajectory, decimal=4)
 
 
     def _perform_test(self, matlab_filename):
@@ -59,7 +58,7 @@ class TestTrajectoriesMatch(unittest.TestCase):
         timepoints = data['timepoints']
         matlab_trajectories = data['trajectories']
 
-        n_moments = data['n_moments'] + 1  # We use one more moment than MATLAB for the same thing
+        max_order = data['n_moments']  # We use one more moment than MATLAB for the same thing
         parameters = data['parameters']
         initial_conditions = data['initial_conditions']
         model_name = data['model_name']
@@ -70,11 +69,11 @@ class TestTrajectoriesMatch(unittest.TestCase):
 
         model = MODELS[model_name]
         problem = means.approximation.MomentExpansionApproximation(model,
-                                                                   n_moments=n_moments,
+                                                                   max_order=max_order,
                                                                    closer=closure,
                                                                    multivariate=multivariate).run()
 
-        simulation = means.simulation.Simulation(problem)
+        simulation = means.simulation.Simulation(problem, solver='ode15s', maxh=0.01)
         results = simulation.simulate_system(parameters, initial_conditions, timepoints)
 
         self._compare_trajectories(results, matlab_trajectories, problem.number_of_species)
