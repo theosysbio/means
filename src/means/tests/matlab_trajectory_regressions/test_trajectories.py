@@ -71,7 +71,7 @@ class TestTrajectoriesMatch(unittest.TestCase):
         model = MODELS[model_name]
         problem = means.approximation.MomentExpansionApproximation(model,
                                                                    max_order=max_order,
-                                                                   clusure=closure,
+                                                                   closure=closure,
                                                                    multivariate=multivariate).run()
 
         # The test script sets maxh equivalent to 0.01 in matlab, so let's do it here as well
