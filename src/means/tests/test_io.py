@@ -113,15 +113,15 @@ class TestSerialisation(unittest.TestCase):
         ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
-                         VarianceTerm(V_00, (0, 0)),
-                         VarianceTerm(V_01, (0, 1)),
-                         VarianceTerm(V_02, (0, 2)),
-                         VarianceTerm(V_10, (1, 0)),
-                         VarianceTerm(V_11, (1, 1)),
-                         VarianceTerm(V_12, (1, 2)),
-                         VarianceTerm(V_20, (2, 0)),
-                         VarianceTerm(V_21, (2, 1)),
-                         VarianceTerm(V_22, (2, 2))]
+                         VarianceTerm((0, 0), V_00),
+                         VarianceTerm((0, 1), V_01),
+                         VarianceTerm((0, 2), V_02),
+                         VarianceTerm((1, 0), V_10),
+                         VarianceTerm((1, 1), V_11),
+                         VarianceTerm((1, 2), V_12),
+                         VarianceTerm((2, 0), V_20),
+                         VarianceTerm((2, 1), V_21),
+                         VarianceTerm((2, 2), V_22)]
 
         constants = ['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6']
 

@@ -45,10 +45,10 @@ class TestSimulate(unittest.TestCase):
         lna_for_lotka_volterra = ODEProblem(method='LNA',
                                             ode_lhs_terms=[Moment([1, 0], symbol='Pred'),
                                                            Moment([0, 1], symbol='Prey'),
-                                                           VarianceTerm('V_00', (0, 0)),
-                                                           VarianceTerm('V_01', (0, 1)),
-                                                           VarianceTerm('V_10', (1, 0)),
-                                                           VarianceTerm('V_11', (1, 1))],
+                                                           VarianceTerm((0, 0), 'V_00'),
+                                                           VarianceTerm((0, 1), 'V_01'),
+                                                           VarianceTerm((1, 0), 'V_10'),
+                                                           VarianceTerm((1, 1), 'V_11')],
                                             right_hand_side=to_sympy_matrix(['Pred*Prey*k_2 - Pred*k_3',
                                                                              '-Pred*Prey*k_2 + Prey*k_1',
                                                                              'Pred*V_01*k_2 + Pred*V_10*k_2 + 2*V_00*(Prey*k_2 - k_3) + (Pred*k_3)**1.0 + (Pred*Prey*k_2)**1.0',
@@ -246,15 +246,15 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
         ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
-                         VarianceTerm(V_00, (0, 0)),
-                         VarianceTerm(V_01, (0, 1)),
-                         VarianceTerm(V_02, (0, 2)),
-                         VarianceTerm(V_10, (1, 0)),
-                         VarianceTerm(V_11, (1, 1)),
-                         VarianceTerm(V_12, (1, 2)),
-                         VarianceTerm(V_20, (2, 0)),
-                         VarianceTerm(V_21, (2, 1)),
-                         VarianceTerm(V_22, (2, 2))]
+                         VarianceTerm((0, 0), V_00),
+                         VarianceTerm((0, 1), V_01),
+                         VarianceTerm((0, 2), V_02),
+                         VarianceTerm((1, 0), V_10),
+                         VarianceTerm((1, 1), V_11),
+                         VarianceTerm((1, 2), V_12),
+                         VarianceTerm((2, 0), V_20),
+                         VarianceTerm((2, 1), V_21),
+                         VarianceTerm((2, 2), V_22)]
 
         right_hand_side = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*V_00*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_02*c_2*y_0/(c_6 + y_0) - V_20*c_2*y_0/(c_6 + y_0) + c_0**Float('1.0', prec=15) + (c_1*y_0)**Float('1.0', prec=15) + (c_2*y_0*y_2/(c_6 + y_0))**Float('1.0', prec=15)], [V_00*c_3 - V_01*c_4 + V_01*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_21*c_2*y_0/(c_6 + y_0)], [V_01*c_4 - V_02*c_5 + V_02*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_00*c_3 - V_10*c_4 + V_10*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_12*c_2*y_0/(c_6 + y_0)], [V_01*c_3 + V_10*c_3 - 2*V_11*c_4 + (c_3*y_0)**Float('1.0', prec=15) + (c_4*y_1)**Float('1.0', prec=15)], [V_02*c_3 + V_11*c_4 - V_12*c_4 - V_12*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_10*c_4 - V_20*c_5 + V_20*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_11*c_4 + V_20*c_3 - V_21*c_4 - V_21*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_12*c_4 + V_21*c_4 - 2*V_22*c_5 + (c_4*y_1)**Float('1.0', prec=15) + (c_5*y_2)**Float('1.0', prec=15)]])
 
@@ -356,10 +356,10 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         ode_lhs_terms = [Moment(np.array([1, 0]), symbol=y_0),
                          Moment(np.array([0, 1]), symbol=y_1),
-                         VarianceTerm(V_00, (0, 0)),
-                         VarianceTerm(V_01, (0, 1)),
-                         VarianceTerm(V_10, (1, 0)),
-                         VarianceTerm(V_11, (1, 1))]
+                         VarianceTerm((0, 0), V_00),
+                         VarianceTerm((0, 1), V_01),
+                         VarianceTerm((1, 0), V_10),
+                         VarianceTerm((1, 1), V_11)]
 
         problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
 

@@ -67,16 +67,15 @@ class VarianceTerm(ODETermBase):
 
     yaml_tag = '!variance-term'
 
-    def __init__(self, symbol, position):
+    def __init__(self, position, symbol):
         """
         Creates a Descriptor for a particular ODE in the system that signifies that that particular equation
         computes the position-th term of a covariance matrix, where position is some tuple (row,column).
 
         It is used in LNA approximation as there we need to deal with moment and variance terms differently
 
-        :param symbol: symbol assigned to the term
         :param position: position in the covariance matrix
-
+        :param symbol: symbol assigned to the term
         """
         super(VarianceTerm, self).__init__(symbol=symbol)
         self._position = position
@@ -112,14 +111,12 @@ class Moment(ODETermBase):
 
     yaml_tag = u'!moment'
 
-    def __init__(self, n_vector, symbol=None):
+    def __init__(self, n_vector, symbol):
         """
         Creates an ODETerm that describes that a particular ODE term is a moment defined by the `n_vector`.
         Should be a vector of ints.
 
         TODO: figure out what "n_vector" is in mathematics-speak and use this here
-        FIXME: can symbol really be optional None?????
-        FIXME: symbol should be first argument to make it consistent with ODETermBase
         :param n_vector: a vector specifying the multidimensional moment
         """
         super(Moment, self).__init__(symbol=symbol)
@@ -165,15 +162,8 @@ class Moment(ODETermBase):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        elif (self.n_vector != other.n_vector).any():
-            return False
-        elif self.symbol != self.symbol:
-            return False
-        else:
-            return True
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return np.equal(self.n_vector, other.n_vector).all() and self.symbol == other.symbol
 
     def __ge__(self, other):
         """
@@ -181,7 +171,6 @@ class Moment(ODETermBase):
         Mathematically: ::math::`n_i^a \ge n_i^b ~ \textrm{for all i}`
         """
         return (self.n_vector >= other.n_vector).all()
-        #return all([a >= b for a, b in zip])
 
     def __repr__(self):
         return '{0}({1!r}, symbol={2!r})'.format(self.__class__.__name__, self.n_vector, self.symbol)

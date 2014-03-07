@@ -68,7 +68,7 @@ class TestODEProblem(unittest.TestCase):
         dict should have nones
         for each of the symbols
         """
-        lhs = [VarianceTerm(term, pos) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
+        lhs = [VarianceTerm(pos, term) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
