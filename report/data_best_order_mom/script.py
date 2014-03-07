@@ -45,7 +45,7 @@ def get_one_mea_result(max_order_cl_arg):
         max_order, cl_arg = max_order_cl_arg
 
         print (max_order, cl_arg)
-        probl = run_mea(MODEL, max_order, **cl_arg)
+        probl = mea_approximation(MODEL, max_order, **cl_arg)
         simulator = Simulation(probl, solver='cvode', discr="BDF",maxord=5, maxh=0.01, maxsteps=1000)
 
         try:
