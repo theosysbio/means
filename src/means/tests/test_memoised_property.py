@@ -1,7 +1,8 @@
 import unittest
-from means.util.decorators import memoised_property
+from means.util.memoisation import memoised_property, MemoisableObject
 
-class A(object):
+
+class A(MemoisableObject):
     def __init__(self, count):
         self.count = count
     @memoised_property
@@ -9,7 +10,7 @@ class A(object):
         self.count += 1
         return ['x', 'y'][self.count]
 
-class B(object):
+class B(MemoisableObject):
 
     def __init__(self, count):
         self.count = count

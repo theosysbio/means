@@ -12,6 +12,7 @@ from means.simulation import Trajectory, TrajectoryWithSensitivityData, Sensitiv
 import numpy as np
 from StringIO import StringIO
 from tempfile import mkstemp
+import cPickle as pickle
 
 def _sample_problem():
     lhs_terms = [Moment(np.array([1, 0, 0]), symbol='y_0'),
@@ -81,6 +82,10 @@ class TestSerialisation(unittest.TestCase):
     def test_odeproblem_serialisation_works(self):
         problem = _sample_problem()
         self._roundtrip(problem)
+        # Now make sure to access problem.right_hand_side_as_function as this sometimes breaks pickle
+        f = problem.right_hand_side_as_function
+        # Do roundtrip again
+        self._roundtrip(problem)
 
     def test_ode_problem_lna_serialisation_works(self):
 
@@ -123,6 +128,10 @@ class TestSerialisation(unittest.TestCase):
         problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
         self._roundtrip(problem)
 
+        # Now make sure to access problem.right_hand_side_as_function as this sometimes breaks pickle
+        f = problem.right_hand_side_as_function
+        # Do roundtrip again
+        self._roundtrip(problem)
 
     def test_trajectory_serialisation(self):
         t = Trajectory([1, 2, 3], [3, 2, 1], Moment([1,2,3], 'x'))
@@ -206,3 +215,18 @@ class TestSerialisationFileIO(TestSerialisation):
             self.assertRaises(ValueError, Trajectory.from_file, tmp_file)
         finally:
             os.unlink(tmp_file)
+
+class TestPickleSerialisation(TestSerialisation):
+    """
+    We need make sure our classes are serialisable using pickle as well, as this is python default and much more
+    compressed of a file format, than the human readable yaml format
+    """
+
+    def _roundtrip(self, object_):
+        pickle_dump = pickle.dumps(object_, pickle.HIGHEST_PROTOCOL)
+        new_object = pickle.loads(pickle_dump)
+
+        self.assertEqual(object_, new_object)
+
+
+
