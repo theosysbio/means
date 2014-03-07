@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version3" metaid="metaid_0000001" level="2" version="3">
+  <model metaid="_481114" id="testid" name="Stone1996_NOsGC">
+    <notes>
+      <body xmlns="http://www.w3.org/1999/xhtml">
+	     This features the two step binding of NO to soluble Guanylyl Cyclase as proposed by <a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=8573563">Stone JR, Marletta MA. Biochemistry (1996) 35(4):1093-9</a>. There is a fast step binding scheme and a slow step binding scheme. The difference lies in the binding of a NO to a non-heme site on sGC, which may not necessarily be the same site of binding during the initial binding. The rates have been directly used models.
+
+
+
+
+      <p>This model originates from BioModels Database: A Database of Annotated Published Models. It is copyright (c) 2005-2011 The BioModels.net Team.
+
+
+
+      <br/>For more information see the
+
+
+
+      <a href="http://www.ebi.ac.uk/biomodels/legal.html" target="_blank">terms of use</a>.
+
+
+
+      <br/>To cite BioModels Database, please use: <a href="http://www.ncbi.nlm.nih.gov/pubmed/20587024" target="_blank">Li C, Donizelli M, Rodriguez N, Dharuri H, Endler L, Chelliah V, Li L, He E, Henry A, Stefan MI, Snoep JL, Hucka M, Le NovÃ¨re N, Laibe C (2010) BioModels Database: An enhanced, curated and annotated resource for published quantitative kinetic models. BMC Syst Biol., 4:92.</a>
+    </p>
+  </body>
+</notes><annotation>
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+    <rdf:Description rdf:about="#_481114">
+      <dc:creator rdf:parseType="Resource">
+        <rdf:Bag>
+          <rdf:li rdf:parseType="Resource">
+            <vCard:N rdf:parseType="Resource">
+              <vCard:Family>Endler</vCard:Family>
+              <vCard:Given>Lukas</vCard:Given>
+            </vCard:N>
+            <vCard:EMAIL>lukas@ebi.ac.uk</vCard:EMAIL>
+            <vCard:ORG>
+              <vCard:Orgname>EMBL-EBI</vCard:Orgname>
+            </vCard:ORG>
+          </rdf:li>
+          <rdf:li rdf:parseType="Resource">
+            <vCard:N rdf:parseType="Resource">
+              <vCard:Family>Chelliah</vCard:Family>
+              <vCard:Given>Vijayalakshmi</vCard:Given>
+            </vCard:N>
+            <vCard:EMAIL>viji@ebi.ac.uk</vCard:EMAIL>
+            <vCard:ORG>
+              <vCard:Orgname>EMBL-EBI</vCard:Orgname>
+            </vCard:ORG>
+          </rdf:li>
+          <rdf:li rdf:parseType="Resource">
+            <vCard:N rdf:parseType="Resource">
+              <vCard:Family>Stone</vCard:Family>
+              <vCard:Given>James R</vCard:Given>
+            </vCard:N>
+            <vCard:ORG>
+              <vCard:Orgname>Department of Biological Chemistry, University of Michigan, Michigan</vCard:Orgname>
+            </vCard:ORG>
+          </rdf:li>
+          <rdf:li rdf:parseType="Resource">
+            <vCard:N rdf:parseType="Resource">
+              <vCard:Family>Marletta</vCard:Family>
+              <vCard:Given>Michael A</vCard:Given>
+            </vCard:N>
+            <vCard:ORG>
+              <vCard:Orgname>Department of Biological Chemistry, University of Michigan, Michigan</vCard:Orgname>
+            </vCard:ORG>
+          </rdf:li>
+        </rdf:Bag>
+      </dc:creator>
+      <dcterms:created rdf:parseType="Resource">
+        <dcterms:W3CDTF>2008-10-21T15:19:25Z</dcterms:W3CDTF>
+      </dcterms:created>
+      <dcterms:modified rdf:parseType="Resource">
+        <dcterms:W3CDTF>2010-12-01T22:11:52Z</dcterms:W3CDTF>
+      </dcterms:modified>
+      <bqmodel:is>
+        <rdf:Bag>
+          <rdf:li rdf:resource="urn:miriam:biomodels.db:BIOMD0000000198"/>
+          <rdf:li rdf:resource="urn:miriam:biomodels.db:MODEL4779732381"/>
+        </rdf:Bag>
+      </bqmodel:is>
+      <bqmodel:isDescribedBy>
+        <rdf:Bag>
+          <rdf:li rdf:resource="urn:miriam:pubmed:8573563"/>
+        </rdf:Bag>
+      </bqmodel:isDescribedBy>
+      <bqbiol:isVersionOf>
+        <rdf:Bag>
+          <rdf:li rdf:resource="urn:miriam:obo.go:GO%3A0007263"/>
+          <rdf:li rdf:resource="urn:miriam:obo.go:GO%3A0031282"/>
+        </rdf:Bag>
+      </bqbiol:isVersionOf>
+      <bqbiol:is>
+        <rdf:Bag>
+          <rdf:li rdf:resource="urn:miriam:taxonomy:9913"/>
+        </rdf:Bag>
+      </bqbiol:is>
+    </rdf:Description>
+  </rdf:RDF>
+</annotation><listOfUnitDefinitions>
+  <unitDefinition metaid="metaid_0010031" id="percm">
+    <listOfUnits>
+      <unit kind="metre" exponent="-1" scale="-2"/>
+    </listOfUnits>
+  </unitDefinition>
+  <unitDefinition metaid="metaid_0000035" id="persec">
+    <listOfUnits>
+      <unit kind="second" exponent="-1"/>
+    </listOfUnits>
+  </unitDefinition>
+  <unitDefinition metaid="metaid_0020031" id="peruMpercm">
+    <listOfUnits>
+      <unit kind="litre"/>
+      <unit kind="mole" exponent="-1" scale="-6"/>
+      <unit kind="metre" exponent="-1" scale="-2"/>
+    </listOfUnits>
+  </unitDefinition>
+  <unitDefinition metaid="metaid_0000031" id="peruMpersec">
+    <listOfUnits>
+      <unit kind="litre"/>
+      <unit kind="mole" exponent="-1" scale="-6"/>
+      <unit kind="second" exponent="-1"/>
+    </listOfUnits>
+  </unitDefinition>
+  <unitDefinition metaid="metaid_0000030" id="substance" name="micromole">
+    <listOfUnits>
+      <unit kind="mole" scale="-6"/>
+    </listOfUnits>
+  </unitDefinition>
+  <unitDefinition metaid="metaid_0000032" id="uM">
+    <listOfUnits>
+      <unit kind="mole" scale="-6"/>
+      <unit kind="litre" exponent="-1"/>
+    </listOfUnits>
+  </unitDefinition>
+</listOfUnitDefinitions><listOfCompartments>
+  <compartment metaid="_481131" id="cytosol" size="1">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481131">
+          <bqmodel:is>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.go:GO%3A0005829"/>
+            </rdf:Bag>
+          </bqmodel:is>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </compartment>
+</listOfCompartments><listOfSpecies>
+  <species metaid="_481391" sboTerm="SBO:0000247" id="NO" compartment="cytosol" initialConcentration="0.5" boundaryCondition="true">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481391">
+          <bqbiol:is>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:kegg.compound:C00533"/>
+            </rdf:Bag>
+          </bqbiol:is>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481411" sboTerm="SBO:0000297" id="NO_sGC_5coord_tot" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481411">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481171" sboTerm="SBO:0000297" id="NO_sGCfast" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481171">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481231" sboTerm="SBO:0000297" id="NO_sGCfast_5coord" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481231">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481191" sboTerm="SBO:0000297" id="NO_sGCfast_6coord" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481191">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481331" sboTerm="SBO:0000297" id="NO_sGCslow" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481331">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481271" sboTerm="SBO:0000297" id="NO_sGCslow_5coord" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481271">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481311" sboTerm="SBO:0000297" id="NO_sGCslow_6coord" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481311">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481291" sboTerm="SBO:0000297" id="NO_sGCslow_6coord_NO_int" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481291">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_482411" sboTerm="SBO:0000297" id="sGC_inact_tot" compartment="cytosol" initialConcentration="0">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_482411">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:obo.chebi:CHEBI%3A16480"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481211" sboTerm="SBO:0000297" id="sGCfast" compartment="cytosol" initialConcentration="0.112">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481211">
+          <bqbiol:hasVersion>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasVersion>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+  <species metaid="_481351" sboTerm="SBO:0000297" id="sGCslow" compartment="cytosol" initialConcentration="0.288">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#_481351">
+          <bqbiol:hasPart>
+            <rdf:Bag>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P19687"/>
+              <rdf:li rdf:resource="urn:miriam:uniprot:P16068"/>
+            </rdf:Bag>
+          </bqbiol:hasPart>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+  </species>
+</listOfSpecies><listOfParameters>
+  <parameter metaid="metaid_0020046" id="e5c" name="ext_5coord" value="0.11" units="peruMpercm">
+    <notes>
+      <p xmlns="http://www.w3.org/1999/xhtml">micromolar extinction coefficient of the 5-coordinate ferrous species at 431 nm</p>
+    </notes>
+  </parameter>
+  <parameter metaid="metaid_0300046" id="e5c_NO" name="ext_5coord_NO" value="0.025" units="peruMpercm">
+    <notes>
+      <p xmlns="http://www.w3.org/1999/xhtml">micromolar extinction coefficient of the 5-coordinate ferrous nitrosyl species at 431 nm</p>
+    </notes>
+  </parameter>
+  <parameter metaid="metaid_0400046" id="e6c_NO" name="ext_6coord_NO" value="0.064" units="peruMpercm">
+    <notes>
+      <p xmlns="http://www.w3.org/1999/xhtml">micromolar extinction coefficient of the 6-coordinate ferrous nitrosyl species at 431 nm</p>
+    </notes>
+  </parameter>
+  <parameter metaid="metaid_0500046" id="ext" name="extinction" units="percm" constant="false">
+    <notes>
+      <p xmlns="http://www.w3.org/1999/xhtml">extinction at 431 nm</p>
+    </notes>
+  </parameter>
+  <parameter metaid="metaid_0000034" id="k1" name="k1" value="700" units="peruMpersec"/>
+  <parameter metaid="metaid_0000044" id="k10" name="k10" value="25" units="persec"/>
+  <parameter metaid="metaid_0000045" id="k11" name="k11" value="1.6" units="persec"/>
+  <parameter metaid="metaid_0010046" id="k12" name="k12" value="0.02" units="persec"/>
+  <parameter metaid="metaid_0000036" id="k2" name="k2" value="800" units="persec"/>
+  <parameter metaid="metaid_0000037" id="k3" name="k3" value="850" units="persec"/>
+  <parameter metaid="metaid_0000038" id="k4" name="k4" value="20" units="persec"/>
+  <parameter metaid="metaid_0000039" id="k5" name="k5" value="0.2" units="persec"/>
+  <parameter metaid="metaid_0000040" id="k6" name="k6" value="700" units="peruMpersec"/>
+  <parameter metaid="metaid_0000041" id="k7" name="k7" value="800" units="persec"/>
+  <parameter metaid="metaid_0000042" id="k8" name="k8" value="850" units="persec"/>
+  <parameter metaid="metaid_0000043" id="k9" name="k9" value="5" units="peruMpersec"/>
+</listOfParameters><listOfRules>
+  <assignmentRule metaid="_481412" variable="NO_sGC_5coord_tot">
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+        <plus/>
+        <ci> NO_sGCfast_5coord </ci>
+        <ci> NO_sGCslow_5coord </ci>
+      </apply>
+    </math>
+  </assignmentRule>
+  <assignmentRule metaid="_481413" variable="sGC_inact_tot">
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+        <plus/>
+        <ci> sGCfast </ci>
+        <ci> NO_sGCfast </ci>
+        <ci> NO_sGCfast_6coord </ci>
+        <ci> sGCslow </ci>
+        <ci> NO_sGCslow </ci>
+        <ci> NO_sGCslow_6coord </ci>
+        <ci> NO_sGCslow_6coord_NO_int </ci>
+      </apply>
+    </math>
+  </assignmentRule>
+  <assignmentRule metaid="_581413" variable="ext">
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+        <plus/>
+        <apply>
+          <times/>
+          <ci> e5c </ci>
+          <apply>
+            <plus/>
+            <ci> sGCfast </ci>
+            <ci> NO_sGCfast </ci>
+            <ci> sGCslow </ci>
+            <ci> NO_sGCslow </ci>
+          </apply>
+        </apply>
+        <apply>
+          <times/>
+          <ci> e5c_NO </ci>
+          <apply>
+            <plus/>
+            <ci> NO_sGCfast_5coord </ci>
+            <ci> NO_sGCslow_5coord </ci>
+          </apply>
+        </apply>
+        <apply>
+          <times/>
+          <ci> e6c_NO </ci>
+          <apply>
+            <plus/>
+            <ci> NO_sGCfast_6coord </ci>
+            <ci> NO_sGCslow_6coord </ci>
+            <ci> NO_sGCslow_6coord_NO_int </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </assignmentRule>
+</listOfRules><listOfReactions>
+  <reaction metaid="metaid_0000047" sboTerm="SBO:0000177" id="r1fast" name="r1fast">
+    <listOfReactants>
+      <speciesReference species="NO"/>
+      <speciesReference species="sGCfast"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCfast"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> cytosol </ci>
+          <apply>
+            <minus/>
+            <apply>
+              <times/>
+              <ci> k1 </ci>
+              <ci> NO </ci>
+              <ci> sGCfast </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> k2 </ci>
+              <ci> NO_sGCfast </ci>
+            </apply>
+          </apply>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000050" sboTerm="SBO:0000177" id="r1slow" name="r1slow">
+    <listOfReactants>
+      <speciesReference species="NO"/>
+      <speciesReference species="sGCslow"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCslow"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> cytosol </ci>
+          <apply>
+            <minus/>
+            <apply>
+              <times/>
+              <ci> k6 </ci>
+              <ci> NO </ci>
+              <ci> sGCslow </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> k7 </ci>
+              <ci> NO_sGCslow </ci>
+            </apply>
+          </apply>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000048" sboTerm="SBO:0000181" id="r2fast" name="r2fast" reversible="false">
+    <listOfReactants>
+      <speciesReference species="NO_sGCfast"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCfast_6coord"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> k3 </ci>
+          <ci> cytosol </ci>
+          <ci> NO_sGCfast </ci>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000051" sboTerm="SBO:0000181" id="r2slow" name="r2slow" reversible="false">
+    <listOfReactants>
+      <speciesReference species="NO_sGCslow"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCslow_6coord"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> k8 </ci>
+          <ci> cytosol </ci>
+          <ci> NO_sGCslow </ci>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000049" sboTerm="SBO:0000181" id="r3fast" name="r3fast">
+    <listOfReactants>
+      <speciesReference species="NO_sGCfast_6coord"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCfast_5coord"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> cytosol </ci>
+          <apply>
+            <minus/>
+            <apply>
+              <times/>
+              <ci> k4 </ci>
+              <ci> NO_sGCfast_6coord </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> k5 </ci>
+              <ci> NO_sGCfast_5coord </ci>
+            </apply>
+          </apply>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000052" sboTerm="SBO:0000177" id="r3slow" name="r3slow">
+    <listOfReactants>
+      <speciesReference species="NO"/>
+      <speciesReference species="NO_sGCslow_6coord"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCslow_6coord_NO_int"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> cytosol </ci>
+          <apply>
+            <minus/>
+            <apply>
+              <times/>
+              <ci> k9 </ci>
+              <ci> NO </ci>
+              <ci> NO_sGCslow_6coord </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> k10 </ci>
+              <ci> NO_sGCslow_6coord_NO_int </ci>
+            </apply>
+          </apply>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+  <reaction metaid="metaid_0000053" sboTerm="SBO:0000181" id="r4slow" name="r4slow">
+    <listOfReactants>
+      <speciesReference species="NO_sGCslow_6coord_NO_int"/>
+    </listOfReactants>
+    <listOfProducts>
+      <speciesReference species="NO_sGCslow_5coord"/>
+    </listOfProducts>
+    <kineticLaw>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+          <times/>
+          <ci> cytosol </ci>
+          <apply>
+            <minus/>
+            <apply>
+              <times/>
+              <ci> k11 </ci>
+              <ci> NO_sGCslow_6coord_NO_int </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> k12 </ci>
+              <ci> NO_sGCslow_5coord </ci>
+            </apply>
+          </apply>
+        </apply>
+      </math>
+    </kineticLaw>
+  </reaction>
+</listOfReactions>
+</model>
+</sbml>
