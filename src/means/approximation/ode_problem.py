@@ -3,9 +3,8 @@ import numpy as np
 from sympy.utilities.autowrap import autowrap
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
-
+from means.util.memoisation import memoised_property, MemoisableObject
 from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, to_sympy_matrix, to_one_dim_array
-from means.util.decorators import memoised_property
 from means.util.sympyhelpers import sympy_expressions_equal
 
 class Descriptor(SerialisableObject):
@@ -196,7 +195,7 @@ class Moment(ODETermBase):
         mapping = [('symbol', str(data.symbol)), ('n_vector', data.n_vector.tolist())]
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
-class ODEProblem(SerialisableObject, LatexPrintableObject):
+class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     """
     Stores the left and right hand side equations to be simulated
 
@@ -329,6 +328,10 @@ class ODEProblem(SerialisableObject, LatexPrintableObject):
             return ans
 
         return f
+
+
+
+
 
     def __unicode__(self):
         equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,

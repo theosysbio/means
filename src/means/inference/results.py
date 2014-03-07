@@ -1,5 +1,6 @@
 from means.io.serialise import SerialisableObject
-from means.util.decorators import memoised_property
+from means.util.memoisation import memoised_property, MemoisableObject
+
 
 class ConvergenceStatusBase(SerialisableObject):
 
@@ -196,7 +197,7 @@ class InferenceResultsCollection(SerialisableObject):
                            kwargs_optimal_trajectories={'label': 'Best Optimised Trajectory'})
 
 
-class InferenceResult(SerialisableObject):
+class InferenceResult(SerialisableObject, MemoisableObject):
 
     __inference = None
 

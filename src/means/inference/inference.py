@@ -17,9 +17,9 @@ from means.inference.parallelisation import raw_results_in_parallel
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
-from means.util.decorators import memoised_property
 from means.approximation.ode_problem import Moment
 from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory, SolverException
+from means.util.memoisation import memoised_property, MemoisableObject
 
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
@@ -190,7 +190,7 @@ def _some_params_are_negative(problem, parameters, initial_conditions):
     return False
 
 
-class InferenceWithRestarts(object):
+class InferenceWithRestarts(MemoisableObject):
     """
     Parameter Inference Method that utilises multiple seed points for the optimisation.
 
@@ -350,7 +350,7 @@ class InferenceWithRestarts(object):
     def method(self):
         return self.__method
 
-class Inference(SerialisableObject):
+class Inference(SerialisableObject, MemoisableObject):
 
     __problem = None
     __starting_parameters_with_variability = None
