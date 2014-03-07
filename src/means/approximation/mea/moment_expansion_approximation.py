@@ -25,6 +25,7 @@ def approximate_mea(model, max_order, closer='scalar', *closer_args, **closer_kw
     See :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
     about the options.
 
+
     :return: an ODE problem which can be further used in inference and simulation.
     :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
     """
@@ -37,9 +38,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     A class to perform moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
     In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
 
-    .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
-     "A general moment expansion method for stochastic kinetic models."\
-      The Journal of chemical physics 138.17 (2013): 174101.
+    .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
+    "A general moment expansion method for stochastic kinetic models,"\
+     The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
+
     """
     def __init__(self, model, max_order, closure='scalar', *closer_args, **closer_kwargs):
 

@@ -7,6 +7,22 @@ from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment, VarianceTerm
 
+def approximate_lna(model):
+
+    r"""
+    A wrapper around :class:`~means.approximation.lna.lna.LinearNoiseApproximation`.
+    It performs linear noise approximation (MEA) as described in [Komorowski2009]_.
+
+    .. [Komorowski2009] M. Komorowski, B. Finkenstadt, C. V. Harper, and D. A. Rand,\
+     "Bayesian inference of biochemical kinetic parameters using the linear noise approximation,"\
+      BMC Bioinformatics, vol. 10, no. 1, p. 343, Oct. 2009.
+
+    :return: an ODE problem which can be further used in inference and simulation.
+    :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+    """
+    lna = LinearNoiseApproximation(model)
+    return lna.run()
+
 
 class LinearNoiseApproximation(ApproximationBaseClass):
     """
