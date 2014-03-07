@@ -496,4 +496,4 @@ class InferenceResult(SerialisableObject, MemoisableObject):
             and self.optimal_initial_conditions == other.optimal_initial_conditions \
             and self.distance_at_minimum == other.distance_at_minimum \
             and self.convergence_status == other.convergence_status \
-            and self.solutions == other.solutions \
+            and self.solutions == other.solutions
