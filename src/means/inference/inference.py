@@ -146,7 +146,7 @@ def _mom_indices(problem, mom_names):
     """
 
     # Get list of moments from mfkoutput to create labels for output data file
-    moments_list = [moment.n_vector for moment in problem.ordered_descriptions]
+    moments_list = [moment.n_vector for moment in problem.left_hand_side_descriptors]
 
     # Get indices in CVODE solutions for the moments in sample data
     # TODO: terribly inefficient but to be replaced by Trajectories

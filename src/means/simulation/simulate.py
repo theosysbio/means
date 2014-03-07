@@ -18,7 +18,7 @@ def validate_problem(problem):
     problem.validate()
 
     if problem.method == "MEA":
-        moments = filter(lambda x: isinstance(x, Moment), problem.ordered_descriptions)
+        moments = filter(lambda x: isinstance(x, Moment), problem.left_hand_side_descriptors)
         if problem.left_hand_side.rows != len(moments):
             raise ValueError("There are {0} equations and {1} moments. "
                              "For MEA problems, the same number is expected.".format(problem.left_hand_side.rows,
@@ -351,7 +351,7 @@ def simulate(problem, trajout, timepoints, initial_constants, initial_variables,
 
     number_of_species = problem.number_of_species
 
-    term_descriptions = problem.ordered_descriptions
+    term_descriptions = problem.left_hand_side_descriptors
 
     initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
     initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
