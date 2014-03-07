@@ -18,8 +18,7 @@ from closure_normal import NormalClosure
 from closure_scalar import ScalarClosure
 
 
-
-def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
+def approximate_mea(model, max_order, closer='scalar', *closer_args, **closer_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
     It performs moment expansion approximation (MEA) as described in [Ale2013]_ up to a given order of moment.
@@ -29,10 +28,8 @@ def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
     :return: an ODE problem which can be further used in inference and simulation.
     :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
     """
-    mea = MomentExpansionApproximation(model, max_order, closer=closer, *closer_args, **closer_kwargs)
+    mea = MomentExpansionApproximation(model, max_order, closure=closer, *closer_args, **closer_kwargs)
     return mea.run()
-
-
 
 
 class MomentExpansionApproximation(ApproximationBaseClass):
@@ -44,30 +41,30 @@ class MomentExpansionApproximation(ApproximationBaseClass):
      "A general moment expansion method for stochastic kinetic models."\
       The Journal of chemical physics 138.17 (2013): 174101.
     """
-    def __init__(self, model, max_order, closer='zero', *closer_args, **closer_kwargs):
+    def __init__(self, model, max_order, closure='scalar', *closer_args, **closer_kwargs):
 
         r"""
         :param model: The model to be approximated
         :type model: :class:`~means.model.model.Model`
 
         :param max_order: the highest order of central moments in the resulting ODEs
-        :param closer: a string describing the type of closure to use. Currently, the supported closures are:
+        :param closure: a string describing the type of closure to use. Currently, the supported closures are:
 
-            `'zero'`
+            `'scalar'`
                 higher order central moments are set to zero.
-                See :class:`~means.approximation.mea.zero_closer.ZeroCloser`.
+                See :class:`~means.approximation.mea.closure_scalar.ScalarClosure`.
             `'normal'`
                 uses normal distribution to compute last order central moments.
-                See :class:`~means.approximation.mea.normal_closer.NormalCloser`.
+                See :class:`~means.approximation.mea.closure_normal.NormalClosure`.
             `'log-normal'`
                 uses log-normal distribution.
-                See :class:`~means.approximation.mea.log_normal_closer.LogNormalCloser`.
+                See :class:`~means.approximation.mea.closure_log_normal.LogNormalClosure`.
             `'gamma'`
                 EXPERIMENTAL,
                 uses gamma distribution.
-                See :class:`~means.approximation.mea.gamma_closer.GammaCloser`.
+                See :class:`~means.approximation.mea.closure_gamma.GammaClosure`.
 
-        :type closer: string
+        :type closure: string
         :param closer_args: arguments to be passed to the closer
         :param closer_kwargs: keyword arguments to be passed to the closer
         """
@@ -79,25 +76,23 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         except:
             raise ValueError("`max_order` can only be positive integer")
 
-
         # A dictionary of "option -> closer". this allows a generic handling for closer without having to add
         # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
         supported_closers = {"log-normal": LogNormalClosure,
-                             "zero": ScalarClosure,
+                             "scalar": ScalarClosure,
                              "normal": NormalClosure,
                              "gamma": GammaClosure}
 
         # We initialise the closer for this approximator
         try:
             # our closer is an instance of the class queried in the dictionary
-            CloserClass = supported_closers[closer]
-            self.__closer = CloserClass(self.__max_order, *closer_args, **closer_kwargs)
+            ClosureClass = supported_closers[closure]
+            self.__closer = ClosureClass(self.__max_order, *closer_args, **closer_kwargs)
         except KeyError:
             error_str = "The closure type '{0}' is not supported.\n\
                          Supported values for closure:\
                          {1}"
-            raise KeyError(error_str.format(closer,supported_closers))
-
+            raise KeyError(error_str.format(closure, supported_closers))
 
     @property
     def closer(self):
@@ -130,7 +125,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Applies moment expansion closure, that is replaces last order central moments by parametric expressions
         mfk = self.closer.close(mfk, central_from_raw_exprs, n_counter, k_counter)
         # These are the left hand sign symbols referring to the mfk
-        prob_lhs = self._generate_problem_left_hand_side(n_counter,k_counter)
+        prob_lhs = self._generate_problem_left_hand_side(n_counter, k_counter)
         # Finally, we build the problem
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
         return out_problem
@@ -148,7 +143,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # concatenate the symbols for first order raw moments (means)
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.__max_order]
+        prob_moments_over_dt += [n for n in n_counter if self.__max_order >= n.order > 1]
+
 
         return prob_moments_over_dt
 
