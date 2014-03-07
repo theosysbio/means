@@ -7,7 +7,7 @@
 
 # <codecell>
 
-from means.approximation.mea.moment_expansion_approximation import run_mea
+from means.approximation.mea.moment_expansion_approximation import mea_approximation
 import means
 from means.examples.sample_models import *
 
@@ -44,7 +44,7 @@ try:
     for max_order in range(2,11):
         for cl_arg in closer_args:
             print "simulating for max_order = {0} and closer = {1}".format(max_order, cl_arg)
-            probl = run_mea(MODEL_P53, max_order, **cl_arg)
+            probl = mea_approximation(MODEL_P53, max_order, **cl_arg)
             simulator = means.simulation.Simulation(probl, solver='cvode', discr="BDF",maxord=5, maxh=0.01)
             try:
                 trajects = simulator.simulate_system(constant_values, initial_conditions, timepoints)
