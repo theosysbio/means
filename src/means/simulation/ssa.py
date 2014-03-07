@@ -52,10 +52,12 @@ class SSASimulation(SerialisableObject):
             raise Exception(exception_str.format(len(self.__problem.constants), len(parameters)))
 
 
-    def simulate_system(self, parameters, initial_conditions, timepoints, n_simulations, number_of_processes=1):
+    def simulate_system(self, parameters, initial_conditions, timepoints, n_simulations, number_of_processes=1,
+                        return_average=True):
         """
-        Perform a given number of Gillespie SSA simulations and returns the average trajectory for of each species.
+        Perform a given number of Gillespie SSA simulations and returns trajectories for of each species.
         Each trajectory is interpolated at the given time points.
+        By default, the average amounts of species for all simulations is returned.
 
         :param parameters: list of the initial values for the constants in the model.
                                   Must be in the same order as in the model
@@ -65,8 +67,10 @@ class SSASimulation(SerialisableObject):
         :param timepoints: A list of time points to simulate the system for
 
         :param number_of_processes: the number of parallel process to be run
+        :param return_average: whether the average of all simulations should be returned
 
-        :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem
+        :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem,
+            or a list of lists of trajectories (one per simulation) if `return_average == False`.
         :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
         """
         self._validate_parameters(parameters, initial_conditions)
@@ -103,6 +107,9 @@ class SSASimulation(SerialisableObject):
             p.close()
 
         resampled_results = [[traj.resample(timepoints) for traj in res] for res in results]
+        if not return_average:
+            return resampled_results
+
         mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*resampled_results)]
         return mean_trajectories
 
@@ -128,7 +135,6 @@ def multiprocessing_apply_ssa(x):
 class SSAGenerator(object):
     def __init__(self, population_rates_as_function, change, initial_conditions, t_max, seed):
         """
-
         :param population_rates_as_function: function to evaluate propensities given the amount of species
         :param change: the change matrix (transpose of the stoichiometry matrix) as an numpy in array
         :param initial_conditions: the initial conditions of the system
