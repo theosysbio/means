@@ -44,7 +44,7 @@ def _sample_problem():
     yx5 = Symbol('yx5')
     rhs = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0) + yx4*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)) + yx6*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*c_4*y_1*y_2 + c_4*y_1 + 2*c_4*yx2 - 2*c_5*y_2**2 + c_5*y_2 - 2*c_5*yx1 - 2*y_2*(c_4*y_1 - c_5*y_2)], [c_3*y_0*y_2 + c_3*yx4 + c_4*y_1**2 - c_4*y_1*y_2 - c_4*y_1 + c_4*yx3 - c_5*y_1*y_2 - y_1*(c_4*y_1 - c_5*y_2) - y_2*(c_3*y_0 - c_4*y_1) + yx2*(-c_4 - c_5)], [2*c_3*y_0*y_1 + c_3*y_0 + 2*c_3*yx5 - 2*c_4*y_1**2 + c_4*y_1 - 2*c_4*yx3 - 2*y_1*(c_3*y_0 - c_4*y_1)], [c_0*y_2 - c_1*y_0*y_2 - c_2*y_0*y_2**2/(c_6 + y_0) - c_2*y_0*yx1/(c_6 + y_0) + c_4*y_0*y_1 + c_4*yx5 - c_5*y_0*y_2 - y_0*(c_4*y_1 - c_5*y_2) - y_2*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(-c_1 + 2*c_2*y_0*y_2/(c_6 + y_0)**2 - 2*c_2*y_2/(c_6 + y_0) - c_5 - y_2*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-c_2*y_0*y_2**2/(c_6 + y_0)**3 + c_2*y_2**2/(c_6 + y_0)**2 - y_2*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [c_0*y_1 - c_1*y_0*y_1 - c_2*y_0*y_1*y_2/(c_6 + y_0) - c_2*y_0*yx2/(c_6 + y_0) + c_3*y_0**2 - c_4*y_0*y_1 - y_0*(c_3*y_0 - c_4*y_1) - y_1*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(c_2*y_0*y_1/(c_6 + y_0)**2 - c_2*y_1/(c_6 + y_0) - y_1*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx5*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0) - c_4) + yx6*(-c_2*y_0*y_1*y_2/(c_6 + y_0)**3 + c_2*y_1*y_2/(c_6 + y_0)**2 + c_3 - y_1*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [2*c_0*y_0 + c_0 - 2*c_1*y_0**2 + c_1*y_0 - 2*c_2*y_0**2*y_2/(c_6 + y_0) + c_2*y_0*y_2/(c_6 + y_0) - 2*y_0*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(2*c_2*y_0**2/(c_6 + y_0)**2 - 4*c_2*y_0/(c_6 + y_0) - c_2*y_0/(c_6 + y_0)**2 + c_2/(c_6 + y_0) - 2*y_0*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-2*c_1 - 2*c_2*y_0**2*y_2/(c_6 + y_0)**3 + 4*c_2*y_0*y_2/(c_6 + y_0)**2 + c_2*y_0*y_2/(c_6 + y_0)**3 - 2*c_2*y_2/(c_6 + y_0) - c_2*y_2/(c_6 + y_0)**2 - 2*y_0*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))]])
 
-    problem = ODEProblem(method='MEA', ode_lhs_terms=lhs_terms, right_hand_side=rhs, constants=constants)
+    problem = ODEProblem(method='MEA', left_hand_side_descriptors=lhs_terms, right_hand_side=rhs, constants=constants)
     return problem
 
 def _sample_inference():
@@ -113,15 +113,15 @@ class TestSerialisation(unittest.TestCase):
         ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
-                         VarianceTerm(V_00, (0, 0)),
-                         VarianceTerm(V_01, (0, 1)),
-                         VarianceTerm(V_02, (0, 2)),
-                         VarianceTerm(V_10, (1, 0)),
-                         VarianceTerm(V_11, (1, 1)),
-                         VarianceTerm(V_12, (1, 2)),
-                         VarianceTerm(V_20, (2, 0)),
-                         VarianceTerm(V_21, (2, 1)),
-                         VarianceTerm(V_22, (2, 2))]
+                         VarianceTerm((0, 0), V_00),
+                         VarianceTerm((0, 1), V_01),
+                         VarianceTerm((0, 2), V_02),
+                         VarianceTerm((1, 0), V_10),
+                         VarianceTerm((1, 1), V_11),
+                         VarianceTerm((1, 2), V_12),
+                         VarianceTerm((2, 0), V_20),
+                         VarianceTerm((2, 1), V_21),
+                         VarianceTerm((2, 2), V_22)]
 
         constants = ['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6']
 
