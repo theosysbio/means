@@ -5,11 +5,14 @@ from means.util.sympyhelpers import substitute_all
 class ClosureBase(object):
 
     _max_order = None
+    _min_order = 1
 
-    def __init__(self,max_order,multivariate=True):
+    def __init__(self,max_order, multivariate=True):
+
         self._max_order = max_order
         self.__is_multivariate = multivariate
-
+        if self._min_order > max_order:
+            raise ValueError("This closure method requires `max_order` to be >= {0}".format(self._min_order))
     @property
     def is_multivariate(self):
         return self.__is_multivariate
@@ -92,7 +95,7 @@ class ClosureBase(object):
 class ScalarClosure(ClosureBase):
 
     def __init__(self,max_order,value=0):
-        super(ScalarClosure,self).__init__(max_order, False)
+        super(ScalarClosure, self).__init__(max_order, False)
         self.__value = value
 
     @property

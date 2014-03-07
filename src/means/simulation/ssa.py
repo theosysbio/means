@@ -24,13 +24,12 @@ class SSASimulation(SerialisableObject):
     """
         A class providing an implementation of the exact Gillespie Stochastic Simulation Algorithm [Gillespie77].
 
-            >>> MODEL = MODEL_P53
+            >>> PROBLEM = StochasticProblem(MODEL_P53)
             >>> RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
             >>> INITIAL_CONDITIONS = [70, 30, 60]
             >>> TIME_RANGE = np.arange(0, 40, .1)
             >>> N_SSA = 10
-            >>> problem = StochasticProblem(MODEL)
-            >>> ssas = SSASimulation(problem)
+            >>> ssas = SSASimulation(PROBLEM)
             >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
             >>> print  mean_trajectories
 

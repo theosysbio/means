@@ -4,6 +4,7 @@ from means.util.sympyhelpers import substitute_all, product
 
 class GammaClosure(ClosureBase):
     def __init__(self, max_order, type=1):
+        self._min_order = 2
         super(GammaClosure, self).__init__(max_order, multivariate=(type > 0))
         self.__type = type
 
@@ -21,7 +22,7 @@ class GammaClosure(ClosureBase):
         """
 
         gamma_type = self.type
-        n_moment = self.max_order +1
+        n_moment = self.max_order + 1
 
         expectation_symbols = sp.Matrix([n.symbol for n in k_counter if n.order == 1])
 

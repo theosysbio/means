@@ -6,6 +6,10 @@ from closure_scalar import ClosureBase
 
 
 class NormalClosure(ClosureBase):
+    def __init__(self,max_order, multivariate=True):
+        self._min_order = 2
+        super(NormalClosure, self).__init__(max_order, multivariate)
+
 
     def _get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
         r"""
