@@ -303,10 +303,9 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         :type symbol: basestring|:class:`sympy.Symbol`
         :return:
         """
-        if isinstance(symbol, 'basestring'):
+        if isinstance(symbol, basestring):
             symbol = sympy.Symbol(symbol)
-        else:
-            symbol = symbol.Symbol(symbol)
+
         try:
             return self._descriptions_dict[symbol]
         except KeyError:

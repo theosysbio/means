@@ -89,5 +89,5 @@ class TestODEProblem(unittest.TestCase):
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         for i, l in enumerate(lhs):
-            self.assertEqual(p.descriptor_for_symbol(l.symbol), lhs)
+            self.assertEqual(p.descriptor_for_symbol(l.symbol), l)
 
