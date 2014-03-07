@@ -10,7 +10,6 @@ def _parse_reaction(libsbml_reaction):
     reactants = {sympy.Symbol(r.getSpecies()): r.getStoichiometry() for r in libsbml_reaction.getListOfReactants()}
     products = {sympy.Symbol(p.getSpecies()): p.getStoichiometry() for p in libsbml_reaction.getListOfProducts()}
     kinetic_law = sympy.sympify(libsbml_reaction.getKineticLaw().getFormula())
-
     # This would only work for SBML Level 3, prior levels do not have parameters within kinetic law
     parameters = sympy.symbols([p.getId() for p in libsbml_reaction.getKineticLaw().getListOfParameters()])
 
@@ -34,6 +33,7 @@ def read_sbml(filename):
 
     species = sympy.symbols([s.getId() for s in sbml_model.getListOfSpecies()])
     reactions = map(_parse_reaction, sbml_model.getListOfReactions())
+
 
     # getListOfParameters is an attribute of the model for SBML Level 1&2
     parameters = sympy.symbols([p.getId() for p in sbml_model.getListOfParameters()])
