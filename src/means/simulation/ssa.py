@@ -63,8 +63,8 @@ class SSASimulation(SerialisableObject):
 
     def simulate_system(self, parameters, initial_conditions, timepoints, n_simulations, number_of_processes=1):
         """
-        Perform a number of Gillespie SSA simulation and returns the average trajectory of each species
-        Interpolates the trajectories for timepoints, starting at initial_constants and initial_values values.
+        Perform a given number of Gillespie SSA simulations and returns the average trajectory for of each species.
+        Each trajectory is interpolated at the given time points.
 
         :param parameters: list of the initial values for the constants in the model.
                                   Must be in the same order as in the model
