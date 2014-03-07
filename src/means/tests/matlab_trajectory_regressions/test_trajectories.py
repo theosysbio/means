@@ -71,7 +71,7 @@ class TestTrajectoriesMatch(unittest.TestCase):
         model = MODELS[model_name]
         problem = means.approximation.MomentExpansionApproximation(model,
                                                                    max_order=max_order,
-                                                                   closer=closure,
+                                                                   clusure=closure,
                                                                    multivariate=multivariate).run()
 
         # The test script sets maxh equivalent to 0.01 in matlab, so let's do it here as well
@@ -87,7 +87,7 @@ class TestODE15SFailsWhereMatlabDoes(unittest.TestCase):
 
     def test_lognormal_2_mom_fails_early(self):
 
-        problem = means.approximation.MomentExpansionApproximation(means.examples.MODEL_P53, 2, closer='log-normal')
+        problem = means.approximation.MomentExpansionApproximation(means.examples.MODEL_P53, 2, closure='log-normal')
         problem = problem.run()
 
         s = means.simulation.Simulation(problem, solver='ode15s', maxh=0.1)
