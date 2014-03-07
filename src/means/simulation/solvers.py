@@ -4,8 +4,8 @@ from assimulo.problem import Explicit_Problem
 import numpy as np
 import sys
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
-from means.util.decorators import memoised_property
 import inspect
+from means.util.memoisation import memoised_property, MemoisableObject
 from means.util.sympyhelpers import to_one_dim_array
 
 NP_FLOATING_POINT_PRECISION = np.double
@@ -92,7 +92,7 @@ def _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descri
     return trajectories
 
 
-class SolverBase(object):
+class SolverBase(MemoisableObject):
     """
     This acts as a base class for ODE solvers used in `means`.
     It wraps around the solvers available in :module:`assimulo` package, and provides some basic functionality
