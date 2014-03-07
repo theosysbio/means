@@ -4,50 +4,42 @@ import multiprocessing
 from means.simulation.trajectory import Trajectory
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import substitute_all
-
-class StochasticProblem(SerialisableObject):
+from means.model import Model
+class StochasticProblem(Model):
     """
-    The formulation of a model for stochastic simulations such as SSA
+    The formulation of a model for stochastic simulations such as GSSA.
     """
     def __init__(self, model):
-        # evaluate substitute rates by their actual values
-
-        self.__propensities = self._make_propensities(model.propensities)
-        self.__species = model.species
-        self.__constants = model.constants
+        super(StochasticProblem, self).__init__(model.constants, model.species,
+                                                model.propensities, model.stoichiometry_matrix)
         self.__change = np.array(model.stoichiometry_matrix.T).astype("int")
-
-    @property
-    def propensities(self):
-        return self.__propensities
-    @property
-    def species(self):
-        return self.__species
-    @property
-    def constants(self):
-        return self.__constants
     @property
     def change(self):
         return self.__change
-
-    def _make_propensities(self, propensities):
-        #todo
-        return propensities
 
 
 
 class SSASimulation(SerialisableObject):
     """
         A class providing an implementation of the exact Gillespie Stochastic Simulation Algorithm [Gillespie77].
+
+            >>> MODEL = MODEL_P53
+            >>> RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+            >>> INITIAL_CONDITIONS = [70, 30, 60]
+            >>> TIME_RANGE = np.arange(0, 40, .1)
+            >>> N_SSA = 10
+            >>> problem = StochasticProblem(MODEL)
+            >>> ssas = SSASimulation(problem,  random_seed=None)
+            >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
+            >>>print  mean_trajectories
+
+
     .. [Gillespie77]Gillespie, Daniel T. "Exact stochastic simulation of coupled chemical reactions."\
          The journal of physical chemistry 81.25 (1977): 2340-2361.
     """
     def __init__(self, stochastic_problem, random_seed=None):
-
         self.__random_seed = random_seed
         self.__problem = stochastic_problem
-
-
 
     def _validate_parameters(self, parameters, initial_conditions):
 
@@ -60,7 +52,6 @@ class SSASimulation(SerialisableObject):
             raise Exception(exception_str.format(len(self.__problem.constants), len(parameters)))
 
 
-
     def simulate_system(self, parameters, initial_conditions, timepoints, n_simulations, number_of_processes=1):
         """
         Perform a given number of Gillespie SSA simulations and returns the average trajectory for of each species.
@@ -68,15 +59,14 @@ class SSASimulation(SerialisableObject):
 
         :param parameters: list of the initial values for the constants in the model.
                                   Must be in the same order as in the model
-        :param initial_conditions: List of the initial values for the equations in the problem. Must be in the same order as
-                               these equations occur.
-                               If not all values specified, the remaining ones will be assumed to be 0.
+        :param initial_conditions: List of the initial values for the equations in the problem.
+                        Must be in the same order as these equations occur.
+
         :param timepoints: A list of time points to simulate the system for
 
         :param number_of_processes: the number of parallel process to be run
 
         :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem
-
         :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
         """
         self._validate_parameters(parameters, initial_conditions)
@@ -131,20 +121,20 @@ def multiprocessing_apply_ssa(x):
     Used in the SSASimulation class.
     Needs to be in global scope for multiprocessing module to pick it up
     """
-
     result = ssa_generator.generate_single_simulation(x)
     return result
+
 
 class SSAGenerator(object):
     def __init__(self, population_rates_as_function, change, initial_conditions, t_max, seed):
         """
 
-        :param population_rates_as_function:
+        :param population_rates_as_function: function to evaluate propensities given the amount of species
         :param change: the change matrix (transpose of the stoichiometry matrix) as an numpy in array
         :param initial_conditions: the initial conditions of the system
         :param t_max: the time when the simulation should stop
-        :param seed: an integer to initialise the random seed. If `None`, the random seed will be random.
-
+        :param seed: an integer to initialise the random seed. If `None`, the random seed will be set
+                automatically (e.g. from /dev/random) once for all.
         """
         self.__rng = np.random.RandomState(seed)
         self.__population_rates_as_function = population_rates_as_function
@@ -183,8 +173,12 @@ class SSAGenerator(object):
         return event, time
 
     def generate_single_simulation(self, x):
-
-
+        """
+        Generate a single SSA simulation
+        :param x: an integer to reset the random seed. If None, the initial random number generator is used
+        :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem
+        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
+        """
         #reset random seed
         if x:
             self.__rng = np.random.RandomState(x)
