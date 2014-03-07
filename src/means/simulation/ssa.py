@@ -5,6 +5,7 @@ from means.simulation.trajectory import Trajectory
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import substitute_all
 from means.model import Model
+
 class StochasticProblem(Model):
     """
     The formulation of a model for stochastic simulations such as GSSA.
@@ -29,7 +30,7 @@ class SSASimulation(SerialisableObject):
             >>> TIME_RANGE = np.arange(0, 40, .1)
             >>> N_SSA = 10
             >>> problem = StochasticProblem(MODEL)
-            >>> ssas = SSASimulation(problem,  random_seed=None)
+            >>> ssas = SSASimulation(problem)
             >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
             >>> print  mean_trajectories
 
@@ -91,7 +92,7 @@ class SSASimulation(SerialisableObject):
 
 
         if number_of_processes ==1:
-            ssa_generator = SSAGenerator(population_rates_as_function,
+            ssa_generator = _SSAGenerator(population_rates_as_function,
                                         self.__problem.__change, initial_conditions, t_max, seed=self.__random_seed)
 
             results = map(ssa_generator.generate_single_simulation, seed_for_processes)
@@ -121,7 +122,7 @@ def multiprocessing_pool_initialiser(population_rates_as_function, change, initi
         seed += current._identity[0]
     else:
         seed = current._identity[0]
-    ssa_generator = SSAGenerator(population_rates_as_function, change,initial_conditions, t_max, seed)
+    ssa_generator = _SSAGenerator(population_rates_as_function, change,initial_conditions, t_max, seed)
 
 def multiprocessing_apply_ssa(x):
     """
@@ -132,7 +133,7 @@ def multiprocessing_apply_ssa(x):
     return result
 
 
-class SSAGenerator(object):
+class _SSAGenerator(object):
     def __init__(self, population_rates_as_function, change, initial_conditions, t_max, seed):
         """
         :param population_rates_as_function: function to evaluate propensities given the amount of species
