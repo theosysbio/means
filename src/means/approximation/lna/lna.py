@@ -7,7 +7,7 @@ from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.approximation.ode_problem import Moment, VarianceTerm
 
-def approximate_lna(model):
+def lna_approximation(model):
 
     r"""
     A wrapper around :class:`~means.approximation.lna.lna.LinearNoiseApproximation`.
