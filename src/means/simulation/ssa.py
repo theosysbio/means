@@ -4,6 +4,7 @@ import multiprocessing
 from means.simulation.trajectory import Trajectory
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import substitute_all
+from means.approximation.ode_problem import Moment
 from means.model import Model
 
 class StochasticProblem(Model):
@@ -92,7 +93,8 @@ class SSASimulation(SerialisableObject):
 
         if number_of_processes ==1:
             ssa_generator = _SSAGenerator(population_rates_as_function,
-                                        self.__problem.__change, initial_conditions, t_max, seed=self.__random_seed)
+                                        self.__problem.change, self.__problem.species,
+                                        initial_conditions, t_max, seed=self.__random_seed)
 
             results = map(ssa_generator.generate_single_simulation, seed_for_processes)
 
@@ -101,6 +103,7 @@ class SSASimulation(SerialisableObject):
             p = multiprocessing.Pool(number_of_processes,
                     initializer=multiprocessing_pool_initialiser,
                     initargs=[population_rates_as_function, self.__problem.change,
+                              self.__problem.species,
                               initial_conditions, t_max, self.__random_seed])
 
             results = p.map(multiprocessing_apply_ssa, seed_for_processes)
@@ -113,7 +116,8 @@ class SSASimulation(SerialisableObject):
         mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*resampled_results)]
         return mean_trajectories
 
-def multiprocessing_pool_initialiser(population_rates_as_function, change, initial_conditions, t_max, seed):
+def multiprocessing_pool_initialiser(population_rates_as_function, change, species,
+                                     initial_conditions, t_max, seed):
     global ssa_generator
     current = multiprocessing.current_process()
     #increment the random seed inside each process at creation, so the result should be reproducible
@@ -121,7 +125,7 @@ def multiprocessing_pool_initialiser(population_rates_as_function, change, initi
         seed += current._identity[0]
     else:
         seed = current._identity[0]
-    ssa_generator = _SSAGenerator(population_rates_as_function, change,initial_conditions, t_max, seed)
+    ssa_generator = _SSAGenerator(population_rates_as_function, change, species, initial_conditions, t_max, seed)
 
 def multiprocessing_apply_ssa(x):
     """
@@ -133,7 +137,7 @@ def multiprocessing_apply_ssa(x):
 
 
 class _SSAGenerator(object):
-    def __init__(self, population_rates_as_function, change, initial_conditions, t_max, seed):
+    def __init__(self, population_rates_as_function, change, species, initial_conditions, t_max, seed):
         """
         :param population_rates_as_function: function to evaluate propensities given the amount of species
         :param change: the change matrix (transpose of the stoichiometry matrix) as an numpy in array
@@ -147,6 +151,7 @@ class _SSAGenerator(object):
         self.__change = change
         self.__initial_conditions = initial_conditions
         self.__t_max = t_max
+        self.__species = species
 
     def _gssa(self, initial_conditions, t_max):
         """
@@ -192,10 +197,16 @@ class _SSAGenerator(object):
         # perform one stochastic simulation
         time_points, species_over_time = self._gssa(self.__initial_conditions, self.__t_max)
 
-        n_species = len([_ for _ in species_over_time])
+        # build descriptors for first order raw moments aka expectations (e.g. [1, 0, 0], [0, 1, 0] and [0, 0, 1])
+        descriptors = []
+        for i, s in enumerate(self.__species):
+            row = [0] * len(self.__species)
+            row[i] = 1
+            descriptors.append(Moment(row, s))
+
         # build trajectories
         trajectories = [Trajectory(time_points, spot, desc) for
-                        spot, desc in zip(species_over_time, range(n_species))]
+                        spot, desc in zip(species_over_time, descriptors)]
 
         return trajectories
 
