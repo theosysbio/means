@@ -2,7 +2,7 @@ import sympy as sp
 from closure_scalar import ClosureBase
 
 class LogNormalClosure(ClosureBase):
-    def __init__(self,max_order, multivariate=True):
+    def __init__(self, max_order, multivariate=True):
         self._min_order = 2
         super(LogNormalClosure, self).__init__(max_order, multivariate)
 

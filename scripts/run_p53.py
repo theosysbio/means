@@ -5,6 +5,6 @@ from means.approximation.mea.moment_expansion_approximation import mea_approxima
 
 from means.examples.sample_models import MODEL_P53
 
-prob = mea_approximation(MODEL_P53, 4, "log-normal")
+prob = mea_approximation(MODEL_P53, 4, "log-normal", multivariate=True)
 
 #"simple_closure_vs_legacy"
