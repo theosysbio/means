@@ -12,7 +12,7 @@ from sympy import Symbol, MutableDenseMatrix, symbols, Float
 class ConstantDerivativesProblem(ODEProblem):
     def __init__(self):
         super(ConstantDerivativesProblem, self).__init__(method=None,
-                                                         ode_lhs_terms=[ODETermBase('y_1'), ODETermBase('y_2')],
+                                                         left_hand_side_descriptors=[ODETermBase('y_1'), ODETermBase('y_2')],
                                                          right_hand_side=['c_1', 'c_2'],
                                                          constants=['c_1', 'c_2'])
 
@@ -43,7 +43,7 @@ class TestSimulate(unittest.TestCase):
         """
 
         lna_for_lotka_volterra = ODEProblem(method='LNA',
-                                            ode_lhs_terms=[Moment([1, 0], symbol='Pred'),
+                                            left_hand_side_descriptors=[Moment([1, 0], symbol='Pred'),
                                                            Moment([0, 1], symbol='Prey'),
                                                            VarianceTerm((0, 0), 'V_00'),
                                                            VarianceTerm((0, 1), 'V_01'),
@@ -155,7 +155,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         c_0, c_1, c_2, c_3, c_4, c_5, c_6 = symbols(['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'])
 
-        ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
+        left_hand_side_descriptors = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
                          Moment(np.array([0, 0, 2]), symbol=yx1),
@@ -179,7 +179,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         right_hand_side = MutableDenseMatrix([[(-c_2*c_6*y_2*yx16 - c_2*c_6*yx8*(c_6 + y_0)**2 + c_2*c_6*(c_6 + y_0)*(y_2*yx13 + yx14) - c_2*y_0*y_2*(c_6 + y_0)**3 + (c_0 - c_1*y_0)*(c_6 + y_0)**4)/(c_6 + y_0)**4], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [c_4*y_1 + 2*c_4*yx3 + c_5*y_2 - 2*c_5*yx1], [c_4*y_1 + 3*c_4*yx3 + 3*c_4*yx4 - c_5*y_2 + 3*c_5*yx1 - 3*c_5*yx2], [c_3*yx8 - c_4*y_1 + c_4*yx5 - yx3*(c_4 + c_5)], [c_3*yx9 - c_4*y_1 - 2*c_4*yx3 - c_4*yx4 + c_4*yx5 + 2*c_4*yx6 + c_5*yx3 - 2*c_5*yx4], [c_3*y_0 + 2*c_3*yx10 + c_4*y_1 - 2*c_4*yx5], [2*c_3*yx11 + c_3*yx8 + c_4*y_1 + c_4*yx3 - 2*c_4*yx5 - 2*c_4*yx6 + c_4*yx7 - c_5*yx6], [c_3*y_0 + 3*c_3*yx10 + 3*c_3*yx12 - c_4*y_1 + 3*c_4*yx5 - 3*c_4*yx7], [(c_2*c_6*y_2*yx14 - c_2*y_0*yx1*(c_6 + y_0)**2 + c_4*yx10*(c_6 + y_0)**3 - (c_6 + y_0)*(c_2*c_6*yx9 + yx8*(c_2*c_6*y_2 + (c_1 + c_5)*(c_6 + y_0)**2)))/(c_6 + y_0)**3], [(c_2*c_6*y_2*yx1*yx16 - c_2*c_6*yx1*(c_6 + y_0)*(y_2*yx13 + yx14) + c_4*(c_6 + y_0)**4*(yx10 + 2*yx11) + (c_6 + y_0)**3*(-c_0*c_6*yx1 - c_0*y_0*yx1 + c_1*c_6*y_0*yx1 + c_1*y_0**2*yx1 + c_2*y_0*y_2*yx1 - c_2*y_0*yx2 - 2*c_4*c_6*y_1*yx8 - 2*c_4*y_0*y_1*yx8 + 2*c_5*c_6*y_2*yx8 + 2*c_5*y_0*y_2*yx8 - yx1*(c_2*y_0*y_2 - (c_0 - c_1*y_0)*(c_6 + y_0))) + (c_6 + y_0)**2*(yx8*(c_2*c_6*yx1 + (c_6 + y_0)**2*(2*c_4*y_1 - 2*c_5*y_2 + c_5)) - yx9*(c_2*c_6*y_2 + (c_1 + 2*c_5)*(c_6 + y_0)**2)))/(c_6 + y_0)**4], [(c_2*c_6*y_2*yx15 - c_2*y_0*yx3*(c_6 + y_0)**2 + c_3*yx13*(c_6 + y_0)**3 - (c_6 + y_0)*(c_2*c_6*yx11 + yx10*(c_2*c_6*y_2 + (c_1 + c_4)*(c_6 + y_0)**2)))/(c_6 + y_0)**3], [(c_2*c_6*y_2*yx16*yx3 + (c_6 + y_0)**4*(c_4*yx12 - yx10*(-c_4*y_1 + c_4 + c_5*y_2)) + (c_6 + y_0)**3*(-c_0*c_6*yx3 - c_0*y_0*yx3 + c_1*c_6*y_0*yx3 + c_1*y_0**2*yx3 + c_2*y_0*y_2*yx3 - c_2*y_0*yx4 - c_3*c_6*y_0*yx8 - c_3*y_0**2*yx8 - c_4*c_6*y_1*yx10 + c_4*c_6*y_1*yx8 - c_4*y_0*y_1*yx10 + c_4*y_0*y_1*yx8 + c_5*c_6*y_2*yx10 + c_5*y_0*y_2*yx10 - yx3*(-c_0*c_6 - c_0*y_0 + c_1*c_6*y_0 + c_1*y_0**2 + c_2*y_0*y_2)) + (c_6 + y_0)**2*(-yx11*(c_2*c_6*y_2 + (c_6 + y_0)**2*(c_1 + c_4 + c_5)) + yx8*(c_2*c_6*yx3 + (c_6 + y_0)**2*(c_3*y_0 - c_4*y_1))) - (c_6 + y_0)*(c_2*c_6*y_2*yx13*yx3 + yx14*(c_2*c_6*yx3 - c_3*(c_6 + y_0)**3)))/(c_6 + y_0)**4], [(c_2*c_6*y_2*yx16*yx5 + (c_6 + y_0)**4*(2*c_3*yx15 + yx10*(2*c_3*y_0 - 2*c_4*y_1 + c_4)) + (c_6 + y_0)**3*(-c_0*c_6*yx5 - c_0*y_0*yx5 + c_1*c_6*y_0*yx5 + c_1*y_0**2*yx5 + c_2*y_0*y_2*yx5 - c_2*y_0*yx6 - 2*c_3*c_6*y_0*yx10 - 2*c_3*y_0**2*yx10 + 2*c_4*c_6*y_1*yx10 + 2*c_4*y_0*y_1*yx10 - yx5*(c_2*y_0*y_2 - (c_0 - c_1*y_0)*(c_6 + y_0))) + (c_6 + y_0)**2*(c_2*c_6*yx5*yx8 - yx12*(c_2*c_6*y_2 + (c_1 + 2*c_4)*(c_6 + y_0)**2)) - (c_6 + y_0)*(c_2*c_6*yx14*yx5 + yx13*(c_2*c_6*y_2*yx5 - c_3*(c_6 + y_0)**3)))/(c_6 + y_0)**4], [(c_2*y_2*yx16*(c_6*(2*y_0 + 1) + 2*y_0**2 - 4*y_0*(c_6 + y_0) + 2*(c_6 + y_0)**2) + c_2*yx8*(c_6 + y_0)**2*(2*c_6*y_0 + c_6 - 2*y_0*(2*c_6 + y_0)) + (c_6 + y_0)**3*(c_0*c_6 + c_0*y_0 + c_1*c_6*y_0 + c_1*y_0**2 + c_2*y_0*y_2) - (c_6 + y_0)*(c_2*yx14*(c_6*(2*y_0 + 1) + 2*y_0**2 - 4*y_0*(c_6 + y_0) + 2*(c_6 + y_0)**2) + yx13*(2*c_1*(c_6 + y_0)**3 + c_2*c_6*y_2*(2*y_0 + 1) + 2*c_2*y_2*(y_0**2 - 2*y_0*(c_6 + y_0) + (c_6 + y_0)**2))))/(c_6 + y_0)**4], [(2*c_2*c_6*y_2*yx16*yx8*(c_6 + y_0)**3 + c_4*yx15*(c_6 + y_0)**3*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4) - yx13*(2*c_2*c_6*y_2*yx8 + (c_6 + y_0)**3*(-c_4*y_1 + c_5*y_2))*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4) - yx14*(2*c_2*y_2*(c_6 + y_0)**2 + c_2*(-2*c_6*y_0*y_2 + c_6*y_2 + 2*c_6*yx8 - 2*y_0**2*y_2) + (2*c_1 + c_5)*(c_6 + y_0)**3)*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4) + (c_6 + y_0)**2*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4)*(-2*c_0*c_6*yx8 - 2*c_0*y_0*yx8 + 2*c_1*c_6*y_0*yx8 + 2*c_1*y_0**2*yx8 + 2*c_2*y_0*y_2*yx8 + c_2*y_0*yx1 - c_4*c_6*y_1*yx13 - c_4*y_0*y_1*yx13 + c_5*c_6*y_2*yx13 + c_5*y_0*y_2*yx13) + (c_6 + y_0)*(c_2*yx9*(2*c_6*y_0 + c_6 - 2*y_0*(2*c_6 + y_0)) + yx8*(-2*c_2*c_6*y_0*y_2 + c_2*c_6*y_2 + 2*c_2*c_6*yx8 - 2*c_2*y_0**2*y_2 + (c_6 + y_0)**2*(2*c_0 - 2*c_1*y_0 + c_1)))*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4))/((c_6 + y_0)**3*(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4))], [(c_1*c_6**4*yx10 - 2*c_1*c_6**4*yx15 + 4*c_1*c_6**3*y_0*yx10 - 8*c_1*c_6**3*y_0*yx15 + 6*c_1*c_6**2*y_0**2*yx10 - 12*c_1*c_6**2*y_0**2*yx15 + 4*c_1*c_6*y_0**3*yx10 - 8*c_1*c_6*y_0**3*yx15 + c_1*y_0**4*yx10 - 2*c_1*y_0**4*yx15 - 2*c_2*c_6**3*y_0*yx11 + c_2*c_6**3*y_0*yx3 + c_2*c_6**3*y_2*yx10 - 2*c_2*c_6**3*y_2*yx15 + 2*c_2*c_6**3*yx10*yx8 + c_2*c_6**3*yx11 - 6*c_2*c_6**2*y_0**2*yx11 + 3*c_2*c_6**2*y_0**2*yx3 + 2*c_2*c_6**2*y_0*y_2*yx10 - 4*c_2*c_6**2*y_0*y_2*yx15 + 4*c_2*c_6**2*y_0*yx10*yx8 + 2*c_2*c_6**2*y_0*yx11 - 2*c_2*c_6**2*y_2*yx10*yx13 - c_2*c_6**2*y_2*yx15 - 2*c_2*c_6**2*yx10*yx14 - 6*c_2*c_6*y_0**3*yx11 + 3*c_2*c_6*y_0**3*yx3 + c_2*c_6*y_0**2*y_2*yx10 - 2*c_2*c_6*y_0**2*y_2*yx15 + 2*c_2*c_6*y_0**2*yx10*yx8 + c_2*c_6*y_0**2*yx11 - 2*c_2*c_6*y_0*y_2*yx10*yx13 - c_2*c_6*y_0*y_2*yx15 - 2*c_2*c_6*y_0*yx10*yx14 + 2*c_2*c_6*y_2*yx10*yx16 - 2*c_2*y_0**4*yx11 + c_2*y_0**4*yx3 + c_3*c_6**4*yx16 + 4*c_3*c_6**3*y_0*yx16 + 6*c_3*c_6**2*y_0**2*yx16 + 4*c_3*c_6*y_0**3*yx16 + c_3*y_0**4*yx16 - c_4*c_6**4*yx15 - 4*c_4*c_6**3*y_0*yx15 - 6*c_4*c_6**2*y_0**2*yx15 - 4*c_4*c_6*y_0**3*yx15 - c_4*y_0**4*yx15)/(c_6**4 + 4*c_6**3*y_0 + 6*c_6**2*y_0**2 + 4*c_6*y_0**3 + y_0**4)], [(-c_2*yx14*(c_6 + y_0)**4*(c_6**2 + 2*c_6*y_0 + y_0**2)*(3*c_6**2*y_0 - 3*c_6**2 + 6*c_6*y_0**2 - 3*c_6*y_0 + 3*c_6*yx13 - c_6 + 3*y_0**3) + c_2*yx8*(c_6 + y_0)**4*(c_6**3 + 3*c_6**2*y_0 + 3*c_6*y_0**2 + y_0**3)*(3*c_6*y_0 + 3*c_6*yx13 - c_6 + 3*y_0**2) - yx13*(c_6 + y_0)*(c_6**2 + 2*c_6*y_0 + y_0**2)*(3*c_2*y_2*(c_6 + y_0)**2*(y_0 - 1) + c_2*y_2*(3*c_6*y_0 + 3*c_6*yx13 - c_6 + 3*y_0**2) + 3*(c_6 + y_0)**3*(-c_0 + c_1*y_0 - c_1))*(c_6**3 + 3*c_6**2*y_0 + 3*c_6*y_0**2 + y_0**3) - yx16*(c_6**2 + 2*c_6*y_0 + y_0**2)*(c_6**3 + 3*c_6**2*y_0 + 3*c_6*y_0**2 + y_0**3)*(3*c_1*(c_6 + y_0)**4 + 3*c_2*y_2*(c_6 + y_0)**3 + 3*c_2*y_2*(c_6 + y_0)**2*(-y_0 + 1) + c_2*y_2*(-3*c_6*y_0 - 3*c_6*yx13 + c_6 - 3*y_0**2)) + (c_6 + y_0)**3*(c_6**2 + 2*c_6*y_0 + y_0**2)*(c_6**3 + 3*c_6**2*y_0 + 3*c_6*y_0**2 + y_0**3)*(-3*c_0*c_6*yx13 + c_0*c_6 - 3*c_0*y_0*yx13 + c_0*y_0 + 3*c_1*c_6*y_0*yx13 - c_1*c_6*y_0 + 3*c_1*y_0**2*yx13 - c_1*y_0**2 + 3*c_2*y_0*y_2*yx13 - c_2*y_0*y_2))/((c_6 + y_0)**4*(c_6**2 + 2*c_6*y_0 + y_0**2)*(c_6**3 + 3*c_6**2*y_0 + 3*c_6*y_0**2 + y_0**3))]])
 
-        problem = ODEProblem('MEA', ode_lhs_terms, right_hand_side, constants)
+        problem = ODEProblem('MEA', left_hand_side_descriptors, right_hand_side, constants)
 
         simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
         timepoints = np.arange(0, 20.5, 0.5)
@@ -243,7 +243,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
         V_12 = Symbol('V_12')
         V_11 = Symbol('V_11')
 
-        ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
+        left_hand_side_descriptors = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
                          VarianceTerm((0, 0), V_00),
@@ -258,7 +258,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         right_hand_side = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*V_00*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_02*c_2*y_0/(c_6 + y_0) - V_20*c_2*y_0/(c_6 + y_0) + c_0**Float('1.0', prec=15) + (c_1*y_0)**Float('1.0', prec=15) + (c_2*y_0*y_2/(c_6 + y_0))**Float('1.0', prec=15)], [V_00*c_3 - V_01*c_4 + V_01*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_21*c_2*y_0/(c_6 + y_0)], [V_01*c_4 - V_02*c_5 + V_02*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_00*c_3 - V_10*c_4 + V_10*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_12*c_2*y_0/(c_6 + y_0)], [V_01*c_3 + V_10*c_3 - 2*V_11*c_4 + (c_3*y_0)**Float('1.0', prec=15) + (c_4*y_1)**Float('1.0', prec=15)], [V_02*c_3 + V_11*c_4 - V_12*c_4 - V_12*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_10*c_4 - V_20*c_5 + V_20*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_22*c_2*y_0/(c_6 + y_0)], [V_11*c_4 + V_20*c_3 - V_21*c_4 - V_21*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_12*c_4 + V_21*c_4 - 2*V_22*c_5 + (c_4*y_1)**Float('1.0', prec=15) + (c_5*y_2)**Float('1.0', prec=15)]])
 
-        problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
+        problem = ODEProblem('LNA', left_hand_side_descriptors, right_hand_side, constants)
 
         simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
 
@@ -302,7 +302,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         right_hand_side = MutableDenseMatrix([[-c_0*y_0*(y_0 + y_1 - 181) - c_0*yx3 - c_0*yx5 - c_1*(y_0 + y_1 - 301)], [c_2*(-y_0 - y_1 + 301)], [c_2*(-y_0 - y_1 - 2*yx1 - 2*yx3 + 301)], [c_2*(-y_0 - y_1 - 3*yx1 - 3*yx2 - 3*yx3 - 3*yx4 + 301)], [-c_0*yx4 - c_0*yx6 - c_2*yx5 - yx1*(c_0*y_0 + c_1) - yx3*(2*c_0*y_0 + c_0*y_1 - 181*c_0 + c_1 + c_2)], [-c_0*y_0*yx2 - 2*c_0*y_0*yx4 - c_0*y_1*yx4 + c_0*yx1*yx3 + c_0*yx1*yx5 + 181*c_0*yx4 - c_1*yx2 - c_1*yx4 - c_2*yx3 - 2*c_2*yx4 - c_2*yx5 - 2*c_2*yx6], [c_0*y_0**2 + c_0*y_0*y_1 - 181*c_0*y_0 - 2*c_0*yx6 - 2*c_0*yx7 - c_1*y_0 - c_1*y_1 + 301*c_1 - yx3*(2*c_0*y_0 - c_0 + 2*c_1) - yx5*(4*c_0*y_0 + 2*c_0*y_1 - 363*c_0 + 2*c_1)], [c_0*y_0*yx1 + 2*c_0*y_0*yx3 - 2*c_0*y_0*yx4 - 4*c_0*y_0*yx6 + c_0*y_1*yx3 - 2*c_0*y_1*yx6 + 2*c_0*yx3**2 + 2*c_0*yx3*yx5 - 181*c_0*yx3 + c_0*yx4 + 363*c_0*yx6 - c_1*yx1 - c_1*yx3 - 2*c_1*yx4 - 2*c_1*yx6 - c_2*yx6 - c_2*yx7], [-c_0*y_0**2 - c_0*y_0*y_1 + 3*c_0*y_0*yx3 + 6*c_0*y_0*yx5 - 3*c_0*y_0*yx6 - 6*c_0*y_0*yx7 + 181*c_0*y_0 + 3*c_0*y_1*yx5 - 3*c_0*y_1*yx7 + 3*c_0*yx3*yx5 - c_0*yx3 + 3*c_0*yx5**2 - 544*c_0*yx5 + 3*c_0*yx6 + 546*c_0*yx7 - c_1*y_0 - c_1*y_1 - 3*c_1*yx3 - 3*c_1*yx5 - 3*c_1*yx6 - 3*c_1*yx7 + 301*c_1]])
 
-        ode_lhs_terms = [Moment(np.array([1, 0]), symbol=y_0),
+        left_hand_side_descriptors = [Moment(np.array([1, 0]), symbol=y_0),
                          Moment(np.array([0, 1]), symbol=y_1),
                          Moment(np.array([0, 2]), symbol=yx1),
                          Moment(np.array([0, 3]), symbol=yx2),
@@ -312,7 +312,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
                          Moment(np.array([2, 1]), symbol=yx6),
                          Moment(np.array([3, 0]), symbol=yx7)]
 
-        problem = ODEProblem('MEA', ode_lhs_terms, right_hand_side, constants)
+        problem = ODEProblem('MEA', left_hand_side_descriptors, right_hand_side, constants)
 
         parameters = [0.00166, 0.001, 0.1]
         initial_conditions = [301, 0, 0, 0, 0]
@@ -354,14 +354,14 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         right_hand_side = MutableDenseMatrix([[-c_0*y_0*(y_0 + y_1 - 181) + c_1*(-y_0 - y_1 + 301)], [c_2*(-y_0 - y_1 + 301)], [2*V_00*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_01*(-c_0*y_0 - c_1) + V_10*(-c_0*y_0 - c_1) + (c_1*(-y_0 - y_1 + 301))**Float('1.0', prec=15) + (c_0*y_0*(y_0 + y_1 - 181))**Float('1.0', prec=15)], [-V_00*c_2 - V_01*c_2 + V_01*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_11*(-c_0*y_0 - c_1)], [-V_00*c_2 - V_10*c_2 + V_10*(-c_0*y_0 - c_0*(y_0 + y_1 - 181) - c_1) + V_11*(-c_0*y_0 - c_1)], [-V_01*c_2 - V_10*c_2 - 2*V_11*c_2 + (c_2*(-y_0 - y_1 + 301))**Float('1.0', prec=15)]])
 
-        ode_lhs_terms = [Moment(np.array([1, 0]), symbol=y_0),
+        left_hand_side_descriptors = [Moment(np.array([1, 0]), symbol=y_0),
                          Moment(np.array([0, 1]), symbol=y_1),
                          VarianceTerm((0, 0), V_00),
                          VarianceTerm((0, 1), V_01),
                          VarianceTerm((1, 0), V_10),
                          VarianceTerm((1, 1), V_11)]
 
-        problem = ODEProblem('LNA', ode_lhs_terms, right_hand_side, constants)
+        problem = ODEProblem('LNA', left_hand_side_descriptors, right_hand_side, constants)
 
         simulation = Simulation(problem, rtol=1e-4, atol=1e-4)
 

@@ -206,7 +206,7 @@ class SolverBase(MemoisableObject):
         :return:
         """
 
-        descriptions = self._problem.ode_lhs_terms
+        descriptions = self._problem.left_hand_side_descriptors
 
         return _wrap_results_to_trajectories(simulated_timepoints, simulated_values, descriptions)
 

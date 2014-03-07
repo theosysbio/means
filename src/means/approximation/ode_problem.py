@@ -197,18 +197,19 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     yaml_tag = '!problem'
 
-    def __init__(self, method, ode_lhs_terms, right_hand_side, constants):
+    def __init__(self, method, left_hand_side_descriptors, right_hand_side, constants):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
         Currently, 'MEA' and 'LNA' are supported"
-        :param ode_lhs_terms: the left hand side of equations as a list of `ODETerms` (e.g. `Moments`)
+        :param left_hand_side_descriptors: the left hand side of equations as a list of :class:`Descriptor` objects
+                                           (e.g. list of :class:`Moment`)
         :param right_hand_side: the right hand side of equations
         :param constants: the constants of the model
         """
 
-        self.__ode_lhs_terms = ode_lhs_terms
-        self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix([plhs.symbol for plhs in ode_lhs_terms]))
+        self.__left_hand_side_descriptors = left_hand_side_descriptors
+        self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix([plhs.symbol for plhs in left_hand_side_descriptors]))
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
@@ -225,8 +226,8 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
     @property
-    def ode_lhs_terms(self):
-        return self.__ode_lhs_terms
+    def left_hand_side_descriptors(self):
+        return self.__left_hand_side_descriptors
 
     @property
     def left_hand_side(self):
@@ -263,7 +264,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     @memoised_property
     def _descriptions_dict(self):
-        return {ode_term.symbol: ode_term for ode_term in self.ode_lhs_terms}
+        return {ode_term.symbol: ode_term for ode_term in self.left_hand_side_descriptors}
 
     @property
     def number_of_equations(self):
@@ -314,7 +315,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
 
     def __unicode__(self):
-        equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.ode_lhs_terms,
+        equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.left_hand_side_descriptors,
                                                                                            self.right_hand_side)])
         return u"{0.__class__!r}\n" \
                u"Method: {0.method!r}\n" \
@@ -343,11 +344,11 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         lines.append("<p>Constants: <code>{0!r}</code></p>".format(self.constants))
         lines.append("<p>Terms:</p>")
         lines.append("<ul>")
-        lines.extend(['<li><code>{0!r}</code></li>'.format(lhs) for lhs in self.ode_lhs_terms])
+        lines.extend(['<li><code>{0!r}</code></li>'.format(lhs) for lhs in self.left_hand_side_descriptors])
         lines.append("</ul>")
         lines.append('<hr />')
         lines.append(r"\begin{align*}")
-        for lhs, rhs in zip(self.ode_lhs_terms, self.right_hand_side):
+        for lhs, rhs in zip(self.left_hand_side_descriptors, self.right_hand_side):
             lines.append(r"\dot{{{0}}} &= {1} \\".format(sympy.latex(lhs.symbol), sympy.latex(rhs)))
         lines.append(r"\end{align*}")
         return "\n".join(lines)
@@ -357,7 +358,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         STRING_RIGHT_HAND = 'RHS of equations:'
         STRING_MOM = 'List of moments:'
 
-        left_hand_side = self.ode_lhs_terms
+        left_hand_side = self.left_hand_side_descriptors
         preamble = ["\documentclass{article}"]
         preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
@@ -383,14 +384,14 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         if not isinstance(other, self.__class__):
             return False
         return self.constants == other.constants \
-                   and other.ode_lhs_terms == self.ode_lhs_terms \
+                   and other.left_hand_side_descriptors == self.left_hand_side_descriptors \
                    and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
 
     @classmethod
     def to_yaml(cls, dumper, data):
         mapping = [('method', data.method),
                    ('constants', map(str, data.constants)),
-                   ('ode_lhs_terms', list(data.ode_lhs_terms)),
+                   ('left_hand_side_descriptors', list(data.left_hand_side_descriptors)),
                    ('right_hand_side', map(str, data.right_hand_side))]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
