@@ -73,21 +73,21 @@ class TestODEProblem(unittest.TestCase):
         p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
         for i,l in enumerate(lhs):
-            self.assertIsNone(p.descriptions_dict[l.symbol].descriptor)
+            self.assertIsNone(p._descriptions_dict[l.symbol].descriptor)
 
 
     def test_ode_moment_getting_n_vector_from_dict_and_key(self):
         """
         Given a list of descriptor and a list of symbols used to create Moment,
-        Then problem description_dict should return a numpy array equal to the descriptor
-        for each corresponding symbol
+        Then problem descriptor_for_symbol function should return the correct
+        descriptor for each corresponding symbol
         :return:
         """
         symbs = to_sympy_matrix(['y_1', 'y_2', 'y_3'])
-        desc = [[0,0,1],[1,0,432],[21,43,34]]
-        lhs = [Moment(d,s) for d,s in zip(desc,symbs)]
+        desc = [[0, 0, 1], [1, 0, 432], [21, 43, 34]]
+        lhs = [Moment(d, s) for d, s in zip(desc, symbs)]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
-        for i,l in enumerate(lhs):
-            self.assertEqual((p.descriptions_dict[l.symbol].descriptor == np.array(desc[i])).all(), True )
+        for i, l in enumerate(lhs):
+            self.assertEqual(p.descriptor_for_symbol(l.symbol), lhs)
 

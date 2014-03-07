@@ -193,9 +193,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
     __right_hand_side = None
     __left_hand_side = None
-    __descriptions_dict = None
     __constants = None
-    __ordered_descriptions_of_lhs_terms = None
 
     yaml_tag = '!problem'
 
@@ -214,22 +212,6 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__constants = to_list_of_symbols(constants)
         self.__method = method
-        self.__initialise_descriptions(ode_lhs_terms)
-
-    #todo
-    # def __eq__(self, other):
-    #    return True
-
-    def __initialise_descriptions(self, ode_lhs_terms):
-        """
-        Populate self.__descriptions_dict
-        and self._ordered_descriptions_of_lhs_terms
-        :param ode_lhs_terms:
-        :return:
-        """
-        descriptions_dict = dict([(ode_term.symbol, ode_term) for ode_term in ode_lhs_terms])
-        self.__ordered_descriptions_of_lhs_terms = ode_lhs_terms
-        self.__descriptions_dict = descriptions_dict
 
     def validate(self):
         """
@@ -257,7 +239,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     # TODO: I don't think species_* methods should be part of ODEProblem, better for it to be unaware of description meanings
     @property
     def species_terms(self):
-        return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self.descriptions_dict.iteritems())
+        return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self._descriptions_dict.iteritems())
 
     @property
     def number_of_species(self):
@@ -279,14 +261,9 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     def method(self):
         return self.__method
 
-    @property
-    def descriptions_dict(self):
-        return self.__descriptions_dict
-
-    @property
-    def ordered_descriptions(self):
-        # TODO: consider removing this
-        return self.__ordered_descriptions_of_lhs_terms
+    @memoised_property
+    def _descriptions_dict(self):
+        return {ode_term.symbol: ode_term for ode_term in self.ode_lhs_terms}
 
     @property
     def number_of_equations(self):
@@ -318,7 +295,22 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
         return f
 
+    def descriptor_for_symbol(self, symbol):
+        """
+        Given the symbol associated with the problem, return the descriptor associated with that symbol
 
+        :param symbol: Symbol
+        :type symbol: basestring|:class:`sympy.Symbol`
+        :return:
+        """
+        if isinstance(symbol, 'basestring'):
+            symbol = sympy.Symbol(symbol)
+        else:
+            symbol = symbol.Symbol(symbol)
+        try:
+            return self._descriptions_dict[symbol]
+        except KeyError:
+            raise KeyError("Symbol {0!r} not found in left-hand-side of the equations".format(symbol))
 
 
 
