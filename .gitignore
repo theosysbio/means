@@ -53,3 +53,5 @@ model*.tex
 .DS_Store
 .texpadtmp
 coverage.xml
+.cache
+.ipynb_checkpoints
