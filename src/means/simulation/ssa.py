@@ -31,7 +31,7 @@ class SSASimulation(SerialisableObject):
             >>> problem = StochasticProblem(MODEL)
             >>> ssas = SSASimulation(problem,  random_seed=None)
             >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
-            >>>print  mean_trajectories
+            >>> print  mean_trajectories
 
 
     .. [Gillespie77]Gillespie, Daniel T. "Exact stochastic simulation of coupled chemical reactions."\
