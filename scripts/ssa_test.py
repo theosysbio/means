@@ -1,4 +1,5 @@
-from means.simulation.ssa import SSASimulation, StochasticProblem
+from means.core.problem import StochasticProblem
+from means.simulation.ssa import SSASimulation
 import numpy as np
 from means.examples.sample_models import *
 
