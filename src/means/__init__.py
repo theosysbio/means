@@ -10,3 +10,4 @@ import plotting
 from core import *
 from simulation import *
 from inference import *
+from approximation import *
