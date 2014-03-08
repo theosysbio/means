@@ -1,7 +1,7 @@
 from collections import namedtuple
 import numpy as np
-from means.approximation.ode_problem import Moment
-from means.simulation import NP_FLOATING_POINT_PRECISION
+from means.core import Moment
+from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
 from scipy.special import gammaln
 
 def _supported_distances_lookup():

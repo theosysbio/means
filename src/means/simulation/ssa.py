@@ -1,30 +1,21 @@
+import multiprocessing
+
 import numpy as np
 import sympy as sp
-import multiprocessing
+
 from means.simulation.trajectory import Trajectory
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import substitute_all
-from means.approximation.ode_problem import Moment
-from means.model import Model
-
-class StochasticProblem(Model):
-    """
-    The formulation of a model for stochastic simulations such as GSSA.
-    """
-    def __init__(self, model):
-        super(StochasticProblem, self).__init__(model.constants, model.species,
-                                                model.propensities, model.stoichiometry_matrix)
-        self.__change = np.array(model.stoichiometry_matrix.T).astype("int")
-    @property
-    def change(self):
-        return self.__change
-
+from means.core import Moment
 
 
 class SSASimulation(SerialisableObject):
     """
         A class providing an implementation of the exact Gillespie Stochastic Simulation Algorithm [Gillespie77].
 
+            >>> from means.examples import MODEL_P53
+            >>> from means import StochasticProblem, SSASimulation
+            >>> import numpy as np
             >>> PROBLEM = StochasticProblem(MODEL_P53)
             >>> RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
             >>> INITIAL_CONDITIONS = [70, 30, 60]
@@ -32,7 +23,6 @@ class SSASimulation(SerialisableObject):
             >>> N_SSA = 10
             >>> ssas = SSASimulation(PROBLEM)
             >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
-            >>> print  mean_trajectories
 
 
     .. [Gillespie77]Gillespie, Daniel T. "Exact stochastic simulation of coupled chemical reactions."\
@@ -70,9 +60,9 @@ class SSASimulation(SerialisableObject):
         :param number_of_processes: the number of parallel process to be run
         :param return_average: whether the average of all simulations should be returned
 
-        :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem,
+        :return: a list of :class:`~means.simulation.Trajectory` one per species in the problem,
             or a list of lists of trajectories (one per simulation) if `return_average == False`.
-        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
+        :rtype: list[:class:`~means.simulation.Trajectory`]
         """
         self._validate_parameters(parameters, initial_conditions)
         t_max= max(timepoints)
@@ -187,8 +177,8 @@ class _SSAGenerator(object):
         """
         Generate a single SSA simulation
         :param x: an integer to reset the random seed. If None, the initial random number generator is used
-        :return: a list of :class:`~means.simulation.simulate.Trajectory` one per species in the problem
-        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
+        :return: a list of :class:`~means.simulation.Trajectory` one per species in the problem
+        :rtype: list[:class:`~means.simulation.Trajectory`]
         """
         #reset random seed
         if x:

@@ -1,8 +1,7 @@
 import os
 import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
-from means.approximation import ODEProblem
-from means.approximation.ode_problem import Moment, VarianceTerm
+from means.core import ODEProblem, Moment, VarianceTerm
 from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus
 from means.io.serialise import dump, load

@@ -3,7 +3,7 @@ import sympy
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 from means.approximation.mea.closure_gamma import GammaClosure
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 
 class TestLogNormalCloser(unittest.TestCase):
     __n_counter = [

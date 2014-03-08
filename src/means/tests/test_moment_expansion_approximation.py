@@ -2,8 +2,7 @@ import unittest
 import sympy
 from numpy import array
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import Moment, ODEProblem
-from means.model import Model
+from means.core import Moment, ODEProblem, Model
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 

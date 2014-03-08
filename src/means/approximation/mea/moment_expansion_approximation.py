@@ -1,9 +1,9 @@
 import itertools
 import sympy as sp
 
-from means.approximation.ode_problem import ODEProblem
+from means.core import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 
 # helper functions
 from dmu_over_dt import generate_dmu_over_dt
@@ -27,7 +27,7 @@ def mea_approximation(model, max_order, closure='scalar', *closure_args, **closu
 
 
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+    :rtype: :class:`~means.core.ODEProblem`
     """
     mea = MomentExpansionApproximation(model, max_order, closure=closure, *closure_args, **closure_kwargs)
     return mea.run()
@@ -106,7 +106,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         Performs the complete analysis on the model specified during initialisation.
 
         :return: an ODE problem which can be further used in inference and simulation.
-        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+        :rtype: :class:`~means.core.ODEProblem`
         """
         max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix

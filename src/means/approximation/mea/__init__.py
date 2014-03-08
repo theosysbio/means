@@ -1,1 +1,1 @@
-from moment_expansion_approximation import MomentExpansionApproximation
+from moment_expansion_approximation import MomentExpansionApproximation, mea_approximation

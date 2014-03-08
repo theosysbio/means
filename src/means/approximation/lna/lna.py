@@ -3,9 +3,9 @@ import operator
 
 import sympy as sp
 
-from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.approximation.ode_problem import Moment, VarianceTerm
+from means.core import Moment, VarianceTerm, ODEProblem
+
 
 def lna_approximation(model):
 
@@ -18,7 +18,7 @@ def lna_approximation(model):
       BMC Bioinformatics, vol. 10, no. 1, p. 343, Oct. 2009.
 
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+    :rtype: :class:`~means.core.ODEProblem`
     """
     lna = LinearNoiseApproximation(model)
     return lna.run()
@@ -33,7 +33,7 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         Overrides the default _run() private method.
         Performs the complete analysis
         :return: A fully computed set of Ordinary Differential Equations that can be used for further simulation
-        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+        :rtype: :class:`~means.core.ODEProblem`
         """
 
         S = self.model.stoichiometry_matrix
@@ -94,5 +94,5 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         ode_terms = moment_terms + variance_terms
 
 
-        out_problem = ode_problem.ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.constants))
+        out_problem = ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.constants))
         return out_problem

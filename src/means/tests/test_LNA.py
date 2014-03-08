@@ -2,7 +2,7 @@ import unittest
 
 import sympy
 
-from means.model.model import Model
+from means.core.model import Model
 from means.approximation.lna.lna import LinearNoiseApproximation
 from means.util.sympyhelpers import to_sympy_matrix
 

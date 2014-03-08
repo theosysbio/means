@@ -2,7 +2,7 @@ import random
 import unittest
 from numpy.testing import assert_array_almost_equal
 from sympy import Symbol, Float, MutableDenseMatrix
-from means.approximation.ode_problem import Moment, ODEProblem
+from means.core import Moment, ODEProblem
 import numpy as np
 from means.inference import Inference, InferenceWithRestarts
 # We need renaming as otherwise nose picks it up as a test

@@ -5,18 +5,7 @@ setup(
     version='trunk',
     author='Theoretical Systems Biology Group',
     author_email=None, # TODO: author email
-    packages=['means',
-              'means.approximation',
-              'means.approximation.lna',
-              'means.approximation.mea',
-              'means.examples',
-              'means.inference',
-              'means.model',
-              'means.plotting',
-              'means.simulation',
-              'means.util',
-              'means.tests',
-              'means.io'],
+    packages=['means'],
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license

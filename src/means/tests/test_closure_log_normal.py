@@ -1,5 +1,5 @@
 import unittest
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 import sympy
 from means.approximation.mea.closure_log_normal import LogNormalClosure
 from means.util.sympyhelpers import sympy_expressions_equal

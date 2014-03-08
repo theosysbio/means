@@ -9,11 +9,9 @@ import sympy
 from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
+from means.core import Moment, VarianceTerm
 
-# These are the default values in solver.c but they seem very low
-from means.approximation.ode_problem import Moment, VarianceTerm
-
-def validate_problem(problem):
+def _validate_problem(problem):
 
     problem.validate()
 
@@ -87,7 +85,7 @@ class Simulation(SerialisableObject):
         .. _`Assimulo documentation`: http://www.jmodelica.org/assimulo_home/
         """
         self.__problem = problem
-        validate_problem(problem)
+        _validate_problem(problem)
 
         if problem.method == 'LNA':
             self._postprocessing = _postprocess_lna_simulation
@@ -151,9 +149,9 @@ class Simulation(SerialisableObject):
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
-        :return: a list of :class:`~means.simulation.simulate.Trajectory` objects,
+        :return: a list of :class:`~means.simulation.Trajectory` objects,
                  one for each of the equations in the problem
-        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
+        :rtype: list[:class:`~means.simulation.Trajectory`]
         """
 
         initial_conditions = self._append_zeros(initial_conditions, self.problem.number_of_equations)
@@ -252,9 +250,9 @@ class SimulationWithSensitivities(Simulation):
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
-        :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
+        :return: a list of :class:`~means.simulation.TrajectoryWithSensitivityData` objects,
                  one for each of the equations in the problem
-        :rtype: list[:class:`~means.simulation.simulate.TrajectoryWithSensitivityData`]
+        :rtype: list[:class:`~means.simulation.TrajectoryWithSensitivityData`]
         """
         return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
 

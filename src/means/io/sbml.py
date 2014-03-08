@@ -1,7 +1,7 @@
 from collections import namedtuple
 import sympy
 import numpy as np
-from means.model import Model
+from means.core.model import Model
 
 _Reaction = namedtuple('_REACTION', ['id', 'reactants', 'products', 'propensity', 'parameters'])
 

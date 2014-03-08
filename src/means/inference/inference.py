@@ -17,8 +17,9 @@ from means.inference.parallelisation import raw_results_in_parallel
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
-from means.approximation.ode_problem import Moment
-from means.simulation import Simulation, NP_FLOATING_POINT_PRECISION, Trajectory, SolverException
+from means.core import Moment
+from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
+from means.simulation import Trajectory, SolverException, Simulation
 from means.util.memoisation import memoised_property, MemoisableObject
 
 
@@ -230,7 +231,7 @@ class InferenceWithRestarts(MemoisableObject):
         """
 
         :param problem: Problem to infer parameters for
-        :type problem: :class:`~means.approximation.ode_problem.ODEProblem`
+        :type problem: :class:`~means.core.ODEProblem`
         :param number_of_samples: Number of the starting points to randomly pick
         :param starting_parameter_ranges: Valid initialisation ranges for the parameters
         :param starting_conditions_ranges: Valid initialisation ranges for the initial conditions.

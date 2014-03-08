@@ -23,9 +23,9 @@ class ApproximationBaseClass(object):
 
     def run(self):
         """
-        Perform the approximation. Return a constructed :class:`~means.approximation.ode_problem.ODEProblem` object.
+        Perform the approximation. Return a constructed :class:`~means.core.ODEProblem` object.
 
-        :return: a constructed set of equations, encoded in :class:`~means.approximation.ode_problem.ODEProblem` object.
-        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+        :return: a constructed set of equations, encoded in :class:`~means.core.ODEProblem` object.
+        :rtype: :class:`~means.core.ODEProblem`
         """
         raise NotImplementedError
