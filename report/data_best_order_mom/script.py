@@ -2,10 +2,10 @@ import sys
 sys.path.append("../utils")
 from report_unit import ReportUnit
 from means.examples.sample_models import *
-from means.simulation.ssa import SSASimulator
+from means.simulation.ssa import SSASimulation
 from means.simulation.simulate import Simulation
-from means.approximation.mea.moment_expansion_approximation import run_mea
-
+from means.approximation.mea.moment_expansion_approximation import mea_approximation
+from means.core import StochasticProblem
 import multiprocessing
 import numpy as np
 
@@ -17,27 +17,8 @@ INITIAL_CONDITIONS = [70, 30, 60]
 TMAX = 40
 TIME_RANGE = np.arange(0,TMAX,.1)
 N_SSA = int(2e4)
-MAX_ORDER = 9
 
-
-
-# we run 10 simulations
-#trajectories = map(get_one_ssa_traj, [i for i in range(10)])
-# and calculate the means per species
-
-
-ssa_simulator = SSASimulator(MODEL)
-def get_one_ssa_traj(i):
-    try:
-        print i
-        # here the trick it to set the random seed according to i so that
-        # we have different results for different processes
-        ssa_simulator.reset_random_seed(i)
-        one_run_trajectories = ssa_simulator.simulate_system(RATES, INITIAL_CONDITIONS, TMAX)
-        one_run_trajectories = [tr.resample(TIME_RANGE) for tr in one_run_trajectories]
-        return one_run_trajectories
-    except KeyboardInterrupt:
-        exit(0)
+MAX_ORDER = 8
 
 
 def get_one_mea_result(max_order_cl_arg):
@@ -46,7 +27,7 @@ def get_one_mea_result(max_order_cl_arg):
 
         print (max_order, cl_arg)
         probl = mea_approximation(MODEL, max_order, **cl_arg)
-        simulator = Simulation(probl, solver='cvode', discr="BDF",maxord=5, maxh=0.01, maxsteps=1000)
+        simulator = Simulation(probl)
 
         try:
             trajects = simulator.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE)
@@ -66,30 +47,19 @@ def get_one_mea_result(max_order_cl_arg):
 class MyData(ReportUnit):
 
 
-    def get_all_sss_means(self):
-
-        pool = multiprocessing.Pool(processes=7)
-        trajectories = pool.map(get_one_ssa_traj, [i for i in range(N_SSA)])
-
-        pool.close()
-        pool.join()
-        #trajectories = map(self.get_one_ssa_traj, [i for i in range(N_SSA)])
-
-        mean_trajectories = [sum(trajs)/len(trajs) for trajs in zip(*trajectories)]
-        return mean_trajectories
-
     def run(self):
 
         self.out_object = []
-        ssa_means = self.get_all_sss_means()
+        ssas = SSASimulation( StochasticProblem(MODEL), N_SSA)
+        ssa_means = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, number_of_processes=8)
         self.out_object.append( {"method":"SSA", "trajectories": ssa_means})
 
         closer_args = [
-                       {"closer":"zero"},
-                       {"closer":"log-normal", "multivariate":True},
-                       {"closer":"log-normal", "multivariate":False},
-                       {"closer":"normal", "multivariate":True},
-                       {"closer":"normal", "multivariate":False}
+                       {"closure":"scalar"},
+                       {"closure":"log-normal", "multivariate":True},
+                       {"closure":"log-normal", "multivariate":False},
+                       {"closure":"normal", "multivariate":True},
+                       {"closure":"normal", "multivariate":False}
                        ]
         print "?"
         try:

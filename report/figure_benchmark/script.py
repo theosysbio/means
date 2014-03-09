@@ -3,7 +3,6 @@ sys.path.append("../utils")
 from report_unit import ReportUnit
 import pylab as pl
 import pickle
-import math
 
 class MyFigure(ReportUnit):
     def __init__(self):
