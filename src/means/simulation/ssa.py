@@ -30,7 +30,7 @@ class SSASimulation(SerialisableObject):
     """
     def __init__(self, stochastic_problem, n_simulations, random_seed=None):
         """
-        
+
         :param stochastic_problem:
         :param n_simulations:
         :param random_seed:
@@ -106,7 +106,9 @@ class SSASimulation(SerialisableObject):
                               initial_conditions, t_max, self.__random_seed])
 
             results = p.map(multiprocessing_apply_ssa, seed_for_processes)
+
             p.close()
+            p.join()
 
         resampled_results = [[traj.resample(timepoints) for traj in res] for res in results]
         if not return_average:
