@@ -160,6 +160,9 @@ class Moment(ODETermBase):
 
         return np.equal(self.n_vector, other.n_vector).all() and self.symbol == other.symbol
 
+    def __ne__(self, other):
+        return not other == self
+
     def __ge__(self, other):
         """
         A moment is said greater or equal than another iff all the values of n_vec are greater or equal.
