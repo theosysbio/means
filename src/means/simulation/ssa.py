@@ -21,16 +21,23 @@ class SSASimulation(SerialisableObject):
             >>> INITIAL_CONDITIONS = [70, 30, 60]
             >>> TIME_RANGE = np.arange(0, 40, .1)
             >>> N_SSA = 10
-            >>> ssas = SSASimulation(PROBLEM)
-            >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, N_SSA)
+            >>> ssas = SSASimulation(PROBLEM, N_SSA)
+            >>> mean_trajectories = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE)
 
 
     .. [Gillespie77]Gillespie, Daniel T. "Exact stochastic simulation of coupled chemical reactions."\
          The journal of physical chemistry 81.25 (1977): 2340-2361.
     """
-    def __init__(self, stochastic_problem, random_seed=None):
+    def __init__(self, stochastic_problem, n_simulations, random_seed=None):
+        """
+        
+        :param stochastic_problem:
+        :param n_simulations:
+        :param random_seed:
+        """
         self.__random_seed = random_seed
         self.__problem = stochastic_problem
+        self.__n_simulations = n_simulations
 
     def _validate_parameters(self, parameters, initial_conditions):
 
@@ -43,10 +50,10 @@ class SSASimulation(SerialisableObject):
             raise Exception(exception_str.format(len(self.__problem.constants), len(parameters)))
 
 
-    def simulate_system(self, parameters, initial_conditions, timepoints, n_simulations, number_of_processes=1,
+    def simulate_system(self, parameters, initial_conditions, timepoints, number_of_processes=1,
                         return_average=True):
         """
-        Perform a given number of Gillespie SSA simulations and returns trajectories for of each species.
+        Perform Gillespie SSA simulations and returns trajectories for of each species.
         Each trajectory is interpolated at the given time points.
         By default, the average amounts of species for all simulations is returned.
 
@@ -64,6 +71,8 @@ class SSASimulation(SerialisableObject):
             or a list of lists of trajectories (one per simulation) if `return_average == False`.
         :rtype: list[:class:`~means.simulation.Trajectory`]
         """
+
+        n_simulations = self.__n_simulations
         self._validate_parameters(parameters, initial_conditions)
         t_max= max(timepoints)
 
