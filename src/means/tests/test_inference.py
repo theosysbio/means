@@ -109,7 +109,7 @@ class TestInference(unittest.TestCase):
         def check_initialisation(variable_parameters, expected_parameters_with_variability,
                                  expected_initial_conditions_with_variability, expected_constraints):
             p = Inference(self.dimer_problem, parameters, initial_conditions,
-                          variable_parameters, [Trajectory([1, 2, 3], [1, 2, 3], 'x')])
+                          variable_parameters, [Trajectory([1, 2, 3], [1, 2, 3], Moment([1], symbol='x'))])
 
             self.assertEquals(p.starting_parameters_with_variability, expected_parameters_with_variability)
             self.assertEqual(p.starting_conditions_with_variability, expected_initial_conditions_with_variability)

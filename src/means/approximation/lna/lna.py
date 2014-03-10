@@ -18,7 +18,7 @@ def lna_approximation(model):
       BMC Bioinformatics, vol. 10, no. 1, p. 343, Oct. 2009.
 
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.core.ODEProblem`
+    :rtype: :class:`~means.core.problems.ODEProblem`
     """
     lna = LinearNoiseApproximation(model)
     return lna.run()
@@ -33,7 +33,7 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         Overrides the default _run() private method.
         Performs the complete analysis
         :return: A fully computed set of Ordinary Differential Equations that can be used for further simulation
-        :rtype: :class:`~means.core.ODEProblem`
+        :rtype: :class:`~means.core.problems.ODEProblem`
         """
 
         S = self.model.stoichiometry_matrix
