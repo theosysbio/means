@@ -17,11 +17,11 @@ from means.inference.parallelisation import raw_results_in_parallel
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
-from means.core import Moment
-from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
-from means.simulation import Trajectory, SolverException, Simulation
+from means.simulation import SolverException, Simulation
 from means.util.memoisation import memoised_property, MemoisableObject
 
+import logging
+logger = logging.getLogger(__name__)
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
@@ -504,9 +504,9 @@ class Inference(SerialisableObject, MemoisableObject):
                                                                    current_initial_conditions,
                                                                    self.timepoints_to_simulate)
             except SolverException as e:
-                print 'Warning: got {0!r} while simulating with '  \
-                      'parameters={1!r}, initial_conditions={2!r}. ' \
-                      'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
+                logger.warn('Warning: got {0!r} while simulating with '  \
+                             'parameters={1!r}, initial_conditions={2!r}. ' \
+                             'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions))
                 self.exception_count += 1
                 if self.exception_limit is not None and self.exception_count > self.exception_limit:
                     raise TooManySolverExceptions('Solver exception limit reached while exploring the inference space.')
@@ -541,7 +541,7 @@ class Inference(SerialisableObject, MemoisableObject):
             result = fmin(distances_calculator, initial_guess, ftol=FTOL, disp=0, full_output=True,
                           retall=return_intermediate_solutions)
         except TooManySolverExceptions as e:
-            print 'Warning: Reached maximum number of exceptions from solver. Stopping inference here'
+            logger.warn('Reached maximum number of exceptions from solver. Stopping inference here')
             if distances_calculator.best_so_far_guess is not None:
                 optimised_data = distances_calculator.best_so_far_guess
             else:

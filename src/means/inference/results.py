@@ -1,6 +1,8 @@
 from means.io.serialise import SerialisableObject
 from means.util.memoisation import memoised_property, MemoisableObject
 
+import logging
+logger = logging.getLogger(__name__)
 
 class ConvergenceStatusBase(SerialisableObject):
 
@@ -285,10 +287,11 @@ class InferenceResult(SerialisableObject, MemoisableObject):
 
         try:
             starting_trajectories = self.inference.simulation.simulate_system(self.starting_parameters,
-                                                                     self.starting_initial_conditions, timepoints)
+                                                                              self.starting_initial_conditions,
+                                                                              timepoints)
         # TODO: change exception type
         except Exception as e:
-            print 'Warning: got {0!r} when obtaining starting trajectories, they will not be plotted'.format(e)
+            logger.warn('Got {0!r} when obtaining starting trajectories, they will not be plotted'.format(e))
             return []
 
         return starting_trajectories
@@ -298,9 +301,10 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         timepoints = self.observed_trajectories[0].timepoints
         try:
             optimal_trajectories = self.inference.simulation.simulate_system(self.optimal_parameters,
-                                                                    self.optimal_initial_conditions, timepoints)
+                                                                             self.optimal_initial_conditions,
+                                                                             timepoints)
         except Exception as e:
-            print 'Warning: got {0!r} when obtaining optimal trajectories, they will not be plotted'.format(e)
+            logger.warn('Got {0!r} when obtaining optimal trajectories, they will not be plotted'.format(e))
             return []
 
         return optimal_trajectories
@@ -318,8 +322,8 @@ class InferenceResult(SerialisableObject, MemoisableObject):
             try:
                 trajectories_collection.append(simulation.simulate_system(parameters, initial_conditions, timepoints))
             except Exception as e:
-                print "Warning: got {0!r} when trying to obtain one of the intermediate trajectories. " \
-                      "It will not be plotted".format(e)
+                logger.warn("Warning: got {0!r} when trying to obtain one of the intermediate trajectories. "
+                            "It will not be plotted".format(e))
                 continue
 
         return trajectories_collection
