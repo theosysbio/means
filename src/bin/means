@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import os
 import sys
+import means
 
 from means.approximation.lna.lna import LinearNoiseApproximation
 from means.simulation.simulate import simulate
-from means.simulation.paramtime import paramtime
-from means.model.model import Model
+from means.core import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import ODEProblem
+from means.core import ODEProblem
 from means.simulation.simulate import graphbuilder
 from means.inference.inference import parse_experimental_data_file, Inference, InferenceWithRestarts
 
@@ -151,12 +151,24 @@ def run():
             sys.exit(1)
 
         problem = ODEProblem.from_file(ODEout)
-        t,param,initcond, __ = paramtime(tpfile,restart, limit, problem)
+
+        try:
+            parameters = means.io.from_file(tpfile)
+        except Exception:
+            print 'There was a problem reading parameters file {0!r}. ' \
+                  'Ensure it is in correct format'.format(tpfile)
+            sys.exit(1)
+
+        # Take lower bound as starting values
+        param = [x[0] for x in parameters['parameter_range']]
+        initcond = [x[0] for x in parameters['initial_conditions_range']]
+
+        t = parameters['timepoints']
 
         solution, momlist = simulate(problem, trajout, t, param, initcond, maxorder)
 
         if plot:
-            graphbuilder(solution,ODEout,plottitle,t,momlist)
+            graphbuilder(solution, ODEout, plottitle, t, momlist)
 
     if infer:
         if not tpfile:
@@ -182,11 +194,17 @@ def run():
         (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
 
         try:
-            t, param, initcond, variable_parameters = paramtime(tpfile, restart, limit, problem)
-        except ValueError:
-            print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
-                  'for all parameter values.'.format(tpfile)
+            parameters = means.io.from_file(tpfile)
+        except Exception:
+            print 'There was a problem reading parameters file {0!r}. ' \
+                  'Ensure it is in correct format'.format(tpfile)
             sys.exit(1)
+
+        variable_parameters = parameters['variable_parameters']
+        param = parameters['parameter_range']
+        initcond = parameters['initial_conditions_range']
+        t = parameters['timepoints']
+
         optimiser_method = distribution if distribution else 'sum_of_squares'
 
         if restart:
@@ -195,10 +213,15 @@ def run():
                                               observed_trajectories,
                                               method=optimiser_method)
         else:
-            inference = Inference(problem, param,
-                                           initcond, variable_parameters,
-                                           observed_trajectories,
-                                           method=optimiser_method)
+            inference = Inference(problem,
+                                  # Just take the lower bound as starting parameter, if we're
+                                  # not doing restarts
+                                  [x[0] for x in param],
+                                  [x[0] for x in initcond],
+                                  variable_parameters,
+                                  observed_trajectories,
+                                  method=optimiser_method)
+
         result = inference.infer()
         result.to_file(inferfile)
         if plot:
