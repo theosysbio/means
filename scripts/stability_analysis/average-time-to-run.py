@@ -90,6 +90,7 @@ def runtime_test_function(simulation, value, initial_conditions, timepoints):
 
 @disk_cached
 def _test_runtime_for(problem, number_of_runs=10, *args, **kwargs):
+    RUNTIME_THRESHOLD = 3600 / 10.0
 
     simulation = means.simulation.Simulation(problem, *args, **kwargs)
     # Warm simulation instance up (cache the numerical evaluation routines)
@@ -104,7 +105,16 @@ def _test_runtime_for(problem, number_of_runs=10, *args, **kwargs):
     for key, value in PARAMETERS.iteritems():
         print "Timing {0}".format(key)
         timer = timeit.Timer(runtime_test_function(simulation, value, INITIAL_CONDITIONS, TIMEPOINTS))
-        runtime = timer.timeit(number=number_of_runs)
+        runtime_one = timer.timeit(number=1)
+
+        if runtime_one > RUNTIME_THRESHOLD:
+            print "Runtime for one iteration was {0}, which is greater than {1}"  \
+                  "not executing the remaining runs".format(runtime_one, RUNTIME_THRESHOLD)
+            runtimes[key] = runtime_one
+            continue
+
+        runtime = timer.timeit(number=number_of_runs-1)
+        runtime += runtime_one  # Add the first one again
         runtime /= float(number_of_runs)
         print "Timing {0} result: {1}s per iteration".format(key, runtime)
         runtimes[key] = runtime
