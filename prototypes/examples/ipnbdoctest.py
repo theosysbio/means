@@ -84,6 +84,9 @@ def sanitize(s):
     # ignore outputs of %time and %timeit magics:
     s = re.sub(r'(CPU times|Wall time|\d+ loops, best of).+', 'TIMING', s)
 
+    # Ignore the %%cache magic output
+    s = re.sub(r'Skipped the cell\'s code and loaded variables problems from file.+', 'CACHING', s)
+
     return s
 
 
