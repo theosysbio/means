@@ -13,7 +13,7 @@ DISK_CACHE_DIRECTORY = '.cache'
 
 MODEL = means.examples.MODEL_P53
 MAX_ORDERS = [1, 2, 3, 4, 5, 6]
-CLOSURE_METHODS = ['normal', 'zero', 'log-normal']
+CLOSURE_METHODS = ['normal', 'scalar', 'log-normal']
 
 PARAMETERS = {'safe': [90, 0.002, 1.20, 1.1, 2.00, 0.96, 0.01],
               'unsafe': [90, 0.002, 2.10, 1.1, 0.80, 0.96, 0.01]}
@@ -62,7 +62,7 @@ def disk_cached(function):
 
 @disk_cached
 def _get_problem(max_order, closure):
-    return means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order, closer=closure).run()
+    return means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order, closure=closure).run()
 
 def _generate_problems_dict():
     import itertools
