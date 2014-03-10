@@ -4,11 +4,9 @@ import sys
 import means
 
 from means.approximation.lna.lna import LinearNoiseApproximation
-from means.simulation.simulate import simulate
 from means.core import Model
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.core import ODEProblem
-from means.simulation.simulate import graphbuilder
 from means.inference.inference import parse_experimental_data_file, Inference, InferenceWithRestarts
 
 def printOptions():
@@ -165,10 +163,37 @@ def run():
 
         t = parameters['timepoints']
 
-        solution, momlist = simulate(problem, trajout, t, param, initcond, maxorder)
+        simulation = means.Simulation(problem)
+        trajectories = simulation.simulate_system(param, initcond, t)
+
+        means.io.to_file(trajectories, trajout)
 
         if plot:
-            graphbuilder(solution, ODEout, plottitle, t, momlist)
+            # TODO: This should be going into a .plot() method of some new container for trajectory results
+            from matplotlib import pyplot as plt
+
+            figure_map = {}
+            counter = 0
+            for trajectory in trajectories:
+                if isinstance(trajectory.description, means.Moment):
+                    key = means.Moment, trajectory.description.order
+                    title = 'Moments, order={0}'.format(trajectory.description.order)
+                else:
+                    key = trajectory.description.__class__
+                    title = '{0}s'.format(trajectory.description.__class__)
+
+                try:
+                    figure_id = figure_map[key]
+                except KeyError:
+                    counter += 1
+                    figure_id = counter
+                    figure_map[key] = figure_id
+
+                plt.figure(figure_id)
+                plt.title(title)
+                trajectory.plot()
+                plt.legend()
+            plt.show()
 
     if infer:
         if not tpfile:
