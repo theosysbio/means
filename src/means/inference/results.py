@@ -1,8 +1,8 @@
 from means.io.serialise import SerialisableObject
+from means.util.logs import get_logger
 from means.util.memoisation import memoised_property, MemoisableObject
 
-import logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class ConvergenceStatusBase(SerialisableObject):
 

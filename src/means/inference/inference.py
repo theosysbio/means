@@ -18,10 +18,10 @@ from means.inference.results import InferenceResultsCollection, InferenceResult,
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
 from means.simulation import SolverException, Simulation
+from means.util.logs import get_logger
 from means.util.memoisation import memoised_property, MemoisableObject
 
-import logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
