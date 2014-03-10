@@ -13,6 +13,7 @@ Each cell is submitted to the kernel, and the outputs are compared with those st
 import os,sys,time
 import base64
 import hashlib
+import traceback
 import png
 import random
 import re
@@ -233,10 +234,16 @@ def test_notebook(nb, generate_png_diffs=True):
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
-                print "failed to run cell:", repr(e)
+                print
+                print "Failed to run cell, got {0!r}".format(e)
+                traceback.print_exc()
+                print
+                print "The cell is:"
+                print '-' * 50
                 print cell.input
+                print '-' * 50
                 errors += 1
-                continue
+                break
 
             failed = False
             outs = collapse_stream_outputs(outs)

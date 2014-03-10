@@ -1,0 +1,16 @@
+initial_conditions_range:
+- !!python/tuple [80, 80]
+- !!python/tuple [40, 40]
+- !!python/tuple [60, 60]
+parameter_range:
+- !!python/tuple [70, 90]
+- !!python/tuple [0.001, 0.002]
+- !!python/tuple [1.0, 1.2]
+- !!python/tuple [1.0, 1.1]
+- !!python/tuple [0.8, 0.8]
+- !!python/tuple [0.8, 0.96]
+- !!python/tuple [0.005, 0.01]
+timepoints: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
+  7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0,
+  14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0]
+variable_parameters: [c_0, c_2, y_0, y_1]

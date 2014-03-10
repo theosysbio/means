@@ -2,14 +2,12 @@
 import os
 import sys
 
-from means.approximation.lna.lna import LinearNoiseApproximation
-from means.simulation.simulate import simulate
-from means.simulation.paramtime import paramtime
-from means.model.model import Model
-from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
-from means.approximation.ode_problem import ODEProblem
-from means.simulation.simulate import graphbuilder
-from means.inference.inference import parse_experimental_data_file, Inference, InferenceWithRestarts
+import means.io
+from means import LinearNoiseApproximation, MomentExpansionApproximation
+from means import ODEProblem, Model
+from means import Simulation
+from means import Inference, InferenceWithRestarts
+
 
 def printOptions():
     print "\nList of possible options:"
@@ -151,12 +149,51 @@ def run():
             sys.exit(1)
 
         problem = ODEProblem.from_file(ODEout)
-        t,param,initcond, __ = paramtime(tpfile,restart, limit, problem)
 
-        solution, momlist = simulate(problem, trajout, t, param, initcond, maxorder)
+        try:
+            parameters = means.io.from_file(tpfile)
+        except Exception:
+            print 'There was a problem reading parameters file {0!r}. ' \
+                  'Ensure it is in correct format'.format(tpfile)
+            sys.exit(1)
+
+        # Take lower bound as starting values
+        param = [x[0] for x in parameters['parameter_range']]
+        initcond = [x[0] for x in parameters['initial_conditions_range']]
+
+        t = parameters['timepoints']
+
+        simulation = Simulation(problem)
+        trajectories = simulation.simulate_system(param, initcond, t)
+
+        means.io.to_file(trajectories, trajout)
 
         if plot:
-            graphbuilder(solution,ODEout,plottitle,t,momlist)
+            # TODO: This should be going into a .plot() method of some new container for trajectory results
+            from matplotlib import pyplot as plt
+
+            figure_map = {}
+            counter = 0
+            for trajectory in trajectories:
+                if isinstance(trajectory.description, Moment):
+                    key = Moment, trajectory.description.order
+                    title = 'Moments, order={0}'.format(trajectory.description.order)
+                else:
+                    key = trajectory.description.__class__
+                    title = '{0}s'.format(trajectory.description.__class__)
+
+                try:
+                    figure_id = figure_map[key]
+                except KeyError:
+                    counter += 1
+                    figure_id = counter
+                    figure_map[key] = figure_id
+
+                plt.figure(figure_id)
+                plt.title(title)
+                trajectory.plot()
+                plt.legend()
+            plt.show()
 
     if infer:
         if not tpfile:
@@ -178,15 +215,19 @@ def run():
             sys.exit(1)
 
         problem = ODEProblem.from_file(ODEout)
-        # read sample data from file and get indices for mean/variances in CVODE output
-        (observed_timepoints, observed_trajectories) = parse_experimental_data_file(exptdata)
+        observed_trajectories = means.io.from_file(exptdata)
 
         try:
-            t, param, initcond, variable_parameters = paramtime(tpfile, restart, limit, problem)
-        except ValueError:
-            print '{0} is not in correct format. Ensure you have entered upper and lower bounds ' \
-                  'for all parameter values.'.format(tpfile)
+            parameters = means.io.from_file(tpfile)
+        except Exception:
+            print 'There was a problem reading parameters file {0!r}. ' \
+                  'Ensure it is in correct format'.format(tpfile)
             sys.exit(1)
+
+        variable_parameters = parameters['variable_parameters']
+        param = parameters['parameter_range']
+        initcond = parameters['initial_conditions_range']
+
         optimiser_method = distribution if distribution else 'sum_of_squares'
 
         if restart:
@@ -195,10 +236,15 @@ def run():
                                               observed_trajectories,
                                               method=optimiser_method)
         else:
-            inference = Inference(problem, param,
-                                           initcond, variable_parameters,
-                                           observed_trajectories,
-                                           method=optimiser_method)
+            inference = Inference(problem,
+                                  # Just take the lower bound as starting parameter, if we're
+                                  # not doing restarts
+                                  [x[0] for x in param],
+                                  [x[0] for x in initcond],
+                                  variable_parameters,
+                                  observed_trajectories,
+                                  method=optimiser_method)
+
         result = inference.infer()
         result.to_file(inferfile)
         if plot:
