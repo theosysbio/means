@@ -6,6 +6,9 @@ from means.io.serialise import SerialisableObject
 class Descriptor(SerialisableObject):
     yaml_tag = u"!descriptor"
 
+    def mathtext(self):
+        return str(self)
+
 class ODETermBase(Descriptor):
     """
     Base class for explaining terms in the ODE expressions.
@@ -46,7 +49,7 @@ class ODETermBase(Descriptor):
     def __unicode__(self):
         return u'{0}({1})'.format(self.__class__.__name__, self.symbol)
 
-    def __mathtext__(self):
+    def mathtext(self):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'${0}$'.format(self.symbol)
 
