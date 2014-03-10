@@ -12,7 +12,7 @@ from collections import defaultdict
 DISK_CACHE_DIRECTORY = '.cache'
 
 MODEL = means.examples.MODEL_P53
-MAX_ORDERS = [1, 2, 3, 4, 5, 6]
+MAX_ORDERS = [1, 2,]# 3, 4, 5, 6]
 CLOSURE_METHODS = ['normal', 'scalar', 'log-normal']
 
 PARAMETERS = {'safe': [90, 0.002, 1.20, 1.1, 2.00, 0.96, 0.01],
@@ -28,6 +28,33 @@ SIMULATION_KWARGS_TO_TEST.append({'solver': 'ode15s', 'iter': 'Newton'})
 SIMULATION_KWARGS_TO_TEST.append({'solver': 'ode15s', 'rtol': 1e-6})
 # Euler with small step size
 SIMULATION_KWARGS_TO_TEST.append({'solver': 'euler', 'h': 0.001})
+
+def _try_hipchat_notify(message, color='gray', *args, **kwargs):
+    print message
+
+    try:
+        import hipchat
+    except ImportError:
+        print 'Cannot notify to hipchat, do `pip install python-simple-hipchat`'
+        return
+
+    try:
+        hipchat_config = means.io.from_file('hipchat_config.yml')
+        room = hipchat_config['room']
+        token = hipchat_config['token']
+
+    except (IOError, KeyError):
+        print 'No hipchat config provided, put `token` and `room_name` into hipchat_config.yml'
+        return
+
+    try:
+        hipster = hipchat.HipChat(token=token)
+        hipster.message_room(room, os.path.basename(__file__), message, color=color, *args, **kwargs)
+    except Exception as e:
+        print 'Hipchat notification failed: {0!r}'.format(e)
+        return
+
+    return
 
 def disk_cached(function):
 
@@ -127,12 +154,17 @@ def compute_runtimes():
 
     runtimes = []
 
-    for description, problem in problems.iteritems():
-        max_order, closure = description
+    number_of_problems = len(problems)
+    number_of_kwargs = len(SIMULATION_KWARGS_TO_TEST)
 
-        for kwargs in SIMULATION_KWARGS_TO_TEST:
+    for i, (description, problem) in enumerate(problems.iteritems()):
+        max_order, closure = description
+        problem_runtimes = []
+        message_runtimes = []
+
+        for j, kwargs in enumerate(SIMULATION_KWARGS_TO_TEST):
             kwargs_key = ', '.join(map(lambda x: '{0}={1!r}'.format(x[0], x[1]), sorted(kwargs.items())))
-            print "Testing runtimes for {0}".format(kwargs_key)
+            print "[{0}/{1}] [{2}/{3}] {4}".format(i+1, number_of_problems, j+1, number_of_kwargs, kwargs_key)
 
             parameter_runtimes = _test_runtime_for(problem, **kwargs)
             for key, value in parameter_runtimes.iteritems():
@@ -142,7 +174,15 @@ def compute_runtimes():
                 d['parameter_set'] = key
                 d['runtime'] = value
 
-                runtimes.append(d)
+                problem_runtimes.append(d)
+                message_runtimes.append(", ".join(["{0}={1}".format(x, y) for x, y in sorted(d.items())]))
+
+        message = "Simulations for {0!r} ({2}/{3}) have now finished. " \
+                  "Results: \n{1}".format(description, '\n'.join(message_runtimes), i+1, number_of_problems)
+        _try_hipchat_notify(message)
+
+        runtimes.append(problem_runtimes)
+
     return pd.DataFrame(runtimes)
 
 if __name__ == '__main__':
