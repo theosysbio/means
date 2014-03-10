@@ -12,7 +12,7 @@ from collections import defaultdict
 DISK_CACHE_DIRECTORY = '.cache'
 
 MODEL = means.examples.MODEL_P53
-MAX_ORDERS = [1, 2,]# 3, 4, 5, 6]
+MAX_ORDERS = [1, 2, 3, 4, 5, 6]
 CLOSURE_METHODS = ['normal', 'scalar', 'log-normal']
 
 PARAMETERS = {'safe': [90, 0.002, 1.20, 1.1, 2.00, 0.96, 0.01],
