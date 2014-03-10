@@ -2,7 +2,7 @@ import operator
 import numbers
 
 import numpy as np
-
+from means.core.descriptors import Descriptor
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
 from means.simulation.descriptors import PerturbedTerm
@@ -32,6 +32,7 @@ class Trajectory(SerialisableObject):
         self._values = np.array(values)
         self._description = description
 
+        assert(isinstance(description, Descriptor))
         assert(self._timepoints.shape == self._values.shape)
 
     @property
