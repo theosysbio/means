@@ -27,7 +27,7 @@ def mea_approximation(model, max_order, closure='scalar', *closure_args, **closu
 
 
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.core.ODEProblem`
+    :rtype: :class:`~means.core.problems.ODEProblem`
     """
     mea = MomentExpansionApproximation(model, max_order, closure=closure, *closure_args, **closure_kwargs)
     return mea.run()
@@ -47,7 +47,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         r"""
         :param model: The model to be approximated
-        :type model: :class:`~means.model.model.Model`
+        :type model: :class:`~means.core.model.Model`
 
         :param max_order: the highest order of central moments in the resulting ODEs
         :param closure: a string describing the type of closure to use. Currently, the supported closures are:
@@ -106,7 +106,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         Performs the complete analysis on the model specified during initialisation.
 
         :return: an ODE problem which can be further used in inference and simulation.
-        :rtype: :class:`~means.core.ODEProblem`
+        :rtype: :class:`~means.core.problems.ODEProblem`
         """
         max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix

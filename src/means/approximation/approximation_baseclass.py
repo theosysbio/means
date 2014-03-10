@@ -7,10 +7,10 @@ class ApproximationBaseClass(object):
     """
     def __init__(self, model):
         """
-        Initialise the approximator.
+        Initialise the approximation.
 
         :param model: Model to approximate
-        :type model: :class:`~means.model.Model`
+        :type model: :class:`~means.core.model.Model`
         """
         self.__model = model
 
@@ -26,6 +26,6 @@ class ApproximationBaseClass(object):
         Perform the approximation. Return a constructed :class:`~means.core.ODEProblem` object.
 
         :return: a constructed set of equations, encoded in :class:`~means.core.ODEProblem` object.
-        :rtype: :class:`~means.core.ODEProblem`
+        :rtype: :class:`~means.core.problems.ODEProblem`
         """
         raise NotImplementedError
