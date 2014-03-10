@@ -104,6 +104,8 @@ def _generate_problems_dict():
         problem = _get_problem(max_order, closure)
         problems[max_order, closure] = problem
 
+    _try_hipchat_notify('Finished generating problems. Let the games begin')
+
     return problems
 
 def runtime_test_function(simulation, value, initial_conditions, timepoints):
@@ -175,7 +177,8 @@ def compute_runtimes():
                 d['runtime'] = value
 
                 problem_runtimes.append(d)
-                message_runtimes.append(", ".join(["{0}={1}".format(x, y) for x, y in sorted(d.items())]))
+                message_runtimes.append(", ".join(["{0}={1}".format(x, y) for x, y in sorted(d.items())
+                                                   if x not in ['closure', 'max_order']]))
 
         message = "Simulations for {0!r} ({2}/{3}) have now finished. " \
                   "Results: \n{1}".format(description, '\n'.join(message_runtimes), i+1, number_of_problems)
