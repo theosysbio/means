@@ -137,8 +137,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         Generate the left hand side of the ODEs. This is simply the symbols for the corresponding moments.
         Note that, in principle, they are in of course fact the time derivative of the moments.
 
-        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
-        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: a list of the problem left hand sides
         :rtype: list[:class:`sympy.Symbol`]
         """
@@ -157,8 +159,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         :param central_moments:
         :param dmu_over_dt:
-        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
-
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: the MFK as a matrix
         :rtype: :class:`sympy.Matrix`
         """
@@ -182,10 +184,11 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         :param central_moments_exprs: a matrix of expressions for central moments.
         :param central_from_raw_exprs: central moment expressed in terms of raw moments
-        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
-        :type n_counter: list[:class:`~means.approximation.ode_problem.Moment`]
-        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
-        :type k_counter: list[:class:`~means.approximation.ode_problem.Moment`]
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
+
         :return: expressions for central moments without raw moment
         """
         positiv_raw_moms_symbs = [raw.symbol for raw in k_counter if raw.order > 1]
@@ -225,7 +228,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         :param max_order: the maximal order of moment to be computer
         :param species: the name of the species
-        :return: a pair of lists of :class:`~means.approximation.ode_problem.Moment`s
+        :return: a pair of lists of :class:`~means.core.descriptors.Moment`s corresponding to central,
+        and raw moments, respectively.
+        :rtype: (list[:class:`~mea ns.core.descriptors.Moment`],list[:class:`~mea ns.core.descriptors.Moment`])
         """
         n_moments = max_order + 1
         # first order moments are always 1

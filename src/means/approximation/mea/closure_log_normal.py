@@ -9,6 +9,13 @@ class LogNormalClosure(ClosureBase):
     def _compute_raw_moments(self, n_counter, k_counter):
 
         # The symbols for expectations are simply the first order raw moments.
+        """
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
+        :return:
+        """
         expectation_symbols = [pm.symbol for pm in k_counter if pm.order == 1]
 
         n_species = len(expectation_symbols)

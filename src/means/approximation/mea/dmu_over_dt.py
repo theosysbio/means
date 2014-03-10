@@ -16,13 +16,14 @@ def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
 
     :param species: the name of the variables (typically `['y_0', 'y_1', ..., 'y_n']`)
     :param propensity: the reactions describes by the model
-    :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`s corresponding central moments
+    :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+    :type n_counter: list[:class:`~means.core.descriptors.Moment`]
     :param stoichiometry_matrix: the stoichiometry matrix
     :return: a matrix in which each row corresponds to a reaction, and each column to an element of counter.
     """
 
-    # compute derivatives :math:`\frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}}`
 
+    # compute derivatives :math:`\frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}}`
     # for EACH REACTION and EACH entry in COUNTER
     derives =[derive_expr_from_counter_entry(reac, species, c.n_vector) for (reac, c) in itertools.product(propensity, n_counter)]
     # Computes the factorial terms (:math:`\frac{1}{\mathbf{n!}}`) for EACH REACTION and EACH entry in COUNTER

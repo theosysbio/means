@@ -24,10 +24,16 @@ def raw_to_central(n_counter, species, k_counter):
     The last term, the beta term, :math:`\langle \mathbf{x^n} \\rangle` is simply obtained
     from k_counter as it contains the symbols for raw moments.
 
-    :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+    :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+    :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+
     :param species: the symbols for species means
-    :param k_counter: all possible raw moments
-    :return: a list of central moments expressed in terms of raw moment
+
+    :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+    :type k_counter: list[:class:`~means.core.descriptors.Moment`]
+
+
+    :return: a vector of central moments expressed in terms of raw moment
     """
     # create empty output
     central_in_terms_of_raw = []

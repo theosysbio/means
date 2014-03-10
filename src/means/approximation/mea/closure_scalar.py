@@ -31,7 +31,11 @@ class ClosureBase(object):
         parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
 
         :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: the central moments where raw moments have been replaced by parametric expressions
         :rtype: sympy.Matrix
         """
@@ -56,15 +60,18 @@ class ClosureBase(object):
 
         :param mfk: the right hand side equations containing symbols for high order central moments
         :param central_from_raw_exprs: expressions of central moments in terms of raw moments
-        :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
-        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: the modified MFK
+        :rtype: `sympy.Matrix`
         """
 
         # we obtain expressions for central moments in terms of variances/covariances
         closed_central_moments = self._compute_closed_central_moments(central_from_raw_exprs, n_counter, k_counter)
         # set mixed central moment to zero iff univariate
-        closed_central_moments = self.set_mixed_moments_to_zero(closed_central_moments, n_counter)
+        closed_central_moments = self._set_mixed_moments_to_zero(closed_central_moments, n_counter)
 
         # retrieve central moments from problem moment. Typically, :math: `[yx2, yx3, ...,yxN]`.
 
@@ -78,13 +85,16 @@ class ClosureBase(object):
 
         return new_mfk
 
-    def set_mixed_moments_to_zero(self, closed_central_moments, n_counter):
-        '''
+    def _set_mixed_moments_to_zero(self, closed_central_moments, n_counter):
+        r"""
         In univariate case, set the cross-terms to 0.
+
         :param closed_central_moments: matrix of closed central moment
-        :param n_counter: a list of moment symbols
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
         :return:  a matrix of new closed central moments with cross-terms equal to 0
-        '''
+        """
+
         positive_n_counter = [n for n in n_counter if n.order > 1]
         if self.is_multivariate:
             return closed_central_moments
@@ -102,14 +112,16 @@ class ScalarClosure(ClosureBase):
     def value(self):
         return self.__value
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
-        """
+        r"""
         Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
 
-
         :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-        :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: the central moments where raw moments have been replaced by parametric expressions
-        :rtype: sympy.Matrix
+        :rtype: `sympy.Matrix`
         """
 
         closed_central_moments = sp.Matrix([sp.Integer(self.__value)] * len(central_from_raw_exprs))

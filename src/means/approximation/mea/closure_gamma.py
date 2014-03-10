@@ -17,7 +17,10 @@ class GammaClosure(ClosureBase):
         Calculates parameters Y expressions and beta coefficients in
         :math:`X = {A(\beta_0,\beta_1\ldots \beta_n) \cdot Y}`
 
-        :param prob_moments: the moments with symbols and moment vectors
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: two column matrices Y expressions and beta multipliers
         """
 
@@ -107,7 +110,10 @@ class GammaClosure(ClosureBase):
         Gamma type 1: :math:`X_i = \frac {\beta_i}{\beta_0}Y_0 + Y_i`
         Gamma type 2: :math:`X_i = \sum_{k=0}^{i}  \frac {\beta_i}{\beta_k}Y_k`
 
-        :param problem_moments: moment matrix with central moment symbols
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return:
         """
 
