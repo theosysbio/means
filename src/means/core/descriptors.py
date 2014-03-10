@@ -147,9 +147,6 @@ class Moment(ODETermBase):
         # If moment is not mixed, it will be of form [0, ... , k, ..., 0] where k is the max order
         return self.order not in self.n_vector
 
-    def __str__(self):
-        return ', '.join(map(str, self.n_vector))
-
     def __hash__(self):
         # Allows moment objects to be stored as keys to dictionaries
         return hash(repr(self.n_vector))
@@ -170,9 +167,14 @@ class Moment(ODETermBase):
         """
         return (self.n_vector >= other.n_vector).all()
 
-    def __repr__(self):
-        return '{0}({1!r}, symbol={2!r})'.format(self.__class__.__name__, self.n_vector, self.symbol)
+    def __unicode__(self):
+        return u'{self.__class__.__name__}({self.n_vector!r}, symbol={self.symbol!r})'.format(self=self)
 
+    def __str__(self):
+        return unicode(self).encode("utf8")
+
+    def __repr__(self):
+        return str(self)
 
     def _repr_latex_(self):
         return '{0}($[{1}]$, symbol=${2}$)'.format(self.__class__.__name__, ', '.join(map(str, self.n_vector)), self.symbol)
