@@ -7,6 +7,7 @@ pip install --quiet pylint
 pip install --quiet IPython
 pip install --quiet pyzmq
 pip install --quiet pypng
+pip install --quiet ipycache
 
 if [ "$1" == "with-slow-tests" ]; then
    SLOWTESTS="--no-skip"
