@@ -1,1 +1,1 @@
-from lna import LinearNoiseApproximation
+from lna import LinearNoiseApproximation, lna_approximation

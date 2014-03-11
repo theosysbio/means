@@ -11,11 +11,14 @@ def eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities,
     for each of the :math:`[n_1, ..., n_d]` combinations in eq. 9 where ... is ... # FIXME
 
     .. math::
-        \mathbf{ {n \choose k} } (-1)^{ \mathbf{n-k} } [ \alpha \frac{d\beta}{dt} + \beta \frac{d\alpha}{dt} ]
+        \mathbf{ {n \choose k} } (-1)^{ \mathbf{n-k} }
+        [ \alpha \frac{d\beta}{dt} + \beta \frac{d\alpha}{dt} ]
 
 
-    :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
-    :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+    :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+    :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+    :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+    :type k_counter: list[:class:`~means.core.descriptors.Moment`]
     :param dmu_over_dt: du/dt in paper
     :param species: species matrix: y_0, y_1,..., y_d
     :param propensities: propensities matrix
@@ -32,7 +35,7 @@ def eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities,
     # copy dmu_mat matrix as a list of rows vectors (1/species)
     dmu_mat = [sp.Matrix(l).T for l in dmu_over_dt.tolist()]
 
-    d_beta_over_dt_calculator = DBetaOverDtCalculator(propensities,n_counter,stoichiometry_matrix,species)
+    d_beta_over_dt_calculator = DBetaOverDtCalculator(propensities,n_counter,stoichiometry_matrix, species)
 
     for n_iter in n_counter:
         # skip zeroth moment
@@ -53,20 +56,22 @@ def eq_central_moments(n_counter, k_counter, dmu_over_dt, species, propensities,
             n_choose_k = make_k_chose_e(k_vec, n_vec)
 
             # (-1)^(n-k) term in equation 9
-            minus_one_pow_n_minus_k = product([sp.Integer(-1) ** (n - m) for (n,m) in zip(n_vec, k_vec)])
+            minus_one_pow_n_minus_k = product([sp.Integer(-1) ** (n - m) for (n,m)
+                                               in zip(n_vec, k_vec)])
 
             # Calculate alpha, dalpha_over_dt terms in equation 9
-            alpha = product([s ** (n - k) for s,n,k in zip(species, n_vec, k_vec)])
+            alpha = product([s ** (n - k) for s, n, k in zip(species, n_vec, k_vec)])
             # eq 10 {(n - k) mu_i^(-1)} corresponds to {(n - k)/s}. s is symbol for mean of a species
 
             # multiplies by alpha an the ith row of dmu_mat and sum it to get dalpha_over_dt
             # eq 10 {(n - k) mu_i^(-1)} corresponds to {(n - k)/s}
-            dalpha_over_dt = sympy_sum_list([((n - k) / s) * alpha * mu_row for s,n,k,mu_row in zip(species, n_vec, k_vec, dmu_mat)])
+            dalpha_over_dt = sympy_sum_list([((n - k) / s) * alpha * mu_row for s, n, k, mu_row
+                                             in zip(species, n_vec, k_vec, dmu_mat)])
 
             # e_counter contains elements of k_counter lower than the current k_iter
             e_counter = [k for k in k_counter if k_iter >= k and k.order > 0]
 
-            dbeta_over_dt = d_beta_over_dt_calculator.get(k_iter, e_counter)
+            dbeta_over_dt = d_beta_over_dt_calculator.get(k_iter.n_vector, e_counter)
 
             # Calculate beta, dbeta_over_dt terms in equation 9
             if len(e_counter) == 0:

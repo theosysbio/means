@@ -6,7 +6,23 @@ from closure_scalar import ClosureBase
 
 
 class NormalClosure(ClosureBase):
-    def __init__(self,max_order, multivariate=True):
+    """
+    A class providing normal closure to
+    :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
+    Expression for higher order (max_order + 1) central moments are directly
+    computed using Isserlis' Theorem.
+    As a result, any higher order moments will be replaced by a symbolic expression
+    depending on mean and variance only.
+    """
+
+    def __init__(self, max_order, multivariate=True):
+        """
+        :param max_order: the maximal order of moments to be modelled.
+        :type max_order: `int`
+        :param multivariate: whether to consider covariances
+        :return:
+        """
+
         self._min_order = 2
         super(NormalClosure, self).__init__(max_order, multivariate)
 
@@ -42,7 +58,7 @@ class NormalClosure(ClosureBase):
 
         :param moment: moment matrix
         :param covariance_matrix: matrix containing variances and covariances
-        :return:  each row of closed central moment
+        :return: each row of closed central moment
         """
 
         # If moment order is odd, higher order moments equals 0
@@ -76,6 +92,17 @@ class NormalClosure(ClosureBase):
 
 
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
+        """
+        Computes parametric expressions (e.g. in terms of mean, variance, covariances) for all central moments
+        up to max_order + 1 order.
+
+        :param central_from_raw_exprs:
+        :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.core.descriptors.Moment`]
+        :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.core.descriptors.Moment`]
+        :return: a vector of parametric expression for central moments
+        """
         n_species = len([None for pm in k_counter if pm.order == 1])
         covariance_matrix = sp.Matrix(n_species, n_species, lambda x,y: self._get_covariance_symbol(n_counter,x,y))
         positive_n_counter = [n for n in n_counter if n.order > 1]
