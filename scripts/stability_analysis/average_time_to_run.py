@@ -91,7 +91,9 @@ def disk_cached(function):
     return f
 
 @disk_cached
-def _get_problem(max_order, closure):
+def _get_problem(args):
+    max_order, closure = args
+    print "Generating problem for max_order={0!r}, closure={1!r}".format(max_order, closure)
     return means.approximation.MomentExpansionApproximation(MODEL, max_order=max_order, closure=closure).run()
 
 def _generate_problems_dict():
@@ -99,13 +101,18 @@ def _generate_problems_dict():
 
     print 'Generating problems'
 
-    problems = {}
+    valid_problems_list = []
     for max_order, closure in itertools.product(MAX_ORDERS, CLOSURE_METHODS):
         if max_order < 2 and closure != 'scalar':
             continue
-        print 'max_order={0!r}, closure={1!r}'.format(max_order, closure)
-        problem = _get_problem(max_order, closure)
-        problems[max_order, closure] = problem
+        valid_problems_list.append((max_order, closure))
+
+    pool = multiprocessing.Pool(N_PROCESSES)
+
+    problems = pool.map(_get_problem, valid_problems_list)
+    problems = dict(zip(valid_problems_list, problems))
+
+    pool.close()
 
     _try_hipchat_notify('Finished generating problems. Let the games begin')
 
@@ -131,8 +138,8 @@ def _test_runtime_for(problem, number_of_runs=10, **kwargs):
     RUNTIME_THRESHOLD = 3600 / 10.0
 
     simulation = means.simulation.Simulation(problem, **kwargs)
-    # Warm simulation instance up (cache the numerical evaluation routines)
 
+    # Warm simulation instance up (cache the numerical evaluation routines) by getting rhs_as_function:
     rhs_as_function = problem.right_hand_side_as_function
 
     runtimes = {}
@@ -204,6 +211,6 @@ def compute_runtimes():
 
 if __name__ == '__main__':
     compute_runtimes()
-
+    _try_hipchat_notify('FIN.', color='green')
 
 
