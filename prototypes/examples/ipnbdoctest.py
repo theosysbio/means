@@ -39,6 +39,10 @@ def png_b64_to_ndarray(a64):
     pngdata = png.Reader(StringIO(base64.decodestring(a64))).asRGBA8()[2]
     return np.array(list(pngdata))
 
+def save_png(data, filename):
+    print 'Saving {0}'.format(filename)
+    png.from_array(data, mode='RGBA;8').save(filename)
+
 
 def diff_png(a64, b64, generate_diff_images=True):
     """compare the pixels of two PNGs"""
@@ -54,12 +58,11 @@ def diff_png(a64, b64, generate_diff_images=True):
             if not os.path.exists('.diffs/'):
                 os.mkdir('.diffs/')
             prefix = '.diffs/ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
-            png.from_array(a_data, mode='RGBA;8').save(prefix + 'original.png')
-            png.from_array(b_data, mode='RGBA;8').save(prefix + 'modified.png')
-        if diff < 1 and generate_diff_images:
-            png.from_array(255 - np.abs(b_data - a_data), mode='RGBA;8').save(
-                           prefix + 'diff.png')
-            print 'diff png saved to %s-diff.png' % prefix
+            save_png(a_data, prefix + 'original.png')
+            save_png(b_data, prefix + 'modified.png')
+            if diff < 1:
+                save_png(255 - np.abs(b_data - a_data), prefix + 'diff.png')
+                print 'diff png saved to %s-diff.png' % prefix
 
     return diff
 
