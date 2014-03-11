@@ -51,7 +51,9 @@ def diff_png(a64, b64, generate_diff_images=True):
     if diff > PNG_DIFF_TOLERANCE:
         digest = hashlib.sha1(a64).digest()
         if generate_diff_images:
-            prefix = 'ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
+            if not os.path.exists('.diffs/'):
+                os.mkdir('.diffs/')
+            prefix = '.diffs/ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
             png.from_array(a_data, mode='RGBA;8').save(prefix + 'original.png')
             png.from_array(b_data, mode='RGBA;8').save(prefix + 'modified.png')
         if diff < 1 and generate_diff_images:
