@@ -3,7 +3,23 @@ from closure_scalar import ClosureBase
 from means.util.sympyhelpers import substitute_all, product
 
 class GammaClosure(ClosureBase):
+    """
+    A class providing gamma closure to
+    :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
+    Expression for higher order (max_order + 1) central moments are computed from expressions of
+    higher order raw moments.
+    As a result, any higher order moments will be replaced by a symbolic expression
+    depending on mean and variance only.
+    """
     def __init__(self, max_order, type=1):
+        """
+        :param max_order: the maximal order of moments to be modelled.
+        :type max_order: `int`
+        :param type: 0 for univariate (ignore covariances), 1 and 2 for
+        the two types of multivariate gamma distributions.
+        :type max_order: `int`
+        :return:
+        """
         self._min_order = 2
         super(GammaClosure, self).__init__(max_order, multivariate=(type > 0))
         self.__type = type
@@ -114,7 +130,7 @@ class GammaClosure(ClosureBase):
         :type n_counter: list[:class:`~means.core.descriptors.Moment`]
         :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
         :type k_counter: list[:class:`~means.core.descriptors.Moment`]
-        :return:
+        :return: a vector of parametric expression for raw moments
         """
 
         alpha_multipliers, beta_multipliers = self._get_parameter_symbols(n_counter, k_counter)
@@ -129,9 +145,12 @@ class GammaClosure(ClosureBase):
         Compute :math:`\frac {(\alpha)_m = (\alpha + m - 1)!}{(\alpha - 1)!}`
         See Eq. 3 in Gamma moment closure Lakatos 2014 unpublished
 
-        :param expr:
+        :param expr: a symbolic expression
+        :type expr:
         :param n:
-        :return:
+        :type n: `int`
+
+        :return: a symbolic expression
         """
         if n == 0:
             return 1

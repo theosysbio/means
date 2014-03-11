@@ -14,11 +14,13 @@ def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
          \frac{1}{\mathbf{n!}}
          \frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}} |_{x=\mu} \mathbf{M_{x^n}} \end{bmatrix}
 
-    :param species: the name of the variables (typically `['y_0', 'y_1', ..., 'y_n']`)
+    :param species: the name of the species/variables (typically `['y_0', 'y_1', ..., 'y_n']`)
+    :type species: list[`sympy.Symbol`]
     :param propensity: the reactions describes by the model
     :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
     :type n_counter: list[:class:`~means.core.descriptors.Moment`]
     :param stoichiometry_matrix: the stoichiometry matrix
+    :type stoichiometry_matrix: `sympy.Matrix`
     :return: a matrix in which each row corresponds to a reaction, and each column to an element of counter.
     """
 

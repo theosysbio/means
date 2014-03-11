@@ -3,11 +3,20 @@ from means.util.sympyhelpers import substitute_all
 
 
 class ClosureBase(object):
-
+    """
+    A virtual class for closure methods. An implementation of `_compute_raw_moments()`
+    must be provided in subclasses.
+    """
     _max_order = None
     _min_order = 1
 
     def __init__(self,max_order, multivariate=True):
+        """
+        :param max_order: the maximal order of moments to be modelled.
+        :type max_order: `int`
+        :param multivariate: whether to consider covariances
+        :return:
+        """
 
         self._max_order = max_order
         self.__is_multivariate = multivariate
@@ -37,7 +46,7 @@ class ClosureBase(object):
         :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
         :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: the central moments where raw moments have been replaced by parametric expressions
-        :rtype: sympy.Matrix
+        :rtype: `sympy.Matrix`
         """
 
         closed_raw_moments = self._compute_raw_moments(n_counter, k_counter)
@@ -103,8 +112,18 @@ class ClosureBase(object):
 
 
 class ScalarClosure(ClosureBase):
-
+    """
+    A class providing scalar closure to
+    :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
+    Expression for higher order (max_order + 1) central moments are set to a scalar.
+    Typically, higher order central moments are replaced by zero.
+    """
     def __init__(self,max_order,value=0):
+        """
+        :param max_order: the maximal order of moments to be modelled.
+        :type max_order: `int`
+        :param value: a scalar value for higher order moments
+        """
         super(ScalarClosure, self).__init__(max_order, False)
         self.__value = value
 

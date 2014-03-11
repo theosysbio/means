@@ -2,7 +2,22 @@ import sympy as sp
 from closure_scalar import ClosureBase
 
 class LogNormalClosure(ClosureBase):
+    """
+    A class providing log-normal closure to
+    :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
+    Expression for higher order (max_order + 1) central moments are computed from expressions of
+    higher order raw moments.
+    As a result, any higher order moments will be replaced by a symbolic expression
+    depending on mean and variance only.
+    """
+
     def __init__(self, max_order, multivariate=True):
+        """
+        :param max_order: the maximal order of moments to be modelled.
+        :type max_order: `int`
+        :param multivariate: whether to consider covariances
+        :return:
+        """
         self._min_order = 2
         super(LogNormalClosure, self).__init__(max_order, multivariate)
 
@@ -14,7 +29,7 @@ class LogNormalClosure(ClosureBase):
         :type n_counter: list[:class:`~means.core.descriptors.Moment`]
         :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
         :type k_counter: list[:class:`~means.core.descriptors.Moment`]
-        :return:
+        :return: a vector of parametric expression for raw moments
         """
         expectation_symbols = [pm.symbol for pm in k_counter if pm.order == 1]
 
@@ -27,20 +42,22 @@ class LogNormalClosure(ClosureBase):
         variance_symbols = [covariance_matrix[i, i] for i in range(n_species)]
 
         # :math: '\logVar(x_i) = 1 + \frac { Var(x_i)}{ \mathbb{E} (x_i)^2}'
-        log_variance_symbols = sp.Matrix([sp.log(sp.Integer(1) + v/(e ** sp.Integer(2))) for e,v in zip(expectation_symbols, variance_symbols)])
+        log_variance_symbols = sp.Matrix([sp.log(sp.Integer(1) + v/(e ** sp.Integer(2))) for e,v
+                                          in zip(expectation_symbols, variance_symbols)])
 
         # :math: '\log\mathbb{E} (x_i) = \log(\mathbb{E} (x_i) )+ \frac {\log (Var(x_i))}{2}'
-        log_expectation_symbols = sp.Matrix([sp.log(e) - lv/sp.Integer(2) for e,lv in zip(expectation_symbols, log_variance_symbols)])
+        log_expectation_symbols = sp.Matrix([sp.log(e) - lv/sp.Integer(2) for e,lv
+                                             in zip(expectation_symbols, log_variance_symbols)])
 
         # Assign log variance symbols on the diagonal of size n_species by n_species
         log_variance_mat = sp.Matrix(n_species,n_species, lambda x,y: log_variance_symbols[x] if x == y else 0)
 
         # Assign log covariances and log variances in the matrix log_covariance matrix based on matrix indices
-        log_covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: \
+        log_covariance_matrix = sp.Matrix(n_species,n_species, lambda x, y:
                 self._get_log_covariance(log_variance_mat, log_expectation_symbols, covariance_matrix, x, y))
 
         # The n_vectors (e.g. [0,2,0]) of the central moments
-        pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1 ]
+        pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1]
 
         #todo find out the equation
         out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
@@ -76,16 +93,16 @@ class LogNormalClosure(ClosureBase):
         :param covariance_matrix: a matrix of covariances
         :param x: x-coordinate in matrix of log variances and log covariances
         :param y: y-coordinate in matrix of log variances and log covariances
-        :return: a matrix of log covariances and log variances
+        :return: the log covariance between x and y
         """
         # The diagonal of the return matrix includes all the log variances
         if x == y:
-            return log_variance_mat[x,x]
+            return log_variance_mat[x, x]
         # log covariances are calculated if not on the diagonal of the return matrix
         elif self.is_multivariate:
             denom = sp.exp(log_expectation_symbols[x] +
                            log_expectation_symbols[y] +
-                           (log_variance_mat[x,x] + log_variance_mat[y, y])/ sp.Integer(2))
+                           (log_variance_mat[x, x] + log_variance_mat[y, y])/ sp.Integer(2))
             return sp.log(sp.Integer(1) + covariance_matrix[x, y] / denom)
         # univariate case: log covariances are 0s.
         else:

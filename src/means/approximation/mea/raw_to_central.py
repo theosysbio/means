@@ -4,10 +4,10 @@ from means.approximation.mea.mea_helpers import make_k_chose_e
 
 
 def _make_alpha(n_vec, k_vec, ymat):
-    return reduce(operator.mul,  [y ** (n - m) for y,n,m in zip(ymat, n_vec, k_vec)])
+    return reduce(operator.mul,  [y ** (n - m) for y, n, m in zip(ymat, n_vec, k_vec)])
 
 def _make_min_one_pow_n_minus_k(n_vec, k_vec):
-    return reduce(operator.mul, [(-1) ** (n - k) for (n,k) in zip(n_vec, k_vec)])
+    return reduce(operator.mul, [(-1) ** (n - k) for n, k in zip(n_vec, k_vec)])
 
 def raw_to_central(n_counter, species, k_counter):
     """
@@ -38,7 +38,7 @@ def raw_to_central(n_counter, species, k_counter):
     # create empty output
     central_in_terms_of_raw = []
     # This loop loops through the ::math::`[n_1, ..., n_d]` vectors of the sums in the beginning of the equation
-    # i.e. ::math::`\sum_{k1=0}^n_1 ... \sum_{kd=0}^n_d` part of the equation.
+    # i.e. :math:`\sum_{k1=0}^n_1 ... \sum_{kd=0}^n_d` part of the equation.
     # Note, this is not the sum over k's in that equation, or at least I think its not
     for n_iter in n_counter:  #loop through all n1,...,nd combinations
         # nothing to do for 0th order central moment

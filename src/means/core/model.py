@@ -20,7 +20,7 @@ class Model(SerialisableObject, LatexPrintableObject):
         """
         Creates a `Model` object that stores the model of reactions we want to analyse
         :param constants: constants of the model, as `sympy` symbols
-        :param species: variables of the model, as `sympy` symbols, i.e. speces
+        :param species: variables of the model, as `sympy.Symbol`s, i.e. species
         :param propensities: a matrix of propensities for each of the reaction in the model.
         :param stoichiometry_matrix: stoichiometry matrix for the model
         """
