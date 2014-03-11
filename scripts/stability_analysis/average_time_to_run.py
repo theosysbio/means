@@ -101,7 +101,7 @@ def _generate_problems_dict():
 
     problems = {}
     for max_order, closure in itertools.product(MAX_ORDERS, CLOSURE_METHODS):
-        if max_order < 2 and closure != 'zero':
+        if max_order < 2 and closure != 'scalar':
             continue
         print 'max_order={0!r}, closure={1!r}'.format(max_order, closure)
         problem = _get_problem(max_order, closure)
@@ -116,7 +116,10 @@ def runtime_test_function(simulation, value, initial_conditions, timepoints):
         try:
             simulation.simulate_system(value, initial_conditions, timepoints)
             return True
-        except Exception:
+        except means.SolverException:
+            return False
+        except Exception as e:
+            print 'Got exception {0!r} when timing'.format(e)
             return False
     return f
 
@@ -130,29 +133,25 @@ def _test_runtime_for(problem, number_of_runs=10, **kwargs):
     simulation = means.simulation.Simulation(problem, **kwargs)
     # Warm simulation instance up (cache the numerical evaluation routines)
 
-    try:
-        simulation.simulate_system(PARAMETERS['safe'], INITIAL_CONDITIONS, np.arange(0, 1, 0.5))
-    except Exception:
-        pass
-
+    rhs_as_function = problem.right_hand_side_as_function
 
     runtimes = {}
     for key, value in PARAMETERS.iteritems():
         print "{1}\t{0}: pending".format(key, _dict_to_str(kwargs))
         timer = timeit.Timer(runtime_test_function(simulation, value, INITIAL_CONDITIONS, TIMEPOINTS))
         runtime_one = timer.timeit(number=1)
-
+        print "{2}\t{0}: {1}s first iteration".format(key, runtime_one, _dict_to_str(kwargs))
         if runtime_one > RUNTIME_THRESHOLD:
             print "Runtime for one iteration was {0}, which is greater than {1}"  \
                   "not executing the remaining runs".format(runtime_one, RUNTIME_THRESHOLD)
             runtimes[key] = runtime_one
             continue
 
-        runtime = timer.timeit(number=number_of_runs-1)
-        runtime += runtime_one  # Add the first one again
-        runtime /= float(number_of_runs)
-        print "{2}\t{0}: {1}s per iteration".format(key, runtime, _dict_to_str(kwargs))
-        runtimes[key] = runtime
+        curr_runtimes = timer.repeat(repeat=number_of_runs-1, number=1)
+        curr_runtimes.append(runtime_one)
+
+        print "{2}\t{0}: avg: {1}s per iteration".format(key, np.mean(curr_runtimes), _dict_to_str(kwargs))
+        runtimes[key] = curr_runtimes
 
     return runtimes
 
@@ -169,13 +168,14 @@ def compute_runtimes_for_problem(argument):
 
         parameter_runtimes = _test_runtime_for(problem, **kwargs)
         for key, value in parameter_runtimes.iteritems():
-            d = {'max_order': max_order,
-                 'closure': closure}
-            d.update(kwargs)
-            d['parameter_set'] = key
-            d['runtime'] = value
+            for runtime in value:
+                d = {'max_order': max_order,
+                     'closure': closure}
+                d.update(kwargs)
+                d['parameter_set'] = key
+                d['runtime'] = runtime
 
-            problem_runtimes.append(d)
+                problem_runtimes.append(d)
             message_runtimes.append(", ".join(["{0}={1}".format(x, y) for x, y in sorted(d.items())
                                                if x not in ['closure', 'max_order']]))
 
@@ -193,7 +193,7 @@ def compute_runtimes():
     runtimes = []
 
     pool = multiprocessing.Pool(N_PROCESSES)
-    lists_of_runtimes = pool.map(compute_runtimes_for_problem, reversed(problems.items()))
+    lists_of_runtimes = pool.map(compute_runtimes_for_problem, sorted(problems.items(), reverse=True))
 
     pool.close()
 
