@@ -1,4 +1,4 @@
-from means.model import Model
+from means.core import Model
 
 MODEL_MICHAELIS_MENTEN = Model(constants=['c_0', 'c_1', 'c_2'],
                                species=['y_0', 'y_1'],

@@ -3,7 +3,7 @@ import unittest
 import sympy
 
 from means.approximation.mea.eq_mixed_moments import DBetaOverDtCalculator
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
 

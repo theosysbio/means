@@ -3,7 +3,8 @@ from collections import namedtuple
 from assimulo.problem import Explicit_Problem
 import numpy as np
 import sys
-from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
+from means.simulation import SensitivityTerm
+from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 import inspect
 from means.util.memoisation import memoised_property, MemoisableObject
 from means.util.sympyhelpers import to_one_dim_array

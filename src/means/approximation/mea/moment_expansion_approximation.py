@@ -1,9 +1,9 @@
 import itertools
 import sympy as sp
 
-from means.approximation.ode_problem import ODEProblem
+from means.core import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 
 # helper functions
 from dmu_over_dt import generate_dmu_over_dt
@@ -18,21 +18,19 @@ from closure_normal import NormalClosure
 from closure_scalar import ScalarClosure
 
 
-
-def run_mea(model, max_order, closer='zero', *closer_args, **closer_kwargs):
+def mea_approximation(model, max_order, closure='scalar', *closure_args, **closure_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
     It performs moment expansion approximation (MEA) as described in [Ale2013]_ up to a given order of moment.
     See :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
     about the options.
 
+
     :return: an ODE problem which can be further used in inference and simulation.
-    :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+    :rtype: :class:`~means.core.problems.ODEProblem`
     """
-    mea = MomentExpansionApproximation(model, max_order, closer=closer, *closer_args, **closer_kwargs)
+    mea = MomentExpansionApproximation(model, max_order, closure=closure, *closure_args, **closure_kwargs)
     return mea.run()
-
-
 
 
 class MomentExpansionApproximation(ApproximationBaseClass):
@@ -40,36 +38,37 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     A class to perform moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
     In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
 
-    .. [Ale2013] Ale, Angelique, Paul Kirk, and Michael PH Stumpf.\
-     "A general moment expansion method for stochastic kinetic models."\
-      The Journal of chemical physics 138.17 (2013): 174101.
+    .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
+    "A general moment expansion method for stochastic kinetic models,"\
+     The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
+
     """
-    def __init__(self, model, max_order, closer='zero', *closer_args, **closer_kwargs):
+    def __init__(self, model, max_order, closure='scalar', *closure_args, **closure_kwargs):
 
         r"""
         :param model: The model to be approximated
-        :type model: :class:`~means.model.model.Model`
+        :type model: :class:`~means.core.model.Model`
 
         :param max_order: the highest order of central moments in the resulting ODEs
-        :param closer: a string describing the type of closure to use. Currently, the supported closures are:
+        :param closure: a string describing the type of closure to use. Currently, the supported closures are:
 
-            `'zero'`
+            `'scalar'`
                 higher order central moments are set to zero.
-                See :class:`~means.approximation.mea.zero_closer.ZeroCloser`.
+                See :class:`~means.approximation.mea.closure_scalar.ScalarClosure`.
             `'normal'`
                 uses normal distribution to compute last order central moments.
-                See :class:`~means.approximation.mea.normal_closer.NormalCloser`.
+                See :class:`~means.approximation.mea.closure_normal.NormalClosure`.
             `'log-normal'`
                 uses log-normal distribution.
-                See :class:`~means.approximation.mea.log_normal_closer.LogNormalCloser`.
+                See :class:`~means.approximation.mea.closure_log_normal.LogNormalClosure`.
             `'gamma'`
                 EXPERIMENTAL,
                 uses gamma distribution.
-                See :class:`~means.approximation.mea.gamma_closer.GammaCloser`.
+                See :class:`~means.approximation.mea.closure_gamma.GammaClosure`.
 
-        :type closer: string
-        :param closer_args: arguments to be passed to the closer
-        :param closer_kwargs: keyword arguments to be passed to the closer
+        :type closure: string
+        :param closure_args: arguments to be passed to the closure
+        :param closure_kwargs: keyword arguments to be passed to the closure
         """
         super(MomentExpansionApproximation, self).__init__(model)
         try:
@@ -79,29 +78,27 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         except:
             raise ValueError("`max_order` can only be positive integer")
 
-
-        # A dictionary of "option -> closer". this allows a generic handling for closer without having to add
-        # if-else and exceptions when implementing new closers. One only needs to add the new closer class to the dict
-        supported_closers = {"log-normal": LogNormalClosure,
-                             "zero": ScalarClosure,
+        # A dictionary of "option -> closure". this allows a generic handling for closure without having to add
+        # if-else and exceptions when implementing new closures. One only needs to add the new closure class to the dict
+        supported_closures = {"log-normal": LogNormalClosure,
+                             "scalar": ScalarClosure,
                              "normal": NormalClosure,
                              "gamma": GammaClosure}
 
-        # We initialise the closer for this approximator
+        # We initialise the closure for this approximator
         try:
-            # our closer is an instance of the class queried in the dictionary
-            CloserClass = supported_closers[closer]
-            self.__closer = CloserClass(self.__max_order, *closer_args, **closer_kwargs)
+            # our closure is an instance of the class queried in the dictionary
+            ClosureClass = supported_closures[closure]
+            self.__closure = ClosureClass(self.__max_order, *closure_args, **closure_kwargs)
         except KeyError:
             error_str = "The closure type '{0}' is not supported.\n\
                          Supported values for closure:\
                          {1}"
-            raise KeyError(error_str.format(closer,supported_closers))
-
+            raise KeyError(error_str.format(closure, supported_closures))
 
     @property
-    def closer(self):
-        return self.__closer
+    def closure(self):
+        return self.__closure
 
     def run(self):
         r"""
@@ -109,7 +106,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         Performs the complete analysis on the model specified during initialisation.
 
         :return: an ODE problem which can be further used in inference and simulation.
-        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+        :rtype: :class:`~means.core.problems.ODEProblem`
         """
         max_order = self.__max_order
         stoichiometry_matrix = self.model.stoichiometry_matrix
@@ -128,27 +125,29 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # Get final right hand side expressions for each moment in a vector
         mfk = self._generate_mass_fluctuation_kinetics(central_moments_exprs, dmu_over_dt, n_counter)
         # Applies moment expansion closure, that is replaces last order central moments by parametric expressions
-        mfk = self.closer.close(mfk, central_from_raw_exprs, n_counter, k_counter)
+        mfk = self.closure.close(mfk, central_from_raw_exprs, n_counter, k_counter)
         # These are the left hand sign symbols referring to the mfk
-        prob_lhs = self._generate_problem_left_hand_side(n_counter,k_counter)
+        prob_lhs = self._generate_problem_left_hand_side(n_counter, k_counter)
         # Finally, we build the problem
         out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
         return out_problem
 
     def _generate_problem_left_hand_side(self, n_counter, k_counter):
         """
-        Generate the left hand sise of the ODEs. This is simply the symbols for the correspondnig moments.
+        Generate the left hand side of the ODEs. This is simply the symbols for the corresponding moments.
         Note that, in principle, they are in of course fact the time derivative of the moments.
 
         :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
         :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
-        :return:
+        :return: a list of the problem left hand sides
+        :rtype: list[:class:`sympy.Symbol`]
         """
 
         # concatenate the symbols for first order raw moments (means)
         prob_moments_over_dt = [k for k in k_counter if k.order == 1]
         # and the higher order central moments (variances, covariances,...)
-        prob_moments_over_dt += [n for n in n_counter if n.order > 1 and n.order <= self.__max_order]
+        prob_moments_over_dt += [n for n in n_counter if self.__max_order >= n.order > 1]
+
 
         return prob_moments_over_dt
 
@@ -160,7 +159,8 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :param dmu_over_dt:
         :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
 
-        :return:
+        :return: the MFK as a matrix
+        :rtype: :class:`sympy.Matrix`
         """
 
         # symbols for central moments
@@ -183,7 +183,9 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :param central_moments_exprs: a matrix of expressions for central moments.
         :param central_from_raw_exprs: central moment expressed in terms of raw moments
         :param n_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing central moments
+        :type n_counter: list[:class:`~means.approximation.ode_problem.Moment`]
         :param k_counter: a list of :class:`~means.approximation.ode_problem.Moment`\s representing raw moments
+        :type k_counter: list[:class:`~means.approximation.ode_problem.Moment`]
         :return: expressions for central moments without raw moment
         """
         positiv_raw_moms_symbs = [raw.symbol for raw in k_counter if raw.order > 1]
@@ -198,7 +200,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
         # now we want to express raw moments only in terms od central moments and means
         # for instance if we have: :math:`x_1 = 1; x_2 = 2 +x_1 and  x_3 = x_2*x_1`, we should give:
-        # :math: `x_1 = 1; x_2 = 2+1 and  x_3 = 1*(2+1)`
+        # :math:`x_1 = 1; x_2 = 2+1 and  x_3 = 1*(2+1)`
         # To achieve this, we recursively apply substitution as many times as the highest order (minus one)
         max_order = max([p.order for p in k_counter])
 

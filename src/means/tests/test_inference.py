@@ -2,7 +2,7 @@ import random
 import unittest
 from numpy.testing import assert_array_almost_equal
 from sympy import Symbol, Float, MutableDenseMatrix
-from means.approximation.ode_problem import Moment, ODEProblem
+from means.core import Moment, ODEProblem
 import numpy as np
 from means.inference import Inference, InferenceWithRestarts
 # We need renaming as otherwise nose picks it up as a test
@@ -109,7 +109,7 @@ class TestInference(unittest.TestCase):
         def check_initialisation(variable_parameters, expected_parameters_with_variability,
                                  expected_initial_conditions_with_variability, expected_constraints):
             p = Inference(self.dimer_problem, parameters, initial_conditions,
-                          variable_parameters, [Trajectory([1, 2, 3], [1, 2, 3], 'x')])
+                          variable_parameters, [Trajectory([1, 2, 3], [1, 2, 3], Moment([1], symbol='x'))])
 
             self.assertEquals(p.starting_parameters_with_variability, expected_parameters_with_variability)
             self.assertEqual(p.starting_conditions_with_variability, expected_initial_conditions_with_variability)

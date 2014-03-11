@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import sympy
 
-from means.approximation.ode_problem import ODEProblem, Moment, VarianceTerm
+from means.core import ODEProblem, Moment, VarianceTerm
 from means.util.sympyhelpers import to_sympy_matrix
 
 

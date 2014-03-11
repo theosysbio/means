@@ -5,7 +5,7 @@ def check_notebook_with_assertion(file_name):
     from ipnbdoctest import test_notebook
     with open(file_name, 'r') as f:
         nb = reads(f.read(), 'json')
-    failures, errors = test_notebook(nb, generate_png_diffs=False)
+    failures, errors = test_notebook(nb, generate_png_diffs=True)
     assert(failures == 0 and errors == 0)
 
 

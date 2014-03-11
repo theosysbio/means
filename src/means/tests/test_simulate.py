@@ -1,7 +1,7 @@
 import unittest
 import means
 from means.util.sympyhelpers import to_sympy_matrix
-from means.approximation.ode_problem import ODEProblem, ODETermBase, Moment, VarianceTerm
+from means.core import ODEProblem, ODETermBase, Moment, VarianceTerm
 from means.simulation import Simulation
 from numpy.testing import assert_array_almost_equal
 import numpy as np
@@ -86,27 +86,27 @@ class TestSimulateWithSensitivities(unittest.TestCase):
         initial_conditions = [301, 0]
         timepoints = np.arange(0, 20, 0.1)
 
-        problem = means.approximation.ODEProblem('MNA',
-                                                 [Moment([1, 0], 'x_1'),
-                                                  Moment([0, 1], 'x_2'),
-                                                  Moment([0, 2], 'yx1'),
-                                                  Moment([1, 1], 'yx2'),
-                                                  Moment([2, 0], 'yx3')],
-                                                 to_sympy_matrix(['-2*k_1*x_1*(x_1 - 1) - 2*k_1*yx3 + 2*k_2*x_2',
-                                                                  'k_1*x_1*(x_1 - 1) + k_1*yx3 - k_2*x_2',
+        problem = ODEProblem('MNA',
+                             [Moment([1, 0], 'x_1'),
+                              Moment([0, 1], 'x_2'),
+                              Moment([0, 2], 'yx1'),
+                              Moment([1, 1], 'yx2'),
+                              Moment([2, 0], 'yx3')],
+                             to_sympy_matrix(['-2*k_1*x_1*(x_1 - 1) - 2*k_1*yx3 + 2*k_2*x_2',
+                                              'k_1*x_1*(x_1 - 1) + k_1*yx3 - k_2*x_2',
 
-                                                                  'k_1*x_1**2 - k_1*x_1 + 2*k_1*yx2*(2*x_1 - 1) '
-                                                                  '+ k_1*yx3 + k_2*x_2 - 2*k_2*yx1',
+                                              'k_1*x_1**2 - k_1*x_1 + 2*k_1*yx2*(2*x_1 - 1) '
+                                              '+ k_1*yx3 + k_2*x_2 - 2*k_2*yx1',
 
-                                                                  '-2*k_1*x_1**2 + 2*k_1*x_1 + k_1*yx3*(2*x_1 - 3) '
-                                                                  '- 2*k_2*x_2 + 2*k_2*yx1 - yx2*(4*k_1*x_1 '
-                                                                  '- 2*k_1 + k_2)',
+                                              '-2*k_1*x_1**2 + 2*k_1*x_1 + k_1*yx3*(2*x_1 - 3) '
+                                              '- 2*k_2*x_2 + 2*k_2*yx1 - yx2*(4*k_1*x_1 '
+                                              '- 2*k_1 + k_2)',
 
-                                                                  '4*k_1*x_1**2 - 4*k_1*x_1 - 8*k_1*yx3*(x_1 - 1)'
-                                                                  ' + 4*k_2*x_2 + 4*k_2*yx2'
-                                                                  ]),
-                                                 ['k_1', 'k_2']
-                                                 )
+                                              '4*k_1*x_1**2 - 4*k_1*x_1 - 8*k_1*yx3*(x_1 - 1)'
+                                              ' + 4*k_2*x_2 + 4*k_2*yx2'
+                             ]),
+                             ['k_1', 'k_2']
+                             )
 
         simulation = means.simulation.SimulationWithSensitivities(problem)
         trajectories = simulation.simulate_system(parameters, initial_conditions, timepoints)

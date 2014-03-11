@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import sympy
-from means.approximation.ode_problem import ODETermBase
+from means.core import ODETermBase
 from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 from means.simulation.solvers import _wrap_results_to_trajectories, _add_sensitivity_data_to_trajectories
 

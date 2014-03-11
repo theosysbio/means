@@ -1,7 +1,7 @@
 import unittest
 import sympy
 from means.approximation.mea.closure_normal import NormalClosure
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 

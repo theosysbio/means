@@ -1,26 +1,9 @@
 import unittest
 import sympy
+from means.util.sympyhelpers import sympy_expressions_equal
+from means.util.sympyhelpers import to_sympy_matrix
 from means.approximation.mea.closure_gamma import GammaClosure
-from means.approximation.ode_problem import Moment
-from means.util.sympyhelpers import sympy_expressions_equal
-from means.util.sympyhelpers import to_sympy_matrix
-
-
-
-import unittest
-from means.approximation.ode_problem import Moment
-import sympy
-from means.approximation.mea.closure_log_normal import LogNormalClosure
-from means.util.sympyhelpers import sympy_expressions_equal
-from means.util.sympyhelpers import to_sympy_matrix
-
-## for univariate or multivariate on dimerisation Model, we should have:
-# m = to_sympy_matrix([
-#             ["c_1*(c_2-y_0)-2*c_0*yx2-2*c_0*y_0*(y_0-1)"],
-#             ["2*c_1*c_2-4*c_0*y_0-2*c_1*y_0+8*c_0*yx2-4*c_0*yx3-2*c_1*yx2+4*c_0*y_0 ** 2-8*c_0*y_0*yx2"],
-#             ["4*c_1*c_2+8*c_0*y_0-4*c_1*y_0-6*c_0*ym4-20*c_0*yx2+18*c_0*yx3-6*c_1*yx2-3*c_1*yx3-8*c_0*y_0 ** 2+6*c_0*yx2 ** 2+24*c_0*y_0*yx2-12*c_0*y_0*yx3"]
-# ])
-
+from means.core import Moment
 
 class TestLogNormalCloser(unittest.TestCase):
     __n_counter = [
@@ -154,88 +137,3 @@ class TestLogNormalCloser(unittest.TestCase):
         answer = closer.close(self.__mfk, central_from_raw_exprs, self.__n_counter, self.__k_counter)
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
-    #
-    # def test_compute_closed_central_moments(self):
-    #     expected = to_sympy_matrix([
-    #         ["yx2"],
-    #         ["(yx2*yx4)/(y_1*y_2)"],
-    #         ["yx4"],
-    #         ["(yx2*yx7)/(y_0*y_2)"],
-    #         ["(yx4*yx7)/(y_0*y_1)"],
-    #         ["yx7"],
-    #         ["(2*yx2 ** 2)/y_2"],
-    #         ["(2*yx2 ** 2*yx4)/(y_1*y_2 ** 2)"],
-    #         ["(2*yx2*yx4 ** 2)/(y_1 ** 2*y_2)"],
-    #         ["(2*yx4 ** 2)/y_1"],
-    #         ["(2*yx2 ** 2*yx7)/(y_0*y_2 ** 2)"],
-    #         ["(2*yx2*yx4*yx7)/(y_0*y_1*y_2)"],
-    #         ["(2*yx4 ** 2*yx7)/(y_0*y_1 ** 2)"],
-    #         ["(2*yx2*yx7 ** 2)/(y_0 ** 2*y_2)"],
-    #         ["(2*yx4*yx7 ** 2)/(y_0 ** 2*y_1)"],
-    #         ["(2*yx7 ** 2)/y_0"]
-    #     ])
-    #
-    #     central_from_raw_exprs = to_sympy_matrix(
-    #         [["x_0_0_2-y_2**2"],
-    #         ["x_0_1_1-y_1*y_2"],
-    #         ["x_0_2_0-y_1**2"],
-    #         ["x_1_0_1-y_0*y_2"],
-    #         ["x_1_1_0-y_0*y_1"],
-    #         ["x_2_0_0-y_0**2"],
-    #         ["-3*x_0_0_2*y_2+x_0_0_3+2*y_2**3"],
-    #         ["-x_0_0_2*y_1-2*x_0_1_1*y_2+x_0_1_2+2*y_1*y_2**2"],
-    #         ["-2*x_0_1_1*y_1-x_0_2_0*y_2+x_0_2_1+2*y_1**2*y_2"],
-    #         ["-3*x_0_2_0*y_1+x_0_3_0+2*y_1**3"],
-    #         ["-x_0_0_2*y_0-2*x_1_0_1*y_2+x_1_0_2+2*y_0*y_2**2"],
-    #         ["-x_0_1_1*y_0-x_1_0_1*y_1-x_1_1_0*y_2+x_1_1_1+2*y_0*y_1*y_2"],
-    #         ["-x_0_2_0*y_0-2*x_1_1_0*y_1+x_1_2_0+2*y_0*y_1**2"],
-    #         ["-2*x_1_0_1*y_0-x_2_0_0*y_2+x_2_0_1+2*y_0**2*y_2"],
-    #         ["-2*x_1_1_0*y_0-x_2_0_0*y_1+x_2_1_0+2*y_0**2*y_1"],
-    #         ["-3*x_2_0_0*y_0+x_3_0_0+2*y_0**3"]
-    #     ])
-    #
-    #     closed_raw_moms = to_sympy_matrix([
-    #         ["y_2 ** 2+yx2"],
-    #         ["y_1*y_2+(yx2*yx4)/(y_1*y_2)"],
-    #         ["y_1 ** 2+yx4"],
-    #         ["y_0*y_2+(yx2*yx7)/(y_0*y_2)"],
-    #         ["y_0*y_1+(yx4*yx7)/(y_0*y_1)"],
-    #         ["y_0 ** 2+yx7"],
-    #         ["(2*yx2 ** 2)/y_2+3*y_2*yx2+y_2 ** 3"],
-    #         ["y_1*yx2+y_1*y_2 ** 2+(2*yx2*yx4)/y_1+(2*yx2 ** 2*yx4)/(y_1*y_2 ** 2)"],
-    #         ["y_2*yx4+y_1 ** 2*y_2+(2*yx2*yx4)/y_2+(2*yx2*yx4 ** 2)/(y_1 ** 2*y_2)"],
-    #         ["(2*yx4 ** 2)/y_1+3*y_1*yx4+y_1 ** 3"],
-    #         ["y_0*yx2+y_0*y_2 ** 2+(2*yx2*yx7)/y_0+(2*yx2 ** 2*yx7)/(y_0*y_2 ** 2)"],
-    #         ["y_0*y_1*y_2+(y_0*yx2*yx4)/(y_1*y_2)+(y_1*yx2*yx7)/(y_0*y_2)+(y_2*yx4*yx7)/(y_0*y_1)+(2*yx2*yx4*yx7)/(y_0*y_1*y_2)"],
-    #         ["y_0*yx4+y_0*y_1 ** 2+(2*yx4*yx7)/y_0+(2*yx4 ** 2*yx7)/(y_0*y_1 ** 2)"],
-    #         ["y_2*yx7+y_0 ** 2*y_2+(2*yx2*yx7)/y_2+(2*yx2*yx7 ** 2)/(y_0 ** 2*y_2)"],
-    #         ["y_1*yx7+y_0 ** 2*y_1+(2*yx4*yx7)/y_1+(2*yx4*yx7 ** 2)/(y_0 ** 2*y_1)"],
-    #         ["(2*yx7 ** 2)/y_0+3*y_0*yx7+y_0 ** 3"]
-    #     ])
-    #     k_counter = [
-    #         Moment([0, 0, 0], symbol=sympy.Integer(1)),
-    #         Moment([1, 0, 0], symbol=sympy.Symbol("y_0")),
-    #         Moment([0, 1, 0], symbol=sympy.Symbol("y_1")),
-    #         Moment([0, 0, 1], symbol=sympy.Symbol("y_2")),
-    #         Moment([0, 0, 2], symbol=sympy.Symbol("x_0_0_2")),
-    #         Moment([0, 1, 1], symbol=sympy.Symbol("x_0_1_1")),
-    #         Moment([0, 2, 0], symbol=sympy.Symbol("x_0_2_0")),
-    #         Moment([1, 0, 1], symbol=sympy.Symbol("x_1_0_1")),
-    #         Moment([1, 1, 0], symbol=sympy.Symbol("x_1_1_0")),
-    #         Moment([2, 0, 0], symbol=sympy.Symbol("x_2_0_0")),
-    #         Moment([0, 0, 3], symbol=sympy.Symbol("x_0_0_3")),
-    #         Moment([0, 1, 2], symbol=sympy.Symbol("x_0_1_2")),
-    #         Moment([0, 2, 1], symbol=sympy.Symbol("x_0_2_1")),
-    #         Moment([0, 3, 0], symbol=sympy.Symbol("x_0_3_0")),
-    #         Moment([1, 0, 2], symbol=sympy.Symbol("x_1_0_2")),
-    #         Moment([1, 1, 1], symbol=sympy.Symbol("x_1_1_1")),
-    #         Moment([1, 2, 0], symbol=sympy.Symbol("x_1_2_0")),
-    #         Moment([2, 0, 1], symbol=sympy.Symbol("x_2_0_1")),
-    #         Moment([2, 1, 0], symbol=sympy.Symbol("x_2_1_0")),
-    #         Moment([3, 0, 0], symbol=sympy.Symbol("x_3_0_0"))
-    #     ]
-    #
-    #     n_moments = 3
-    #     closer = GammaCloser(n_moments, type=1)
-    #     answer = closer.compute_closed_central_moments(central_from_raw_exprs,self.__n_counter, k_counter)
-    #     self.assertTrue(sympy_expressions_equal(answer, expected))

@@ -9,14 +9,13 @@ setup(
               'means.approximation',
               'means.approximation.lna',
               'means.approximation.mea',
+              'means.core',
               'means.examples',
               'means.inference',
-              'means.model',
-              'means.plotting',
+              'means.io',
               'means.simulation',
-              'means.util',
               'means.tests',
-              'means.io'],
+              'means.util'],
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license

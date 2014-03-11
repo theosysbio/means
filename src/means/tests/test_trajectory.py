@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from means.simulation import Trajectory, TrajectoryWithSensitivityData
-
+from means.core import Moment
 
 class TestTrajectory(unittest.TestCase):
 
@@ -10,8 +10,8 @@ class TestTrajectory(unittest.TestCase):
         Given two Trajectories that were equal, they should be comparable with ==.
         """
 
-        t1 = Trajectory([1, 2, 3], [3, 2, 1], 'description')
-        t2 = Trajectory([1, 2, 3], [3, 2, 1], 'description')
+        t1 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
+        t2 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
 
         self.assertEqual(t1, t2)
 
@@ -20,8 +20,8 @@ class TestTrajectory(unittest.TestCase):
         Given two Trajectories that differ only by timepoints, they should be treated as different
         """
 
-        t1 = Trajectory([1, 2, 3], [3, 2, 1], 'description')
-        t2 = Trajectory([0, 1, 2], [3, 2, 1], 'description')
+        t1 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
+        t2 = Trajectory([0, 1, 2], [3, 2, 1], Moment([1], symbol='description'))
 
         self.assertNotEqual(t1, t2)
 
@@ -30,8 +30,8 @@ class TestTrajectory(unittest.TestCase):
         Given two Trajectories that differ only by values, they should be treated as different
         """
 
-        t1 = Trajectory([1, 2, 3], [3, 2, 1], 'description')
-        t2 = Trajectory([1, 2, 3], [4, 2, 1], 'description')
+        t1 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
+        t2 = Trajectory([1, 2, 3], [4, 2, 1], Moment([1], symbol='description'))
 
         self.assertNotEqual(t1, t2)
 
@@ -40,8 +40,8 @@ class TestTrajectory(unittest.TestCase):
         Given two Trajectories that differ only by values, they should be treated as different
         """
 
-        t1 = Trajectory([1, 2, 3], [3, 2, 1], 'description1')
-        t2 = Trajectory([1, 2, 3], [3, 2, 1], 'description2')
+        t1 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
+        t2 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'))
 
         self.assertNotEqual(t1, t2)
 
@@ -52,11 +52,11 @@ class TestTrajectoryWithSensitivityData(unittest.TestCase):
         """
         Given two Trajectories that were equal, they should be comparable with ==.
         """
-        t_sensitivity_1 = Trajectory([1,2,3], [3, 2, 1], 'sensitivity1')
-        t_sensitivity_2 = Trajectory([1,2, 3], [-5, -9, -1], 'sensitivity2')
+        t_sensitivity_1 = Trajectory([1,2,3], [3, 2, 1], Moment([1], symbol='description'))
+        t_sensitivity_2 = Trajectory([1,2, 3], [-5, -9, -1], Moment([1], symbol='description'))
 
-        t1 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], 'description', [t_sensitivity_1, t_sensitivity_2])
-        t2 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], 'description', [t_sensitivity_1, t_sensitivity_2])
+        t1 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'), [t_sensitivity_1, t_sensitivity_2])
+        t2 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'), [t_sensitivity_1, t_sensitivity_2])
 
         self.assertEqual(t1, t2)
 
@@ -66,11 +66,11 @@ class TestTrajectoryWithSensitivityData(unittest.TestCase):
         they should be reported as different
         """
 
-        t_sensitivity_1 = Trajectory([1,2,3], [3, 2, 1], 'sensitivity1')
-        t_sensitivity_2 = Trajectory([1,2, 3], [-5, -9, -1], 'sensitivity2')
-        t_sensitivity_3 = Trajectory([1,2,3], [-5, -9, -100], 'sensitivity2')
+        t_sensitivity_1 = Trajectory([1,2,3], [3, 2, 1], Moment([1], symbol='sensitivity1'))
+        t_sensitivity_2 = Trajectory([1,2, 3], [-5, -9, -1], Moment([1], symbol='sensitivity2'))
+        t_sensitivity_3 = Trajectory([1,2,3], [-5, -9, -100], Moment([1], symbol='sensitivity2'))
 
-        t1 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], 'description', [t_sensitivity_1, t_sensitivity_2])
-        t2 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], 'description', [t_sensitivity_1, t_sensitivity_3])
+        t1 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'), [t_sensitivity_1, t_sensitivity_2])
+        t2 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'), [t_sensitivity_1, t_sensitivity_3])
 
         self.assertNotEqual(t1, t2)

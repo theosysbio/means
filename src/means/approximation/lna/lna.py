@@ -3,9 +3,25 @@ import operator
 
 import sympy as sp
 
-from means.approximation import ode_problem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.approximation.ode_problem import Moment, VarianceTerm
+from means.core import Moment, VarianceTerm, ODEProblem
+
+
+def lna_approximation(model):
+
+    r"""
+    A wrapper around :class:`~means.approximation.lna.lna.LinearNoiseApproximation`.
+    It performs linear noise approximation (MEA) as described in [Komorowski2009]_.
+
+    .. [Komorowski2009] M. Komorowski, B. Finkenstadt, C. V. Harper, and D. A. Rand,\
+     "Bayesian inference of biochemical kinetic parameters using the linear noise approximation,"\
+      BMC Bioinformatics, vol. 10, no. 1, p. 343, Oct. 2009.
+
+    :return: an ODE problem which can be further used in inference and simulation.
+    :rtype: :class:`~means.core.problems.ODEProblem`
+    """
+    lna = LinearNoiseApproximation(model)
+    return lna.run()
 
 
 class LinearNoiseApproximation(ApproximationBaseClass):
@@ -17,7 +33,7 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         Overrides the default _run() private method.
         Performs the complete analysis
         :return: A fully computed set of Ordinary Differential Equations that can be used for further simulation
-        :rtype: :class:`~means.approximation.ode_problem.ODEProblem`
+        :rtype: :class:`~means.core.problems.ODEProblem`
         """
 
         S = self.model.stoichiometry_matrix
@@ -78,5 +94,5 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         ode_terms = moment_terms + variance_terms
 
 
-        out_problem = ode_problem.ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.constants))
+        out_problem = ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.constants))
         return out_problem

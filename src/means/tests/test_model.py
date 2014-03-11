@@ -1,9 +1,8 @@
 import unittest
 
 import sympy
-import numpy as np
 
-from means.model.model import Model
+from means.core.model import Model
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
 

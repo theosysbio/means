@@ -9,11 +9,9 @@ import sympy
 from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
+from means.core import Moment, VarianceTerm
 
-# These are the default values in solver.c but they seem very low
-from means.approximation.ode_problem import Moment, VarianceTerm
-
-def validate_problem(problem):
+def _validate_problem(problem):
 
     problem.validate()
 
@@ -87,7 +85,7 @@ class Simulation(SerialisableObject):
         .. _`Assimulo documentation`: http://www.jmodelica.org/assimulo_home/
         """
         self.__problem = problem
-        validate_problem(problem)
+        _validate_problem(problem)
 
         if problem.method == 'LNA':
             self._postprocessing = _postprocess_lna_simulation
@@ -151,9 +149,9 @@ class Simulation(SerialisableObject):
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
-        :return: a list of :class:`~means.simulation.simulate.Trajectory` objects,
+        :return: a list of :class:`~means.simulation.Trajectory` objects,
                  one for each of the equations in the problem
-        :rtype: list[:class:`~means.simulation.simulate.Trajectory`]
+        :rtype: list[:class:`~means.simulation.Trajectory`]
         """
 
         initial_conditions = self._append_zeros(initial_conditions, self.problem.number_of_equations)
@@ -252,9 +250,9 @@ class SimulationWithSensitivities(Simulation):
                                these equations occur.
                                If not all values specified, the remaining ones will be assumed to be 0.
         :param timepoints: A list of time points to simulate the system for
-        :return: a list of :class:`~means.simulation.simulate.TrajectoryWithSensitivityData` objects,
+        :return: a list of :class:`~means.simulation.TrajectoryWithSensitivityData` objects,
                  one for each of the equations in the problem
-        :rtype: list[:class:`~means.simulation.simulate.TrajectoryWithSensitivityData`]
+        :rtype: list[:class:`~means.simulation.TrajectoryWithSensitivityData`]
         """
         return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
 
@@ -306,118 +304,3 @@ def _postprocess_lna_simulation(problem, trajectories):
         answer.append(new_trajectory)
 
     return answer
-
-
-def print_output(output_file, trajectories, initial_conditions, number_of_species, param, timepoints, max_order=None):
-    # Check maximum order of moments to output to file/plot
-    # TODO: change wherever maxorder comes from for it to be "None" not false.
-
-    # write results to output file (Input file name, parameters,
-    # initial conditions, data needed for maximum entropy
-    # (no.timepoints, no.species, max order of moments),
-    # timepoints, and trajectories for each moment)
-    output = open(output_file, 'w')
-    try:
-        output.write('\n>Parameters: {0!r}\n>Starting values: {1}\n'.format([round(x, 6) for x in param],
-                                                                            [round(y, 6) for y in initial_conditions]))
-
-        output.write('#\t{0}\t{1}\t{2}\n'.format(len(timepoints), number_of_species, max_order))
-        output.write('time\t{0}\n'.format('\t'.join(map(str, timepoints))))
-
-        # write trajectories of moments (up to maxorder) to output file
-        for trajectory in trajectories:
-            term = trajectory.description
-            if not isinstance(term, Moment):
-                continue
-            if max_order is None or term.order <= max_order:
-                output.write('{0}\t{1}\n'.format(term, '\t'.join(map(str, trajectory.values))))
-    finally:
-        output.close()
-
-def simulate(problem, trajout, timepoints, initial_constants, initial_variables, maxorder):
-    """
-    :param simulation_type: either "MEA" or "LNA"
-    :param problem: Parsed problem to simulate
-    :type problem: ODEProblem
-    :param trajout: Name of output file for this function (where simulated trajectories would be stored, i.e. --simout)
-    :param timepoints: List of timepoints
-    :param initial_constants: List of kinetic parameters
-    :param initial_variables: List of initial conditions for each moment (in timeparameters file)
-    :param maxorder: Maximum order of moments to output to either plot or datafile. (Defaults to maximum order of moments)
-    :return: a list of trajectories resulting from simulation
-    """
-
-    # Get required info from the expansion output
-
-    number_of_species = problem.number_of_species
-
-    term_descriptions = problem.left_hand_side_descriptors
-
-    initial_variables = np.array(initial_variables, dtype=NP_FLOATING_POINT_PRECISION)
-    initial_constants = np.array(initial_constants, dtype=NP_FLOATING_POINT_PRECISION)
-    simulator = Simulation(problem)
-    trajectories = simulator.simulate_system(initial_constants, initial_variables, timepoints)
-
-    print_output(trajout, trajectories, initial_variables, number_of_species,
-                 initial_constants, timepoints, maxorder)
-
-    return trajectories, term_descriptions
-
-def graphbuilder(soln,momexpout,title,t,momlist):
-    """
-    Creates a plot of the solutions
-
-    :param soln: output from CVODE (array of solutions at each time point for each moment)
-    :param momexpout:
-    :param title:
-    :param t:
-    :param momlist:
-    :return:
-    """
-    simtype = 'momexp'
-    LHSfile = open(momexpout)
-    lines = LHSfile.readlines()
-    LHSindex = lines.index('LHS:\n')
-    cindex = lines.index('Constants:\n')
-    LHS = []
-    for i in range(LHSindex+1,cindex-1):
-        LHS.append(lines[i].strip())
-        if lines[i].startswith('V'):simtype='LNA'
-    fig = plt.figure()
-    count = -1
-    for el in LHS:
-        if '_' in el:
-            count+=1
-    n = np.floor(np.sqrt(len(LHS)+1-count))+1
-    m = np.floor((len(LHS)+1-count)/n)+1
-    if n>3:
-        n=3
-        m=3
-    for i in range(len(LHS)):
-        if simtype == 'LNA':
-            if 'y' in LHS[i]:
-                ax = plt.subplot(111)
-                ax.plot(t,soln[:][i],label=LHS[i])
-                plt.xlabel('Time')
-                plt.ylabel('Means')
-                ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
-          fancybox=True, shadow=True, ncol=3)
-        elif simtype == 'momexp':
-            if i<(count+9):
-                if '_' in LHS[i]:
-                    ax1 = plt.subplot(n,m,1)
-                    ax1.plot(t,soln[:,i],label=LHS[i])
-                    plt.xlabel('Time')
-                    plt.ylabel('Means')
-                    ax1.legend(loc='upper center', bbox_to_anchor=(0.9, 1.0),
-          fancybox=True, shadow=True,prop={'size':12})
-                else:
-                    ax = plt.subplot(n,m,i+1-count)
-                    ax.plot(t,soln[:,i])
-                    plt.xlabel('Time')
-                    plt.ylabel('['+str(momlist[i])+']')
-
-
-    fig.suptitle(title)
-    plt.show()
-

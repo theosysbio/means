@@ -1,9 +1,11 @@
+import io
+import core
 import approximation
 import inference
-import model
 import simulation
 import util
-import plotting
-import io
 
-from model import *
+from core import *
+from simulation import *
+from inference import *
+from approximation import *

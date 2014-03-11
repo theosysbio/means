@@ -1,7 +1,7 @@
 import unittest
 import sympy as sp
 from means.approximation.mea.dmu_over_dt import generate_dmu_over_dt
-from means.approximation.ode_problem import Moment
+from means.core import Moment
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal
 
