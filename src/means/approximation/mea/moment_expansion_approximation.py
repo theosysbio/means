@@ -71,12 +71,12 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         :param closure_kwargs: keyword arguments to be passed to the closure
         """
         super(MomentExpansionApproximation, self).__init__(model)
-        try:
-            self.__max_order = int(max_order)
-            if self.__max_order < 1:
-                raise ValueError("`max_order` can only be POSITIVE")
-        except:
-            raise ValueError("`max_order` can only be positive integer")
+
+        max_order = int(max_order)
+        if max_order < 1:
+            raise ValueError("`max_order` can only be POSITIVE, {0!r} given".format(max_order))
+
+        self.__max_order = max_order
 
         # A dictionary of "option -> closure". this allows a generic handling for closure without having to add
         # if-else and exceptions when implementing new closures. One only needs to add the new closure class to the dict
