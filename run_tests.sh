@@ -15,6 +15,12 @@ else
    SLOWTESTS=""
 fi
 nosetests $SLOWTESTS --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR
+# Remove the image diff directory first
+rm -rf '.diffs/'
+mkdir ".diffs/"
+# Run notebook tests
 nosetests --with-xunit --xunit-file="notebook-tests.xml" $EXAMPLES_DIR
+# Zip the results
+zip -r diffs.zip ".diffs/"
 cd $INOUT_DIR
 

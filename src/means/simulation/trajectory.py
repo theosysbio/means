@@ -70,10 +70,9 @@ class Trajectory(SerialisableObject):
         :param kwargs: keyword arguments to pass to :func:`~matplotlib.pyplot.plot`
         :return: the result of the :func:`matplotlib.pyplot.plot` function.
         """
-        from means.plotting.util import mathtextify
         from matplotlib import pyplot as plt
         # Get label from the kwargs provided, or use self.description as default
-        label = kwargs.pop('label', mathtextify(self.description))
+        label = kwargs.pop('label', self.description.mathtext())
         # This is needed for matplotlib version 1.1.1
         label = str(label)
         return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
