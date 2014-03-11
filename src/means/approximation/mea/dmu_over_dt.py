@@ -10,9 +10,11 @@ def generate_dmu_over_dt(species, propensity, n_counter, stoichiometry_matrix):
     Calculate :math:`\frac{d\mu_i}{dt}` in eq. 6 (see Ale et al. 2013).
 
     .. math::
-         \frac{d\mu_i}{dt} = S \begin{bmatrix} \sum_{l} \sum_{n_1=0}^{\infty} ... \sum_{n_d=0}^{\infty}
+         \frac{d\mu_i}{dt} = S \begin{bmatrix} \sum_{l} \sum_{n_1=0}^{\infty} ...
+         \sum_{n_d=0}^{\infty}
          \frac{1}{\mathbf{n!}}
-         \frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}} |_{x=\mu} \mathbf{M_{x^n}} \end{bmatrix}
+         \frac{\partial^n \mathbf{n}a_l(\mathbf{x})}{\partial \mathbf{x^n}} |_{x=\mu}
+         \mathbf{M_{x^n}} \end{bmatrix}
 
     :param species: the name of the species/variables (typically `['y_0', 'y_1', ..., 'y_n']`)
     :type species: list[`sympy.Symbol`]

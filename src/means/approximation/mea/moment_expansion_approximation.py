@@ -1,3 +1,12 @@
+"""
+[Ale2013]_
+
+.. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
+"A general moment expansion method for stochastic kinetic models,"\
+The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
+"""
+
+
 import itertools
 import sympy as sp
 
@@ -5,13 +14,12 @@ from means.core import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.core import Moment
 
-# helper functions
 from dmu_over_dt import generate_dmu_over_dt
 from eq_central_moments import eq_central_moments
 from raw_to_central import raw_to_central
 from means.util.sympyhelpers import substitute_all, quick_solve
 
-# the different closure methods:
+
 from closure_gamma import GammaClosure
 from closure_log_normal import LogNormalClosure
 from closure_normal import NormalClosure
@@ -21,7 +29,7 @@ from closure_scalar import ScalarClosure
 def mea_approximation(model, max_order, closure='scalar', *closure_args, **closure_kwargs):
     r"""
     A wrapper around :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
-    It performs moment expansion approximation (MEA) as described in [Ale2013]_ up to a given order of moment.
+    It performs moment expansion approximation (MEA) up to a given order of moment.
     See :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation` for details
     about the options.
 
@@ -38,9 +46,6 @@ class MomentExpansionApproximation(ApproximationBaseClass):
     A class to perform moment expansion approximation as described in [Ale2013]_ up to a given order of moment.
     In addition, it allows to close the Taylor expansion by using parametric values for last order central moments.
 
-    .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
-    "A general moment expansion method for stochastic kinetic models,"\
-     The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
 
     """
     def __init__(self, model, max_order, closure='scalar', *closure_args, **closure_kwargs):
@@ -62,7 +67,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
                 uses log-normal distribution.
                 See :class:`~means.approximation.mea.closure_log_normal.LogNormalClosure`.
             `'gamma'`
-                EXPERIMENTAL,
+                *EXPERIMENTAL*,
                 uses gamma distribution.
                 See :class:`~means.approximation.mea.closure_gamma.GammaClosure`.
 
@@ -85,7 +90,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
                              "normal": NormalClosure,
                              "gamma": GammaClosure}
 
-        # We initialise the closure for this approximator
+        # We initialise the closure for this approximation
         try:
             # our closure is an instance of the class queried in the dictionary
             ClosureClass = supported_closures[closure]
@@ -134,8 +139,10 @@ class MomentExpansionApproximation(ApproximationBaseClass):
 
     def _generate_problem_left_hand_side(self, n_counter, k_counter):
         """
-        Generate the left hand side of the ODEs. This is simply the symbols for the corresponding moments.
-        Note that, in principle, they are in of course fact the time derivative of the moments.
+        Generate the left hand side of the ODEs. This is simply the
+        symbols for the corresponding moments.
+        Note that, in principle, they are in of course fact the
+        time derivative of the moments.
 
         :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
         :type n_counter: list[:class:`~means.core.descriptors.Moment`]
@@ -157,7 +164,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         """
         Generate the Mass Fluctuation Kinetics (i.e. the right hand side of the ODEs)
 
-        :param central_moments:
+        :param central_moments: The matrix of central moment expressions
         :param dmu_over_dt:
         :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
         :type n_counter: list[:class:`~means.core.descriptors.Moment`]

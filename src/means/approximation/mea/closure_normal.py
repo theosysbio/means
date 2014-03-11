@@ -93,6 +93,8 @@ class NormalClosure(ClosureBase):
 
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         """
+        Computes parametric expressions (e.g. in terms of mean, variance, covariances) for all central moments
+        up to max_order + 1 order.
 
         :param central_from_raw_exprs:
         :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments

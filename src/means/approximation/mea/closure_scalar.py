@@ -36,11 +36,10 @@ class ClosureBase(object):
 
     def _compute_closed_central_moments(self, central_from_raw_exprs, n_counter, k_counter):
         r"""
-        Replace raw moment terms in central moment expressions by parameters (e.g. mean, variance, covariances)
-        parameters such as variance/covariance (i.e. central moments) and first order raw moment (i.e. means)
+        Computes parametric expressions (e.g. in terms of mean, variance, covariances) for all central moments
+        up to max_order + 1 order.
 
         :param central_from_raw_exprs: the expression of central moments in terms of raw moments
-
         :param n_counter: a list of :class:`~means.core.descriptors.Moment`\s representing central moments
         :type n_counter: list[:class:`~means.core.descriptors.Moment`]
         :param k_counter: a list of :class:`~means.core.descriptors.Moment`\s representing raw moments
