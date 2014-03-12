@@ -281,6 +281,10 @@ def test_notebook(nb, generate_png_diffs=True):
         print "    %3i cells mismatched output" % failures
     if errors:
         print "    %3i cells failed to complete" % errors
+
+    if failures or errors:
+        print " If image tests failed, but images not displayed, copy and paste the line below to your address bar: "
+        print "javascript:pres = document.querySelectorAll('pre'); for (var i = 0; i < pres.length; i++) { pres[i].innerHTML = pres[i].innerHTML.replace(/&lt;img/g, '<img').replace(/\/&gt;/g, '/>') };void 0;"
     kc.stop_channels()
     km.shutdown_kernel()
     del km
