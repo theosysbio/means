@@ -151,7 +151,7 @@ def _test_runtime_for(problem, number_of_runs=10, **kwargs):
         if runtime_one > RUNTIME_THRESHOLD:
             print "Runtime for one iteration was {0}, which is greater than {1}"  \
                   "not executing the remaining runs".format(runtime_one, RUNTIME_THRESHOLD)
-            runtimes[key] = runtime_one
+            runtimes[key] = [runtime_one]
             continue
 
         curr_runtimes = timer.repeat(repeat=number_of_runs-1, number=1)
