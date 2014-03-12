@@ -6,13 +6,13 @@ import pickle
 import math
 # this rejects unstable trajectories
 REJECTED_TRAJ_THRESHOLD = 10e5
-
+FILE_NAME = "../data_closure_and_max_order_dimer.pickle"
 class MyFigureA(ReportUnit):
     def __init__(self):
         super(MyFigureA, self).__init__()
 
     def run(self):
-        with open("../data_best_order_mom.pickle") as f:
+        with open(FILE_NAME) as f:
             list_of_dict = pickle.load(f)
 
         n_species = len(list_of_dict[0]["trajectories"])
@@ -20,8 +20,8 @@ class MyFigureA(ReportUnit):
         max_order = max([d["max_order"] for d in list_of_dict if d["method"] == "MEA"])
 
 
+        f, axarr = pl.subplots(max_order-1, sharex=True, sharey=True, figsize=(9.0, 16.0))
 
-        f, axarr = pl.subplots(max_order-1, n_species, sharex=True, sharey=True, figsize=(9.0, 16.0))
 
 
         for mo in range(2,max_order+1):
@@ -67,7 +67,8 @@ class MyFigureA(ReportUnit):
                     else:
                         continue
 
-                    ax =axarr[mo-2, sps]
+
+                    ax =axarr[mo-2]
 
                     ax.plot(x,y,linestyle=style, color=color, linewidth=lwd,alpha=alpha)
                     text="species: y_{0}; max order: {1}".format(sps,mo)
@@ -101,7 +102,7 @@ class MyFigureB(ReportUnit):
         return math.log10(sum([sum(d) for d in diffs])/1000)
 
     def run(self):
-        with open("../data_best_order_mom.pickle") as f:
+        with open(FILE_NAME) as f:
             list_of_dict = pickle.load(f)
 
         self.ssa_reference = [d["trajectories"] for d in list_of_dict if d["method"] == "SSA"][0]

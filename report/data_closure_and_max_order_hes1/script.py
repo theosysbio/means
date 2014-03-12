@@ -10,15 +10,13 @@ import multiprocessing
 import numpy as np
 
 
-MODEL = MODEL_P53
-
-RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
-INITIAL_CONDITIONS = [70, 30, 60]
-TMAX = 40
-TIME_RANGE = np.arange(0,TMAX,.1)
+MODEL = MODEL_HES1
+RATES = [5, 10, 1, 1]
+INITIAL_CONDITIONS = [4, 20, 20]
+TMAX = 240
+TIME_RANGE = np.arange(0,TMAX,1)
 N_SSA = int(2e4)
-
-MAX_ORDER = 8
+MAX_ORDER = 7
 
 
 def get_one_mea_result(max_order_cl_arg):
@@ -50,9 +48,17 @@ class MyData(ReportUnit):
     def run(self):
 
         self.out_object = []
-        ssas = SSASimulation( StochasticProblem(MODEL), N_SSA)
-        ssa_means = ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, number_of_processes=8)
-        self.out_object.append( {"method":"SSA", "trajectories": ssa_means})
+        ssa_means = []
+
+        step=250
+        for i in range(0, N_SSA, step):
+            print "simulation #{0}".format(i)
+            ssas = SSASimulation( StochasticProblem(MODEL), step)
+            ssa_means.append(ssas.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE, number_of_processes=8))
+        print len(ssa_means)
+        mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*ssa_means)]
+
+        self.out_object.append( {"method":"SSA", "trajectories": mean_trajectories })
 
         closer_args = [
                        {"closure":"scalar"},
@@ -61,7 +67,7 @@ class MyData(ReportUnit):
                        {"closure":"normal", "multivariate":True},
                        {"closure":"normal", "multivariate":False}
                        ]
-        print "?"
+
         try:
             for max_order in range(2,MAX_ORDER+1):
 
