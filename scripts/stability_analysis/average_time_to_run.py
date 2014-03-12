@@ -105,6 +105,9 @@ def _generate_problems_dict():
     for max_order, closure in itertools.product(MAX_ORDERS, CLOSURE_METHODS):
         if max_order < 2 and closure != 'scalar':
             continue
+        # No point of odd max orders for normal and log-normal closures
+        if max_order % 2 == 1 and closure in ['normal', 'log-normal']:
+            continue
         valid_problems_list.append((max_order, closure))
 
     pool = multiprocessing.Pool(N_PROCESSES)
