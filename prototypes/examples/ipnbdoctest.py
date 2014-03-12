@@ -13,6 +13,7 @@ Each cell is submitted to the kernel, and the outputs are compared with those st
 import os,sys,time
 import base64
 import hashlib
+import traceback
 import png
 import random
 import re
@@ -38,6 +39,10 @@ def png_b64_to_ndarray(a64):
     pngdata = png.Reader(StringIO(base64.decodestring(a64))).asRGBA8()[2]
     return np.array(list(pngdata))
 
+def save_png(data, filename):
+    print 'Saving {0}'.format(filename)
+    png.from_array(data, mode='RGBA;8').save(filename)
+
 
 def diff_png(a64, b64, generate_diff_images=True):
     """compare the pixels of two PNGs"""
@@ -50,13 +55,14 @@ def diff_png(a64, b64, generate_diff_images=True):
     if diff > PNG_DIFF_TOLERANCE:
         digest = hashlib.sha1(a64).digest()
         if generate_diff_images:
-            prefix = 'ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
-            png.from_array(a_data, mode='RGBA;8').save(prefix + 'original.png')
-            png.from_array(b_data, mode='RGBA;8').save(prefix + 'modified.png')
-        if diff < 1 and generate_diff_images:
-            png.from_array(255 - np.abs(b_data - a_data), mode='RGBA;8').save(
-                           prefix + 'diff.png')
-            print 'diff png saved to %s-diff.png' % prefix
+            if not os.path.exists('.diffs/'):
+                os.mkdir('.diffs/')
+            prefix = '.diffs/ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
+            save_png(a_data, prefix + 'original.png')
+            save_png(b_data, prefix + 'modified.png')
+            if diff < 1:
+                save_png(255 - np.abs(b_data - a_data), prefix + 'diff.png')
+                print 'diff png saved to %s-diff.png' % prefix
 
     return diff
 
@@ -82,6 +88,9 @@ def sanitize(s):
 
     # ignore outputs of %time and %timeit magics:
     s = re.sub(r'(CPU times|Wall time|\d+ loops, best of).+', 'TIMING', s)
+
+    # Ignore the %%cache magic output
+    s = re.sub(r'Skipped the cell\'s code and loaded variables problems from file.+', 'CACHING', s)
 
     return s
 
@@ -130,8 +139,8 @@ def compare_outputs(test, ref,
 def run_cell(shell, iopub, cell):
     # print cell.input
     shell.execute(cell.input)
-    # wait for finish, maximum 60s
-    shell.get_msg(timeout=60)
+    # wait for finish, maximum 10min
+    shell.get_msg(timeout=60*10)
     outs = []
 
     while True:
@@ -233,10 +242,16 @@ def test_notebook(nb, generate_png_diffs=True):
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
-                print "failed to run cell:", repr(e)
+                print
+                print "Failed to run cell, got {0!r}".format(e)
+                traceback.print_exc()
+                print
+                print "The cell is:"
+                print '-' * 50
                 print cell.input
+                print '-' * 50
                 errors += 1
-                continue
+                break
 
             failed = False
             outs = collapse_stream_outputs(outs)

@@ -1,0 +1,18 @@
+initial_conditions_range:
+- !!python/tuple [1, 4]
+- !!python/tuple [0, 20]
+- !!python/tuple [0, 20]
+parameter_range:
+- &id001 !!python/tuple [0, 5]
+- &id002 !!python/tuple [1, 10]
+- &id003 !!python/tuple [0, 1]
+- &id004 !!python/tuple [0, 1]
+timepoints: [0, 30, 60, 90, 120, 150, 180, 210, 240]
+variable_parameters:
+  c_0: *id001
+  c_1: *id002
+  c_2: *id003
+  c_3: *id004
+  y_0: !!python/tuple [0, .inf]
+  y_1: !!python/tuple [0, .inf]
+  y_2: !!python/tuple [0, .inf]

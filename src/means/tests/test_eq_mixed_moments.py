@@ -48,7 +48,7 @@ class TestEqMixedMoments(unittest.TestCase):
         species = sympy.Matrix(["y_0", "y_1", "y_2"])
 
         dbdt_calc = DBetaOverDtCalculator(propensities, counter,stoichio, species)
-        k_vec = Moment([1, 0, 0], None)
+        k_vec = [1, 0, 0]
         ek_counter = [Moment([1, 0, 0], sympy.Symbol("y_0"))]
 
         answer = dbdt_calc.get(k_vec,ek_counter).T

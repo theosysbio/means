@@ -7,6 +7,7 @@ pip install --quiet pylint
 pip install --quiet IPython
 pip install --quiet pyzmq
 pip install --quiet pypng
+pip install --quiet ipycache
 
 if [ "$1" == "with-slow-tests" ]; then
    SLOWTESTS="--no-skip"
@@ -14,6 +15,12 @@ else
    SLOWTESTS=""
 fi
 nosetests $SLOWTESTS --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR
+# Remove the image diff directory first
+rm -rf '.diffs/'
+mkdir ".diffs/"
+# Run notebook tests
 nosetests --with-xunit --xunit-file="notebook-tests.xml" $EXAMPLES_DIR
+# Zip the results
+zip -r diffs.zip ".diffs/"
 cd $INOUT_DIR
 

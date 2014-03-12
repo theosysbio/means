@@ -17,11 +17,11 @@ from means.inference.parallelisation import raw_results_in_parallel
 from means.inference.results import InferenceResultsCollection, InferenceResult, SolverErrorConvergenceStatus, \
     NormalConvergenceStatus
 from means.io.serialise import SerialisableObject
-from means.core import Moment
-from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
-from means.simulation import Trajectory, SolverException, Simulation
+from means.simulation import SolverException, Simulation
+from means.util.logs import get_logger
 from means.util.memoisation import memoised_property, MemoisableObject
 
+logger = get_logger(__name__)
 
 DEFAULT_SOLVER_EXCEPTIONS_LIMIT = 100
 
@@ -90,77 +90,6 @@ def _extract_params_from_i0(only_variable_parameters, parameters_with_variabilit
             counter += 1
 
     return complete_params, complete_initial_conditions
-
-
-def parse_experimental_data_file(sample):
-    """
-    Reads sample data and returns a list of timepoints and the trajectories
-    :param sample: file containing the sample data
-    :return: `timepoints, trajectories`
-    """
-    def _parse_data_point(data_point):
-        try:
-            return NP_FLOATING_POINT_PRECISION(data_point)
-        except ValueError:
-            if data_point == 'N':
-                return np.nan
-            else:
-                raise
-
-    datafile = open(sample,'r')
-    trajectories = []
-    timepoints = None
-    try:
-        for l in datafile:
-            l = l.strip()
-            if not l or l.startswith('>') or l.startswith('#'):
-                continue
-
-            data = l.split('\t')
-            header = data.pop(0)
-            if header == 'time':
-                timepoints = np.array(map(NP_FLOATING_POINT_PRECISION, data), dtype=NP_FLOATING_POINT_PRECISION)
-            else:
-                data = np.array(map(_parse_data_point, data), dtype=NP_FLOATING_POINT_PRECISION)
-                moment_str_list = header.split(',')
-                n_vec = map(int, moment_str_list)
-                moment = Moment(n_vec)
-                assert(timepoints is not None)
-                assert(timepoints.shape == data.shape)
-                trajectories.append(Trajectory(timepoints, data, moment))
-    finally:
-        datafile.close()
-
-    return timepoints, trajectories
-
-
-def _mom_indices(problem, mom_names):
-    """
-    From list of moments in sample file (`mom_names`), identify the indices of the corresponding moments
-    in simulated trajectories produced by CVODE. Returns these indices as a list (`mom_index_list`).
-
-    Also returns a list of moments produced by MFK/CVODE (`moments_list)
-    :param problem: ODEProblem
-    :type problem: ODEProblem
-    :param mom_names: List of moments in sample file
-    :return: `mom_index_list, moments_list`
-    """
-
-    # Get list of moments from mfkoutput to create labels for output data file
-    moments_list = [moment.n_vector for moment in problem.left_hand_side_descriptors]
-
-    # Get indices in CVODE solutions for the moments in sample data
-    # TODO: terribly inefficient but to be replaced by Trajectories
-    mom_index_list = []
-    for mom_name in mom_names:
-        for i, moment in enumerate(moments_list):
-            if (mom_name == moment).all():
-                mom_index_list.append(i)
-                break
-
-    return mom_index_list, moments_list
-
-
 
 def _constraints_are_satisfied(current_guess, limits):
     if limits is not None:
@@ -575,9 +504,9 @@ class Inference(SerialisableObject, MemoisableObject):
                                                                    current_initial_conditions,
                                                                    self.timepoints_to_simulate)
             except SolverException as e:
-                print 'Warning: got {0!r} while simulating with '  \
-                      'parameters={1!r}, initial_conditions={2!r}. ' \
-                      'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions)
+                logger.warn('Warning: got {0!r} while simulating with '  \
+                             'parameters={1!r}, initial_conditions={2!r}. ' \
+                             'Setting distance to infinity'.format(e, current_parameters, current_initial_conditions))
                 self.exception_count += 1
                 if self.exception_limit is not None and self.exception_count > self.exception_limit:
                     raise TooManySolverExceptions('Solver exception limit reached while exploring the inference space.')
@@ -612,7 +541,7 @@ class Inference(SerialisableObject, MemoisableObject):
             result = fmin(distances_calculator, initial_guess, ftol=FTOL, disp=0, full_output=True,
                           retall=return_intermediate_solutions)
         except TooManySolverExceptions as e:
-            print 'Warning: Reached maximum number of exceptions from solver. Stopping inference here'
+            logger.warn('Reached maximum number of exceptions from solver. Stopping inference here')
             if distances_calculator.best_so_far_guess is not None:
                 optimised_data = distances_calculator.best_so_far_guess
             else:

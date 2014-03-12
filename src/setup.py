@@ -13,7 +13,6 @@ setup(
               'means.examples',
               'means.inference',
               'means.io',
-              'means.plotting',
               'means.simulation',
               'means.tests',
               'means.util'],

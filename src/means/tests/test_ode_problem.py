@@ -31,15 +31,33 @@ class TestODEProblem(unittest.TestCase):
                                               # otherwise ExplicitEuler solver would fail.
         assert_array_equal(actual_ans, expected_ans)
 
+    def _check_ode_rhs_as_function_ans(self, p1_rhs_as_function, p2_rhs_as_function):
+
+        constants = [1, 2, 3]
+        values_p1 = [4, 5, 6, 5]  # y_1, y_2, y_3, y_4 in that order
+        values_p2 = [4, 5, 6]  # y_1, y_2, y_3  in that order
+
+        p1_expected_ans = np.array([11, 14, 7, 8])
+        p2_expected_ans = np.array([4, 1, 6+5])
+        p1_actual_ans = np.array(p1_rhs_as_function(values_p1, constants))
+        p2_actual_ans = np.array(p2_rhs_as_function(values_p2, constants))
+
+        # This checks if by any means p2 is able to "override" the p1 result
+        p1_ans_after_p2 = np.array(p1_rhs_as_function(values_p1, constants))
+
+        assert_array_equal(p1_actual_ans, p1_expected_ans)
+        assert_array_equal(p2_actual_ans, p2_expected_ans)
+        assert_array_equal(p1_ans_after_p2, p1_expected_ans)
+
 
     def test_ode_rhs_as_function_cache_does_not_persist_between_instances(self):
         """
         Given two ODEProblems, the cache should not persist between these objects.
         :return:
         """
-        constants = [1, 2, 3]
-        p1_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
-        p1_rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
+
+        p1_lhs = [Moment(np.ones(4), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3', 'y_4'])]
+        p1_rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1', 'y_1*2'])
 
         p2_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
         p2_rhs = to_sympy_matrix(['y_1', 'c_1', 'y_2+y_3'])
@@ -47,19 +65,24 @@ class TestODEProblem(unittest.TestCase):
         p1 = ODEProblem('MEA', p1_lhs, p1_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p1_rhs_as_function = p1.right_hand_side_as_function
 
-        values = [4, 5, 6]  # y_1, y_2, y_3 in that order
-
         p2 = ODEProblem('MEA', p2_lhs, p2_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p2_rhs_as_function = p2.right_hand_side_as_function
 
-        p1_expected_ans = np.array([11, 14, 7])
+        constants = [1, 2, 3]
+        values_p1 = [4, 5, 6, 5]  # y_1, y_2, y_3, y_4 in that order
+        values_p2 = [4, 5, 6]  # y_1, y_2, y_3  in that order
+
+        p1_expected_ans = np.array([11, 14, 7, 8])
         p2_expected_ans = np.array([4, 1, 6+5])
-        p1_actual_ans = np.array(p1_rhs_as_function(values, constants))
-        p2_actual_ans = np.array(p2_rhs_as_function(values, constants))
+        p1_actual_ans = np.array(p1_rhs_as_function(values_p1, constants))
+        p2_actual_ans = np.array(p2_rhs_as_function(values_p2, constants))
+
+        # This checks if by any means p2 is able to "override" the p1 result
+        p1_ans_after_p2 = np.array(p1_rhs_as_function(values_p1, constants))
 
         assert_array_equal(p1_actual_ans, p1_expected_ans)
         assert_array_equal(p2_actual_ans, p2_expected_ans)
-
+        assert_array_equal(p1_ans_after_p2, p1_expected_ans)
 
 
     def test_ode_moment_no_description_from_variance_terms(self):
@@ -91,3 +114,11 @@ class TestODEProblem(unittest.TestCase):
         for i, l in enumerate(lhs):
             self.assertEqual(p.descriptor_for_symbol(l.symbol), l)
 
+def _get_rhs_as_function(args):
+    lhs, rhs = args
+
+    p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+    # access right_hand_side_as_function
+    rhs_as_function = p.right_hand_side_as_function
+
+    return p

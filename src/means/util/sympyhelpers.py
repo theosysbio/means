@@ -37,7 +37,7 @@ def quick_solve(expr, var):
         may be simply solved by stating :math: `c = -(2*a + 3*b)`.
         The function checks if the right hand side does not contain :math: `c`.
         If it does, then, the classic `sympy.solve()` method is used.
-        `sympy.solve()` used simplify in the background,
+        `sympy.solve()` uses simplify in the background (i.e. is slow),
         it is therefore preferable to avoid using it.
 
         :param expr: an expression like implicitly equal to 0
@@ -57,7 +57,7 @@ def to_sympy_matrix(value):
     Leaves the value as `sympy.Matrix` if it already was
     :param value: value to convert
     :return:
-    :rtype: sympy.Matrix
+    :rtype: `sympy.Matrix`
     """
     if isinstance(value, sympy.Matrix):
         return value
