@@ -109,7 +109,11 @@ class Model(SerialisableObject, LatexPrintableObject):
                 if symbol not in both:
                     raise ValueError('Propensity {0!r} '
                                      'contains a free symbol {1!r} '
-                                     'that is not in listed in parameters or species lists'.format(row, symbol))
+                                     'that is not in listed in parameters or species lists '
+                                     'Parameters: {2!r}; '
+                                     'Species: {3!r}'.format(row, symbol,
+                                                             self.constants,
+                                                             self.species))
 
             seen_free_symbols.update(free_symbols)
 
