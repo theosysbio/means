@@ -1,15 +1,50 @@
 from collections import namedtuple
+import os
 import sympy
 import numpy as np
 from means.core.model import Model
 
 _Reaction = namedtuple('_REACTION', ['id', 'reactants', 'products', 'propensity', 'parameters'])
 
+def _sbml_like_piecewise(*args):
+
+    if len(args) % 2 == 1:
+        # Add a final True element you can skip in SBML
+        args += (True,)
+
+    sympy_args = []
+
+    for i in range(len(args)/2):
+        # We need to group args into tuples of form
+        # (value, condition)
+        # SBML usually outputs them in form (value, condition, value, condition, value ...)
+        sympy_args.append((args[i*2], args[i*2+1]))
+
+    return sympy.Piecewise(*sympy_args)
+
+def _sympify_kinetic_law_formula(formula):
+
+    # We need to define some namespace hints for sympy to deal with certain functions in SBML formulae
+    # For instance, `eq` in formula should map to `sympy.Eq`
+
+    namespace = {'eq': sympy.Eq,
+                 'neq': sympy.Ne,
+                 'floor': sympy.floor,
+                 'ceiling': sympy.ceiling,
+                 'gt': sympy.Gt,
+                 'lt': sympy.Lt,
+                 'geq': sympy.Ge,
+                 'leq': sympy.Le,
+                 'pow': sympy.Pow,
+                 'piecewise': _sbml_like_piecewise}
+
+    return sympy.sympify(formula, locals=namespace)
+
 def _parse_reaction(libsbml_reaction):
     id_ = libsbml_reaction.getId()
     reactants = {sympy.Symbol(r.getSpecies()): r.getStoichiometry() for r in libsbml_reaction.getListOfReactants()}
     products = {sympy.Symbol(p.getSpecies()): p.getStoichiometry() for p in libsbml_reaction.getListOfProducts()}
-    kinetic_law = sympy.sympify(libsbml_reaction.getKineticLaw().getFormula())
+    kinetic_law =  _sympify_kinetic_law_formula(libsbml_reaction.getKineticLaw().getFormula())
     # This would only work for SBML Level 3, prior levels do not have parameters within kinetic law
     parameters = sympy.symbols([p.getId() for p in libsbml_reaction.getKineticLaw().getListOfParameters()])
 
@@ -26,6 +61,9 @@ def read_sbml(filename):
     """
     import libsbml
 
+    if not os.path.exists(filename):
+        raise IOError('File {0!r} does not exist'.format(filename))
+
     reader = libsbml.SBMLReader()
     document = reader.readSBML(filename)
 
@@ -33,7 +71,6 @@ def read_sbml(filename):
 
     species = sympy.symbols([s.getId() for s in sbml_model.getListOfSpecies()])
     reactions = map(_parse_reaction, sbml_model.getListOfReactions())
-
 
     # getListOfParameters is an attribute of the model for SBML Level 1&2
     parameters = sympy.symbols([p.getId() for p in sbml_model.getListOfParameters()])
