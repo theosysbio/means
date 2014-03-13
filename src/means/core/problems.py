@@ -3,7 +3,7 @@ Problems
 --------
 
 This part of the package implement classes describing "problems".
-Problems are needed inputs for simulation and inference.
+Problems are required inputs for simulation and inference.
 Currently, there are two types of problems:
 
 * A :class:`ODEProblem` is a system of differential equations describing
@@ -11,7 +11,7 @@ Currently, there are two types of problems:
     :mod:`~means.approximation.mea.moment_expansion_approximation`, or \
     :mod:`~means.approximation.lna.lna`) \
 
-* A :class:`StochasticProblem` can be used for stochastic simulations
+* A :class:`StochasticProblem` can be used for stochastic simulations\
 and can be simply built from  a :class:`~means.core.model.Model`:
 
 >>> from means import StochasticProblem
