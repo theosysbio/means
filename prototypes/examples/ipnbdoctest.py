@@ -134,7 +134,7 @@ def compare_outputs(test, ref,
                             generate_diff_images=generate_png_diffs)
             if diff > PNG_DIFF_TOLERANCE:
                 print "png mismatch %s" % key
-                print "%2.6f%% disagree" % diff
+                print "diff: {0!r}".format(diff)
                 return False
         elif key not in skip_compare and sanitize(test[key]) != sanitize(ref[key]):
             print "mismatch %s:" % key
