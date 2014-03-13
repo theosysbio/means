@@ -39,9 +39,15 @@ def png_b64_to_ndarray(a64):
     pngdata = png.Reader(StringIO(base64.decodestring(a64))).asRGBA8()[2]
     return np.array(list(pngdata))
 
-def save_png(data, filename):
-    print 'Saving {0}'.format(filename)
-    png.from_array(data, mode='RGBA;8').save(filename)
+def print_base64_img(data):
+    s = StringIO()
+    png.from_array(data, mode='RGBA;8').save(s)
+    contents = s.getvalue()
+    s.close()
+    base64_image = base64.b64encode(contents)
+
+    print '<img src="data:image/png;base64,{0}"/>'.format(base64_image)
+
 
 
 def diff_png(a64, b64, generate_diff_images=True):
@@ -58,11 +64,14 @@ def diff_png(a64, b64, generate_diff_images=True):
             if not os.path.exists('.diffs/'):
                 os.mkdir('.diffs/')
             prefix = '.diffs/ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
-            save_png(a_data, prefix + 'original.png')
-            save_png(b_data, prefix + 'modified.png')
+            print 'Images mismatch'
+            print 'Expected:'
+            print_base64_img(a_data)
+            print 'Actual:'
+            print_base64_img(b_data)
             if diff < 1:
-                save_png(255 - np.abs(b_data - a_data), prefix + 'diff.png')
-                print 'diff png saved to %s-diff.png' % prefix
+                print 'Diff:'
+                print_base64_img(255 - np.abs(b_data - a_data))
 
     return diff
 
@@ -272,6 +281,10 @@ def test_notebook(nb, generate_png_diffs=True):
         print "    %3i cells mismatched output" % failures
     if errors:
         print "    %3i cells failed to complete" % errors
+
+    if failures or errors:
+        print " If image tests failed, but images not displayed, copy and paste the line below to your address bar: "
+        print "javascript:pres = document.querySelectorAll('pre'); for (var i = 0; i < pres.length; i++) { pres[i].innerHTML = pres[i].innerHTML.replace(/&lt;img/g, '<img').replace(/\/&gt;/g, '/>') };void 0;"
     kc.stop_channels()
     km.shutdown_kernel()
     del km
