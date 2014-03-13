@@ -1,6 +1,36 @@
 """
-Simulates data for given model, moments, parameters, initial conditions
-and method (moment expansion or LNA)
+Simulate
+--------
+This part of the package provides utilities for simulate the
+dynamic of an `means.core.problems.ODEProblem`.
+
+A wide range of numerical solver are available:
+
+>>> from means import Simulation
+>>> print Simulation.supported_solvers()
+
+In order to simulate a system, it is necessary to provide values for
+the initial conditions and parameters (constants):
+
+>>> from means import mea_approximation
+>>> from means.examples.sample_models import MODEL_P53
+>>> from means import Simulation
+>>> import numpy as np
+>>>
+>>> ode_problem = mea_approximation(MODEL_P53,max_order=2)
+>>> # We provide initial conditions, constants and time range
+>>> RATES = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+>>> INITIAL_CONDITIONS = [70, 30, 60]
+>>> TMAX = 40
+>>> TIME_RANGE = np.arange(0, TMAX, .1)
+>>> #This is where we simulate the system to obtain trajectories
+>>> simulator = Simulation(ode_problem)
+>>> trajectories = simulator.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE)
+
+A list of `Trajectory` objects (see :mod:`means.simulation.trajectory`) is created.
+See the documentation of :class:`Simulation` for additional information.
+
+-------------
 """
 
 import numpy as np

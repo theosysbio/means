@@ -37,7 +37,8 @@ Typically, a model would be used for approximation (e.g.
 :mod:`~means.approximation.mea.moment_expansion_approximation`, or
 :mod:`~means.approximation.lna.lna`)
 and stochastic simulations (e.g. :mod:`~means.simulation.ssa`).
-------------
+
+-------------
 """
 
 import sympy

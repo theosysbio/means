@@ -8,7 +8,7 @@ Example:
 
 >>> from means.approximation.lna.lna import lna_approximation
 >>> from means.examples.sample_models import MODEL_P53
->>> problem = lna_approximation(MODEL_P53)
+>>> ode_problem = lna_approximation(MODEL_P53)
 >>> print ode_problem
 
 The result is an :class:`means.core.problems.ODEProblem`. Typically, it would be further used to
