@@ -1,3 +1,26 @@
+"""
+Problems
+--------
+
+This part of the package implement classes describing "problems".
+Problems are needed inputs for simulation and inference.
+Currently, there are two types of problems:
+
+* A :class:`ODEProblem` is a system of differential equations describing
+    the temporal behaviour of the system. They are typically obtained through approximation (e.g. \
+    :mod:`~means.approximation.mea.moment_expansion_approximation`, or \
+    :mod:`~means.approximation.lna.lna`) \
+
+* A :class:`StochasticProblem` can be used for stochastic simulations
+and can be simply built from  a :class:`~means.core.model.Model`:
+
+>>> from means import StochasticProblem
+>>> from means.examples.sample_models import MODEL_P53
+>>> my_stoch_prob = StochasticProblem(MODEL_P54)
+
+"""
+
+
 import sympy
 import numpy as np
 from sympy.utilities.autowrap import autowrap
