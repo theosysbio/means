@@ -1,7 +1,51 @@
+"""
+Model
+-----
+
+`Model` objects describe a system in terms of **stochastic** reaction propensities/rates, species/variables,
+constants and a stoichiometry matrix.
+Generally, describing a model is a pre-requisite for any subsequent analysis.
+
+An example showing the p53 model could be encoded:
+
+>>> from means import Model
+>>> my_model = Model(constants=['c_0',   # P53 production rate
+>>>                             'c_1',   # MDM2-independent p53 degradation rate
+>>>                             'c_2',   # saturating p53 degradation rate
+>>>                             'c_3',   # P53-dependent MDM2 production rate
+>>>                             'c_4',   # MDM2 maturation rate
+>>>                             'c_5',   # MDM2 degradation rate
+>>>                             'c_6'],  # P53 threshold of degradation by MDM2
+>>>                  species=['y_0',   # Concentration of p53
+>>>                           'y_1',   # Concentration of MDM2 precursor
+>>>                           'y_2'],  # Concentration of MDM2
+>>>                  stoichiometry_matrix=[[1, -1, -1, 0, 0, 0],
+>>>                                        [0, 0, 0, 1, -1, 0],
+>>>                                        [0, 0, 0, 0, 1, -1]],
+>>>                  propensities=['c_0',
+>>>                                'c_1*y_0',
+>>>                                'c_2*y_2*y_0/(y_0+c_6)',
+>>>                                'c_3*y_0',
+>>>                                'c_4*y_1',
+>>>                                'c_5*y_2'])
+
+Printing the model to ensure everything is all right:
+
+>>> print my_model
+
+Typically, a model would be used for approximation (e.g.
+:mod:`~means.approximation.mea.moment_expansion_approximation`, or
+:mod:`~means.approximation.lna.lna`)
+and stochastic simulations (e.g. :mod:`~means.simulation.ssa`).
+
+-------------
+"""
+
 import sympy
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal
+
 
 class Model(SerialisableObject, LatexPrintableObject):
     """
@@ -17,7 +61,7 @@ class Model(SerialisableObject, LatexPrintableObject):
     yaml_tag = u'!model'
 
     def __init__(self, constants, species, propensities, stoichiometry_matrix):
-        """
+        r"""
         Creates a `Model` object that stores the model of reactions we want to analyse
         :param constants: constants of the model, as `sympy` symbols
         :param species: variables of the model, as `sympy.Symbol`s, i.e. species
