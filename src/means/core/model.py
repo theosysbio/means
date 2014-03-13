@@ -82,11 +82,41 @@ class Model(SerialisableObject, LatexPrintableObject):
         if self.stoichiometry_matrix.cols != self.propensities.rows:
             raise ValueError('There must be a column in stoichiometry matrix '
                              'for each row in propensities matrix. '
-                             'S ({0.rows}x{0.cols}): {0!r} , propensities ({1.rows}x{1.cols}): {1!r}'.format(self.stoichiometry_matrix, self.propensities))
+                             'S ({0.rows}x{0.cols}): {0!r} , '
+                             'propensities ({1.rows}x{1.cols}): {1!r}'.format(self.stoichiometry_matrix,
+                                                                              self.propensities))
 
         if self.stoichiometry_matrix.rows != len(self.species):
             raise ValueError('There must be a row in stoichiometry matrix for each variable. '
-                             'S ({0.rows}x{0.cols}): {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix, self.species))
+                             'S ({0.rows}x{0.cols}): {0!r}, variables: {1!r}'.format(self.stoichiometry_matrix,
+                                                                                     self.species))
+
+        seen_free_symbols = set()
+        parameters = set(self.constants)
+        species = set(self.species)
+
+        # Check if there are any parameters in both lists
+        intersection = parameters & species
+        if intersection:
+            raise ValueError("Some symbols are in both parameters and species lists")
+
+        both = parameters | species
+        for row in self.propensities:
+            free_symbols = row.free_symbols
+            # Do not check the seen symbols twice
+            free_symbols = free_symbols - seen_free_symbols
+            for symbol in free_symbols:
+                if symbol not in both:
+                    raise ValueError('Propensity {0!r} '
+                                     'contains a free symbol {1!r} '
+                                     'that is not in listed in parameters or species lists '
+                                     'Parameters: {2!r}; '
+                                     'Species: {3!r}'.format(row, symbol,
+                                                             self.constants,
+                                                             self.species))
+
+            seen_free_symbols.update(free_symbols)
+
 
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
