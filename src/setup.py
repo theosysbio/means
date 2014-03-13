@@ -22,7 +22,7 @@ setup(
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
     long_description=open('README.txt').read(),
     install_requires=[
-        "numpy>=1.7.0",
+        "numpy>=1.6.1",
         "sympy>=0.7.4.1",
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
