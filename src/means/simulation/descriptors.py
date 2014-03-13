@@ -40,7 +40,7 @@ class SensitivityTerm(Descriptor):
     def __repr__(self):
         return '<Sensitivity of {0!r} w.r.t. {1!r}>'.format(self.ode_term, self.parameter)
 
-    def __mathtext__(self):
+    def mathtext(self):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
         return r'$\frac{{\partial {0}}}{{\partial {1}}}$'.format(self.ode_term.symbol, self.parameter)
 
