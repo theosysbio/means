@@ -17,8 +17,8 @@ The function :func:`mea_approximation` should provide all the necessary options.
 >>> # problem = mea_approximation(MODEL_P53, max_order=2, closure="scalar", value=0)
 >>> print ode_problem
 
-Typically, ODE problems will be further used to perform simulations (see :mod:`~means.simulation`)
-and inference (see :mod:`~means.inference`).
+The result is an :class:`means.core.problems.ODEProblem`. Typically, it would be further used to
+perform simulations (see :mod:`~means.simulation`) and inference (see :mod:`~means.inference`).
 
 .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
 "A general moment expansion method for stochastic kinetic models,"\
