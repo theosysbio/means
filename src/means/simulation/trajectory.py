@@ -63,6 +63,14 @@ class Trajectory(SerialisableObject):
         """
         return self._description
 
+    def _create_plot(self, *args, **kwargs):
+        from matplotlib import pyplot as plt
+        # Get label from the kwargs provided, or use self.description as default
+        label = kwargs.pop('label', self.description.mathtext())
+        # This is needed for matplotlib version 1.1.1
+        label = str(label)
+        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
+
     def plot(self, *args, **kwargs):
         """
         Plots the trajectory using :mod:`matplotlib.pyplot`.
@@ -71,12 +79,36 @@ class Trajectory(SerialisableObject):
         :param kwargs: keyword arguments to pass to :func:`~matplotlib.pyplot.plot`
         :return: the result of the :func:`matplotlib.pyplot.plot` function.
         """
+        return self._create_plot(*args, **kwargs)
+
+    def _repr_png_(self):
+        from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
-        # Get label from the kwargs provided, or use self.description as default
-        label = kwargs.pop('label', self.description.mathtext())
-        # This is needed for matplotlib version 1.1.1
-        label = str(label)
-        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
+        ax = self._create_plot()
+        fig = plt.gcf()
+        data = print_figure(fig, 'png')
+        plt.close(fig)
+        return data
+
+    @property
+    def png(self):
+        from IPython.display import Image
+        return Image(self._repr_png_(), embed=True)
+
+    def _repr_svg_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        ax = self._create_plot()
+        fig = plt.gcf()
+        data = print_figure(fig, 'svg')
+        plt.close(fig)
+        return data
+
+    @property
+    def svg(self):
+        from IPython.display import SVG
+        return SVG(self._repr_png_())
+
 
     def resample(self, new_timepoints, extrapolate=False):
         if not extrapolate:
