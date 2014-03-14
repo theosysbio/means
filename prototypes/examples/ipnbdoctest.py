@@ -261,7 +261,7 @@ def test_notebook(nb, generate_png_diffs=True):
                 continue
 
             # Look into cells that require optional dependancies, and skip them if these are not satisfied
-            dependencies_match = re.match(r'Requires:\s+(?P<package_name>\w+)', cell.input)
+            dependencies_match = re.match(r'#\s*Requires:\s+(?P<package_name>\w+)', cell.input)
             if dependencies_match:
                 package = dependencies_match.group('package_name')
 
