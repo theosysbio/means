@@ -146,8 +146,8 @@ def compare_outputs(test, ref,
 def run_cell(shell, iopub, cell):
     # print cell.input
     shell.execute(cell.input)
-    # wait for finish, maximum 10min
-    shell.get_msg(timeout=60*10)
+    # wait for finish, maximum 20min
+    shell.get_msg(timeout=60*20)
     outs = []
 
     while True:
