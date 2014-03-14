@@ -82,9 +82,8 @@ def diff_png(a64, b64, generate_diff_images=True):
                 print_base64_img(a_data)
                 print 'Expected:'
                 print_base64_img(b_data)
-                if diff < 1:
-                    print 'Diff:'
-                    print_base64_img(255 - np.abs(b_data - a_data))
+                print 'Diff:'
+                print_base64_img(255 - np.abs(b_data - a_data))
 
     return diff
 
