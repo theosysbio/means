@@ -319,31 +319,76 @@ class TrajectoryCollection(SerialisableObject):
     def __getitem__(self, item):
         return self.trajectories[item]
 
-    def plot(self):
-        from matplotlib import pyplot as plt
+    def _create_figure(self):
 
-        figure_numbers = {}
-        figure_counter = 0
-        for trajectory in self.trajectories:
-            description = trajectory.description
+        def _key_and_title(description):
             if isinstance(description, Moment):
                 key = (description.__class__, description.order)
                 title = 'Moments of order {0}'.format(description.order)
             else:
                 key = description.__class__
                 title = description.__class__.__name__
+            return key, title
+
+        from matplotlib import pyplot as plt
+
+
+        subplot_numbers = {}
+        subplot_counter = 0
+        for trajectory in self.trajectories:
+            description = trajectory.description
+            key, title = _key_and_title(description)
 
             try:
-                figure_number = figure_numbers[key]
+                subplot_number = subplot_numbers[key]
             except KeyError:
-                figure_counter += 1
-                figure_number = figure_counter
-                figure_numbers[key] = figure_number
+                subplot_counter += 1
+                subplot_number = subplot_counter
+                subplot_numbers[key] = subplot_number
 
-            plt.figure(figure_number)
+        total_subplots = subplot_counter
+
+        for trajectory in self.trajectories:
+            description = trajectory.description
+            key, title = _key_and_title(description)
+
+            subplot_number = subplot_numbers[key]
+
+            plt.subplot(total_subplots, 1, subplot_number)
             plt.title(title)
             trajectory.plot()
-            plt.legend(bbox_to_anchor=(1, 1), loc=2)
+            plt.legend(bbox_to_anchor=(1, 1), loc=2, ncol=2)
+
+        return plt.gcf()
+
+    def plot(self):
+        self._create_figure()
+
+    def _repr_png_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        fig = self._create_figure()
+        data = print_figure(fig, 'png')
+        plt.close(fig)
+        return data
+
+    @property
+    def png(self):
+        from IPython.display import Image
+        return Image(self._repr_png_(), embed=True)
+
+    def _repr_svg_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        fig = self._create_figure()
+        data = print_figure(fig, 'svg')
+        plt.close(fig)
+        return data
+
+    @property
+    def svg(self):
+        from IPython.display import SVG
+        return SVG(self._repr_png_())
 
     def __unicode__(self):
         return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
