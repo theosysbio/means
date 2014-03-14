@@ -259,10 +259,19 @@ def test_notebook(nb, generate_png_diffs=True):
         for cell in ws.cells:
             if cell.cell_type != 'code':
                 continue
-            # Skip cells that have "#!NO_DOCTEST" inside
-            if '#!NO_DOCTEST' in cell.input:
-                sys.stdout.write('S')
-                continue
+
+            # Look into cells that require optional dependancies, and skip them if these are not satisfied
+            dependencies_match = re.match(r'Requires:\s+(?P<package_name>\w+)', cell.input)
+            if dependencies_match:
+                package = dependencies_match.group('package_name')
+
+                # Check if the dependancy is satisfied
+                try:
+                    __import__(package)
+                except ImportError:
+                    # If not, skip
+                    sys.stdout.write('S')
+                    continue
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
