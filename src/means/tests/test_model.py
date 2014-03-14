@@ -298,6 +298,35 @@ class TestModelInitialisation(unittest.TestCase):
                           sympy.Matrix([[1, 2], [3, 4], [5, 6]]),
                           self.SAMPLE_STOICHIOMETRY_MATRIX)
 
+    def test_model_complains_if_there_are_symbols_in_both_constants_and_species_lists(self):
+        """
+        Given a model that is being initialised with a set of constants and species symbols that intersects,
+        Constructor should raise a ValueError
+        :return:
+        """
+
+        self.assertRaises(ValueError, Model,
+                          self.SAMPLE_CONSTANTS + ['y_0'], # y_0 would now be in both
+                          self.SAMPLE_VARIABLES,
+                          self.SAMPLE_PROPENSITIES,
+                          self.SAMPLE_STOICHIOMETRY_MATRIX
+                          )
+
+    def test_model_complains_if_there_are_free_symbols_in_propensities_that_are_not_in_parameters(self):
+        """
+        Given a model is being initialised with a set of propensities and constants,
+        model should complain if there are free symbols in propensities that are not in constants list
+        """
+
+        self.assertRaises(ValueError, Model,
+                          self.SAMPLE_CONSTANTS,
+                          self.SAMPLE_VARIABLES,
+                          sympy.Matrix([['c_0*y_0*(y_0 + y_1 - 181)'],
+                                        ['c_1*(-y_0 - y_1 + 301)+d_4'],  # d_4 is a free symbol
+                                        ['c_2*(-y_0 - y_1 + 301)']]),
+                          self.SAMPLE_STOICHIOMETRY_MATRIX
+                          )
+
 class TestModelEquality(unittest.TestCase):
 
     def test_equal_models_are_equal(self):

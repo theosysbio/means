@@ -311,12 +311,13 @@ class Dopri5Solver(SolverBase, UniqueNameInitialisationMixin):
         new_message = None
         try:
             new_message = 'Dopri5 failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+            exception = Exception(new_message)
         except KeyError:
             # We have no documentation for this exception, let's just reraise it
-            raise solver_exception
+            exception = solver_exception
 
-        # All is fine
-        raise Exception(new_message)
+        # Use the superclass method to rethrow the exception with our wrapper
+        super(Dopri5Solver, self)._handle_solver_exception(exception)
 
 class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
 
@@ -350,12 +351,13 @@ class LSODARSolver(SolverBase, UniqueNameInitialisationMixin):
         new_message = None
         try:
             new_message = 'LSODAR failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+            exception = ODEPACK_Exception(new_message)
         except KeyError:
             # We have no documentation for this exception, let's just reraise it
-            raise solver_exception
+            exception = solver_exception
 
-        # All is fine
-        raise ODEPACK_Exception(new_message)
+        # Use the superclass method to rethrow the exception with our wrapper
+        super(LSODARSolver, self)._handle_solver_exception(exception)
 
 class ExplicitEulerSolver(SolverBase, UniqueNameInitialisationMixin):
 
@@ -413,12 +415,13 @@ class Radau5Solver(SolverBase, UniqueNameInitialisationMixin):
         new_message = None
         try:
             new_message = 'Radau5 failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+            exception = Exception(new_message)
         except KeyError:
             # We have no documentation for this exception, let's just reraise it
-            raise solver_exception
+            exception = solver_exception
 
-        # All is fine
-        raise Exception(new_message)
+        # Use the superclass method to rethrow the exception with our wrapper
+        super(Radau5Solver, self)._handle_solver_exception(exception)
 
 class RodasSolver(SolverBase, UniqueNameInitialisationMixin):
 
@@ -442,12 +445,13 @@ class RodasSolver(SolverBase, UniqueNameInitialisationMixin):
         new_message = None
         try:
             new_message = 'Rodas failed with flag {0}: {1}'.format(flag, FLAG_DOCUMENTATION[flag])
+            exception = Exception(new_message)
         except KeyError:
             # We have no documentation for this exception, let's just reraise it
-            raise solver_exception
+            exception = solver_exception
 
-        # All is fine
-        raise Exception(new_message)
+        # Use the superclass method to rethrow the exception with our wrapper
+        super(RodasSolver, self)._handle_solver_exception(exception)
 
 #-- Solvers with sensitivity support -----------------------------------------------------------------------------------
 
