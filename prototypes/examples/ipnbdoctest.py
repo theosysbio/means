@@ -133,7 +133,7 @@ def compare_outputs(test, ref,
         elif key == 'png':
             diff = diff_png(test[key], ref[key],
                             generate_diff_images=generate_png_diffs)
-            if not diff:
+            if diff:
                 return False
         elif key not in skip_compare and sanitize(test[key]) != sanitize(ref[key]):
             print "mismatch in {0} ({1} != {2})".format(key, test[key], ref[key])
