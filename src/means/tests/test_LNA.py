@@ -40,8 +40,7 @@ class TestLNA(unittest.TestCase):
 
         correct_lhs = to_sympy_matrix(['y_0','y_1','y_2','V_00', 'V_01', 'V_02', 'V_10', 'V_11', 'V_12', 'V_20', 'V_21', 'V_22'])
 
-        # todo use stub class?
-        constants = ["c_{0}".format(i) for i in range(6)]
+        constants = ["c_{0}".format(i) for i in range(7)]
         model = Model(constants, species, propensities, stoichiometry_matrix)
         lna = LinearNoiseApproximation(model)
         problem = lna.run()
