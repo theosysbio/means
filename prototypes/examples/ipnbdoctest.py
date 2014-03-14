@@ -53,25 +53,24 @@ def print_base64_img(data):
 def diff_png(a64, b64, generate_diff_images=True):
     """compare the pixels of two PNGs"""
     a_data, b_data = map(png_b64_to_ndarray, (a64, b64))
+    diff = False
     if a_data.shape != b_data.shape:
-        diff = 255
+        print "PNG images are different. Shapes mismatch: {0!r} v. {1!r}".format(a_data.shape, b_data.shape)
+        diff = True
     else:
-        diff = np.mean(np.abs(a_data - b_data))
-    diff /= 255.0
-    if diff > PNG_DIFF_TOLERANCE:
-        digest = hashlib.sha1(a64).digest()
-        if generate_diff_images:
-            if not os.path.exists('.diffs/'):
-                os.mkdir('.diffs/')
-            prefix = '.diffs/ipnbdoctest-%s-' % base64.urlsafe_b64encode(digest)[:4]
-            print 'Images mismatch'
-            print 'Expected:'
-            print_base64_img(a_data)
-            print 'Actual:'
-            print_base64_img(b_data)
-            if diff < 1:
-                print 'Diff:'
-                print_base64_img(255 - np.abs(b_data - a_data))
+        numeric_diff = np.mean(np.abs(a_data - b_data)) / 255.0
+        if numeric_diff > PNG_DIFF_TOLERANCE:
+            diff = True
+            print "PNG diff observed, images differ by {0!r}".format(numeric_diff)
+            if generate_diff_images:
+                print 'Images mismatch'
+                print 'Actual:'
+                print_base64_img(a_data)
+                print 'Expected:'
+                print_base64_img(b_data)
+                if diff < 1:
+                    print 'Diff:'
+                    print_base64_img(255 - np.abs(b_data - a_data))
 
     return diff
 
@@ -127,20 +126,19 @@ def compare_outputs(test, ref,
                     generate_png_diffs=True):
     for key in ref:
         if key not in test:
-            print "missing key: %s != %s" % (test.keys(), ref.keys())
+            print "Missing key in output: %s != %s" % (test.keys(), ref.keys())
+            print "Reference:\n{0!r}".format(ref)
+            print "Actual:\n{0!r}".format(test)
             return False
         elif key == 'png':
             diff = diff_png(test[key], ref[key],
                             generate_diff_images=generate_png_diffs)
-            if diff > PNG_DIFF_TOLERANCE:
-                print "png mismatch %s" % key
-                print "diff: {0!r}".format(diff)
+            if not diff:
                 return False
         elif key not in skip_compare and sanitize(test[key]) != sanitize(ref[key]):
-            print "mismatch %s:" % key
-            print test[key]
-            print '  !=  '
-            print ref[key]
+            print "mismatch in {0} ({1} != {2})".format(key, test[key], ref[key])
+            print "Reference:\n{0!r}".format(ref)
+            print "Actual:\n{0!r}".format(test)
             return False
     return True
 
