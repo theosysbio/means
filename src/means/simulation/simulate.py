@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 import sympy
 from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
-from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
+from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
 from means.core import Moment, VarianceTerm
 
 def _validate_problem(problem):
@@ -188,7 +188,7 @@ class Simulation(SerialisableObject):
         solver = self._initialise_solver(initial_conditions, parameters, timepoints)
         trajectories = solver.simulate(timepoints)
 
-        return self._postprocessing(self.problem, trajectories)
+        return TrajectoryCollection(self._postprocessing(self.problem, trajectories))
 
     @property
     def problem(self):
