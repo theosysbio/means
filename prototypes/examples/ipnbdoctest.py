@@ -259,6 +259,10 @@ def test_notebook(nb, generate_png_diffs=True):
         for cell in ws.cells:
             if cell.cell_type != 'code':
                 continue
+            # Skip cells that have "#!NO_DOCTEST" inside
+            if '#!NO_DOCTEST' in cell.input:
+                sys.stdout.write('S')
+                continue
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
