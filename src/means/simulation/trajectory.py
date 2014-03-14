@@ -2,10 +2,11 @@ import operator
 import numbers
 
 import numpy as np
-from means.core.descriptors import Descriptor
+from means.core.descriptors import Descriptor, Moment
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
 from means.simulation.descriptors import PerturbedTerm
+
 
 
 class Trajectory(SerialisableObject):
@@ -290,3 +291,65 @@ def perturbed_trajectory(trajectory, sensitivity_trajectory, delta=1e-4):
                       PerturbedTerm(sensitivity_trajectory_description.ode_term,
                                     sensitivity_trajectory_description.parameter,
                                     delta))
+
+
+class TrajectoryCollection(SerialisableObject):
+
+    yaml_tag = '!trajectory-collection'
+
+    trajectories = None
+
+    def __init__(self, trajectories):
+        self._trajectories = trajectories
+
+    @property
+    def trajectories(self):
+        """
+        Return a list of all trajectories in the collection
+        :rtype: list[:class:`~means.simulation.trajectory.Trajectory`]
+        """
+        return self._trajectories
+
+    def __iter__(self):
+        return iter(self.trajectories)
+
+    def __len__(self):
+        return len(self.trajectories)
+
+    def __getitem__(self, item):
+        return self.trajectories[item]
+
+    def plot(self):
+        from matplotlib import pyplot as plt
+
+        figure_numbers = {}
+        figure_counter = 0
+        for trajectory in self.trajectories:
+            description = trajectory.description
+            if isinstance(description, Moment):
+                key = (description.__class__, description.order)
+                title = 'Moments of order {0}'.format(description.order)
+            else:
+                key = description.__class__
+                title = description.__class__.__name__
+
+            try:
+                figure_number = figure_numbers[key]
+            except KeyError:
+                figure_counter += 1
+                figure_number = figure_counter
+                figure_numbers[key] = figure_number
+
+            plt.figure(figure_number)
+            plt.title(title)
+            trajectory.plot()
+            plt.legend(bbox_to_anchor=(1, 1), loc=2)
+
+    def __unicode__(self):
+        return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __repr__(self):
+        return str(self)
