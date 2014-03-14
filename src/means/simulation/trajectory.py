@@ -349,7 +349,12 @@ class TrajectoryCollection(SerialisableObject):
         return len(self.trajectories)
 
     def __getitem__(self, item):
-        return self.trajectories[item]
+        answer = self.trajectories[item]
+        if isinstance(answer, list):
+            # Wrap around self class if we return a list of trajectories
+            return self.__class__(answer)
+        else:
+            return answer
 
     def _create_figure(self):
 
