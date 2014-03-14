@@ -33,6 +33,7 @@ except ImportError:
 from IPython.nbformat.current import reads, NotebookNode
 
 PNG_DIFF_TOLERANCE = 1e-2
+PNG_SHAPE_DIFF_TOLERANCE = 10 # pixels
 
 def png_b64_to_ndarray(a64):
     """convert PNG output into a np.ndarray using pypng"""
@@ -54,10 +55,23 @@ def diff_png(a64, b64, generate_diff_images=True):
     """compare the pixels of two PNGs"""
     a_data, b_data = map(png_b64_to_ndarray, (a64, b64))
     diff = False
-    if a_data.shape != b_data.shape:
+    a_rows, a_columns = a_data.shape
+    b_rows, b_columns = b_data.shape
+    if abs(a_rows - b_rows) > PNG_SHAPE_DIFF_TOLERANCE or abs(a_columns - b_columns) > PNG_SHAPE_DIFF_TOLERANCE:
         print "PNG images are different. Shapes mismatch: {0!r} v. {1!r}".format(a_data.shape, b_data.shape)
         diff = True
     else:
+        # Equalise the data shapes
+        if a_rows < b_rows:
+            b_data = b_data[:a_rows, :]
+        elif a_rows > b_rows:
+            a_data = a_data[:b_rows, :]
+
+        if a_columns < b_columns:
+            b_data = b_data[:, :a_columns]
+        elif a_columns > b_columns:
+            a_data = a_data[:, :b_columns]
+
         numeric_diff = np.mean(np.abs(a_data - b_data)) / 255.0
         if numeric_diff > PNG_DIFF_TOLERANCE:
             diff = True
