@@ -2,10 +2,11 @@ import operator
 import numbers
 
 import numpy as np
-from means.core.descriptors import Descriptor
+from means.core.descriptors import Descriptor, Moment
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
 from means.simulation.descriptors import PerturbedTerm
+
 
 
 class Trajectory(SerialisableObject):
@@ -62,6 +63,14 @@ class Trajectory(SerialisableObject):
         """
         return self._description
 
+    def _create_plot(self, *args, **kwargs):
+        from matplotlib import pyplot as plt
+        # Get label from the kwargs provided, or use self.description as default
+        label = kwargs.pop('label', self.description.mathtext())
+        # This is needed for matplotlib version 1.1.1
+        label = str(label)
+        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
+
     def plot(self, *args, **kwargs):
         """
         Plots the trajectory using :mod:`matplotlib.pyplot`.
@@ -70,12 +79,36 @@ class Trajectory(SerialisableObject):
         :param kwargs: keyword arguments to pass to :func:`~matplotlib.pyplot.plot`
         :return: the result of the :func:`matplotlib.pyplot.plot` function.
         """
+        return self._create_plot(*args, **kwargs)
+
+    def _repr_png_(self):
+        from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
-        # Get label from the kwargs provided, or use self.description as default
-        label = kwargs.pop('label', self.description.mathtext())
-        # This is needed for matplotlib version 1.1.1
-        label = str(label)
-        return plt.plot(self.timepoints, self.values, *args, label=label, **kwargs)
+        ax = self._create_plot()
+        fig = plt.gcf()
+        data = print_figure(fig, 'png')
+        plt.close(fig)
+        return data
+
+    @property
+    def png(self):
+        from IPython.display import Image
+        return Image(self._repr_png_(), embed=True)
+
+    def _repr_svg_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        ax = self._create_plot()
+        fig = plt.gcf()
+        data = print_figure(fig, 'svg')
+        plt.close(fig)
+        return data
+
+    @property
+    def svg(self):
+        from IPython.display import SVG
+        return SVG(self._repr_png_())
+
 
     def resample(self, new_timepoints, extrapolate=False):
         if not extrapolate:
@@ -290,3 +323,115 @@ def perturbed_trajectory(trajectory, sensitivity_trajectory, delta=1e-4):
                       PerturbedTerm(sensitivity_trajectory_description.ode_term,
                                     sensitivity_trajectory_description.parameter,
                                     delta))
+
+
+class TrajectoryCollection(SerialisableObject):
+
+    yaml_tag = '!trajectory-collection'
+
+    trajectories = None
+
+    def __init__(self, trajectories):
+        self._trajectories = trajectories
+
+    @property
+    def trajectories(self):
+        """
+        Return a list of all trajectories in the collection
+        :rtype: list[:class:`~means.simulation.trajectory.Trajectory`]
+        """
+        return self._trajectories
+
+    def __iter__(self):
+        return iter(self.trajectories)
+
+    def __len__(self):
+        return len(self.trajectories)
+
+    def __getitem__(self, item):
+        answer = self.trajectories[item]
+        if isinstance(answer, list):
+            # Wrap around self class if we return a list of trajectories
+            return self.__class__(answer)
+        else:
+            return answer
+
+    def _create_figure(self):
+
+        def _key_and_title(description):
+            if isinstance(description, Moment):
+                key = (description.__class__, description.order)
+                title = 'Moments of order {0}'.format(description.order)
+            else:
+                key = description.__class__
+                title = description.__class__.__name__
+            return key, title
+
+        from matplotlib import pyplot as plt
+
+
+        subplot_numbers = {}
+        subplot_counter = 0
+        for trajectory in self.trajectories:
+            description = trajectory.description
+            key, title = _key_and_title(description)
+
+            try:
+                subplot_number = subplot_numbers[key]
+            except KeyError:
+                subplot_counter += 1
+                subplot_number = subplot_counter
+                subplot_numbers[key] = subplot_number
+
+        total_subplots = subplot_counter
+
+        for trajectory in self.trajectories:
+            description = trajectory.description
+            key, title = _key_and_title(description)
+
+            subplot_number = subplot_numbers[key]
+
+            plt.subplot(total_subplots, 1, subplot_number)
+            plt.title(title)
+            trajectory.plot()
+            plt.legend(bbox_to_anchor=(1, 1), loc=2, ncol=2)
+
+        return plt.gcf()
+
+    def plot(self):
+        self._create_figure()
+
+    def _repr_png_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        fig = self._create_figure()
+        data = print_figure(fig, 'png')
+        plt.close(fig)
+        return data
+
+    @property
+    def png(self):
+        from IPython.display import Image
+        return Image(self._repr_png_(), embed=True)
+
+    def _repr_svg_(self):
+        from IPython.core.pylabtools import print_figure
+        from matplotlib import pyplot as plt
+        fig = self._create_figure()
+        data = print_figure(fig, 'svg')
+        plt.close(fig)
+        return data
+
+    @property
+    def svg(self):
+        from IPython.display import SVG
+        return SVG(self._repr_png_())
+
+    def __unicode__(self):
+        return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __repr__(self):
+        return str(self)
