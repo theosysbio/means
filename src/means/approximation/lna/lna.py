@@ -87,7 +87,6 @@ class LinearNoiseApproximation(ApproximationBaseClass):
             row = []
             for j in range(len(ymat)):
                 # TODO: (from original authors) Make V_ij equal to V_ji
-                # TODO: this wont work for more than 9 species
                 symbol = 'V_{0}_{1}'.format(i, j)
                 variance_terms.append(VarianceTerm(position=(i,j), symbol=symbol))
                 row.append(symbol)
