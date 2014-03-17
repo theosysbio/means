@@ -60,11 +60,11 @@ class Model(SerialisableObject, LatexPrintableObject):
 
     yaml_tag = u'!model'
 
-    def __init__(self, parameters, species, propensities, stoichiometry_matrix):
+    def __init__(self, species, parameters, propensities, stoichiometry_matrix):
         r"""
         Creates a `Model` object that stores the model of reactions we want to analyse
-        :param parameters: parameters of the model, as `sympy` symbols
         :param species: variables of the model, as `sympy.Symbol`s, i.e. species
+        :param parameters: parameters of the model, as `sympy` symbols
         :param propensities: a matrix of propensities for each of the reaction in the model.
         :param stoichiometry_matrix: stoichiometry matrix for the model
         """

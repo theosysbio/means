@@ -252,9 +252,10 @@ class StochasticProblem(Model):
     The formulation of a model for stochastic simulations such as GSSA.
     """
     def __init__(self, model):
-        super(StochasticProblem, self).__init__(model.parameters, model.species,
+        super(StochasticProblem, self).__init__(model.species, model.parameters,
                                                 model.propensities, model.stoichiometry_matrix)
         self.__change = np.array(model.stoichiometry_matrix.T).astype("int")
+
     @property
     def change(self):
         return self.__change

@@ -120,6 +120,6 @@ def read_sbml(filename):
     compartments_and_parameters = compartments + sorted_parameters
     parameter_values_list = compartment_sizes + parameter_values_list
 
-    model = Model(compartments_and_parameters, species, propensities, stoichiometry_matrix)
+    model = Model(species, compartments_and_parameters, propensities, stoichiometry_matrix)
 
     return model, parameter_values_list, initial_conditions
