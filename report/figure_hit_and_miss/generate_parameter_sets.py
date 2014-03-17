@@ -12,7 +12,9 @@ def hash(parameters, initial_conditions, timepoints, kwargs):
 
 def _parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--output', type=argparse.FileType('w'), required=True)
+    parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('--per-file', type=int, default=0, help='If set, would create multiple files,'
+                                                                ' each containing specified number of items')
 
     return parser
 
@@ -43,8 +45,21 @@ def generate_test_cases():
 def main():
     args = _parser().parse_args()
     test_cases = generate_test_cases()
-    yaml.dump(test_cases, args.output)
-    args.output.close()
+
+    if args.per_file <= 0:
+        splits = [test_cases]
+    else:
+        splits = []
+        while len(test_cases) > args.per_file:
+            splits.append(test_cases[:args.per_file])
+            test_cases = test_cases[args.per_file:]
+
+    for i, split in enumerate(splits):
+        filename = args.output
+        if i > 0:
+            filename += '.{0}'.format(i)
+        with open(filename, 'w') as f:
+            yaml.dump(split, f)
 
 if __name__ == '__main__':
     main()
