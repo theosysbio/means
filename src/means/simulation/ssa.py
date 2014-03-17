@@ -45,9 +45,9 @@ class SSASimulation(SerialisableObject):
             exception_str = "The number of initial conditions and the number of species are different. ({0} != {1})"
             raise Exception(exception_str.format(len(self.__problem.species), len(initial_conditions)))
 
-        elif len(self.__problem.constants) != len(parameters):
+        elif len(self.__problem.parameters) != len(parameters):
             exception_str = "The number of parameters and the number of constants are different. ({0} != {1})"
-            raise Exception(exception_str.format(len(self.__problem.constants), len(parameters)))
+            raise Exception(exception_str.format(len(self.__problem.parameters), len(parameters)))
 
 
     def simulate_system(self, parameters, initial_conditions, timepoints, number_of_processes=1,
@@ -76,7 +76,7 @@ class SSASimulation(SerialisableObject):
         self._validate_parameters(parameters, initial_conditions)
         t_max= max(timepoints)
 
-        substitution_pairs = dict(zip(self.__problem.constants, parameters))
+        substitution_pairs = dict(zip(self.__problem.parameters, parameters))
         propensities = substitute_all(self.__problem.propensities, substitution_pairs)
         # lambdify the propensities for fast evaluation
         population_rates_as_function = sp.lambdify(tuple(self.__problem.species),

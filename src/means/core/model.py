@@ -9,7 +9,7 @@ Generally, describing a model is a pre-requisite for any subsequent analysis.
 An example showing the p53 model could be encoded:
 
 >>> from means import Model
->>> my_model = Model(constants=['c_0',   # P53 production rate
+>>> my_model = Model(parameters=['c_0',   # P53 production rate
 >>>                             'c_1',   # MDM2-independent p53 degradation rate
 >>>                             'c_2',   # saturating p53 degradation rate
 >>>                             'c_3',   # P53-dependent MDM2 production rate
@@ -53,22 +53,22 @@ class Model(SerialisableObject, LatexPrintableObject):
     """
 
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
-    __constants = None
+    __parameters = None
     __species = None
     __propensities = None
     __stoichiometry_matrix = None
 
     yaml_tag = u'!model'
 
-    def __init__(self, constants, species, propensities, stoichiometry_matrix):
+    def __init__(self, species, parameters, propensities, stoichiometry_matrix):
         r"""
         Creates a `Model` object that stores the model of reactions we want to analyse
-        :param constants: constants of the model, as `sympy` symbols
         :param species: variables of the model, as `sympy.Symbol`s, i.e. species
+        :param parameters: parameters of the model, as `sympy` symbols
         :param propensities: a matrix of propensities for each of the reaction in the model.
         :param stoichiometry_matrix: stoichiometry matrix for the model
         """
-        self.__constants = to_list_of_symbols(constants)
+        self.__parameters = to_list_of_symbols(parameters)
         self.__species = to_list_of_symbols(species)
         self.__propensities = to_sympy_column_matrix(to_sympy_matrix(propensities))
         self.__stoichiometry_matrix = to_sympy_matrix(stoichiometry_matrix)
@@ -92,7 +92,7 @@ class Model(SerialisableObject, LatexPrintableObject):
                                                                                      self.species))
 
         seen_free_symbols = set()
-        parameters = set(self.constants)
+        parameters = set(self.parameters)
         species = set(self.species)
 
         # Check if there are any parameters in both lists
@@ -112,7 +112,7 @@ class Model(SerialisableObject, LatexPrintableObject):
                                      'that is not in listed in parameters or species lists '
                                      'Parameters: {2!r}; '
                                      'Species: {3!r}'.format(row, symbol,
-                                                             self.constants,
+                                                             self.parameters,
                                                              self.species))
 
             seen_free_symbols.update(free_symbols)
@@ -121,8 +121,8 @@ class Model(SerialisableObject, LatexPrintableObject):
     # Expose public interface for the specified instance variables
     # Note that all properties here are "getters" only, thus assignment won't work
     @property
-    def constants(self):
-        return self.__constants
+    def parameters(self):
+        return self.__parameters
 
     @property
     def species(self):
@@ -146,14 +146,14 @@ class Model(SerialisableObject, LatexPrintableObject):
         return len(self.__species)
 
     @property
-    def number_of_constants(self):
-        return len(self.__constants)
+    def number_of_parameters(self):
+        return len(self.__parameters)
 
 
     def __unicode__(self):
         return u"{0.__class__!r}\n" \
                u"Species: {0.species!r}\n" \
-               u"Constants: {0.constants!r}\n" \
+               u"Parameters: {0.parameters!r}\n" \
                u"\n" \
                u"Stoichiometry matrix:\n" \
                u"{0.stoichiometry_matrix!r}\n" \
@@ -172,7 +172,7 @@ class Model(SerialisableObject, LatexPrintableObject):
         lines = []
         lines.append(r"\begin{align*}")
         lines.append(r"\text{{Species}} &= {0} \\".format(sympy.latex(self.species)))
-        lines.append(r"\text{{Constants}} &= {0} \\".format(sympy.latex(self.constants)))
+        lines.append(r"\text{{Parameters}} &= {0} \\".format(sympy.latex(self.parameters)))
         lines.append(r"\text{{Stoichiometry matrix}} &= {0} \\".format(sympy.latex(self.stoichiometry_matrix)))
         lines.append(r"\text{{Propensities}} &= {0} \\".format(sympy.latex(self.propensities)))
         lines.append(r"\end{align*}")
@@ -189,7 +189,7 @@ class Model(SerialisableObject, LatexPrintableObject):
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        mapping = [('species', map(str, data.species)), ('constants', map(str, data.constants)),
+        mapping = [('species', map(str, data.species)), ('parameters', map(str, data.parameters)),
                    ('stoichiometry_matrix', map(lambda x: map(int, x), data.stoichiometry_matrix.tolist())),
                    ('propensities', map(str, data.propensities))]
 

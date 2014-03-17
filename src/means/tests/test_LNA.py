@@ -41,7 +41,7 @@ class TestLNA(unittest.TestCase):
         correct_lhs = to_sympy_matrix(['y_0','y_1','y_2','V_0_0', 'V_0_1', 'V_0_2', 'V_1_0', 'V_1_1', 'V_1_2', 'V_2_0', 'V_2_1', 'V_2_2'])
 
         constants = ["c_{0}".format(i) for i in range(7)]
-        model = Model(constants, species, propensities, stoichiometry_matrix)
+        model = Model(species, constants, propensities, stoichiometry_matrix)
         lna = LinearNoiseApproximation(model)
         problem = lna.run()
 
