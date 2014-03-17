@@ -27,7 +27,9 @@ def main():
         all_.append(item['output'])
 
     args.output.write('all: {0}\n'.format(' '.join(all_)))
-    args.output.write('clean:\n\trm {0}'.format(' '.join(all_)))
+    args.output.write('clean:\n')
+    for item in all_:
+        args.output.write('\trm -f {0}\n'.format(item))
 
 if __name__ == '__main__':
     main()
