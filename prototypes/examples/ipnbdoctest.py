@@ -273,7 +273,7 @@ def test_notebook(nb, generate_png_diffs=True):
                     sys.stdout.write('S')
                     continue
 
-            skip_test_match = re.match(r'#\s*Skip\s+Doctest', cell.input, re.IGNORECASE)
+            skip_test_match = re.match(r'#\s*skip\s+doctest', cell.input.lower())
             if skip_test_match:
                 sys.stdout.write('S')
                 continue
