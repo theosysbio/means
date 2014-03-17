@@ -146,14 +146,14 @@ class Model(SerialisableObject, LatexPrintableObject):
         return len(self.__species)
 
     @property
-    def number_of_constants(self):
+    def number_of_parameters(self):
         return len(self.__parameters)
 
 
     def __unicode__(self):
         return u"{0.__class__!r}\n" \
                u"Species: {0.species!r}\n" \
-               u"Constants: {0.constants!r}\n" \
+               u"Parameters: {0.parameters!r}\n" \
                u"\n" \
                u"Stoichiometry matrix:\n" \
                u"{0.stoichiometry_matrix!r}\n" \
@@ -172,7 +172,7 @@ class Model(SerialisableObject, LatexPrintableObject):
         lines = []
         lines.append(r"\begin{align*}")
         lines.append(r"\text{{Species}} &= {0} \\".format(sympy.latex(self.species)))
-        lines.append(r"\text{{Constants}} &= {0} \\".format(sympy.latex(self.parameters)))
+        lines.append(r"\text{{Parameters}} &= {0} \\".format(sympy.latex(self.parameters)))
         lines.append(r"\text{{Stoichiometry matrix}} &= {0} \\".format(sympy.latex(self.stoichiometry_matrix)))
         lines.append(r"\text{{Propensities}} &= {0} \\".format(sympy.latex(self.propensities)))
         lines.append(r"\end{align*}")

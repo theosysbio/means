@@ -169,7 +169,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
                                                                                            self.right_hand_side)])
         return u"{0.__class__!r}\n" \
                u"Method: {0.method!r}\n" \
-               u"Constants: {0.constants!r}\n" \
+               u"Parameters: {0.parameters!r}\n" \
                u"\n" \
                u"Equations:\n\n" \
                u"{1}\n".format(self, equations_pretty_str)
@@ -191,7 +191,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         lines.append(r"<h1>{0}</h1>".format(self.__class__.__name__))
 
         lines.append("<p>Method: <code>{0!r}</code></p>".format(self.method))
-        lines.append("<p>Constants: <code>{0!r}</code></p>".format(self.parameters))
+        lines.append("<p>Parameters: <code>{0!r}</code></p>".format(self.parameters))
         lines.append("<p>Terms:</p>")
         lines.append("<ul>")
         lines.extend(['<li><code>{0!r}</code></li>'.format(lhs) for lhs in self.left_hand_side_descriptors])
