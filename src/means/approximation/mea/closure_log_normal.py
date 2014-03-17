@@ -59,7 +59,7 @@ class LogNormalClosure(ClosureBase):
         # The n_vectors (e.g. [0,2,0]) of the central moments
         pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1]
 
-        #todo find out the equation
+
         out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
 
         # return the exponential of all values

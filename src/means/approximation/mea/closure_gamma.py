@@ -82,7 +82,7 @@ class GammaClosure(ClosureBase):
             alpha_exprs = alpha_bar_exprs - sp.Matrix([gamma_type]*n_species)
             alpha_exprs = first.col_join(alpha_exprs)
 
-        # Gamma type 2 has arbitrary alpha0 fixme why is it arbitrary
+        # Gamma type 2 has arbitrary alpha0
         # Gamma type 2 :math: `\bar\alpha_i = \sum \limits_{i}  \alpha_i`
         else: # if gamma_type == 2:
             first = sp.Matrix([1] + [alpha_bar_exprs[0] - 1])
