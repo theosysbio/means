@@ -43,11 +43,11 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     # These are private (as indicated by __, the code is a bit messier, but we can ensure immutability this way)
     __right_hand_side = None
     __left_hand_side = None
-    __constants = None
+    __parameters = None
 
     yaml_tag = '!problem'
 
-    def __init__(self, method, left_hand_side_descriptors, right_hand_side, constants):
+    def __init__(self, method, left_hand_side_descriptors, right_hand_side, parameters):
         """
         Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
@@ -55,13 +55,13 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         :param left_hand_side_descriptors: the left hand side of equations as a list of :class:`Descriptor` objects
                                            (e.g. list of :class:`Moment`)
         :param right_hand_side: the right hand side of equations
-        :param constants: the constants of the model
+        :param parameters: the parameters of the model
         """
 
         self.__left_hand_side_descriptors = left_hand_side_descriptors
         self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix([plhs.symbol for plhs in left_hand_side_descriptors]))
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
-        self.__constants = to_list_of_symbols(constants)
+        self.__parameters = to_list_of_symbols(parameters)
         self.__method = method
 
     def validate(self):
@@ -101,12 +101,12 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         return self.__right_hand_side
 
     @property
-    def constants(self):
-        return self.__constants
+    def parameters(self):
+        return self.__parameters
 
     @property
     def number_of_parameters(self):
-        return len(self.constants)
+        return len(self.parameters)
 
     @property
     def method(self):
@@ -122,7 +122,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     @memoised_property
     def _right_hand_side_as_numeric_functions(self):
-        all_symbols = self.constants + self.variables
+        all_symbols = self.parameters + self.variables
         wrapping_func = lambda x: autowrap(x, args=all_symbols, language='C', backend='Cython')
         return map(wrapping_func, self.right_hand_side)
 
@@ -191,7 +191,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         lines.append(r"<h1>{0}</h1>".format(self.__class__.__name__))
 
         lines.append("<p>Method: <code>{0!r}</code></p>".format(self.method))
-        lines.append("<p>Constants: <code>{0!r}</code></p>".format(self.constants))
+        lines.append("<p>Constants: <code>{0!r}</code></p>".format(self.parameters))
         lines.append("<p>Terms:</p>")
         lines.append("<ul>")
         lines.extend(['<li><code>{0!r}</code></li>'.format(lhs) for lhs in self.left_hand_side_descriptors])
@@ -233,14 +233,14 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.constants == other.constants \
+        return self.parameters == other.parameters \
                    and other.left_hand_side_descriptors == self.left_hand_side_descriptors \
                    and sympy_expressions_equal(other.right_hand_side, self.right_hand_side)
 
     @classmethod
     def to_yaml(cls, dumper, data):
         mapping = [('method', data.method),
-                   ('constants', map(str, data.constants)),
+                   ('parameters', map(str, data.parameters)),
                    ('left_hand_side_descriptors', list(data.left_hand_side_descriptors)),
                    ('right_hand_side', map(str, data.right_hand_side))]
 
@@ -252,7 +252,7 @@ class StochasticProblem(Model):
     The formulation of a model for stochastic simulations such as GSSA.
     """
     def __init__(self, model):
-        super(StochasticProblem, self).__init__(model.constants, model.species,
+        super(StochasticProblem, self).__init__(model.parameters, model.species,
                                                 model.propensities, model.stoichiometry_matrix)
         self.__change = np.array(model.stoichiometry_matrix.T).astype("int")
     @property

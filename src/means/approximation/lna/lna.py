@@ -110,5 +110,5 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         ode_terms = moment_terms + variance_terms
 
 
-        out_problem = ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.constants))
+        out_problem = ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.parameters))
         return out_problem

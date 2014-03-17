@@ -30,7 +30,7 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_VARIABLES,
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
+        self.assertEqual(m.parameters, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
     def test_initialisation_of_constants_as_list_of_sympy_symbols(self):
         """
@@ -44,7 +44,7 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_VARIABLES,
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
+        self.assertEqual(m.parameters, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
     def test_initialisation_of_constants_as_list_of_sympy_matrix(self):
         """
@@ -58,14 +58,14 @@ class TestModelInitialisation(unittest.TestCase):
                   self.SAMPLE_VARIABLES,
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
+        self.assertEqual(m.parameters, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
         # Row
         m = Model(sympy.Matrix([['c_0', 'c_1', 'c_2']]),
                   self.SAMPLE_VARIABLES,
                   self.SAMPLE_PROPENSITIES,
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
-        self.assertEqual(m.constants, sympy.symbols(['c_0', 'c_1', 'c_2']))
+        self.assertEqual(m.parameters, sympy.symbols(['c_0', 'c_1', 'c_2']))
 
     #-- Variables ---------------------------------------------------
 
@@ -333,9 +333,9 @@ class TestModelEquality(unittest.TestCase):
         """
         Given two equal models, they should return true on == comparison.
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
 
         self.assertEqual(model_a, model_b)
@@ -344,11 +344,11 @@ class TestModelEquality(unittest.TestCase):
         """
         Given models that differ by species names only, they should not be equal
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['c', 'd'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_b = Model(species=['c', 'd'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['c+d+x+y', 'c-d+x-y'])
-        model_c = Model(species=['c', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_c = Model(species=['c', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['c+b+x+y', 'c-b+x-y'])
 
         self.assertNotEqual(model_a, model_b)
@@ -359,9 +359,9 @@ class TestModelEquality(unittest.TestCase):
         """
         Given two models, that differ by their constants only, they should return False on == comparison.
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['a', 'b'], constants=['z', 'q'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_b = Model(species=['a', 'b'], parameters=['z', 'q'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+z+q', 'a-b+z-q'])
         self.assertNotEqual(model_a, model_b)
 
@@ -369,9 +369,9 @@ class TestModelEquality(unittest.TestCase):
         """
         Given two models that differ only by stoichiometry_matrices, they should be returned as unequal.
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[1,2], [3,-4]],
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[1,2], [3,-4]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
 
         self.assertNotEqual(model_a, model_b)
@@ -380,9 +380,9 @@ class TestModelEquality(unittest.TestCase):
         """
         Given two models, that differ by their propensities only, the == comparison should return false
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x'])
 
         self.assertNotEqual(model_a, model_b)
@@ -392,9 +392,9 @@ class TestModelEquality(unittest.TestCase):
         Given two equal models, that have different, but equivalent propensities,
         the == comparison should return true
         """
-        model_a = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y'])
-        model_b = Model(species=['a', 'b'], constants=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+x+y', 'a-b+x-y +2*x +x - (1/3) * x * 9'])
 
         self.assertEqual(model_a, model_b)

@@ -23,7 +23,7 @@ y_0, y_1, y_2 = sympy.Symbol('y_0'), sympy.Symbol('y_1'), sympy.Symbol('y_2')
 class TestMomentExpansionApproximationOnMaxOrderIsThree(unittest.TestCase):
     max_order = 3
     def test_run_dimer(self):
-        dimer_model = Model(constants=['c_0', 'c_1', 'c_2'],
+        dimer_model = Model(parameters=['c_0', 'c_1', 'c_2'],
                            species=['y_0'],
                            stoichiometry_matrix=[[-2, 2]],
                            propensities=['c_0*y_0*(y_0-1)',
@@ -53,7 +53,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsThree(unittest.TestCase):
         self.assertEqual(answer, expected)
 
     def test_run_mm(self):
-        mm_model = Model(constants=['c_0', 'c_1', 'c_2'],
+        mm_model = Model(parameters=['c_0', 'c_1', 'c_2'],
                                species=['y_0', 'y_1'],
                                propensities=['c_0*y_0*(120-301+y_0+y_1)',
                                              'c_1*(301-(y_0+y_1))',
@@ -99,7 +99,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsThree(unittest.TestCase):
         self.assertEqual(answer, expected)
 
     def test_run_hes1(self):
-        hes1_model = Model(constants=['c_0', 'c_1', 'c_2', 'c_3'],
+        hes1_model = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3'],
                    species=['y_0', 'y_1', 'y_2'],
                    propensities=['0.03*y_0',
                                  '0.03*y_1',
@@ -173,7 +173,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsThree(unittest.TestCase):
 
     # #
     def test_run_p53(self):
-        p53_model = Model(constants=['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'],
+        p53_model = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'],
                   species=['y_0', 'y_1', 'y_2'],
                   stoichiometry_matrix=[[1, -1, -1, 0, 0, 0],
                                         [0, 0, 0, 1, -1, 0],
@@ -250,7 +250,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsThree(unittest.TestCase):
 class TestMomentExpansionApproximationOnMaxOrderIsTwo(unittest.TestCase):
     max_order = 2
     def test_run_dimer(self):
-        dimer_model = Model(constants=['c_0', 'c_1', 'c_2'],
+        dimer_model = Model(parameters=['c_0', 'c_1', 'c_2'],
                            species=['y_0'],
                            stoichiometry_matrix=[[-2, 2]],
                            propensities=['c_0*y_0*(y_0-1)',
@@ -278,7 +278,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsTwo(unittest.TestCase):
         self.assertEqual(answer, expected)
 
     def test_run_mm(self):
-        mm_model = Model(constants=['c_0', 'c_1', 'c_2'],
+        mm_model = Model(parameters=['c_0', 'c_1', 'c_2'],
                                species=['y_0', 'y_1'],
                                propensities=['c_0*y_0*(120-301+y_0+y_1)',
                                              'c_1*(301-(y_0+y_1))',
@@ -315,7 +315,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsTwo(unittest.TestCase):
         self.assertEqual(answer, expected)
 
     def test_run_hes1(self):
-        hes1_model = Model(constants=['c_0', 'c_1', 'c_2', 'c_3'],
+        hes1_model = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3'],
                    species=['y_0', 'y_1', 'y_2'],
                    propensities=['0.03*y_0',
                                  '0.03*y_1',
@@ -367,7 +367,7 @@ class TestMomentExpansionApproximationOnMaxOrderIsTwo(unittest.TestCase):
 
 
     def test_run_p53(self):
-        p53_model = Model(constants=['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'],
+        p53_model = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6'],
                   species=['y_0', 'y_1', 'y_2'],
                   stoichiometry_matrix=[[1, -1, -1, 0, 0, 0],
                                         [0, 0, 0, 1, -1, 0],
