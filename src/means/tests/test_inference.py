@@ -87,7 +87,7 @@ class TestInference(unittest.TestCase):
 
         def compare(variables, correct_values_with_variability, correct_constraints):
             values_with_variability, constraints = pi_stub._generate_values_with_variability_and_constraints(
-                self.dimer_problem.constants,
+                self.dimer_problem.parameters,
                 parameters,
                 variables)
 
@@ -235,7 +235,7 @@ class TestSumOfSquaresForRegressions(_TestInferenceForRegressions):
                               initial_conditions,
                               variable_parameters,
                               self.observed_trajectories,
-                              method=optimiser_method)
+                              distance_function_type=optimiser_method)
         return inference
 
     def validate_result(self, inference_result):
@@ -259,7 +259,7 @@ class TestSumOfSquaresMeansOnly(_TestInferenceForRegressions):
                               variable_parameters,
                               # Only means trajectory
                               [self.observed_trajectories[0]],
-                              method=optimiser_method,
+                              distance_function_type=optimiser_method,
                               # We need to increase rtol here, otherwise wildly different result happens
                               rtol=1e-4)
 
@@ -289,7 +289,7 @@ class TestGammaInferenceForRegressions(_TestInferenceForRegressions):
                               variable_parameters,
                               # Only means trajectory
                               [self.observed_trajectories[0]],
-                              method=optimiser_method)
+                              distance_function_type=optimiser_method)
         return inference
 
     def validate_result(self, inference_result):
@@ -316,7 +316,7 @@ class TestNormalInferenceForRegressions(_TestInferenceForRegressions):
                               variable_parameters,
                               # Only means trajectory
                               [self.observed_trajectories[0]],
-                              method=optimiser_method)
+                              distance_function_type=optimiser_method)
 
         return inference
 
@@ -343,7 +343,7 @@ class TestLogNormalInferenceForRegressions(_TestInferenceForRegressions):
                               variable_parameters,
                               # Only means trajectory
                               [self.observed_trajectories[0]],
-                              method=optimiser_method)
+                              distance_function_type=optimiser_method)
         return inference
 
     def validate_result(self, inference_result):
@@ -387,7 +387,7 @@ class InferenceWithValidation(Inference):
         starting_conditions = inference_instance.starting_conditions
         variable_parameters = inference_instance.variable_parameters
         observed_trajectories = inference_instance.observed_trajectories
-        method = inference_instance.method
+        method = inference_instance.distance_function_type
         simulation_kwargs = inference_instance.simulation_kwargs
 
         super(InferenceWithValidation, self).__init__(problem, starting_parameters, starting_conditions,

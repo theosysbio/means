@@ -43,7 +43,7 @@ def _sample_problem():
     yx5 = Symbol('yx5')
     rhs = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0) + yx4*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)) + yx6*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*c_4*y_1*y_2 + c_4*y_1 + 2*c_4*yx2 - 2*c_5*y_2**2 + c_5*y_2 - 2*c_5*yx1 - 2*y_2*(c_4*y_1 - c_5*y_2)], [c_3*y_0*y_2 + c_3*yx4 + c_4*y_1**2 - c_4*y_1*y_2 - c_4*y_1 + c_4*yx3 - c_5*y_1*y_2 - y_1*(c_4*y_1 - c_5*y_2) - y_2*(c_3*y_0 - c_4*y_1) + yx2*(-c_4 - c_5)], [2*c_3*y_0*y_1 + c_3*y_0 + 2*c_3*yx5 - 2*c_4*y_1**2 + c_4*y_1 - 2*c_4*yx3 - 2*y_1*(c_3*y_0 - c_4*y_1)], [c_0*y_2 - c_1*y_0*y_2 - c_2*y_0*y_2**2/(c_6 + y_0) - c_2*y_0*yx1/(c_6 + y_0) + c_4*y_0*y_1 + c_4*yx5 - c_5*y_0*y_2 - y_0*(c_4*y_1 - c_5*y_2) - y_2*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(-c_1 + 2*c_2*y_0*y_2/(c_6 + y_0)**2 - 2*c_2*y_2/(c_6 + y_0) - c_5 - y_2*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-c_2*y_0*y_2**2/(c_6 + y_0)**3 + c_2*y_2**2/(c_6 + y_0)**2 - y_2*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [c_0*y_1 - c_1*y_0*y_1 - c_2*y_0*y_1*y_2/(c_6 + y_0) - c_2*y_0*yx2/(c_6 + y_0) + c_3*y_0**2 - c_4*y_0*y_1 - y_0*(c_3*y_0 - c_4*y_1) - y_1*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(c_2*y_0*y_1/(c_6 + y_0)**2 - c_2*y_1/(c_6 + y_0) - y_1*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx5*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0) - c_4) + yx6*(-c_2*y_0*y_1*y_2/(c_6 + y_0)**3 + c_2*y_1*y_2/(c_6 + y_0)**2 + c_3 - y_1*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))], [2*c_0*y_0 + c_0 - 2*c_1*y_0**2 + c_1*y_0 - 2*c_2*y_0**2*y_2/(c_6 + y_0) + c_2*y_0*y_2/(c_6 + y_0) - 2*y_0*(c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)) + yx4*(2*c_2*y_0**2/(c_6 + y_0)**2 - 4*c_2*y_0/(c_6 + y_0) - c_2*y_0/(c_6 + y_0)**2 + c_2/(c_6 + y_0) - 2*y_0*(c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0))) + yx6*(-2*c_1 - 2*c_2*y_0**2*y_2/(c_6 + y_0)**3 + 4*c_2*y_0*y_2/(c_6 + y_0)**2 + c_2*y_0*y_2/(c_6 + y_0)**3 - 2*c_2*y_2/(c_6 + y_0) - c_2*y_2/(c_6 + y_0)**2 - 2*y_0*(-c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2))]])
 
-    problem = ODEProblem(method='MEA', left_hand_side_descriptors=lhs_terms, right_hand_side=rhs, constants=constants)
+    problem = ODEProblem(method='MEA', left_hand_side_descriptors=lhs_terms, right_hand_side=rhs, parameters=constants)
     return problem
 
 def _sample_inference():
@@ -53,7 +53,7 @@ def _sample_inference():
                       starting_conditions=[1,2,3],
                       variable_parameters=['c_0', 'c_1'],
                       observed_trajectories=[Trajectory([1,2], [2,3], Moment([1, 0, 0], 'x'))],
-                      method='gamma',
+                      distance_function_type='gamma',
                       maxh=0.01) # Some simulation kwargs
     return r
 

@@ -17,6 +17,9 @@ def get_distance_function(distance):
     :param distance: The string name of the distributions
     :return:
     """
+    # If we provided distance function ourselves, use it
+    if callable(distance):
+        return distance
     try:
         return _supported_distances_lookup()[distance]
     except KeyError:

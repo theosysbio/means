@@ -20,7 +20,7 @@ class TestODEProblem(unittest.TestCase):
         lhs = [Moment(np.ones(3),i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
 
-        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p = ODEProblem('MEA', lhs, rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
         rhs_as_function = p.right_hand_side_as_function
 
@@ -62,10 +62,10 @@ class TestODEProblem(unittest.TestCase):
         p2_lhs = [Moment(np.ones(3), i) for i in sympy.Matrix(['y_1', 'y_2', 'y_3'])]
         p2_rhs = to_sympy_matrix(['y_1', 'c_1', 'y_2+y_3'])
 
-        p1 = ODEProblem('MEA', p1_lhs, p1_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p1 = ODEProblem('MEA', p1_lhs, p1_rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p1_rhs_as_function = p1.right_hand_side_as_function
 
-        p2 = ODEProblem('MEA', p2_lhs, p2_rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p2 = ODEProblem('MEA', p2_lhs, p2_rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
         p2_rhs_as_function = p2.right_hand_side_as_function
 
         constants = [1, 2, 3]
@@ -93,7 +93,7 @@ class TestODEProblem(unittest.TestCase):
         """
         lhs = [VarianceTerm(pos, term) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem('LNA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p = ODEProblem('LNA', lhs, rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
         for i,l in enumerate(lhs):
             self.assertIsNone(p._descriptions_dict[l.symbol].descriptor)
@@ -110,14 +110,14 @@ class TestODEProblem(unittest.TestCase):
         desc = [[0, 0, 1], [1, 0, 432], [21, 43, 34]]
         lhs = [Moment(d, s) for d, s in zip(desc, symbs)]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
-        p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+        p = ODEProblem('MEA', lhs, rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
         for i, l in enumerate(lhs):
             self.assertEqual(p.descriptor_for_symbol(l.symbol), l)
 
 def _get_rhs_as_function(args):
     lhs, rhs = args
 
-    p = ODEProblem('MEA', lhs, rhs, constants=sympy.symbols(['c_1', 'c_2', 'c_3']))
+    p = ODEProblem('MEA', lhs, rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
     # access right_hand_side_as_function
     rhs_as_function = p.right_hand_side_as_function
 

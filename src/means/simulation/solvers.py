@@ -123,7 +123,7 @@ class SolverBase(MemoisableObject):
         parameters = to_one_dim_array(parameters, dtype=NP_FLOATING_POINT_PRECISION)
         initial_conditions = to_one_dim_array(initial_conditions, dtype=NP_FLOATING_POINT_PRECISION)
 
-        assert(parameters.shape == (len(problem.constants),))
+        assert(parameters.shape == (len(problem.parameters),))
         assert(initial_conditions.shape[0] == problem.number_of_equations)
 
         self._parameters = parameters
@@ -503,7 +503,7 @@ class SensitivitySolverBase(SolverBase):
         sensitivities_raw = np.array(self._solver.p_sol)
 
         trajectories_with_sensitivity_data = _add_sensitivity_data_to_trajectories(trajectories, sensitivities_raw,
-                                                                                   self._problem.constants)
+                                                                                   self._problem.parameters)
 
         return trajectories_with_sensitivity_data
 

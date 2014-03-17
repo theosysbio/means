@@ -333,4 +333,6 @@ def _postprocess_lna_simulation(problem, trajectories):
 
         answer.append(new_trajectory)
 
+    answer.extend(variance_trajectories)
+
     return answer
