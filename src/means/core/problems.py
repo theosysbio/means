@@ -87,14 +87,12 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     def variables(self):
         return to_list_of_symbols(self.__left_hand_side)
 
-    # TODO: I don't think species_* methods should be part of ODEProblem, better for it to be unaware of description meanings
-    @property
-    def species_terms(self):
-        return filter(lambda x: isinstance(x[1], Moment) and x[1].order == 1, self._descriptions_dict.iteritems())
-
     @property
     def number_of_species(self):
-        return len(self.species_terms)
+        species = [it[1]  for it in self._descriptions_dict.iteritems() if
+            isinstance(it[1], Moment) and it[1].order == 1]
+
+        return len(species)
 
     @property
     def right_hand_side(self):
