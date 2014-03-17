@@ -1,4 +1,5 @@
 import sympy as sp
+from sympy.utilities.iterables import multiset_partitions
 import operator
 import copy
 from means.util.sympyhelpers import product
@@ -81,7 +82,7 @@ class NormalClosure(ClosureBase):
         # For even moment order other than 2, generate a list of partitions of the indices of covariances
         else:
             each_row = []
-            for idx_pair in self._generate_partitions(len(list_for_partition)/2,list_for_partition):
+            for idx_pair in self._generate_partitions(list_for_partition):
                 # Retrieve the pairs of covariances using the pairs of partitioned indices
                 l = [covariance_matrix[i, j] for i,j in idx_pair]
                 # Calculate the product of each pair of covariances
@@ -109,38 +110,11 @@ class NormalClosure(ClosureBase):
         out_mat = [self._compute_one_closed_central_moment(n, covariance_matrix) for n in positive_n_counter ]
         return sp.Matrix(out_mat)
 
-    #todo use sympy built in partitions
-    def _generate_partitions(self, k, list_for_par, accum=[[]], index=0):
-        r"""
 
-        :param list_for_par: the list for partition
-        :param accum: should be [[]] as each partition pair consists of lists within a list
-        :param index: the index of item in list to start partition.should start from 0
-        :return: a list of non-repetitive partition pairs, each partition pair contains 2 indices for variance
-        """
-        if index == len(list_for_par):
-            if (k == 0):
-                return accum
-            else:
-                return []
-
-        element = list_for_par[index]
-        result = []
-
-        for set_i in range(len(accum)):
-            clone_new = copy.deepcopy(accum)
-            clone_new[set_i].append([element])
-            result.extend(self._generate_partitions(k - 1, list_for_par, clone_new, index + 1))
-
-            for elem_i in range(len(accum[set_i])):
-                clone_new = copy.deepcopy(accum)
-                clone_new[set_i][elem_i].append(element)
-                result.extend(self._generate_partitions(k, list_for_par,clone_new, index + 1))
-
-        return [row for row in result if all([(len(r) == 2) for r in row])]
-
-
-
-
-
+    def _generate_partitions(self, list_for_par):
+        for p in multiset_partitions(range(len(list_for_par)), m=len(list_for_par)/2):
+            # keep partitions of size = 2
+            if all([(len(k) == 2) for k in p]):
+                # retrieve index in original list
+                yield [[list_for_par[i] for i in k] for k in p]
 
