@@ -12,7 +12,6 @@ def _parser():
     parser.add_argument('--parameters', help='Parameters for the generation', type=float, nargs='+')
     parser.add_argument('--initial-conditions', help='Initial conditions for generation')
 
-
     return parser
 
 def main():
@@ -21,8 +20,7 @@ def main():
 
     print options.problem
     print options.parameters
-    print options.initial-conditions
-
+    print options.initial_conditions
 
 
 if __name__ == '__main__':

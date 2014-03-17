@@ -1,0 +1,8 @@
+- command: mkdir problems
+  output: problems
+- command: python mea_problem.py p53 2 -o problems/problem-p53-2.yml
+  output: problems/problem-p53-2.yml
+  dependencies: [problems]
+- command: python mea_problem.py p53 3 -o problems/problem-p53-3.yml
+  output: problems/problem-p53-3.yml
+  dependencies: [problems]
