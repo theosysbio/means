@@ -345,7 +345,7 @@ class Inference(SerialisableObject, MemoisableObject):
         variable_parameters = self._validate_variable_parameters(problem, variable_parameters)
         self._variable_parameters = variable_parameters
 
-        assert(len(starting_parameters) == len(problem.constants))
+        assert(len(starting_parameters) == len(problem.parameters))
 
         if len(starting_conditions) < problem.number_of_equations:
             starting_conditions = starting_conditions[:] \
@@ -353,7 +353,7 @@ class Inference(SerialisableObject, MemoisableObject):
 
 
         starting_parameters_with_variability, parameter_constraints = \
-            self._generate_values_with_variability_and_constraints(self.problem.constants, starting_parameters,
+            self._generate_values_with_variability_and_constraints(self.problem.parameters, starting_parameters,
                                                                    variable_parameters)
 
         starting_conditions_with_variability, initial_condition_constraints = \
@@ -445,7 +445,7 @@ class Inference(SerialisableObject, MemoisableObject):
             variable_parameters_symbolic[parameter] = range_
 
         for parameter in variable_parameters_symbolic:
-            if parameter not in problem.left_hand_side and parameter not in problem.constants:
+            if parameter not in problem.left_hand_side and parameter not in problem.parameters:
                 raise KeyError('Unknown variable parameter {0!r} provided. '
                                'It is not in the problem\'s parameter list, nor in the left-hand-side of equations')
 

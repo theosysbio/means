@@ -87,7 +87,7 @@ class TestInference(unittest.TestCase):
 
         def compare(variables, correct_values_with_variability, correct_constraints):
             values_with_variability, constraints = pi_stub._generate_values_with_variability_and_constraints(
-                self.dimer_problem.constants,
+                self.dimer_problem.parameters,
                 parameters,
                 variables)
 

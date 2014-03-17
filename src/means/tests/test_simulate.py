@@ -14,7 +14,7 @@ class ConstantDerivativesProblem(ODEProblem):
         super(ConstantDerivativesProblem, self).__init__(method=None,
                                                          left_hand_side_descriptors=[ODETermBase('y_1'), ODETermBase('y_2')],
                                                          right_hand_side=['c_1', 'c_2'],
-                                                         constants=['c_1', 'c_2'])
+                                                         parameters=['c_1', 'c_2'])
 
 class TestSimulate(unittest.TestCase):
 
@@ -55,7 +55,7 @@ class TestSimulate(unittest.TestCase):
                                                                              'Pred*V_11*k_2 - Prey*V_00*k_2 + V_01*(-Pred*k_2 + k_1) + V_01*(Prey*k_2 - k_3) - (Pred*Prey*k_2)**1.0',
                                                                              'Pred*V_11*k_2 - Prey*V_00*k_2 + V_10*(-Pred*k_2 + k_1) + V_10*(Prey*k_2 - k_3) - (Pred*Prey*k_2)**1.0',
                                                                              '-Prey*V_01*k_2 - Prey*V_10*k_2 + 2*V_11*(-Pred*k_2 + k_1) + (Prey*k_1)**1.0 + (Pred*Prey*k_2)**1.0']),
-                                            constants=['k_1', 'k_2', 'k_3'])
+                                            parameters=['k_1', 'k_2', 'k_3'])
 
         s = Simulation(lna_for_lotka_volterra, rtol=1e-4, atol=1e-4)
         np.random.seed(42)

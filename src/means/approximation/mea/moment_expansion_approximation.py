@@ -155,7 +155,7 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         # These are the left hand sign symbols referring to the mfk
         prob_lhs = self._generate_problem_left_hand_side(n_counter, k_counter)
         # Finally, we build the problem
-        out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.constants))
+        out_problem = ODEProblem("MEA", prob_lhs, mfk, sp.Matrix(self.model.parameters))
         return out_problem
 
     def _generate_problem_left_hand_side(self, n_counter, k_counter):
