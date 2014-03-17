@@ -1,0 +1,10 @@
+- parameters: [1, 2, 3, 4, 5, 6, 7]
+  initial_conditions: [70, 60, 50]
+  timepoints: [0, 40, 0.1]
+  simulation_kwargs: {solver: 'ode15s'}
+  output: test.yml
+- parameters: [1, 2, 3, 5, 5, 6, 7]
+  initial_conditions: [70, 60, 50]
+  timepoints: [0, 40, 0.1]
+  simulation_kwargs: {solver: 'ode15s'}
+  output: test2.yml
