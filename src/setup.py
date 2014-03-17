@@ -3,8 +3,8 @@ from distutils.core import setup
 setup(
     name='means',
     version='trunk',
-    author='Theoretical Systems Biology Group',
-    author_email=None, # TODO: author email
+    author='Sisi Fan, Quentin Geissmann, Saulius Lukauskas',
+    author_email= 'sisi.fan10@imperial.ac.uk, quentin.geissmann13@imperial.ac.uk, saulius.lukauskas13@imperial.ac.uk',
     packages=['means',
               'means.approximation',
               'means.approximation.lna',
