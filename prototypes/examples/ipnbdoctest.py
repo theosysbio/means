@@ -272,6 +272,12 @@ def test_notebook(nb, generate_png_diffs=True):
                     # If not, skip
                     sys.stdout.write('S')
                     continue
+
+            skip_test_match = re.match(r'#\s*Skip\s+Doctest', cell.input, re.IGNORECASE)
+            if skip_test_match:
+                sys.stdout.write('S')
+                continue
+
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
