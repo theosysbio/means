@@ -51,7 +51,7 @@ class ODETermBase(Descriptor):
 
     def mathtext(self):
         # Double {{ and }} in multiple places as to escape the curly braces in \frac{} from .format
-        return r'${0}$'.format(self.symbol)
+        return r'${0}$'.format(sympy.printing.latex(self.symbol))
 
     def _repr_latex(self):
         return '${0}$'.format(self.symbol)
