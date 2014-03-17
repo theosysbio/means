@@ -435,3 +435,9 @@ class TrajectoryCollection(SerialisableObject):
 
     def __repr__(self):
         return str(self)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = {'trajectories': data.trajectories}
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
