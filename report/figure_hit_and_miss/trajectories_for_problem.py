@@ -1,4 +1,5 @@
 import os
+import traceback
 import yaml
 import means
 import means.examples
@@ -49,7 +50,6 @@ def _process_task(task):
         timepoints = np.arange(*timepoints)
 
     output = os.path.join(directory, task['output'])
-
     if os.path.exists(output):
         print 'Skipping generation of {0} as it already exists'.format(output)
         return
@@ -67,16 +67,27 @@ def _process_task(task):
     except means.SolverException as e:
         exception = e
         trajectories = None
+
     end = datetime.now()
     time_taken = (end-start).total_seconds()
 
     # Leave only first order trajectories
-    means_ = filter(lambda x: isinstance(x.description, means.Moment) and x.description.order == 1,
-                    trajectories)
+    if trajectories:
+        means_ = filter(lambda x: isinstance(x.description, means.Moment) and x.description.order == 1,
+                        trajectories)
+    else:
+        means_ = None
     means.io.to_file({'trajectories': means_,
                       'exception': exception,
                       'time_taken': time_taken}, output)
 
+
+def _wrapped_process_task(task):
+    try:
+        _process_task(task)
+    except:
+        traceback.print_exc()
+        raise
 
 def main():
 
@@ -88,11 +99,14 @@ def main():
 
     problem = options.problem
 
-    pool = multiprocessing.Pool(processes=options.processes,
-                                initializer=_pool_initialiser,
-                                initargs=(problem, directory))
-    __ = pool.map(_process_task, tasks)
-    pool.close()
-
+    if options.processes > 1:
+        pool = multiprocessing.Pool(processes=options.processes,
+                                    initializer=_pool_initialiser,
+                                    initargs=(problem, directory))
+        __ = pool.map(_wrapped_process_task, tasks)
+        pool.close()
+    else:
+        _pool_initialiser(problem, directory)
+        __ = map(_wrapped_process_task, tasks)
 if __name__ == '__main__':
     main()

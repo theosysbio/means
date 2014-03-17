@@ -34,7 +34,7 @@ def generate_test_cases():
 
             data = {'parameters': parameters,
                     'initial_conditions': initial_conditions,
-                    'kwargs': kwargs,
+                    'simulation_kwargs': kwargs,
                     'timepoints': timepoints,
                     'output': output}
             test_cases.append(data)
