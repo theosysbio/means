@@ -134,7 +134,7 @@ class InferenceWithRestarts(MemoisableObject):
     __observed_trajectories = None
     _return_intermediate_solutions = None
 
-    __method = None
+    __distance_function_type = None
 
 
     def _validate_range(self, range_):
@@ -156,7 +156,7 @@ class InferenceWithRestarts(MemoisableObject):
 
     def __init__(self, problem, number_of_samples,
                  starting_parameter_ranges, starting_conditions_ranges,
-                 variable_parameters, observed_trajectories, method='sum_of_squares'):
+                 variable_parameters, observed_trajectories, distance_function_type='sum_of_squares'):
         """
 
         :param problem: Problem to infer parameters for
@@ -170,12 +170,14 @@ class InferenceWithRestarts(MemoisableObject):
                                     ``(min_value, max_value)`` is the range of the allowed parameter values.
                                     If the range is None, parameters are assumed to be unbounded.
         :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
-        :param method: Method of calculating the data fit. Currently supported values are
+        :param distance_function_type: Method of calculating the data fit. Currently supported values are
               - 'sum_of_squares' -  min sum of squares optimisation
               - 'gamma' - maximum likelihood optimisation assuming gamma distribution
               - 'normal'- maximum likelihood optimisation assuming normal distribution
               - 'lognormal' - maximum likelihood optimisation assuming lognormal distribution
-
+              - any callable function, that takes two arguments: simulated trajectories (list)
+                and observed trajectories lookup (dictionary of description: trajectory pairs)
+                see :func:`means.inference.distances.sum_of_squares` for examples of such functions
         """
 
         self.__problem = problem
@@ -204,7 +206,7 @@ class InferenceWithRestarts(MemoisableObject):
         if not observed_trajectories:
             raise ValueError('No observed trajectories provided. Need at least one to perform parameter inference')
 
-        self.__method = method
+        self.__distance_function_type = distance_function_type
 
     @memoised_property
     def _inference_objects(self):
@@ -222,7 +224,7 @@ class InferenceWithRestarts(MemoisableObject):
                                                 starting_conditions,
                                                 self.variable_parameters,
                                                 self.observed_trajectories,
-                                                method=self.method,
+                                                distance_function_type=self.distance_function_type,
                                                 ))
 
         return inference_objects
@@ -277,8 +279,8 @@ class InferenceWithRestarts(MemoisableObject):
         return self.__observed_trajectories
 
     @property
-    def method(self):
-        return self.__method
+    def distance_function_type(self):
+        return self.__distance_function_type
 
 class Inference(SerialisableObject, MemoisableObject):
 
@@ -288,7 +290,7 @@ class Inference(SerialisableObject, MemoisableObject):
     __constraints = None
     __observed_timepoints = None
     __observed_trajectories = None
-    _method = None
+    _distance_function_type = None
     _variable_parameters = None
 
     yaml_tag = '!inference'
@@ -305,14 +307,14 @@ class Inference(SerialisableObject, MemoisableObject):
                    ('starting_conditions', data.starting_conditions),
                    ('variable_parameters', variable_parameters),
                    ('observed_trajectories', data.observed_trajectories),
-                   ('method', data.method)]
+                   ('distance_function_type', data.distance_function_type)]
 
         mapping.extend(data.simulation_kwargs.items())
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
     def __init__(self, problem, starting_parameters, starting_conditions,
-                 variable_parameters, observed_trajectories, method='sum_of_squares', **simulation_kwargs):
+                 variable_parameters, observed_trajectories, distance_function_type='sum_of_squares', **simulation_kwargs):
         """
 
         :param problem: ODEProblem to infer data for
@@ -327,7 +329,7 @@ class Inference(SerialisableObject, MemoisableObject):
                                     ``(min_value, max_value)`` is the range of the allowed parameter values.
                                     If the range is None, parameters are assumed to be unbounded.
         :param observed_trajectories: A list of `Trajectory` objects containing observed data values.
-        :param method: Method of calculating the data fit. Currently supported values are
+        :param distance_function_type: Method of calculating the data fit. Currently supported values are
               `'sum_of_squares'`
                     minimisation of the sum of squares distance between trajectories
               `'gamma'`
@@ -374,7 +376,7 @@ class Inference(SerialisableObject, MemoisableObject):
 
         self.__observed_timepoints = observed_trajectories[0].timepoints
 
-        self._method = method
+        self._distance_function_type = distance_function_type
         self._simulation_kwargs = simulation_kwargs
 
 
@@ -453,7 +455,7 @@ class Inference(SerialisableObject, MemoisableObject):
 
     @memoised_property
     def _distance_between_trajectories_function(self):
-        return get_distance_function(self.method)
+        return get_distance_function(self.distance_function_type)
 
     class _DistancesCalculator(object):
 
@@ -648,8 +650,8 @@ class Inference(SerialisableObject, MemoisableObject):
         return self._variable_parameters
 
     @property
-    def method(self):
-        return self._method
+    def distance_function_type(self):
+        return self._distance_function_type
 
 
     def __eq__(self, other):
@@ -661,5 +663,5 @@ class Inference(SerialisableObject, MemoisableObject):
                and self.starting_parameters == other.starting_parameters \
                and self.variable_parameters == other.variable_parameters \
                and self.observed_trajectories == other.observed_trajectories \
-               and self.method == other.method \
+               and self.distance_function_type == other.distance_function_type \
                and self.simulation_kwargs == other.simulation_kwargs

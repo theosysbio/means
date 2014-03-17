@@ -53,7 +53,7 @@ def _sample_inference():
                       starting_conditions=[1,2,3],
                       variable_parameters=['c_0', 'c_1'],
                       observed_trajectories=[Trajectory([1,2], [2,3], Moment([1, 0, 0], 'x'))],
-                      method='gamma',
+                      distance_function_type='gamma',
                       maxh=0.01) # Some simulation kwargs
     return r
 
