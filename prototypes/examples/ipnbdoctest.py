@@ -14,6 +14,7 @@ import os,sys,time
 import base64
 import hashlib
 import traceback
+import gc
 import png
 import random
 import re
@@ -320,7 +321,8 @@ def test_notebook(nb, generate_png_diffs=True):
     kc.stop_channels()
     km.shutdown_kernel()
     del km
-
+    # Call Garbage-collector immediately
+    gc.collect()
     return failures, errors
 
 def arguments_parser():
