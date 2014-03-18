@@ -14,13 +14,9 @@ if [ "$1" == "with-slow-tests" ]; then
 else
    SLOWTESTS=""
 fi
+echo "Running tests"
 nosetests $SLOWTESTS --with-xcoverage --with-xunit --cover-package=means --cover-erase $CODE_DIR
-# Remove the image diff directory first
-rm -rf '.diffs/'
-mkdir ".diffs/"
+echo "Running notebook tests"
 # Run notebook tests
 nosetests --with-xunit --xunit-file="notebook-tests.xml" $EXAMPLES_DIR
-# Zip the results
-zip -r diffs.zip ".diffs/"
-cd $INOUT_DIR
 

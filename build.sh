@@ -22,6 +22,7 @@ pip uninstall -y means || echo "Means not yet installed"
 pip install $CODE_DIR
 
 ./run_tests.sh
+echo "Running pylint"
 pylint --rcfile=pylint.rc --disable=E0611,E1101 --ignore=tests -f parseable $CODE_DIR/means > pylint.out
 
 # Documentation
