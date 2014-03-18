@@ -3,9 +3,10 @@ import multiprocessing
 import numpy as np
 import sympy as sp
 
-from means.simulation.trajectory import Trajectory
+from means.simulation.trajectory import Trajectory, TrajectoryCollection
 from means.io.serialise import SerialisableObject
-from means.util.sympyhelpers import substitute_all
+from means.util.meanshelpers import generate_n_and_k_counters
+from means.util.sympyhelpers import product, substitute_all
 from means.core import Moment
 
 
@@ -39,6 +40,7 @@ class SSASimulation(SerialisableObject):
         self.__problem = stochastic_problem
         self.__n_simulations = n_simulations
 
+
     def _validate_parameters(self, parameters, initial_conditions):
 
         if len(self.__problem.species) != len(initial_conditions):
@@ -50,8 +52,8 @@ class SSASimulation(SerialisableObject):
             raise Exception(exception_str.format(len(self.__problem.parameters), len(parameters)))
 
 
-    def simulate_system(self, parameters, initial_conditions, timepoints, number_of_processes=1,
-                        return_average=True):
+    def simulate_system(self, parameters, initial_conditions, timepoints,
+                        return_moments=True, max_moment_order=1, number_of_processes=1):
         """
         Perform Gillespie SSA simulations and returns trajectories for of each species.
         Each trajectory is interpolated at the given time points.
@@ -65,12 +67,16 @@ class SSASimulation(SerialisableObject):
         :param timepoints: A list of time points to simulate the system for
 
         :param number_of_processes: the number of parallel process to be run
-        :param return_average: whether the average of all simulations should be returned
+        :param return_moments: whether the moments should be calculated between all individual simulations
+        :param max_moment_order: up to which order the moment should be calculated.
+        E.g. a value of one will return means, a values of two, means, variances and covariance and so on.
+
 
         :return: a list of :class:`~means.simulation.Trajectory` one per species in the problem,
             or a list of lists of trajectories (one per simulation) if `return_average == False`.
         :rtype: list[:class:`~means.simulation.Trajectory`]
         """
+        assert(max_moment_order > 0)
 
         n_simulations = self.__n_simulations
         self._validate_parameters(parameters, initial_conditions)
@@ -111,11 +117,66 @@ class SSASimulation(SerialisableObject):
             p.join()
 
         resampled_results = [[traj.resample(timepoints) for traj in res] for res in results]
-        if not return_average:
-            return resampled_results
+        for i in resampled_results:
+            idx = len(i[0].values) - 1
+            print (i[0].values[idx], i[1].values[idx], i[2].values[idx])
 
-        mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*resampled_results)]
-        return mean_trajectories
+        if not return_moments:
+            return TrajectoryCollection(resampled_results)
+
+        return TrajectoryCollection(self._compute_moments(resampled_results, max_moment_order))
+        #mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*resampled_results)]
+        #return mean_trajectories
+
+    def _compute_moments(self, all_trajectories, max_moment_order):
+
+        mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*all_trajectories)]
+        if max_moment_order == 1:
+            return mean_trajectories
+        n_counter, _ = generate_n_and_k_counters(max_moment_order - 1, self.__problem.species)
+
+        out_trajects = mean_trajectories[:]
+        for n in n_counter:
+            if n.order == 0:
+                continue
+            out_trajects.append(self._compute_one_moment(all_trajectories, mean_trajectories, n))
+        return out_trajects
+
+    def _compute_one_moment(self, all_trajectories, mean_trajectory, moment):
+
+        # the expectation of the product:
+        #products_of_sps = [product(trajs) for trajs in all_trajectories]
+        all_products = []
+        for trajs in all_trajectories:
+
+            trajs_at_power = [trajs[i] ** n  for i,n in enumerate(moment.n_vector) if n > 0]
+            # we change the descriptions
+            for t in trajs_at_power:
+                t.set_description(moment)
+
+            all_products.append(product(trajs_at_power))
+        # TODO use sample moments  -> divide by N - 1, not N
+        expectation_of_prod = sum(all_products)/float(len(all_products))
+
+        # product of expectations:
+        means_at_pow = [mean_trajectory[i] ** n  for i,n in enumerate(moment.n_vector) if n > 0]
+        # we change the descriptions
+        for t in means_at_pow:
+            t.set_description(moment)
+
+        product_of_expectations = product(means_at_pow)
+
+        out = expectation_of_prod - product_of_expectations
+        return out
+
+
+
+
+
+
+
+
+
 
 def multiprocessing_pool_initialiser(population_rates_as_function, change, species,
                                      initial_conditions, t_max, seed):
