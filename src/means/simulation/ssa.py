@@ -119,7 +119,6 @@ class SSASimulation(SerialisableObject):
         resampled_results = [[traj.resample(timepoints) for traj in res] for res in results]
         for i in resampled_results:
             idx = len(i[0].values) - 1
-            print (i[0].values[idx], i[1].values[idx], i[2].values[idx])
 
         if not return_moments:
             return TrajectoryCollection(resampled_results)
