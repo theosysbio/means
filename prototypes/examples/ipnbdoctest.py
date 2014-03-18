@@ -273,11 +273,6 @@ def test_notebook(nb, generate_png_diffs=True):
                     sys.stdout.write('S')
                     continue
 
-            skip_test_match = re.match(r'#\s*skip\s+doctest', cell.input.lower())
-            if skip_test_match:
-                sys.stdout.write('S')
-                continue
-
             try:
                 outs = run_cell(shell, iopub, cell)
             except Exception as e:
@@ -292,14 +287,21 @@ def test_notebook(nb, generate_png_diffs=True):
                 errors += 1
                 break
 
+            skip_test_match = re.match(r'#\s*skip\s+doctest', cell.input.lower())
+            if skip_test_match:
+                sys.stdout.write('S')
+                continue
+
             failed = False
             outs = collapse_stream_outputs(outs)
             cell_outputs = collapse_stream_outputs(cell.outputs)
             for out, ref in zip(outs, cell_outputs):
                 if not compare_outputs(out, ref, generate_png_diffs=generate_png_diffs):
                     failed = True
+
             if failed:
                 failures += 1
+                break  # Break after failure
             else:
                 successes += 1
             sys.stdout.write('.')
