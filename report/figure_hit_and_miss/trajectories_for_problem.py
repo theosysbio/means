@@ -79,7 +79,8 @@ def _process_task(task):
         means_ = None
     means.io.to_file({'trajectories': means_,
                       'exception': exception,
-                      'time_taken': time_taken}, output)
+                      'time_taken': time_taken,
+                      'task': task}, output)
 
 
 def _wrapped_process_task(task):
