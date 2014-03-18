@@ -113,7 +113,6 @@ def _some_params_are_negative(problem, parameters, initial_conditions):
     if any(i < 0 for i in parameters):     # parameters cannot be negative
         return True
     # disallow negative numbers for raw moments (i.e. cannot have -1.5 molecules on avg)
-    # TODO: it is questionable whether we should hardcode this or create a similar interface as in limits
     if any(j < 0 for j in initial_conditions[0:number_of_species]):
         return True
 

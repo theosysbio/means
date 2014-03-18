@@ -169,30 +169,8 @@ def run():
         means.io.to_file(trajectories, trajout)
 
         if plot:
-            # TODO: This should be going into a .plot() method of some new container for trajectory results
-            from matplotlib import pyplot as plt
-
-            figure_map = {}
-            counter = 0
-            for trajectory in trajectories:
-                if isinstance(trajectory.description, Moment):
-                    key = Moment, trajectory.description.order
-                    title = 'Moments, order={0}'.format(trajectory.description.order)
-                else:
-                    key = trajectory.description.__class__
-                    title = '{0}s'.format(trajectory.description.__class__)
-
-                try:
-                    figure_id = figure_map[key]
-                except KeyError:
-                    counter += 1
-                    figure_id = counter
-                    figure_map[key] = figure_id
-
-                plt.figure(figure_id)
-                plt.title(title)
-                trajectory.plot()
-                plt.legend()
+            plt.figure()
+            trajectories.plot()
             plt.show()
 
     if infer:
