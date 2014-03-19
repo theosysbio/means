@@ -3,7 +3,8 @@ import luigi
 import means
 import means.examples
 from config import DATA_DIR
-from target import PickleSerialiser
+from target import PickleSerialiser, PickleSerialiserWithAdditionalParameters
+from datetime import datetime
 
 class MeansTask(luigi.Task):
     """
@@ -24,10 +25,19 @@ class MeansTask(luigi.Task):
 
     def output(self):
         # Enforce all data to be in data dir
-        return PickleSerialiser(os.path.join(DATA_DIR, self._filename))
+        return PickleSerialiserWithAdditionalParameters(os.path.join(DATA_DIR, self._filename))
 
     def run(self):
-        self.output().dump(self._return_object())
+        # Poor man's timing
+        start = datetime.now()
+        answer = self._return_object()
+        end = datetime.now()
+        runtime = (end-start).total_seconds()
+
+        # Store both the object and runtime
+        self.output().dump(answer, runtime=runtime)
+
+
 
 class Model(MeansTask):
     """
@@ -63,6 +73,10 @@ class MEAProblem(MeansTask):
                                           **kwargs)
 
         return problem
+
+
+class Simulation(MeansTask):
+    pass
 
 if __name__ == '__main__':
     luigi.run()
