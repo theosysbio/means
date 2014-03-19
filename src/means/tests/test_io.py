@@ -1,6 +1,7 @@
 import os
 import unittest
 from sympy import Symbol, MutableDenseMatrix, Float
+from means import TrajectoryCollection
 from means.core import ODEProblem, Moment, VarianceTerm
 from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus
@@ -135,6 +136,13 @@ class TestSerialisation(unittest.TestCase):
     def test_trajectory_serialisation(self):
         t = Trajectory([1, 2, 3], [3, 2, 1], Moment([1,2,3], 'x'))
         self._roundtrip(t)
+
+    def test_trajectory_collection_serialisation(self):
+
+        t1 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1,2,3], 'x'))
+        t2 = Trajectory([1, 2, 3], [3, 2, 1], Moment([1,0,0], 'y'))
+        tc = TrajectoryCollection([t1, t2])
+        self._roundtrip(tc)
 
     def test_trajectory_with_sensitivities_serialisation(self):
         term = Moment([1, 0, 0], 'x')

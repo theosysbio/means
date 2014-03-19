@@ -439,3 +439,16 @@ class TrajectoryCollection(SerialisableObject):
 
     def __repr__(self):
         return str(self)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        mapping = {'trajectories': data.trajectories}
+        return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.trajectories == other.trajectories
+
+    def __ne__(self, other):
+        return not self == other
+
