@@ -130,6 +130,7 @@ class SSASimulation(SerialisableObject):
     def _compute_moments(self, all_trajectories, max_moment_order):
 
         mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*all_trajectories)]
+
         if max_moment_order == 1:
             return mean_trajectories
         n_counter, _ = generate_n_and_k_counters(max_moment_order - 1, self.__problem.species)
@@ -141,39 +142,25 @@ class SSASimulation(SerialisableObject):
             out_trajects.append(self._compute_one_moment(all_trajectories, mean_trajectories, n))
         return out_trajects
 
-    def _compute_one_moment(self, all_trajectories, mean_trajectory, moment):
+    def _compute_one_moment(self, all_trajectories, mean_trajectories, moment):
 
         # the expectation of the product:
         #products_of_sps = [product(trajs) for trajs in all_trajectories]
-        all_products = []
-        for trajs in all_trajectories:
+        n_vec = moment.n_vector
 
-            trajs_at_power = [trajs[i] ** n  for i,n in enumerate(moment.n_vector) if n > 0]
-            # we change the descriptions
-            for t in trajs_at_power:
-                t.set_description(moment)
+        to_multipl = []
 
-            all_products.append(product(trajs_at_power))
-        # TODO use sample moments  -> divide by N - 1, not N
-        expectation_of_prod = sum(all_products)/float(len(all_products))
+        for i, trajs in enumerate(zip(*all_trajectories)):
+            mean_of_sp = mean_trajectories[i]
+            order_of_sp = n_vec[i]
+            xi_minus_ex = [(t - mean_of_sp) ** order_of_sp for t in trajs]
+            for x in xi_minus_ex:
+                x.set_description(moment)
+            to_multipl.append(xi_minus_ex)
 
-        # product of expectations:
-        means_at_pow = [mean_trajectory[i] ** n  for i,n in enumerate(moment.n_vector) if n > 0]
-        # we change the descriptions
-        for t in means_at_pow:
-            t.set_description(moment)
+        to_sum = [product(xs) for xs in zip(*to_multipl)]
 
-        product_of_expectations = product(means_at_pow)
-
-        out = expectation_of_prod - product_of_expectations
-        return out
-
-
-
-
-
-
-
+        return sum(to_sum)/ float(len(to_sum))
 
 
 
