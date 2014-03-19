@@ -1,1 +1,1 @@
-__author__ = 'saulius'
+DATA_DIR = 'data'
