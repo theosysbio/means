@@ -116,7 +116,7 @@ class SSASimulation(SerialisableObject):
             p.close()
             p.join()
 
-        resampled_results = [[traj.resample(timepoints) for traj in res] for res in results]
+        resampled_results = [[traj.resample(timepoints, extrapolate=True) for traj in res] for res in results]
         for i in resampled_results:
             idx = len(i[0].values) - 1
 
