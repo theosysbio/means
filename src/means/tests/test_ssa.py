@@ -44,6 +44,13 @@ class TestSSA(unittest.TestCase):
         covar_expected = Trajectory([0.0, 1.0, 2.0], [31.875, 5.75, -1.125],
                                     Moment([1, 1], sympy.Symbol("Cov_a_b")))
 
+        skew_a_result = ssa._compute_one_moment(all_trajectories, mean_trajectories,
+                                                    Moment([3,0],sympy.Symbol("V_a")))
+
+        skew_a_expected = Trajectory([0.0, 1.0, 2.0], [20.25,   396.0,  -0.28125],
+                                     Moment([3, 0], symbol="V_a"))
+
 
         self.assertEqual(variance_a_result , variance_a_expected)
         self.assertEqual(covar_result, covar_expected)
+        self.assertEqual(skew_a_expected, skew_a_result)
