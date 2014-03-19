@@ -146,23 +146,16 @@ class Trajectory(SerialisableObject):
             timepoint_to_print,
             values_to_print)
 
-    def __ne__(self, other):
-        return not self == other
+    # def __ne__(self, other):
+    #     return not self == other
+
 
     def __eq__(self, other):
-
         if not isinstance(other, self.__class__):
             return False
-        if self.description != other.description:
-            return False
 
-        if not np.equal(self.timepoints, other.timepoints).all():
-            return False
-
-        if not np.equal(self.values, other.values).all():
-            return False
-
-        return True
+        return np.equal(self.timepoints, other.timepoints).all() and np.equal(self.values, other.values).all() \
+            and self.description == other.description
 
     def __add__(self, other):
         return self._arithmetic_operation(other, operator.add)
