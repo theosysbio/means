@@ -63,6 +63,10 @@ class Trajectory(SerialisableObject):
         """
         return self._description
 
+    def set_description(self, description):
+        assert(isinstance(description, Descriptor))
+        self._description = description
+
     def _create_plot(self, *args, **kwargs):
         from matplotlib import pyplot as plt
         # Get label from the kwargs provided, or use self.description as default
