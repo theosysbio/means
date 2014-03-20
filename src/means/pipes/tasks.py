@@ -8,9 +8,8 @@ import numpy as np
 from means.util.logs import get_logger
 import means.examples
 
-
-# TODO: make this configurable maybe?
-OUTPUT_DIR = 'output'
+# Allow getting the output directory from [output] > directory in config file
+OUTPUT_DIR = luigi.configuration.get_config().get('output', 'directory', 'task-output')
 
 logger = get_logger(__name__)
 
@@ -59,10 +58,11 @@ class ModelTask(Task):
     Return a model from one of the predefined models
     """
     name = luigi.Parameter()
-    # TODO: Add others
     _SUPPORTED_MODELS = {'p53': means.examples.MODEL_P53,
                          'hes1': means.examples.MODEL_HES1,
-                         'dimerisation': means.examples.MODEL_DIMERISATION}
+                         'dimerisation': means.examples.MODEL_DIMERISATION,
+                         'michaelis-menten': means.examples.MODEL_MICHAELIS_MENTEN,
+                         'lotka-volterra': means.examples.MODEL_LOTKA_VOLTERRA}
 
     def _return_object(self):
         return self._SUPPORTED_MODELS[self.name]
@@ -116,16 +116,6 @@ class TrajectoryTask(Task, TaskPreloadingHint):
     def _return_object(self):
         problem = self.input().load()
 
-
-
-        logger.debug('Input: {0!r}'.format(self.input()))
-        logger.debug(zip(self.input().get_cache().keys(), map(lambda x: hex(id(x)), self.input().get_cache().values())))
-
-        try:
-            logger.debug('!!!! {0} !!!!! Some memoised properties'.format(os.getpid(), problem._memoised_properties))
-        except AttributeError:
-            logger.debug('???? {0} !!!!! No memoised properties'.format(os.getpid()))
-
         timepoints = np.arange(*self.timepoints_arange)
         parameters = self.parameters
         initial_conditions = self.initial_conditions
@@ -138,9 +128,8 @@ class TrajectoryTask(Task, TaskPreloadingHint):
 
     def preload(self):
         if self.input().exists():
-            logger.warn('Preloading {0} {1}'.format(self.__class__.__name__, hex(id(self))))
-            start = datetime.now()
+            logger.debug('Preloading {0} {1}'.format(self.__class__.__name__, hex(id(self))))
+            # Cache the load from file
             problem = self.input().load()
-            problem.right_hand_side_as_function
-            end = datetime.now()
-            logger.warn('Took: {0}'.format((end-start).total_seconds()))
+            # Cache the right_hand_side_as_function
+            __ = problem.right_hand_side_as_function
