@@ -319,7 +319,8 @@ def _postprocess_lna_simulation(problem, trajectories):
         means = [trajectory.values[t] for trajectory in species_trajectories ]
 
         # Recreate the species trajectories by sampling from multivariate normal
-        sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
+        #sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
+        sampled_observations[t] = means
 
     # Recompile everything back to trajectories
     answer = []

@@ -71,15 +71,13 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         A = sp.Matrix(len(ymat), len(ymat), lambda i, j: 0)
         for i in range(A.rows):
             for k in range(A.cols):
-                A[i, k] = reduce(operator.add, [S[i, j] * sp.diff(amat[j], ymat[k])  for j in range(len(amat))])
+                A[i, k] = reduce(operator.add, [S[i, j] * sp.diff(amat[j], ymat[k]) for j in range(len(amat))])
 
 
         # `diagA` is a matrix that has values sqrt(a[i]) on the diagonal (0 elsewhere)
-        diagA = sp.Matrix(len(amat), len(amat), lambda i, j: amat[i] ** 0.5 if i==j else 0)
-
+        diagA = sp.Matrix(len(amat), len(amat), lambda i, j: amat[i] ** sp.Rational(1,2) if i==j else 0)
         # E is stoichiometry matrix times diagA
         E = S * diagA
-
 
         variance_terms = []
         cov_matrix = []
