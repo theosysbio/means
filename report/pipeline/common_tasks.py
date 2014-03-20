@@ -6,6 +6,8 @@ from config import DATA_DIR
 from target import PickleSerialiser, PickleSerialiserWithAdditionalParameters
 from datetime import datetime
 import numpy as np
+import logging
+logger = logging.getLogger('luigi-interface')
 
 class MeansTask(luigi.Task):
     """
@@ -25,10 +27,16 @@ class MeansTask(luigi.Task):
         raise NotImplementedError
 
     def output(self):
-        # Enforce all data to be in data dir
-        return PickleSerialiserWithAdditionalParameters(os.path.join(DATA_DIR,
-                                                                     self.__class__.__name__,
-                                                                     self._filename))
+        try:
+            # Make sure we have only one instance of output object
+            return self.__output
+        except AttributeError:
+            # Force the directory structure <DATA_DIR>/<CLASS>/<FILENAME>
+            output = PickleSerialiserWithAdditionalParameters(os.path.join(DATA_DIR,
+                                                              self.__class__.__name__,
+                                                              self._filename))
+            self.__output = output
+            return output
 
     def run(self):
         # Poor man's timing
@@ -93,7 +101,24 @@ class MEAProblem(MeansTask):
 
         return problem
 
-class Trajectory(MeansTask):
+    def __init__(self, *args, **kwargs):
+        super(MEAProblem, self).__init__(*args, **kwargs)
+
+class TaskPreloadingHint(object):
+
+    def preload(self):
+        pass
+
+class PreloadingWorker(luigi.worker.Worker):
+
+    def _fork_task(self, children, task_id):
+        task = self._Worker__scheduled_tasks[task_id]
+        if isinstance(task, TaskPreloadingHint):
+            task.preload()
+        super(PreloadingWorker, self)._fork_task(children, task_id)
+
+
+class Trajectory(MeansTask, TaskPreloadingHint):
 
     # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
     model_name = luigi.Parameter()
@@ -116,6 +141,16 @@ class Trajectory(MeansTask):
     def _return_object(self):
         problem = self.input().load()
 
+
+
+        logger.debug('Input: {0!r}'.format(self.input()))
+        logger.debug(zip(self.input().get_cache().keys(), map(lambda x: hex(id(x)), self.input().get_cache().values())))
+
+        try:
+            logger.debug('!!!! {0} !!!!! Some memoised properties'.format(os.getpid(), problem._memoised_properties))
+        except AttributeError:
+            logger.debug('???? {0} !!!!! No memoised properties'.format(os.getpid()))
+
         timepoints = np.arange(*self.timepoints_arange)
         parameters = self.parameters
         initial_conditions = self.initial_conditions
@@ -125,6 +160,15 @@ class Trajectory(MeansTask):
             kwargs['h'] = self.h
         simulation = means.Simulation(problem, **kwargs)
         return simulation.simulate_system(parameters, initial_conditions, timepoints)
+
+    def preload(self):
+        if self.input().exists():
+            logger.warn('Preloading {0} {1}'.format(self.__class__.__name__, hex(id(self))))
+            start = datetime.now()
+            problem = self.input().load()
+            problem.right_hand_side_as_function
+            end = datetime.now()
+            logger.warn('Took: {0}'.format((end-start).total_seconds()))
 
 class LotsOfTrajectoriesTask(MeansTask):
 
@@ -145,7 +189,13 @@ class LotsOfTrajectoriesTask(MeansTask):
     def _return_object(self):
 
         inputs = self.input()
+
         return [i.load() for i in inputs]
 
+class PreloadingWorkerSchedulerFactory(luigi.interface.WorkerSchedulerFactory):
+    def create_worker(self, scheduler, worker_processes):
+        return PreloadingWorker(scheduler=scheduler, worker_processes=worker_processes)
+
 if __name__ == '__main__':
-    luigi.run()
+    luigi.run(worker_scheduler_factory=PreloadingWorkerSchedulerFactory())
+    #luigi.run()
