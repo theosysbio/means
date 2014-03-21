@@ -25,10 +25,35 @@ class UniqueNameInitialisationMixin(object):
 
 class SolverException(Exception):
 
-    def __init__(self, base_exception):
-        message = '{0.__class__.__name__}: {0!s}'.format(base_exception)
-        self.base_exception = base_exception
+    __base_exception_class = None
+    __base_exception_kwargs = None
+
+    def __init__(self, message, base_exception=None):
+        if base_exception is not None:
+            if message is None:
+                message = ''
+            # We need to take message argument as otherwise SolverException is unpickleable
+            message += '{0.__class__.__name__}: {0!s}'.format(base_exception)
+
         super(SolverException, self).__init__(message)
+
+        # CVodeError does not serialise well, so let's store it as a set of arguments and create the base exception
+        # on the fly, rather than storing the actual object
+        if base_exception is not None:
+            self.__base_exception_class = base_exception.__class__
+            self.__base_exception_kwargs = base_exception.__dict__.copy()
+
+    @property
+    def base_exception(self):
+        if self.__base_exception_class is not None:
+            return self.__base_exception_class(**self.__base_exception_kwargs)
+
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and  \
+               self.message == other.message and self.__base_exception_class == other.__base_exception_class  and \
+               self.__base_exception_kwargs == other.__base_exception_kwargs
+
 
 def available_solvers(with_sensitivity_support=False):
     members = inspect.getmembers(sys.modules[__name__])
@@ -172,7 +197,7 @@ class SolverBase(MemoisableObject):
         :type solver_exception: Exception
         """
         # By default just re-raise it with our wrapper
-        raise SolverException(solver_exception)
+        raise SolverException(None, solver_exception)
 
     def _default_solver_instance(self):
         raise NotImplementedError

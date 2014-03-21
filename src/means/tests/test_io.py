@@ -1,7 +1,8 @@
 import os
 import unittest
+from assimulo.solvers.sundials import CVodeError
 from sympy import Symbol, MutableDenseMatrix, Float
-from means import TrajectoryCollection
+from means import TrajectoryCollection, SolverException
 from means.core import ODEProblem, Moment, VarianceTerm
 from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus
@@ -235,5 +236,9 @@ class TestPickleSerialisation(TestSerialisation):
 
         self.assertEqual(object_, new_object)
 
+    def test_solver_exception(self):
+
+        e = SolverException(None, CVodeError('Test', 14.9))
+        self._roundtrip(e)
 
 
