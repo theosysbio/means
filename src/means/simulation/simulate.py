@@ -1,8 +1,9 @@
 """
 Simulate
 --------
+
 This part of the package provides utilities for simulate the
-dynamic of an `means.core.problems.ODEProblem`.
+dynamic of an :class:`~means.core.problems.ODEProblem`.
 
 A wide range of numerical solver are available:
 
@@ -27,7 +28,7 @@ the initial conditions and parameters (constants):
 >>> simulator = Simulation(ode_problem)
 >>> trajectories = simulator.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE)
 
-A list of `Trajectory` objects (see :mod:`means.simulation.trajectory`) is created.
+A :class:`~means.simulation.trajectory.TrajectoryCollection` object (see :mod:`~means.simulation.trajectory`) is created.
 See the documentation of :class:`Simulation` for additional information.
 
 -------------

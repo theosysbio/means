@@ -36,7 +36,9 @@ from means.util.sympyhelpers import sympy_expressions_equal
 
 class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     """
-    Stores the left and right hand side equations to be simulated
+    Creates a `ODEProblem` object that stores a system of ODEs describing the kinetic of a system.
+    Typically, `ODEProblem`s will be further used in simulations (see :mod:`~means.simulation`)
+    and inference (see :mod:`~means.inference`).
 
     """
 
@@ -49,17 +51,18 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     def __init__(self, method, left_hand_side_descriptors, right_hand_side, parameters):
         """
-        Creates a `ODEProblem` object that stores the problem to be simulated/used for inference
         :param method: a string describing the method used to generate the problem.
         Currently, 'MEA' and 'LNA' are supported"
-        :param left_hand_side_descriptors: the left hand side of equations as a list of :class:`Descriptor` objects
-                                           (e.g. list of :class:`Moment`)
+        :param left_hand_side_descriptors: the left hand side of equations as a list of
+            :class:`~means.core.descriptors.Descriptor` objects (such as :class:`~means.core.descriptors.Moment`)
         :param right_hand_side: the right hand side of equations
         :param parameters: the parameters of the model
         """
 
         self.__left_hand_side_descriptors = left_hand_side_descriptors
-        self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix([plhs.symbol for plhs in left_hand_side_descriptors]))
+        self.__left_hand_side = to_sympy_column_matrix(to_sympy_matrix(
+                    [plhs.symbol for plhs in left_hand_side_descriptors])
+                    )
         self.__right_hand_side = to_sympy_column_matrix(right_hand_side)
         self.__parameters = to_list_of_symbols(parameters)
         self.__method = method
@@ -146,7 +149,8 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     def descriptor_for_symbol(self, symbol):
         """
-        Given the symbol associated with the problem, return the descriptor associated with that symbol
+        Given the symbol associated with the problem.
+        Returns the :class:`~means.core.descriptors.Descriptor` associated with that symbol
 
         :param symbol: Symbol
         :type symbol: basestring|:class:`sympy.Symbol`
@@ -245,9 +249,10 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
 
+
 class StochasticProblem(Model):
     """
-    The formulation of a model for stochastic simulations such as GSSA.
+    The formulation of a model for stochastic simulations such as GSSA (see :mod:`means.simulation.ssa`).
     """
     def __init__(self, model):
         super(StochasticProblem, self).__init__(model.species, model.parameters,
