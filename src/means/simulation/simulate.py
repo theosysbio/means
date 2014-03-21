@@ -336,4 +336,5 @@ def _postprocess_lna_simulation(problem, trajectories):
 
     answer.extend(variance_trajectories)
 
-    return answer
+    # No longer using multivariate normal sampling
+    return trajectories
