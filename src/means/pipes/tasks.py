@@ -27,9 +27,11 @@ class TaskBase(luigi.Task):
         params = self.get_params()
         param_values = [getattr(self, x[0]) for x in params if x[1].significant]
 
-        to_filesafe_string = lambda x: str(x).replace(' ', '_')
+        to_filesafe_string = lambda x: str(x).replace(',', '_').replace(' ', '_')
         params_str = '-'.join(map(to_filesafe_string, param_values))
-        return '{0}-{1}{2}'.format(class_, params_str, self._file_extension)
+        if params_str:
+            params_str = ''.join(['-', params_str])
+        return '{0}{1}{2}'.format(class_, params_str, self._file_extension)
 
     def _output(self):
         raise NotImplementedError

@@ -1,3 +1,26 @@
+"""
+Generates the hit-and-miss figures for the report from scratch.
+
+To run it, first run a luigi daemon on one terminal window:
+
+    bash$ luigid
+
+Then on, another window, start this script
+
+    bash$ python figure_hit_and_miss.py --workers 8
+
+Change the number of workers to the number of CPUs on your computer.
+Open your browser to http://127.0.0.1:8042 to see the luigi task visualiser an follow the progress there.
+
+Known issues:
+
+    It is likely that matplotlib will fail when multiple workers are used.
+    If that happens, the main worker will die and all `FigureTask`s will be marked as red in the luigi visualiser.
+    This can be mitigated by re-running this script with only one worker (so no threading is used)
+    What should run only the failed tasks and regenerate all the figures.
+
+
+"""
 from means import TrajectoryCollection, SolverException
 from means.pipes import *
 import numpy as np
@@ -23,7 +46,8 @@ class FigureHitAndMissData(Task):
             for c_4 in np.arange(0.8, 2.5, 0.1):
                 parameters.append([90, 0.002, c_2, 1.1, c_4, 0.96, 0.01])
 
-
+        # We want to specify all the trajectoreis we need to compute as requirements of this task,
+        # so luigi handles their execution and scheduling, not us.
         return [TrajectoryTask(model_name=model_name, max_order=max_order,
                                parameters=x,
                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
@@ -58,6 +82,9 @@ class FigureHitAndMiss(FigureTask):
     timepoints_arange = ListParameter()
 
     def requires(self):
+        # I split the data aggregation and figure plotting into different tasks, thus this dependancy
+        # this is not strictly necessary, if you do not plot figures into subplots, (like we don't here)
+        # But would be desired if we do, essentially this dependency can be refactored to be implicit
         return FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange)
 
     def _return_object(self):
@@ -100,26 +127,22 @@ class FigureHitAndMiss(FigureTask):
         return fig
 
 class FigureHitAndMissTex(TexFigureTask):
+    """
+    Join all hit and miss figures into one tex file
+    """
 
     # Note that this is not a parameter, it is a constant
     timepoints_arange = [0, 40, 0.1]
     max_orders = [1, 2, 3, 4, 5]
 
+    label = 'hit-and-miss'
+    caption = 'Some Caption'
+    standalone = True
+    number_of_columns = 2
+
     def requires(self):
         return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange)
                 for max_order in self.max_orders]
 
-class FigureHitAndMissMain(Task):
-    """
-    Convenience function to be able to run file without command line args
-    """
-
-    def requires(self):
-        return FigureHitAndMissTex(label='hit-and-miss', caption='Some caption',
-                                   standalone=True)
-
-    def _return_object(self):
-        return None
-
 if __name__ == '__main__':
-    run(main_task_cls=FigureHitAndMissMain)
+    run(main_task_cls=FigureHitAndMissTex)
