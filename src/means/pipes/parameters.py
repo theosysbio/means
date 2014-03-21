@@ -1,6 +1,6 @@
-import luigi
+from luigi.parameter import *
 
-class ListParameter(luigi.Parameter):
+class ListParameter(Parameter):
 
     _separator = ','
 
