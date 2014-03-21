@@ -1,8 +1,9 @@
 """
 Simulate
 --------
+
 This part of the package provides utilities for simulate the
-dynamic of an `means.core.problems.ODEProblem`.
+dynamic of an :class:`~means.core.problems.ODEProblem`.
 
 A wide range of numerical solver are available:
 
@@ -27,7 +28,7 @@ the initial conditions and parameters (constants):
 >>> simulator = Simulation(ode_problem)
 >>> trajectories = simulator.simulate_system(RATES, INITIAL_CONDITIONS, TIME_RANGE)
 
-A list of `Trajectory` objects (see :mod:`means.simulation.trajectory`) is created.
+A :class:`~means.simulation.trajectory.TrajectoryCollection` object (see :mod:`~means.simulation.trajectory`) is created.
 See the documentation of :class:`Simulation` for additional information.
 
 -------------
@@ -319,7 +320,8 @@ def _postprocess_lna_simulation(problem, trajectories):
         means = [trajectory.values[t] for trajectory in species_trajectories ]
 
         # Recreate the species trajectories by sampling from multivariate normal
-        sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
+        #sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
+        sampled_observations[t] = means
 
     # Recompile everything back to trajectories
     answer = []
@@ -335,4 +337,5 @@ def _postprocess_lna_simulation(problem, trajectories):
 
     answer.extend(variance_trajectories)
 
-    return answer
+    # No longer using multivariate normal sampling
+    return trajectories

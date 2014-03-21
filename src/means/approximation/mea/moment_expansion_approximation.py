@@ -1,5 +1,4 @@
 """
-
 Moment Expansion Approximation
 -----
 
@@ -245,3 +244,4 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
         return out_exprs
+

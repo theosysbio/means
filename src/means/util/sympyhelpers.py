@@ -23,7 +23,7 @@ def substitute_all(sp_object, pairs):
         expr = sp_object.xreplace(dict_pairs)
 
     # in sympy 0.7.2, this would not work, so we do it manually
-    except:
+    except Exception:
         expr =  sp_object
         for (a,b) in dict_pairs.items():
             expr = sympy.Subs(expr, a, b)
@@ -48,7 +48,7 @@ def quick_solve(expr, var):
         # This may not work every time,
         # so we fallback on the --slow-- `solve()` if we failed
         if var in res:
-            return sp.solve(expr, var)
+            return sympy.solve(expr, var)
         return res
 
 def to_sympy_matrix(value):
