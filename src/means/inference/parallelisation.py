@@ -1,3 +1,11 @@
+"""
+Parameter Inference Parallelisation
+----
+
+This part of the package provides helper functions to make parameter inference run in parallel.
+
+"""
+
 import multiprocessing
 
 def multiprocessing_pool_initialiser(objects, infer_args, infer_kwargs):

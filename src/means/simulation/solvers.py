@@ -1,5 +1,9 @@
-from collections import namedtuple
+"""
+Solvers
+-------
 
+This part of the package provides wrappers around Assimulo solvers.
+"""
 from assimulo.problem import Explicit_Problem
 import numpy as np
 import sys

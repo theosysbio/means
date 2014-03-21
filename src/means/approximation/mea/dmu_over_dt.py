@@ -1,7 +1,5 @@
 import itertools
-
 import sympy as sp
-
 from means.approximation.mea.mea_helpers import get_one_over_n_factorial, derive_expr_from_counter_entry
 
 

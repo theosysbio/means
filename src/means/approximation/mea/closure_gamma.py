@@ -1,9 +1,19 @@
+"""
+Gamma moment closure
+------
+
+This part of the package provides the original the Gamma closure.
+"""
+
 import sympy as sp
 from closure_scalar import ClosureBase
 from means.util.sympyhelpers import substitute_all, product
 
 class GammaClosure(ClosureBase):
     """
+
+    **EXPERIMENTAL**
+
     A class providing gamma closure to
     :class:`~means.approximation.mea.moment_expansion_approximation.MomentExpansionApproximation`.
     Expression for higher order (max_order + 1) central moments are computed from expressions of

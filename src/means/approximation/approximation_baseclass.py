@@ -1,6 +1,3 @@
-from time import time
-
-
 class ApproximationBaseClass(object):
     """
     A class of explicit generators for ordinary differential equations required to simulate the model provided.

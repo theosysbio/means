@@ -1,11 +1,19 @@
-import multiprocessing
+"""
+Gillespie Stochastic Simulation Algorithm
+----
 
+This part of the package provides a simple implementation of GSSA.
+This is designed for experimental purposes much more than for performance.
+If you would like to use SSA for parameter inference, or for high
+number of species, there are many superior implementations available.
+"""
+
+import multiprocessing
 import numpy as np
 import sympy as sp
-
 from means.simulation.trajectory import Trajectory, TrajectoryCollection
 from means.io.serialise import SerialisableObject
-from means.util.meanshelpers import generate_n_and_k_counters
+from means.util.moment_counters import generate_n_and_k_counters
 from means.util.sympyhelpers import product, substitute_all
 from means.core import Moment
 

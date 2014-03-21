@@ -1,3 +1,11 @@
+"""
+Log-normal moment closure
+------
+
+This part of the package provides the original the Log-normal closure.
+"""
+
+
 import sympy as sp
 from closure_scalar import ClosureBase
 

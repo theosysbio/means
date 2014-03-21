@@ -1,3 +1,14 @@
+"""
+Scalar moment closure
+------
+
+This part of the package provides the original
+(and default) closure :class:`~means.approximation.mea.closure_scalar.ScalarClosure`
+as well as the base class for all closers.
+
+"""
+
+
 import sympy as sp
 from means.util.sympyhelpers import substitute_all
 

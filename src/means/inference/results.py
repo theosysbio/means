@@ -1,3 +1,10 @@
+"""
+Inference Results
+-------
+This part of the package provides classes to store and manage the results
+of inference.
+"""
+
 from means.io.serialise import SerialisableObject
 from means.util.logs import get_logger
 from means.util.memoisation import memoised_property, MemoisableObject

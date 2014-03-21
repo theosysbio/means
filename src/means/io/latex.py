@@ -1,4 +1,7 @@
+"""
 
+
+"""
 class LatexPrintableObject(object):
 
     def _repr_latex_(self):

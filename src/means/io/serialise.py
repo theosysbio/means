@@ -1,7 +1,8 @@
 import yaml
 import numpy as np
 
-# CLoader and CDumper do not support custom serialisation logic, do not use
+# CLoader and CDumper do not support custom serialisation logic.
+# *DO NOT USE* CDumper
 from yaml import Loader, Dumper
 
 _NUMPY_ARRAY_TAG = '!nparray'

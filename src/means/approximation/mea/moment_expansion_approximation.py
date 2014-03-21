@@ -31,7 +31,7 @@ import sympy as sp
 
 from means.core import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.util.meanshelpers import generate_n_and_k_counters
+from means.util.moment_counters import generate_n_and_k_counters
 
 from dmu_over_dt import generate_dmu_over_dt
 from eq_central_moments import eq_central_moments

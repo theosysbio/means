@@ -1,3 +1,11 @@
+"""
+MEANS Helpers
+-----
+
+This part of the package provides a function to generate all mixed and "pure" raw and
+:class:`~means.core.descriptor.Moment`s up to a maximal_order.
+"""
+
 import itertools
 import sympy as sp
 from means.core import Moment
@@ -9,7 +17,7 @@ def generate_n_and_k_counters(max_order, species, central_symbols_prefix="M_", r
         Therefore, each :class:`~means.approximation.ode_problem.Moments` is represented by both
         a vector of integer and a symbol.
 
-        :param max_order: the maximal order of moment to be computer
+        :param max_order: the maximal order of moment to be computer (will generate a list of moments up to `max_order + 1`)
         :param species: the name of the species
         :return: a pair of lists of :class:`~means.core.descriptors.Moment`s corresponding to central,
         and raw moments, respectively.

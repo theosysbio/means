@@ -1,3 +1,15 @@
+"""
+Sample Models
+-----
+
+This part of the package provides examples of simple
+and well characterised models to play with.
+
+>>> from means.examples.sample_models import MODEL_P53
+>>> print MODEL_P53
+
+"""
+
 from means.core import Model
 
 MODEL_MICHAELIS_MENTEN = Model(parameters=['c_0', 'c_1', 'c_2'],
@@ -51,7 +63,7 @@ MODEL_HES1 = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3'],
                                          [0, -1, 0, -1, 1, 0],
                                          [0, 0, -1, 1, 0, 0]])
 
-MODEL_LOTKA_VOLTERRA  =  Model(
+MODEL_LOTKA_VOLTERRA = Model(
                                parameters=['k_1', 'k_2', 'k_3'],
                                species=['Pred', 'Prey'],
                                propensities=['k_1 * Prey',

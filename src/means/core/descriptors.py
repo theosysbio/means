@@ -1,3 +1,6 @@
+#todo docsting. wait for decision on geting rid of variance term -> moment corresponding to variance
+
+
 import numpy as np
 import sympy
 from means.io.serialise import SerialisableObject

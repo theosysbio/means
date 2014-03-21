@@ -1,13 +1,16 @@
-#################################################################
-# Functions used for parameter inference.  Selected rate constants
-# and initial conditions are varied to minimise the cost function.
-# Minimization uses the Nelder-Mead simplex algorithm (python fmin).
-# The default cost function calculates the distance (sum of squared
-# differences) between the sample data moments and moments 
-# calculated using MFK at each of the specified timepoints.
-#################################################################
+"""
+Parameter Inference
+-----
 
-import numpy as np
+This part of the package provides utilities for parameter inference.
+Parameter inference will try to find the set of parameters which
+produces trajectories with minimal distance to the observed trajectories.
+Different distance functions are implemented (e.g. based on parametric likelihood),
+but it is also possible to use custom distance functions.
+Parameter inference support parallel computing and can use random
+restarts (see :class:`~means.inference.InferenceWithRestarts`).
+"""
+
 from scipy.optimize import fmin
 from sympy import Symbol
 
@@ -349,7 +352,6 @@ class Inference(SerialisableObject, MemoisableObject):
         if len(starting_conditions) < problem.number_of_equations:
             starting_conditions = starting_conditions[:] \
                                   + [0.0] * (problem.number_of_equations - len(starting_conditions))
-
 
         starting_parameters_with_variability, parameter_constraints = \
             self._generate_values_with_variability_and_constraints(self.problem.parameters, starting_parameters,

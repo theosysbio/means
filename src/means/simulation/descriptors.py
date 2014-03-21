@@ -1,13 +1,17 @@
 """
+Simulation Descriptors
+----
+
 Descriptors that are local to the simulation package
 """
+
 from means.core import Descriptor
 
 
 class SensitivityTerm(Descriptor):
     r"""
-    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object represents the sensitivity
-    of some ODE term with respect to some parameter.
+    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object
+    represents the sensitivity of some ODE term with respect to some parameter.
     In other words, sensitivity term describes :math:`s_{ij}(t) = \frac{\partial y_i(t)}{\partial p_j}` where
     :math:`y_i` is the ODE term described above and :math:`p_j` is the parameter.
 
@@ -60,7 +64,8 @@ class SensitivityTerm(Descriptor):
 
 class PerturbedTerm(Descriptor):
     r"""
-    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a particular object represents the sensitivity
+    A :class:`~means.approximation.ode_problem.Descriptor` term that describes a
+    particular object represents the sensitivity
     of some ODE term with respect to some parameter.
     In other words, sensitivity term describes :math:`s_{ij}(t) = \frac{\partial y_i(t)}{\partial p_j}` where
     :math:`y_i` is the ODE term described above and :math:`p_j` is the parameter.

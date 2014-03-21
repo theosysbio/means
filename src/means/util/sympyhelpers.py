@@ -1,3 +1,11 @@
+"""
+Sympy Helpers
+----
+
+This part of the package provides functions to extend the functionality of sympy,
+or to make MEANS compatible with different versions of sympy.
+"""
+
 import sympy
 from sympy.core.sympify import SympifyError
 import numpy as np

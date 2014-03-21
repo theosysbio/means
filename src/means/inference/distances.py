@@ -1,3 +1,11 @@
+"""
+Distances
+-----
+
+This part of the package implements functions to compute distance between two set of trajectories.
+Distance functions are typically required for parameter inference (see :mod:`means.inference.inference`).
+"""
+
 from collections import namedtuple
 import numpy as np
 from means.core import Moment

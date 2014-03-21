@@ -1,7 +1,13 @@
+"""
+Normal moment closure
+------
+
+This part of the package provides the original the Normal (Gaussian) closure.
+"""
+
 import sympy as sp
 from sympy.utilities.iterables import multiset_partitions
 import operator
-import copy
 from means.util.sympyhelpers import product
 from closure_scalar import ClosureBase
 
