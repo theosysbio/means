@@ -1,12 +1,28 @@
+"""
+Trajectories
+--------
+
+This part of the package provide convenient utilities to manage trajectories.
+A :class:`~means.simulation.trajectory.Trajectory` object is generally a time series
+containing the values of a given moment (e.g. mean, variance, ...) over a time range.
+Trajectories are typically returned by simulations (see :mod:`~means.simulation.simulate` and
+:mod:`~means.simulation.ssa`),
+or from observation/measurement.
+
+The `TrajectoryCollection` class is a container of trajectories.
+It can be used like other containers such as lists.
+
+Both `~means.simulation.trajectory.TrajectoryCollection` and `~means.simulation.trajectory.Trajectory` have there own `.plot()`
+method to help representation.
+"""
+
 import operator
 import numbers
-
 import numpy as np
 from means.core.descriptors import Descriptor, Moment
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
 from means.simulation.descriptors import PerturbedTerm
-
 
 
 class Trajectory(SerialisableObject):
@@ -113,8 +129,19 @@ class Trajectory(SerialisableObject):
         from IPython.display import SVG
         return SVG(self._repr_png_())
 
-
     def resample(self, new_timepoints, extrapolate=False):
+
+        """
+        Use linear interpolation to resample trajectory values.
+        The new values are interpolated for the provided time points.
+        This is generally before comparing or averaging trajectories.
+
+        :param new_timepoints: the new time points
+        :param extrapolate: whether extrapolation should be performed when some new time points
+            are out of the current time range. if extrapolate=False, it would raise an exception.
+        :return: a new trajectory.
+        :rtype: :class:`~means.simulation.trajectory.Trajectory`
+        """
         if not extrapolate:
             if min(self.timepoints) > min(new_timepoints):
                 raise Exception("Some of the new time points are before any time points. If you really want to extrapolate, use `extrapolate=True`")
@@ -333,6 +360,10 @@ def perturbed_trajectory(trajectory, sensitivity_trajectory, delta=1e-4):
 
 
 class TrajectoryCollection(SerialisableObject):
+    """
+    A container of trajectories with representation functions for matplotlib and IPythonNoteBook.
+    In most cases, it simply behaves as list.
+    """
 
     yaml_tag = '!trajectory-collection'
 

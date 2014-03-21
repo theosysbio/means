@@ -1,5 +1,4 @@
 """
-
 Moment Expansion Approximation
 -----
 
