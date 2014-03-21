@@ -25,8 +25,10 @@ class TaskBase(luigi.Task):
         # Default filename that just lists class name and parameters in dashes
         class_ = self.__class__.__name__
         params = self.get_params()
-        param_values = [getattr(self, x[0]) for x in params]
-        params_str = '-'.join(map(str, param_values))
+        param_values = [getattr(self, x[0]) for x in params if x[1].significant]
+
+        to_filesafe_string = lambda x: str(x).replace(' ', '_')
+        params_str = '-'.join(map(to_filesafe_string, param_values))
         return '{0}-{1}{2}'.format(class_, params_str, self._file_extension)
 
     def _output(self):
@@ -85,7 +87,7 @@ class Task(TaskBase):
 
 class FigureTask(TaskBase):
 
-    figure_format = luigi.Parameter(default='svg')
+    figure_format = luigi.Parameter(default='pdf')
 
     @property
     def _file_extension(self):
@@ -103,9 +105,91 @@ class FigureTask(TaskBase):
         f = self.output().open('w')
         f.close()
         # Write to filename, not file object, as matplotlib doesn't like the latter
-        answer.savefig(self.output().path)
+        answer.savefig(self.output().path, bbox_inches='tight')
+
         # Close the figure
         plt.close(answer)
+
+class TexFigureTask(Task):
+    """
+    Creates a latex figure that joins one or more figures using `LaTeX subfloats`_.
+
+    Returns a .tex file with the figure in LaTeX notation that can then be included to other files
+
+    .. `LaTeX subfloats`: https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions#Subfloats
+    """
+
+    label = luigi.Parameter()
+    caption = luigi.Parameter(significant=False)
+    placement = luigi.Parameter(default='tb', significant=False)
+    number_of_columns = luigi.Parameter(default=0)
+    standalone = luigi.BooleanParameter(default=False)
+
+    @property
+    def _file_extension(self):
+        return '.tex'
+
+    def _output(self):
+        output = luigi.File(self.filepath)
+        return output
+
+    def _return_object(self):
+        files = []
+        for figure in self.input():
+            files.append(figure.path)
+        return files
+
+    def _store_output_and_runtime(self, answer, runtime):
+
+        template = r'''
+        {standalone}\documentclass{{article}}
+        {standalone}\usepackage{{graphicx}}
+        {standalone}\usepackage{{caption}}
+        {standalone}\usepackage{{subcaption}}
+        {standalone}\begin{{document}}
+        \begin{{figure}}
+            \centering
+            {subfigures}
+            \caption{{{caption}}}
+            \label{{fig:{label}}}
+        \end{{figure}}
+        {standalone}\end{{document}}
+        '''
+
+        subfigures_template = r'''
+        \begin{{subfigure}}[b]{{{width}\textwidth}}
+            \includegraphics[width=\textwidth]{{{figure_file}}}
+            \caption{{}} % TODO: caption
+        \end{{subfigure}}
+        '''
+
+        number_of_subfigures = len(answer)
+        maxwidth = 0.9  # Proportion of the total \textwidth
+        number_of_columns = self.number_of_columns
+
+        if number_of_columns <= 0:
+            number_of_columns = number_of_subfigures
+
+        width_per_column = round(maxwidth / number_of_columns, 2)
+        subfigure_strs = []
+        for subfigure in answer:
+            filename, extension = os.path.splitext(subfigure)
+            # Change filename from smth.pdf to {smth}.pdf -- otherwise LaTeX is not happy
+            masked_filename = '{{{0}}}{1}'.format(filename, extension)
+            subfigure_strs.append(subfigures_template.format(width=width_per_column,
+                                                             figure_file=masked_filename))
+
+
+        with self.output().open('w') as f:
+            f.write(template.format(caption=self.caption,
+                                    label=self.label,
+                                    subfigures='~'.join(subfigure_strs),
+                                    standalone='' if self.standalone else '%'))
+
+
+
+
+
 
 
 class ModelTask(Task):

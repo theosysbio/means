@@ -7,15 +7,14 @@ from means.util.logs import get_logger
 
 logger = get_logger(__name__)
 
-class FigureHitAndMissTask(FigureTask):
+class FigureHitAndMissData(Task):
 
     max_order = IntParameter()
-    # Note that this is not a parameter, it is a constant
-    timepoints_arange = [0, 40, 0.1]
+    timepoints_arange = ListParameter()
 
     def requires(self):
         model_name = 'p53'
-        max_orer = self.max_order
+        max_order = self.max_order
 
         initial_conditions = [70, 30, 60]
 
@@ -25,14 +24,12 @@ class FigureHitAndMissTask(FigureTask):
                 parameters.append([90, 0.002, c_2, 1.1, c_4, 0.96, 0.01])
 
 
-        return [TrajectoryTask(model_name=model_name, max_order=max_orer,
+        return [TrajectoryTask(model_name=model_name, max_order=max_order,
                                parameters=x,
                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
                 for x in parameters]
 
     def _return_object(self):
-        from matplotlib import pyplot as plt
-        from matplotlib import colors
         success_x = []
         success_y = []
         failure_x = []
@@ -52,13 +49,31 @@ class FigureHitAndMissTask(FigureTask):
             else:
                 raise Exception('Got {0!r} as trajectory, expected either SolverException'
                                 ' or TrajectoryCollection'.format(trajectory))
+
+        return success_x, success_y, failure_x, failure_y, failure_c
+
+class FigureHitAndMiss(FigureTask):
+
+    max_order = IntParameter()
+    timepoints_arange = ListParameter()
+
+    def requires(self):
+        return FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange)
+
+    def _return_object(self):
+        from matplotlib import pyplot as plt
+        from matplotlib import colors
         fig = plt.figure()
-        ax = fig.add_subplot(1,1,1)
+
+        input_ = self.input()
+
+        success_x, success_y, failure_x, failure_y, failure_c = input_.load()
+        ax = fig.add_subplot(1, 1, 1)
 
         ax.set_xlabel('c_2')
         ax.set_ylabel('c_4')
         ax.set_title('max_order = {0}'.format(self.max_order))
-        ax.scatter(success_x, success_y, color='b', label='Success')
+        success_scatter = ax.scatter(success_x, success_y, color='b', label='Success')
 
         cdict = {'red': ((0.0, 1.0, 1.0),
                          (1.0, 0.0, 0.0)),
@@ -74,13 +89,37 @@ class FigureHitAndMissTask(FigureTask):
 
         vmin = self.timepoints_arange[0]
         vmax = self.timepoints_arange[1]
-        failure_scatter = ax.scatter(failure_x, failure_y, marker='x', c=failure_c, cmap=cmap,
-                                     vmin=vmin, vmax=vmax, label='Failure')
+        failure_scatter = ax.scatter(failure_x, failure_y, marker='s', c=failure_c, cmap=cmap,
+                                     vmin=vmin, vmax=vmax, label='Failure', edgecolor='')
 
-        colorbar = fig.colorbar(failure_scatter)
-        colorbar.set_label('Point of failure')
         ax.legend()
+        if failure_x:
+            colorbar = plt.colorbar(failure_scatter, ax=ax)
+            colorbar.set_label('Point of failure')
+
         return fig
 
+class FigureHitAndMissTex(TexFigureTask):
+
+    # Note that this is not a parameter, it is a constant
+    timepoints_arange = [0, 40, 0.1]
+    max_orders = [1, 2, 3, 4, 5]
+
+    def requires(self):
+        return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange)
+                for max_order in self.max_orders]
+
+class FigureHitAndMissMain(Task):
+    """
+    Convenience function to be able to run file without command line args
+    """
+
+    def requires(self):
+        return FigureHitAndMissTex(label='hit-and-miss', caption='Some caption',
+                                   standalone=True)
+
+    def _return_object(self):
+        return None
+
 if __name__ == '__main__':
-    run()
+    run(main_task_cls=FigureHitAndMissMain)
