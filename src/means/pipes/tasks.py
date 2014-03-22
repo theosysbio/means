@@ -234,37 +234,27 @@ class MEATask(Task):
 
         return problem
 
-class TrajectoryTask(Task, TaskPreloadingHint):
+class TrajectoryTaskBase(Task):
 
-    # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
     model_name = luigi.Parameter()
-    max_order = luigi.IntParameter()
-    closure = luigi.Parameter(default='scalar')
-    multivariate = luigi.BooleanParameter(default=True)
 
+    # General parameters for trajectory
     parameters = ListParameter(item_type=float)
     initial_conditions = ListParameter(item_type=float)
     timepoints_arange = ListParameter(item_type=float)
 
-    # Solver kwargs, list the missing ones here with default=None
-    solver = luigi.Parameter(default='ode15s')
-    h = luigi.Parameter(default=None)
 
-    def requires(self):
-        return MEATask(model_name=self.model_name, max_order=self.max_order, closure=self.closure,
-                       multivariate=self.multivariate)
+    def _simulation_object(self):
+        raise NotImplementedError
 
     def _return_object(self):
-        problem = self.input().load()
 
         timepoints = np.arange(*self.timepoints_arange)
         parameters = self.parameters
         initial_conditions = self.initial_conditions
 
-        kwargs = {'solver': self.solver}
-        if self.h is not None:
-            kwargs['h'] = self.h
-        simulation = means.Simulation(problem, **kwargs)
+        simulation = self._simulation_object()
+
         try:
             return simulation.simulate_system(parameters, initial_conditions, timepoints)
         except means.SolverException as e:
@@ -275,6 +265,32 @@ class TrajectoryTask(Task, TaskPreloadingHint):
             # Any other exception is still raised as that means the task failed
             raise
 
+class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
+
+    # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
+    max_order = luigi.IntParameter()
+    closure = luigi.Parameter(default='scalar')
+    multivariate = luigi.BooleanParameter(default=True)
+
+    # Solver kwargs, list the missing ones here with default=None
+    solver = luigi.Parameter(default='ode15s')
+    h = luigi.Parameter(default=None)
+
+    def requires(self):
+        return MEATask(model_name=self.model_name, max_order=self.max_order, closure=self.closure,
+                       multivariate=self.multivariate)
+
+    def _simulation_object(self):
+
+        problem = self.input().load()
+
+        kwargs = {'solver': self.solver}
+        if self.h is not None:
+            kwargs['h'] = self.h
+        simulation = means.Simulation(problem, **kwargs)
+
+        return simulation
+
 
     def preload(self):
         if self.input().exists():
@@ -283,3 +299,18 @@ class TrajectoryTask(Task, TaskPreloadingHint):
             problem = self.input().load()
             # Cache the right_hand_side_as_function
             __ = problem.right_hand_side_as_function
+
+
+class SSATrajectoryTask(TrajectoryTaskBase):
+
+    n_simulations = luigi.IntParameter()
+
+    def requires(self):
+        return ModelTask(name=self.model_name)
+
+    def _simulation_object(self):
+
+        problem = means.StochasticProblem(self.input().load())
+        simulation = means.SSASimulation(problem, n_simulations=self.n_simulations)
+
+        return simulation

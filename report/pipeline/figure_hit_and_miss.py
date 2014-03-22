@@ -48,10 +48,18 @@ class FigureHitAndMissData(Task):
 
         # We want to specify all the trajectoreis we need to compute as requirements of this task,
         # so luigi handles their execution and scheduling, not us.
-        return [TrajectoryTask(model_name=model_name, max_order=max_order,
+        regular_trajectories = [TrajectoryTask(model_name=model_name, max_order=max_order,
                                parameters=x,
                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
-                for x in parameters]
+                               for x in parameters]
+
+        ssa_trajectories = [SSATrajectoryTask(model_name=model_name,
+                                              parameters=x,
+                                              initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange,
+                                              n_simulations=5000)
+                                              for x in parameters]
+
+        return regular_trajectories + ssa_trajectories
 
     def _return_object(self):
         success_x = []
@@ -61,6 +69,9 @@ class FigureHitAndMissData(Task):
         failure_c = []
 
         for task, trajectory_buffer in itertools.izip(self.requires(), self.input()):
+            if isinstance(task, SSATrajectoryTask):
+                continue
+
             x, y = task.parameters[2], task.parameters[4]
             trajectory = trajectory_buffer.load()
             if isinstance(trajectory, SolverException):
