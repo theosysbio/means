@@ -25,38 +25,56 @@ from means import TrajectoryCollection, SolverException
 from means.pipes import *
 import numpy as np
 import itertools
+
 from means.util.logs import get_logger
-
-
 logger = get_logger(__name__)
+
+
+class P53Model(means.Model):
+    """
+    A wrapper around means. Model that initialises it with P53 parameters and changes the __unicode__ function to
+    print a shorter string
+    """
+    def __init__(self):
+        from means.examples import MODEL_P53
+        super(P53Model, self).__init__(MODEL_P53.species, MODEL_P53.parameters, MODEL_P53.propensities,
+                                       MODEL_P53.stoichiometry_matrix)
+
+    def __str__(self):
+        # Override the str() methods so they do not print the whole blerch of things, but
+        # only a nice and easily readable "p53"
+        return 'p53'
 
 class FigureHitAndMissData(Task):
 
     max_order = IntParameter()
     timepoints_arange = ListParameter()
+    number_of_ssa_simulations = IntParameter()
+    point_sparsity = FloatParameter(default=0.1)
 
     def requires(self):
-        model_name = 'p53'
+        model = P53Model()
         max_order = self.max_order
 
         initial_conditions = [70, 30, 60]
 
         parameters = []
-        for c_2 in np.arange(1.5, 2.5, 0.1):
-            for c_4 in np.arange(0.8, 2.5, 0.1):
-                parameters.append([90, 0.002, c_2, 1.1, c_4, 0.96, 0.01])
+        for c_2 in np.arange(1.5, 2.5, self.point_sparsity):
+            for c_4 in np.arange(0.8, 2.5, self.point_sparsity):
+                parameters.append([90, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
 
         # We want to specify all the trajectoreis we need to compute as requirements of this task,
         # so luigi handles their execution and scheduling, not us.
-        regular_trajectories = [TrajectoryTask(model_name=model_name, max_order=max_order,
-                               parameters=x,
-                               initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
-                               for x in parameters]
+        regular_trajectories = [TrajectoryTask(model=model, max_order=max_order,
+                                parameters=x,
+                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
+                                for x in parameters]
 
-        ssa_trajectories = [SSATrajectoryTask(model_name=model_name,
+        ssa_trajectories = [SSATrajectoryTask(model=model,
                                               parameters=x,
-                                              initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange,
-                                              n_simulations=5000)
+                                              initial_conditions=initial_conditions,
+                                              timepoints_arange=self.timepoints_arange,
+                                              n_simulations=self.number_of_ssa_simulations)
                                               for x in parameters]
 
         return regular_trajectories + ssa_trajectories
@@ -89,14 +107,18 @@ class FigureHitAndMissData(Task):
 
 class FigureHitAndMiss(FigureTask):
 
-    max_order = IntParameter()
-    timepoints_arange = ListParameter()
+    max_order = FigureHitAndMissData.max_order
+    timepoints_arange = FigureHitAndMissData.timepoints_arange
+    number_of_ssa_simulations = FigureHitAndMissData.number_of_ssa_simulations
+    point_sparsity = FigureHitAndMissData.point_sparsity
 
     def requires(self):
         # I split the data aggregation and figure plotting into different tasks, thus this dependancy
         # this is not strictly necessary, if you do not plot figures into subplots, (like we don't here)
         # But would be desired if we do, essentially this dependency can be refactored to be implicit
-        return FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange)
+        return FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange,
+                                    number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                    point_sparsity=self.point_sparsity)
 
     def _return_object(self):
         from matplotlib import pyplot as plt
@@ -144,17 +166,21 @@ class FigureHitAndMissTex(TexFigureTask):
 
     # Note that this is not a parameter, it is a constant
     timepoints_arange = [0, 40, 0.1]
-    max_orders = [1, 2, 3, 4, 5]
+    max_orders = ListParameter(default=[1, 2, 3, 4, 5])
+    point_sparsity = FigureHitAndMissData.point_sparsity
 
     label = 'hit-and-miss'
     caption = 'Some Caption'
     standalone = True
     number_of_columns = 2
 
+    number_of_ssa_simulations = IntParameter(default=500)
+
     def requires(self):
-        return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange)
+        return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
+                                 number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                 point_sparsity=self.point_sparsity)
                 for max_order in self.max_orders]
 
 if __name__ == '__main__':
-    #run(main_task_cls=FigureHitAndMissTex)
-    run()
+    run(main_task_cls=FigureHitAndMissTex)
