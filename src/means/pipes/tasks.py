@@ -515,11 +515,11 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     """
 
     # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
-    max_order = luigi.IntParameter()
+    max_order = MEATask.max_order
     """Maximum order of MEA approximation to use"""
-    closure = luigi.Parameter(default='scalar')
+    closure = MEATask.closure
     """Closure method to use"""
-    multivariate = luigi.BooleanParameter(default=True)
+    multivariate = MEATask.multivariate
     """Use multivariate closure (where available)"""
 
     # Solver kwargs, list the missing ones here with default=None
@@ -536,7 +536,6 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     def _simulation_object(self):
 
         problem = self.input().load()
-
         simulation = means.Simulation(problem, solver=self.solver, **self.solver_kwargs)
 
         return simulation
