@@ -84,13 +84,18 @@ class LinearNoiseApproximation(ApproximationBaseClass):
         for i in range(len(ymat)):
             row = []
             for j in range(len(ymat)):
-                # TODO: (from original authors) Make V_ij equal to V_ji
-                symbol = 'V_{0}_{1}'.format(i, j)
-                variance_terms.append(VarianceTerm(position=(i,j), symbol=symbol))
+                if i <= j:
+                    symbol = 'V_{0}_{1}'.format(i, j)
+                    variance_terms.append(VarianceTerm(position=(i,j), symbol=symbol))
+                else:
+                    # Since Vi,j = Vj,i, i.e. covariance are equal, we remove the repetitive terms
+                    symbol = 'V_{0}_{1}'.format(j, i)
+                    variance_terms.append(VarianceTerm(position=(j,i), symbol=symbol))
                 row.append(symbol)
             cov_matrix.append(row)
 
         V = sp.Matrix(cov_matrix)
+
 
         # Matrix of variances (diagonal) and covariances of species i and j differentiated wrt time.
         # I.e. if i=j, V_ij is the variance, and if i!=j, V_ij is the covariance between species i and species j
@@ -98,15 +103,31 @@ class LinearNoiseApproximation(ApproximationBaseClass):
 
 
         # build ODEProblem object
-        rhs = sp.Matrix([i for i in dPdt] + [i for i in dVdt])
+        rhs_redundant = sp.Matrix([i for i in dPdt] + [i for i in dVdt])
+
 
         #generate ODE terms
         n_vectors = [tuple([1 if i==j else 0 for i in range(n_species)]) for j in range(n_species)]
         moment_terms = [Moment(nvec,lhs) for (lhs, nvec) in zip(ymat, n_vectors)]
 
+        ode_description = moment_terms + variance_terms
 
-        ode_terms = moment_terms + variance_terms
+
+        non_redundant_idx = []
+        ode_terms = []
+        # remove repetitive covariances, as Vij = Vji
+        for i, cov in enumerate(ode_description):
+            if cov in ode_terms:
+                continue
+            else:
+                ode_terms.append(cov)
+                non_redundant_idx.append(i)
+        rhs = []
+        for i in non_redundant_idx:
+            rhs.append(rhs_redundant[i])
 
 
         out_problem = ODEProblem("LNA", ode_terms, rhs, sp.Matrix(self.model.parameters))
+
+
         return out_problem
