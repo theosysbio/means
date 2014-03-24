@@ -36,15 +36,18 @@ class DictParameter(Parameter):
     _separator_key_value = ':'
 
     def parse(self, x):
-        items = x.split(self._separator)
+        if isinstance(x, basestring):
+            items = x.split(self._separator)
 
-        key_values = []
-        for item in items:
-            if self._separator_key_value not in item:
-                raise ValueError('Cannot split {0!r} into key,value pairs'.format(item))
-            key_values.append(item.split(self._separator_key_value))
+            key_values = []
+            for item in items:
+                if self._separator_key_value not in item:
+                    raise ValueError('Cannot split {0!r} into key,value pairs'.format(item))
+                key_values.append(item.split(self._separator_key_value))
 
-        return dict(key_values)
+            return dict(key_values)
+        else:
+            return dict(x)
 
     def serialize(self, x):
 

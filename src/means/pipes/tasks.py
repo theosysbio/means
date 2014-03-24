@@ -1,7 +1,8 @@
+import re
 import luigi
 import os
 from means.pipes.interface import TaskPreloadingHint
-from means.pipes.parameters import ListParameter
+from means.pipes.parameters import ListParameter, DictParameter
 from means.pipes.targets import PickleSerialiserWithAdditionalParameters
 from datetime import datetime
 import numpy as np
@@ -14,10 +15,38 @@ OUTPUT_DIR = luigi.configuration.get_config().get('output', 'directory', 'task-o
 
 logger = get_logger(__name__)
 
+
+def filesafe_string(original_filename):
+    """
+    Replaces all non ascii or non-digit characters
+    :param original_filename: Original string replace
+    :return: version of the original_filename that is safe as a filename
+    """
+    original_filename = str(original_filename)
+    # Based on http://stackoverflow.com/a/295466/171400
+    # change all non-safe symbols to _
+    original_filename = re.sub(r'[^\d\w.-]', '_', original_filename)
+    # Change multiple spaces to single space
+    original_filename = re.sub(r'_+', '_', original_filename)
+    # Remove spaces at the start and end of the string
+    original_filename = original_filename.strip('_')
+    return original_filename
+
 class TaskBase(luigi.Task):
     """
     Base class for all tasks in :mod:`means.pipes`
 
+    """
+
+    _FILENAME_LENGTH_LIMIT = 200
+    """Maximum supported length for filenames. Hashed filenames will be used instead of human-readable ones if
+    the length goes above that. This needs to be a bit lower, as luigi appends some temp extension while saving files"""
+
+    use_human_readable_filenames = True
+    """
+    If set to true, human-readable filenames will try to be generated,
+    otherwise, the parameter string will be shortened using md5. A clash is less likely, if non-human readable filenames
+    used
     """
 
     def __init__(self, *args, **kwargs):
@@ -42,16 +71,38 @@ class TaskBase(luigi.Task):
         :return: The generated filename
         :rtype: str
         """
+        try:
+            return self.__filename
+        except AttributeError:
+            pass
+
         # Default filename that just lists class name and parameters in dashes
         class_ = self.__class__.__name__
+        filename = ''
+
         params = self.get_params()
         param_values = [getattr(self, x[0]) for x in params if x[1].significant]
 
-        to_filesafe_string = lambda x: str(x).replace(',', '_').replace(' ', '_').replace(':', '_')
-        params_str = '-'.join(map(to_filesafe_string, param_values))
-        if params_str:
-            params_str = ''.join(['-', params_str])
-        return '{0}{1}{2}'.format(class_, params_str, self._file_extension)
+        if self.use_human_readable_filenames:
+            params_str = '-'.join(map(filesafe_string, param_values))
+            if params_str:
+                params_str = ''.join(['-', params_str])
+
+            filename = '{0}{1}{2}'.format(class_, params_str, self._file_extension)
+
+        if not self.use_human_readable_filenames or len(filename) > self._FILENAME_LENGTH_LIMIT:
+            import hashlib
+            params_str = hashlib.md5(';'.join(map(str, param_values))).hexdigest()
+            filename = '{0}{1}{2}'.format(class_, params_str, self._file_extension)
+
+        assert(filename != '')
+        # Cache the filename before returning, especially important for the hashlib generated ones
+        self.__filename = filename
+
+        return filename
+
+
+
 
     def _output(self):
         """
@@ -475,8 +526,8 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     solver = luigi.Parameter(default='ode15s')
     """ODE solver to use, defaults to ode15s"""
 
-    h = luigi.Parameter(default=None)
-    """h parameter to the solver, where available"""
+    solver_kwargs = DictParameter(default=[])
+    """Keyword arguments to pass to solver"""
 
     def requires(self):
         return MEATask(model_name=self.model_name, max_order=self.max_order, closure=self.closure,
@@ -486,10 +537,7 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
 
         problem = self.input().load()
 
-        kwargs = {'solver': self.solver}
-        if self.h is not None:
-            kwargs['h'] = self.h
-        simulation = means.Simulation(problem, **kwargs)
+        simulation = means.Simulation(problem, solver=self.solver, **self.solver_kwargs)
 
         return simulation
 
