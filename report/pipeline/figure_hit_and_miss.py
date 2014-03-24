@@ -56,12 +56,12 @@ class FigureHitAndMissData(Task):
         model = P53Model()
         max_order = self.max_order
 
-        initial_conditions = [70, 30, 60]
+        initial_conditions = [70.0, 30.0, 60.0]
 
         parameters = []
         for c_2 in np.arange(1.5, 2.5, self.point_sparsity):
             for c_4 in np.arange(0.8, 2.5, self.point_sparsity):
-                parameters.append([90, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
+                parameters.append([90.0, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
 
         # We want to specify all the trajectoreis we need to compute as requirements of this task,
         # so luigi handles their execution and scheduling, not us.
@@ -165,7 +165,7 @@ class FigureHitAndMissTex(TexFigureTask):
     """
 
     # Note that this is not a parameter, it is a constant
-    timepoints_arange = [0, 40, 0.1]
+    timepoints_arange = [0.0, 40.0, 0.1]
     max_orders = ListParameter(default=[1, 2, 3, 4, 5])
     point_sparsity = FigureHitAndMissData.point_sparsity
 
@@ -174,7 +174,7 @@ class FigureHitAndMissTex(TexFigureTask):
     standalone = True
     number_of_columns = 2
 
-    number_of_ssa_simulations = IntParameter(default=500)
+    number_of_ssa_simulations = IntParameter(default=5000)
 
     def requires(self):
         return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
