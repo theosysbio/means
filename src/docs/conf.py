@@ -340,10 +340,11 @@ epub_exclude_files = ['search.html']
 intersphinx_cache_limit = 10     # days to keep the cached inventories
 intersphinx_mapping = {
         'python':('http://docs.python.org/2.7',None),
-    'matplotlib':('http://matplotlib.sourceforge.net', None),
+        'matplotlib':('http://matplotlib.sourceforge.net', None),
          'numpy':('http://docs.scipy.org/doc/numpy',None),
          'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None)
+         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None),
+         'luigi': ('http://luigi.readthedocs.org/en/latest/', None)
 }
 
 
