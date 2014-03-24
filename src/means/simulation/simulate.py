@@ -35,10 +35,8 @@ See the documentation of :class:`Simulation` for additional information.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import sympy
 from means.io.serialise import SerialisableObject
-from means.simulation.solvers import available_solvers, NP_FLOATING_POINT_PRECISION
+from means.simulation.solvers import available_solvers
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
 from means.core import Moment, VarianceTerm
 
@@ -67,7 +65,6 @@ class Simulation(SerialisableObject):
 
     """
     __problem = None
-    _postprocessing = None
     _solver_options = None
     _solver = None
 
@@ -118,10 +115,6 @@ class Simulation(SerialisableObject):
         self.__problem = problem
         _validate_problem(problem)
 
-        if problem.method == 'LNA':
-            self._postprocessing = _postprocess_lna_simulation
-        else:
-            self._postprocessing = _postprocess_default
 
         self._solver = solver.lower()
         self._solver_options = solver_options
@@ -189,7 +182,7 @@ class Simulation(SerialisableObject):
         solver = self._initialise_solver(initial_conditions, parameters, timepoints)
         trajectories = solver.simulate(timepoints)
 
-        return TrajectoryCollection(self._postprocessing(self.problem, trajectories))
+        return TrajectoryCollection(trajectories)
 
     @property
     def problem(self):
@@ -286,56 +279,3 @@ class SimulationWithSensitivities(Simulation):
         :rtype: list[:class:`~means.simulation.TrajectoryWithSensitivityData`]
         """
         return super(SimulationWithSensitivities, self).simulate_system(parameters, initial_conditions, timepoints)
-
-
-def _postprocess_default(problem, trajectories):
-    return trajectories
-
-def _postprocess_lna_simulation(problem, trajectories):
-    timepoints = trajectories[0].timepoints
-
-    # TODO: this should be going through the descriptions of LHS fields, rather than number of species
-    # Would make code cleaner
-
-    number_of_species = problem.number_of_species
-
-    sampled_observations = np.zeros((len(timepoints), number_of_species), dtype=NP_FLOATING_POINT_PRECISION)
-    variance_trajectories = filter(lambda x: isinstance(x.description, VarianceTerm), trajectories)
-    species_trajectories = filter(lambda x: not isinstance(x.description, VarianceTerm), trajectories)
-
-    for t in range(len(timepoints)):
-        covariance_matrix = sympy.Matrix(np.zeros((number_of_species, number_of_species)))
-
-        for trajectory in variance_trajectories:
-            values = trajectory.values
-
-            if not isinstance(trajectory.description, VarianceTerm):
-                continue
-            i, j = trajectory.description.position
-             # FIXME: hack to make regression tests still work, remove
-            if i*number_of_species+j >= 2*number_of_species:
-                continue
-            covariance_matrix[i, j] = values[t]
-
-        means = [trajectory.values[t] for trajectory in species_trajectories ]
-
-        # Recreate the species trajectories by sampling from multivariate normal
-        #sampled_observations[t] = np.random.multivariate_normal(means, covariance_matrix)
-        sampled_observations[t] = means
-
-    # Recompile everything back to trajectories
-    answer = []
-
-    for i, old_trajectory in enumerate(species_trajectories):
-        new_trajectory = Trajectory(old_trajectory.timepoints, sampled_observations[:, i], old_trajectory.description)
-        if isinstance(old_trajectory, TrajectoryWithSensitivityData):
-            # Make sure to deal with trajectories with sensitivities if we need to
-            new_trajectory = TrajectoryWithSensitivityData.from_trajectory(new_trajectory,
-                                                                           old_trajectory.sensitivity_data)
-
-        answer.append(new_trajectory)
-
-    answer.extend(variance_trajectories)
-
-    # No longer using multivariate normal sampling
-    return trajectories
