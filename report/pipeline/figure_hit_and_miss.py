@@ -156,4 +156,5 @@ class FigureHitAndMissTex(TexFigureTask):
                 for max_order in self.max_orders]
 
 if __name__ == '__main__':
-    run(main_task_cls=FigureHitAndMissTex)
+    #run(main_task_cls=FigureHitAndMissTex)
+    run()
