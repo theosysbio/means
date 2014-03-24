@@ -47,7 +47,7 @@ class TaskBase(luigi.Task):
         params = self.get_params()
         param_values = [getattr(self, x[0]) for x in params if x[1].significant]
 
-        to_filesafe_string = lambda x: str(x).replace(',', '_').replace(' ', '_')
+        to_filesafe_string = lambda x: str(x).replace(',', '_').replace(' ', '_').replace(':', '_')
         params_str = '-'.join(map(to_filesafe_string, param_values))
         if params_str:
             params_str = ''.join(['-', params_str])
