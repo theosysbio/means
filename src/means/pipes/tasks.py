@@ -2,12 +2,11 @@ import re
 import luigi
 import os
 from means.pipes.interface import TaskPreloadingHint
-from means.pipes.parameters import ListParameter, DictParameter
+from means.pipes.parameters import ListParameter, ModelParameter, ListOfKeyValuePairsParameter
 from means.pipes.targets import PickleSerialiserWithAdditionalParameters
 from datetime import datetime
 import numpy as np
 from means.util.logs import get_logger
-import means.examples
 import means
 
 # Allow getting the output directory from [output] > directory in config file
@@ -88,12 +87,14 @@ class TaskBase(luigi.Task):
             if params_str:
                 params_str = ''.join(['-', params_str])
 
-            filename = '{0}{1}{2}'.format(class_, params_str, self._file_extension)
+            params_str = params_str.strip('-')
+
+            filename = '{0}-{1}{2}'.format(class_, params_str, self._file_extension)
 
         if not self.use_human_readable_filenames or len(filename) > self._FILENAME_LENGTH_LIMIT:
             import hashlib
             params_str = hashlib.md5(';'.join(map(str, param_values))).hexdigest()
-            filename = '{0}{1}{2}'.format(class_, params_str, self._file_extension)
+            filename = '{0}-{1}{2}'.format(class_, params_str, self._file_extension)
 
         assert(filename != '')
         # Cache the filename before returning, especially important for the hashlib generated ones
@@ -410,47 +411,26 @@ class TexFigureTask(Task):
                                     subfigures='~'.join(subfigure_strs),
                                     standalone='' if self.standalone else '%'))
 
-class ModelTask(Task):
-    """
-    Return a model from one of the predefined models
-    """
-    name = luigi.Parameter()
-    """
-    Name of the model, must be in :attr:`ModelTask`._SUPPORTED_MODELS
-    """
-
-    _SUPPORTED_MODELS = {'p53': means.examples.MODEL_P53,
-                         'hes1': means.examples.MODEL_HES1,
-                         'dimerisation': means.examples.MODEL_DIMERISATION,
-                         'michaelis-menten': means.examples.MODEL_MICHAELIS_MENTEN,
-                         'lotka-volterra': means.examples.MODEL_LOTKA_VOLTERRA}
-    """List of supported models"""
-
-    def _return_object(self):
-        return self._SUPPORTED_MODELS[self.name]
-
 class MEATask(Task):
     """
     Task to perform MEA Approximation and return it's result.
     """
 
-    model_name = luigi.Parameter()
-    """Model name to use"""
+    model = ModelParameter()
+    """Model to use"""
 
     max_order = luigi.IntParameter()
     """MAX order to perform the approximation"""
 
-    closure = luigi.Parameter()
+    closure = luigi.Parameter(default='scalar')
     """Closure method to use"""
 
     multivariate = luigi.BooleanParameter(default=True)
     """Whether to use multivariate or univariate closure (where available)"""
 
-    def requires(self):
-        return ModelTask(self.model_name)
 
     def _return_object(self):
-        model = self.input().load()
+        model = self.model
 
         # Scalar closure currently does not support univariate/multivariate
         if self.closure != 'scalar':
@@ -467,7 +447,7 @@ class TrajectoryTaskBase(Task):
     Base-class for trajectories.
     """
 
-    model_name = luigi.Parameter()
+    model = ModelParameter()
     """Model name to use"""
 
     # General parameters for trajectory
@@ -478,7 +458,8 @@ class TrajectoryTaskBase(Task):
     """Initial conditions to use"""
 
     timepoints_arange = ListParameter(item_type=float)
-    """An arangement of the timepoints to simulate, e.g. ``(0, 40, 0.1)`` would simulate from 0 to 40 in 0.1 increments"""
+    """An arangement of the timepoints to simulate,
+       e.g. ``(0, 40, 0.1)`` would simulate from 0 to 40 in 0.1 increments"""
 
 
     def _simulation_object(self):
@@ -526,17 +507,17 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     solver = luigi.Parameter(default='ode15s')
     """ODE solver to use, defaults to ode15s"""
 
-    solver_kwargs = DictParameter(default=[])
+    solver_kwargs = ListOfKeyValuePairsParameter(default=[])
     """Keyword arguments to pass to solver"""
 
     def requires(self):
-        return MEATask(model_name=self.model_name, max_order=self.max_order, closure=self.closure,
+        return MEATask(model=self.model, max_order=self.max_order, closure=self.closure,
                        multivariate=self.multivariate)
 
     def _simulation_object(self):
 
         problem = self.input().load()
-        simulation = means.Simulation(problem, solver=self.solver, **self.solver_kwargs)
+        simulation = means.Simulation(problem, solver=self.solver, **dict(self.solver_kwargs))
 
         return simulation
 
@@ -562,13 +543,9 @@ class SSATrajectoryTask(TrajectoryTaskBase):
     n_simulations = luigi.IntParameter()
     """Number of simulations to use in SSA"""
 
-    def requires(self):
-        return ModelTask(name=self.model_name)
-
     def _simulation_object(self):
 
-
-        problem = means.StochasticProblem(self.input().load())
+        problem = means.StochasticProblem(self.model)
         simulation = means.SSASimulation(problem, n_simulations=self.n_simulations)
 
         return simulation

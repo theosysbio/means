@@ -125,6 +125,9 @@ Please see :mod:`means.pipes.tasks` documentation for the list of such classes.
 
 Other considerations
 -----------------------
+
+Caching
+~~~~~~~
 MEANS package uses clever caching of the C expression evaluators generated using `sympy`.
 Due to the way `luigi` workers create a sandbox for each tasks execution, this caching is not persistent between
 the tasks run by the default :class:`luigi.Worker`. To overcome this, means define their own
@@ -141,6 +144,30 @@ and not from `luigi`, i.e. ::
     >>> if __name__ == '__main__':
     ...    run()
 
+Objects with long string representations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Some objects, such as :class:`means.Model` have long `str()` representations designed to be helpful in interactive mode.
+Since :mod:`means.pipes` uses the `str()` method to generate the filenames, these long methods cause said filenames
+become incredibly long. When filenames become longer than 200 characters,
+ :mod:`means.pipes` shortens the filenames by hashing the parameters using `md5` algorithm,
+ what makes them unreadable by humans.
+
+In order to preserve the readability of filenames, you can create an object that inherits from the original one, and
+changes it's ``__str__`` function to some other readable representation, for instance,
+we could create `P53Model()` class that would initialise the `P53` model from :mod:`means.examples` and assign
+a friendly short-name for it as follows::
+
+    >>> class P53Model(means.Model):
+    ...     def __init__(self):
+    ...         from means.examples import MODEL_P53
+    ...         super(P53Model, self).__init__(MODEL_P53.species, MODEL_P53.parameters, MODEL_P53.propensities,
+    ...                                        MODEL_P53.stoichiometry_matrix)
+    ...
+    ...     def __str__(self):
+    ...         # Override the str() methods so they do not print the whole blerch of things, but
+    ...         # only a nice and easily readable "p53"
+    ...         return 'p53'
+
 .. _`luigi package by Spotify`: https://github.com/spotify/luigi
 .. _`configuration file`: https://github.com/spotify/luigi/blob/master/README.md#configuration
 
@@ -148,6 +175,6 @@ and not from `luigi`, i.e. ::
 from interface import TaskPreloadingHint, PreloadingWorker, PreloadingWorkerSchedulerFactory, run
 from parameters import *
 from targets import PickleSerialiserWithAdditionalParameters, PickleSerialiser
-from tasks import Task, MEATask, ModelTask, TrajectoryTask, TaskBase, FigureTask, TexFigureTask, SSATrajectoryTask
+from tasks import Task, MEATask, TrajectoryTask, TaskBase, FigureTask, TexFigureTask, SSATrajectoryTask
 
 import interface, parameters, targets, tasks

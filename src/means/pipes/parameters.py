@@ -1,4 +1,5 @@
 from luigi.parameter import *
+import means.examples
 
 class ListParameter(Parameter):
     """
@@ -26,10 +27,16 @@ class ListParameter(Parameter):
     def serialize(self, x):
         return ','.join(map(str, x))
 
-class DictParameter(Parameter):
+class ListOfKeyValuePairsParameter(Parameter):
     """
-    A parameter that can take a dictionary of values. Most useful as a parameter to pass to **kwargs result.
+    A parameter that can take a list of key-value pairs.
+    Most useful to pass in kwargs for the function.
 
+    Please use :meth:`dict.items()` before assigning this parameter.
+    This is needed as dictionaries are not serialisable by default in python,
+    therefore caching mechanisms will not work.
+
+    Lists, on the other hand, are serialisable by :mod:`luigi` as they are always converted to tuples beforehand.
     """
 
     _separator = ','
@@ -45,19 +52,29 @@ class DictParameter(Parameter):
                     raise ValueError('Cannot split {0!r} into key,value pairs'.format(item))
                 key_values.append(item.split(self._separator_key_value))
 
-            return dict(key_values)
+            return key_values
+        elif isinstance(x, list):
+            return x
         else:
-            return dict(x)
+            raise TypeError('Expected a list or string')
 
     def serialize(self, x):
-
-        # Always sort the dictionary items before serialising, otherwise order is unspecified
-        items = sorted(x.items())
+        items = x
 
         str_items = []
         for item in items:
             str_items.append(self._separator_key_value.join(item))
-
         return self._separator.join(str_items)
 
 
+
+class ModelParameter(Parameter):
+
+    def parse(self, x):
+        if isinstance(x, means.Model):
+            return x
+        else:
+            raise TypeError('{0!r} is not a model name, nor a `means.Model` object')
+
+    def serialize(self, x):
+        return x
