@@ -51,6 +51,9 @@ clean:
 
 apidocs:
 	sphinx-apidoc -E -H means -A "Sisi Fan, Quentin Geissmann, Saulius Lukauskas" -V trunk -R trunk -o . -f ../ ../setup.py ../means/tests/
+    # Add private methods to means.pipes.tasks documentation
+	@echo "Adding private methods to the documentation"
+	python -c "import re; f = open('means.pipes.rst', 'r'); contents=f.read(); f.close(); fw = open('means.pipes.rst', 'w'); contents = re.sub(r'.. automodule:: means.pipes.tasks\n    :members:', '\g<0>\n    :private-members:', contents, re.MULTILINE); fw.write(contents); fw.close()"
 html: apidocs
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo

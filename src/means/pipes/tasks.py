@@ -15,13 +15,33 @@ OUTPUT_DIR = luigi.configuration.get_config().get('output', 'directory', 'task-o
 logger = get_logger(__name__)
 
 class TaskBase(luigi.Task):
+    """
+    Base class for all tasks in :mod:`means.pipes`
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TaskBase, self).__init__(*args, **kwargs)
 
     @property
     def _file_extension(self):
+        """
+        The file extension for the serialised objects to use.
+
+        :return: the file extension, including the dot in front of it. i.e. ``.pickle``
+        """
         return ''
 
     @property
     def _filename(self):
+        """
+        Method that generates the filename of the class.
+        This defaults to the class name, followed by dash-separated parameters of the class followed by
+        :attr:`TaskBase._file_extension`
+
+        :return: The generated filename
+        :rtype: str
+        """
         # Default filename that just lists class name and parameters in dashes
         class_ = self.__class__.__name__
         params = self.get_params()
@@ -34,9 +54,23 @@ class TaskBase(luigi.Task):
         return '{0}{1}{2}'.format(class_, params_str, self._file_extension)
 
     def _output(self):
+        """
+        A function that returns the class output by default.
+
+        If you want to change the behaviour of this function, please override it, rather than the actual
+        :meth:`TaskBase.output()` method
+        """
         raise NotImplementedError
 
     def output(self):
+        """
+        Returns the output of the class.
+        Ensures we only have one instance of the output object, meaning we have only one cache per output object.
+
+        Please do not override this in your class, and override :meth:`TaskBase._output()` instead.
+
+        :return: Cached result of :meth:`TaskBase._output()`
+        """
         try:
             # Make sure we have only one instance of output object
             return self.__output
@@ -47,6 +81,12 @@ class TaskBase(luigi.Task):
 
     @property
     def filepath(self):
+        """
+        Generates the filepath of the task, default is of format ``<OUTPUT_DIR>/<CLASS>/<FILENAME>``
+        where ``<FILENAME>`` is defined in :attr:`TaskBase._filename`.
+
+        :return:
+        """
         # Force the directory structure <OUTPUT_DIR>/<CLASS>/<FILENAME>
         return os.path.join(OUTPUT_DIR,
                             self.__class__.__name__,
@@ -54,12 +94,43 @@ class TaskBase(luigi.Task):
 
 
     def _return_object(self):
+        """
+        Implementation of the main logic in the task.
+        This function should perform the task, generate the output and return it.
+
+        The rest of the class will handle storing that output.
+
+        e.g. ::
+
+            >>> from means.pipes import Task
+            >>> class MyTask(Task):
+            ...     def _return_object(self):
+            ...         a = 'foo'
+            ...         b = 'bar'
+            ...
+            ...         # This would store `a` and `b` as a tuple in the output file `<output_dir>/MyTask/MyTask.pickle'
+            ...         return a, b
+
+        """
         raise NotImplementedError
 
     def _store_output_and_runtime(self, answer, runtime):
+        """
+        Implements storage of the output from the task and runtime of the task into some file.
+
+        :param answer: The answer returned by :meth:`TaskBase._return_object()`
+        :param runtime: Runtime of the task in seconds
+        :type runtime: float
+        """
         raise NotImplementedError
 
     def run(self):
+        """
+        Runs the specified task and keep track of the runtime
+
+        Subclasses should not override this method directly, and should override the
+        :meth:`TaskBase._return_object()` instead.
+        """
         # Poor man's timing
         start = datetime.now()
         answer = self._return_object()
@@ -71,13 +142,39 @@ class TaskBase(luigi.Task):
 
 class Task(TaskBase):
     """
-    A wrapper around luigi task that would automatically set the output variable to a standard used in MEANS pipelines
+    A wrapper around :class:`luigi.Task` that provides some basic functionality used in means.
+
+    Namely, it defines :class:`~means.interface.PickleSerialiserWithAdditionalParameters` as an output source
+    and automatically sets file extension to ``.pickle``.
+
+    The classes inheriting from this class should define their own :meth:`~Task._return_object()` implementation that
+    would perform the required task and return the object that is serialised.
+
+    For example::
+        >>> from means.pipes import Task
+        >>> class MyTask(Task):
+        ...     def _return_object(self):
+        ...         a = 'foo'
+        ...         b = 'bar'
+        ...
+        ...         # This would store `a` and `b` as a tuple in the output file `<output_dir>/MyTask/MyTask.pickle'
+        ...         return a, b
+
     """
 
     @property
     def _file_extension(self):
         return '.pickle'
 
+    def _return_object(self):
+        """
+        Implementation of the main logic in the task.
+        This function should perform the task, generate the output and return it.
+
+        The rest of the class will handle storing that output.
+
+        """
+        raise NotImplementedError
 
     def _store_output_and_runtime(self, answer, runtime):
         # Store both the object and runtime
@@ -88,18 +185,64 @@ class Task(TaskBase):
         return output
 
 class FigureTask(TaskBase):
+    """
+    Class that can store :mod:`matplotlib` figures in pdf/svg format.
+
+    To use it define a class that would override the :meth:`FigureTask._return_object` so it returns a
+    :class:`matplotlib.Figure`, which then would be saved in the format specified by :attr:`FigureTask.figure_format`.
+
+    For example ::
+
+         >>> from means.pipes import FigureTask
+         >>> class MyFigure(FigureTask):
+         ...
+         ...     def _return_object(self):
+         ...         from matplotlib import pyplot as plt
+         ...         # Create a figure
+         ...         fig = plt.figure()
+         ...
+         ...         # Plot something
+         ...         ax = plt.subplot(1,1,1)
+         ...         ax.plot([1,2], [3,4], label='foobar')
+         ...         fig.legend()
+         ...
+         ...         # just return the figure, do not issue ``plt.show()`` or anything of that sort
+         ...         return fig
+    """
 
     figure_format = luigi.Parameter(default='pdf')
+    """Figure format to render the figure in. PDF by default. Can also support SVG"""
+
+    def _return_object(self):
+        """
+        Implementation of the main logic in the task.
+        This function should perform the task, generate the output and return it.
+
+        The rest of the class will handle storing that output.
+        """
+        raise NotImplementedError
 
     @property
     def _file_extension(self):
+        """
+        The figure extension
+
+        :return: :attr:`FigureTask.figure_format` preceded by a dot, i.e. ``".pdf"``
+        """
         return '.{0}'.format(self.figure_format)
 
     def _output(self):
+        """
+
+        :return: Output object pointing to the file where the figure is saved
+        """
         output = luigi.File(self.filepath)
         return output
 
     def _store_output_and_runtime(self, answer, runtime):
+        """
+        Renders the figure into the file specified by :attr:`FigureTask._output`
+        """
         from matplotlib import pyplot as plt
         assert (isinstance(answer, plt.Figure))
 
@@ -114,18 +257,46 @@ class FigureTask(TaskBase):
 
 class TexFigureTask(Task):
     """
-    Creates a latex figure that joins one or more figures using `LaTeX subfloats`_.
+    Creates a LaTeX figure that joins one or more figures using `LaTeX subfloats`_.
+    These figures need to be specified in the :meth:`TexFigureTask.requires()` object.
 
-    Returns a .tex file with the figure in LaTeX notation that can then be included to other files
+    Saves the resulting figure into a .tex file that can be included in other files or compiled to pdf (if standalone
+    is set)
+
+    Example usage::
+
+        >>> class MyFigure(Figure):
+        ...    name = Parameter()
+        ...
+        ... class MyTexFigure(TexFigureTask):
+        ...     label = 'my-tex-figure'  # Set the label of figure
+        ...     caption = 'Some Caption' # Set it's caption
+        ...     standalone = True        # Make it standalone
+        ...     number_of_columns = 1    # Allow only one column (meaning the two figures will be in two rows)
+        ...
+        ...     def requires(self):
+        ...         # Specify all the figures as dependancies only, the package will do the rest
+        ...         return [MyFigure(name='foo'), MyFigure(name='bar')]
+
 
     .. `LaTeX subfloats`: https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions#Subfloats
     """
 
     label = luigi.Parameter()
+    """Label of the LaTeX figure"""
+
     caption = luigi.Parameter(significant=False)
+    """Caption of the figure"""
+
     placement = luigi.Parameter(default='tb', significant=False)
+    """Placement of the figure, defaults to ``tb``"""
+
     number_of_columns = luigi.Parameter(default=0)
+    """Number of columns to structure the subfloats to. If set to zero, will put the figures into one row"""
+
     standalone = luigi.BooleanParameter(default=False)
+    """If set to true, generates a standalone tex file, that can be compiled immediately, otherwise
+       generates a file that needs to be included in some document"""
 
     @property
     def _file_extension(self):
@@ -188,35 +359,41 @@ class TexFigureTask(Task):
                                     subfigures='~'.join(subfigure_strs),
                                     standalone='' if self.standalone else '%'))
 
-
-
-
-
-
-
 class ModelTask(Task):
     """
     Return a model from one of the predefined models
     """
     name = luigi.Parameter()
+    """
+    Name of the model, must be in :attr:`ModelTask`._SUPPORTED_MODELS
+    """
+
     _SUPPORTED_MODELS = {'p53': means.examples.MODEL_P53,
                          'hes1': means.examples.MODEL_HES1,
                          'dimerisation': means.examples.MODEL_DIMERISATION,
                          'michaelis-menten': means.examples.MODEL_MICHAELIS_MENTEN,
                          'lotka-volterra': means.examples.MODEL_LOTKA_VOLTERRA}
+    """List of supported models"""
 
     def _return_object(self):
         return self._SUPPORTED_MODELS[self.name]
 
 class MEATask(Task):
     """
-    Task to perform MEA Approximation and return result
+    Task to perform MEA Approximation and return it's result.
     """
 
     model_name = luigi.Parameter()
+    """Model name to use"""
+
     max_order = luigi.IntParameter()
+    """MAX order to perform the approximation"""
+
     closure = luigi.Parameter()
+    """Closure method to use"""
+
     multivariate = luigi.BooleanParameter(default=True)
+    """Whether to use multivariate or univariate closure (where available)"""
 
     def requires(self):
         return ModelTask(self.model_name)
@@ -235,16 +412,29 @@ class MEATask(Task):
         return problem
 
 class TrajectoryTaskBase(Task):
+    """
+    Base-class for trajectories.
+    """
 
     model_name = luigi.Parameter()
+    """Model name to use"""
 
     # General parameters for trajectory
     parameters = ListParameter(item_type=float)
+    """Parameters to simulate trajectories for"""
+
     initial_conditions = ListParameter(item_type=float)
+    """Initial conditions to use"""
+
     timepoints_arange = ListParameter(item_type=float)
+    """An arangement of the timepoints to simulate, e.g. ``(0, 40, 0.1)`` would simulate from 0 to 40 in 0.1 increments"""
 
 
     def _simulation_object(self):
+        """
+        A method that sub-classes should override, this method should return a simulation object
+        that would have ``.simulate_system()`` method, e.g. :class:`~means.simulation.simulate.Simulation`
+        """
         raise NotImplementedError
 
     def _return_object(self):
@@ -266,15 +456,27 @@ class TrajectoryTaskBase(Task):
             raise
 
 class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
+    """
+    Task to simulate the system, and return the resulting trajectories.
+    Uses the standard Simulation object, :class:`means.simulation.simulate.Simulation`.
+
+    See also :class:`~means.pipes.tasks.SSATrajectoryTask` for SSA simulation support.
+    """
 
     # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
     max_order = luigi.IntParameter()
+    """Maximum order of MEA approximation to use"""
     closure = luigi.Parameter(default='scalar')
+    """Closure method to use"""
     multivariate = luigi.BooleanParameter(default=True)
+    """Use multivariate closure (where available)"""
 
     # Solver kwargs, list the missing ones here with default=None
     solver = luigi.Parameter(default='ode15s')
+    """ODE solver to use, defaults to ode15s"""
+
     h = luigi.Parameter(default=None)
+    """h parameter to the solver, where available"""
 
     def requires(self):
         return MEATask(model_name=self.model_name, max_order=self.max_order, closure=self.closure,
@@ -302,13 +504,22 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
 
 
 class SSATrajectoryTask(TrajectoryTaskBase):
+    """
+    Generates a SSA trajectory for the particular set of parameters.
+    See :class:`~means.simulation.ssa.SSASimulation` for more details.
+
+    See also :class:`~means.pipes.tasks.TrajectoryTask` for ODE simulation support.
+
+    """
 
     n_simulations = luigi.IntParameter()
+    """Number of simulations to use in SSA"""
 
     def requires(self):
         return ModelTask(name=self.model_name)
 
     def _simulation_object(self):
+
 
         problem = means.StochasticProblem(self.input().load())
         simulation = means.SSASimulation(problem, n_simulations=self.n_simulations)

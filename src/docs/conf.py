@@ -340,10 +340,11 @@ epub_exclude_files = ['search.html']
 intersphinx_cache_limit = 10     # days to keep the cached inventories
 intersphinx_mapping = {
         'python':('http://docs.python.org/2.7',None),
-    'matplotlib':('http://matplotlib.sourceforge.net', None),
+        'matplotlib':('http://matplotlib.sourceforge.net', None),
          'numpy':('http://docs.scipy.org/doc/numpy',None),
          'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None)
+         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None),
+         'luigi': ('http://luigi.readthedocs.org/en/latest/', None)
 }
 
 
@@ -361,3 +362,22 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
         html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # otherwise, readthedocs.org uses their theme by default, so no need to specify it
+
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    exclusions = ('__weakref__',  # special-members
+                  '__doc__', '__module__', '__dict__',  # undoc-members
+                  )
+    exclude = name in exclusions
+
+    # Ignore all the _abc private methods if private methods are set to be documented
+    if name.startswith('_abc_'):
+        exclude = True
+
+    # Disable the private methods
+    return skip or exclude
+
+
+def setup(app):
+    # Register our skip members function
+    app.connect('autodoc-skip-member', autodoc_skip_member)
