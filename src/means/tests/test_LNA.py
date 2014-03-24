@@ -29,10 +29,9 @@ class TestLNA(unittest.TestCase):
             "k2 * x - g2 * y",
             "k1 + g1 * x - 2 * g1 * V_0_0",
             "k2 * V_0_0 - (g1 + g2) * V_0_1",
-            "k2 * V_0_0 - (g1 + g2) * V_1_0",
-            "k2 * x + g2 * y + k2 * V_0_1 + k2 * V_1_0 - 2 * g2 * V_1_1"])
+            "k2 * x + g2 * y + k2 * V_0_1 + k2 * V_0_1 - 2 * g2 * V_1_1"])
 
-        correct_lhs = to_sympy_matrix(['x','y','V_0_0', 'V_0_1', 'V_1_0', 'V_1_1'])
+        correct_lhs = to_sympy_matrix(['x','y','V_0_0', 'V_0_1', 'V_1_1'])
 
         constants = ["k1","k2","g1","g2"]
         model = Model(species, constants, propensities, stoichiometry_matrix)
