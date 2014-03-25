@@ -531,7 +531,7 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
             __ = problem.right_hand_side_as_function
 
 
-class SSATrajectoryTask(TrajectoryTaskBase):
+class SSATrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     """
     Generates a SSA trajectory for the particular set of parameters.
     See :class:`~means.simulation.ssa.SSASimulation` for more details.
@@ -545,7 +545,15 @@ class SSATrajectoryTask(TrajectoryTaskBase):
 
     def _simulation_object(self):
 
-        problem = means.StochasticProblem(self.model)
+        # self.__problem is set in preload() method, the code would throw attribute error if it is called incorrectly.
+        problem = self.__problem
         simulation = means.SSASimulation(problem, n_simulations=self.n_simulations)
 
         return simulation
+
+    def preload(self):
+        logger.debug('Preloading {0} {1}'.format(self.__class__.__name__, hex(id(self))))
+        # Cache the load from file
+        self.__problem = means.StochasticProblem(self.model)
+        # Cache the propensities_as_function
+        __ = self.__problem.propensities_as_function
