@@ -25,7 +25,7 @@ import operator
 import sympy as sp
 
 from means.approximation.approximation_baseclass import ApproximationBaseClass
-from means.core import Moment, VarianceTerm, ODEProblem
+from means.core import Moment, Moments, ODEProblem
 
 
 def lna_approximation(model):
@@ -86,11 +86,11 @@ class LinearNoiseApproximation(ApproximationBaseClass):
             for j in range(len(ymat)):
                 if i <= j:
                     symbol = 'V_{0}_{1}'.format(i, j)
-                    variance_terms.append(VarianceTerm(position=(i,j), symbol=symbol))
+                    variance_terms.append(Moments(position=(i,j), symbol=symbol))
                 else:
-                    # Since Vi,j = Vj,i, i.e. covariance are equal, we remove the repetitive terms
+                    # Since Vi,j = Vj,i, i.e. covariance are equal, we only record Vi,j but not Vj,i
                     symbol = 'V_{0}_{1}'.format(j, i)
-                    variance_terms.append(VarianceTerm(position=(j,i), symbol=symbol))
+                    variance_terms.append(Moments(position=(j,i), symbol=symbol))
                 row.append(symbol)
             cov_matrix.append(row)
 

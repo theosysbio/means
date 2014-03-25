@@ -3,7 +3,7 @@ import unittest
 from assimulo.solvers.sundials import CVodeError
 from sympy import Symbol, MutableDenseMatrix, Float
 from means import TrajectoryCollection, SolverException
-from means.core import ODEProblem, Moment, VarianceTerm
+from means.core import ODEProblem, Moment, Moments
 from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus
 from means.io.serialise import dump, load
@@ -114,15 +114,15 @@ class TestSerialisation(unittest.TestCase):
         ode_lhs_terms = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
-                         VarianceTerm((0, 0), V_00),
-                         VarianceTerm((0, 1), V_01),
-                         VarianceTerm((0, 2), V_02),
-                         VarianceTerm((1, 0), V_10),
-                         VarianceTerm((1, 1), V_11),
-                         VarianceTerm((1, 2), V_12),
-                         VarianceTerm((2, 0), V_20),
-                         VarianceTerm((2, 1), V_21),
-                         VarianceTerm((2, 2), V_22)]
+                         Moments((0, 0), V_00),
+                         Moments((0, 1), V_01),
+                         Moments((0, 2), V_02),
+                         Moments((1, 0), V_10),
+                         Moments((1, 1), V_11),
+                         Moments((1, 2), V_12),
+                         Moments((2, 0), V_20),
+                         Moments((2, 1), V_21),
+                         Moments((2, 2), V_22)]
 
         constants = ['c_0', 'c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6']
 
