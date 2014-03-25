@@ -78,13 +78,37 @@ class FigureHitAndMissData(Task):
                                               for x in parameters]
 
         return regular_trajectories + ssa_trajectories
+    def _distance_between_trajectories(self, lookup, trajectory_collection):
+        distance = 0.0
+        for trajectory_a in trajectory_collection:
+            try:
+                trajectory_b = lookup[trajectory_a.description]
+            except KeyError:
+                continue
+
+            distance += np.sum(np.square(trajectory_a.values - trajectory_b.values))
+
+        return distance
 
     def _return_object(self):
         success_x = []
         success_y = []
+        success_c = []
+
         failure_x = []
         failure_y = []
         failure_c = []
+
+
+        ssa_trajectory_lookup = {}
+
+        for task, trajectory_buffer in itertools.izip(self.requires(), self.input()):
+            if isinstance(task, SSATrajectoryTask):
+                lookup = {}
+                for trajectory in trajectory_buffer.load():
+                    lookup[trajectory.description] = trajectory
+
+                ssa_trajectory_lookup[tuple(task.parameters)] = lookup
 
         for task, trajectory_buffer in itertools.izip(self.requires(), self.input()):
             if isinstance(task, SSATrajectoryTask):
@@ -99,11 +123,14 @@ class FigureHitAndMissData(Task):
             elif isinstance(trajectory, TrajectoryCollection):
                 success_x.append(x)
                 success_y.append(y)
+                ssa_equivalent = ssa_trajectory_lookup[tuple(task.parameters)]
+                distance = self._distance_between_trajectories(ssa_equivalent, trajectory)
+                success_c.append(distance)
             else:
                 raise Exception('Got {0!r} as trajectory, expected either SolverException'
                                 ' or TrajectoryCollection'.format(trajectory))
 
-        return success_x, success_y, failure_x, failure_y, failure_c
+        return success_x, success_y, success_c, failure_x, failure_y, failure_c
 
 class FigureHitAndMiss(FigureTask):
 
@@ -127,35 +154,57 @@ class FigureHitAndMiss(FigureTask):
 
         input_ = self.input()
 
-        success_x, success_y, failure_x, failure_y, failure_c = input_.load()
+        success_x, success_y, success_c, failure_x, failure_y, failure_c = input_.load()
         ax = fig.add_subplot(1, 1, 1)
 
         ax.set_xlabel('c_2')
         ax.set_ylabel('c_4')
         ax.set_title('max_order = {0}'.format(self.max_order))
-        success_scatter = ax.scatter(success_x, success_y, color='b', label='Success')
 
-        cdict = {'red': ((0.0, 1.0, 1.0),
-                         (1.0, 0.0, 0.0)),
+        # Green -> Blue
+        cdict_success = {'red': ((0.0, 0.0, 0.0),
+                                 (1.0, 0.0, 0.0)),
 
-                 'green': ((0.0, 0.0, 0.0),
-                           (1.0, 0.0, 0.0)),
+                         'green': ((0.0, 1.0, 1.0),
+                                  (1.0, 0.0, 0.0)),
 
-                 'blue': ((0.0, 0.0, 0.0),
-                          (1.0, 1.0, 1.0))
-                }
+                         'blue': ((0.0, 0.0, 0.0),
+                                 (1.0, 1.0, 1.0))
+                        }
+        cmap_success = colors.LinearSegmentedColormap('BlueYellow', cdict_success)
 
-        cmap = colors.LinearSegmentedColormap('RedBlue', cdict)
+
+        success_scatter = ax.scatter(success_x, success_y, c=success_c, s=80, label='Success', cmap=cmap_success,
+                                     edgecolor='', norm=colors.LogNorm())
+
+        # Blue -> Green
+        cdict_failure = {'red': ((0.0, 1.0, 1.0),
+                                 (1.0, 0.0, 0.0)),
+
+                         'green': ((0.0, 0.0, 0.0),
+                                   (1.0, 0.0, 0.0)),
+
+                         'blue': ((0.0, 0.0, 0.0),
+                                  (1.0, 1.0, 1.0))
+                          }
+
+        cmap_failure = colors.LinearSegmentedColormap('RedBlue', cdict_failure)
+
 
         vmin = self.timepoints_arange[0]
         vmax = self.timepoints_arange[1]
-        failure_scatter = ax.scatter(failure_x, failure_y, marker='s', c=failure_c, cmap=cmap,
+        failure_scatter = ax.scatter(failure_x, failure_y, marker='v', s=80, c=failure_c, cmap=cmap_failure,
                                      vmin=vmin, vmax=vmax, label='Failure', edgecolor='')
 
+        #failure_circles_scatter = ax.scatter(failure_x, failure_y, marker='s', s=80, facecolors='', edgecolors='r')
+
         ax.legend()
+        colorbar_success = plt.colorbar(success_scatter, ax=ax)
+        colorbar_success.set_label('Sum-of-squares distance from SSA result')
+
         if failure_x:
-            colorbar = plt.colorbar(failure_scatter, ax=ax)
-            colorbar.set_label('Point of failure')
+            colorbar_failure = plt.colorbar(failure_scatter, ax=ax)
+            colorbar_failure.set_label('Point of failure')
 
         return fig
 
