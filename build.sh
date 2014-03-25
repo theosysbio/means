@@ -16,10 +16,14 @@ cd $WORKSPACE
 
 ./install_assimulo.sh
 
+# Install luigi
+pip install --quiet luigi
+
 # Uninstall previous version of our script
 pip uninstall -y means || echo "Means not yet installed"
 # Install current version of our script
 pip install $CODE_DIR
+
 
 ./run_tests.sh
 echo "Running pylint"

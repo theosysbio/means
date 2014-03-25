@@ -172,6 +172,12 @@ a friendly short-name for it as follows::
 .. _`configuration file`: https://github.com/spotify/luigi/blob/master/README.md#configuration
 
 """
+
+try:
+    import luigi
+except ImportError:
+    raise ImportError('means.pipes requires luigi package. Please install it before using means.pipes')
+
 from interface import TaskPreloadingHint, PreloadingWorker, PreloadingWorkerSchedulerFactory, run
 from parameters import *
 from targets import PickleSerialiserWithAdditionalParameters, PickleSerialiser

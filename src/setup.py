@@ -15,12 +15,16 @@ setup(
               'means.io',
               'means.simulation',
               'means.tests',
-              'means.util'],
+              'means.util',
+              'means.pipes'],
     scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
     long_description=open('README.txt').read(),
+    extras_require={
+        'pipes': ['luigi>=1.0.13'],
+    },
     install_requires=[
         "numpy>=1.6.1",
         "sympy>=0.7.4.1",
