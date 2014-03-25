@@ -60,7 +60,7 @@ class ODETermBase(Descriptor):
         return '${0}$'.format(self.symbol)
 
 
-class VarianceTerm(ODETermBase):
+class Moments(ODETermBase):
     """
     Signifies that a particular equation generated from the model is part of a Variance Term
     """
@@ -78,7 +78,7 @@ class VarianceTerm(ODETermBase):
         :param position: position in the covariance matrix
         :param symbol: symbol assigned to the term
         """
-        super(VarianceTerm, self).__init__(symbol=symbol)
+        super(Moments, self).__init__(symbol=symbol)
         self._position = position
 
     @property
@@ -86,10 +86,10 @@ class VarianceTerm(ODETermBase):
         return self._position
 
     def __unicode__(self):
-        return u'{0}({1}, {2})'.format(self.__class__.__name__, self.symbol, self.position)
+        return u'{0}({1}, {2})'.format(self.__class__.__name__, self.position, self.symbol)
 
     def _repr_latex_(self):
-        return '${0}$ (Variance term $V_{{{0}, {1}}})'.format(self.symbol, self.position[0], self.position[1])
+        return '${0}$ (Variance term $V_{{{0}, {1}}})'.format(self.position[0], self.position[1], self.symbol)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
