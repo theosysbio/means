@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import sympy
 
-from means.core import ODEProblem, Moment, VarianceTerm
+from means.core import ODEProblem, Moment, Moments
 from means.util.sympyhelpers import to_sympy_matrix
 
 
@@ -91,7 +91,7 @@ class TestODEProblem(unittest.TestCase):
         dict should have nones
         for each of the symbols
         """
-        lhs = [VarianceTerm(pos, term) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
+        lhs = [Moments(pos, term) for term, pos in [('V34', (3, 4)), ('V32', (3, 2)), ('V11', (1, 1))]]
         rhs = to_sympy_matrix(['y_1+y_2+c_2', 'y_2+y_3+c_3', 'y_3+c_1'])
         p = ODEProblem('LNA', lhs, rhs, parameters=sympy.symbols(['c_1', 'c_2', 'c_3']))
 
