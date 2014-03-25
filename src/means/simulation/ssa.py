@@ -10,7 +10,6 @@ number of species, there are many superior implementations available.
 
 import multiprocessing
 import numpy as np
-import sympy as sp
 from means.simulation.trajectory import Trajectory, TrajectoryCollection
 from means.io.serialise import SerialisableObject
 from means.util.moment_counters import generate_n_and_k_counters
@@ -93,9 +92,11 @@ class SSASimulation(SerialisableObject):
         substitution_pairs = dict(zip(self.__problem.parameters, parameters))
         propensities = substitute_all(self.__problem.propensities, substitution_pairs)
         # lambdify the propensities for fast evaluation
-        population_rates_as_function = sp.lambdify(tuple(self.__problem.species),
-                                                propensities, modules="numpy")
+        propensities_as_function = self.__problem.propensities_as_function
+        def f(*species_parameters):
+            return propensities_as_function(*(np.concatenate((species_parameters, parameters))))
 
+        population_rates_as_function = f
 
         if not self.__random_seed:
             seed_for_processes = [None] * n_simulations

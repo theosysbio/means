@@ -16,7 +16,7 @@ and can be simply built from  a :class:`~means.core.model.Model`:
 
 >>> from means import StochasticProblem
 >>> from means.examples.sample_models import MODEL_P53
->>> my_stoch_prob = StochasticProblem(MODEL_P54)
+>>> my_stoch_prob = StochasticProblem(MODEL_P53)
 
 """
 
@@ -250,7 +250,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
 
 
-class StochasticProblem(Model):
+class StochasticProblem(Model, MemoisableObject):
     """
     The formulation of a model for stochastic simulations such as GSSA (see :mod:`means.simulation.ssa`).
     """
@@ -262,3 +262,15 @@ class StochasticProblem(Model):
     @property
     def change(self):
         return self.__change
+
+    @memoised_property
+    def propensities_as_function(self):
+        all_symbols = self.species + self.parameters
+        wrapping_func = lambda x: autowrap(x, args=all_symbols, language='C', backend='Cython')
+        wrapped_functions = map(wrapping_func, self.propensities)
+
+        def f(*args):
+            ans = np.array([w_f(*args) for w_f in wrapped_functions])
+            return ans
+
+        return f
