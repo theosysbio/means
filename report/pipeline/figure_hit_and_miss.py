@@ -63,7 +63,7 @@ class FigureHitAndMissData(Task):
             for c_4 in np.arange(0.8, 2.5, self.point_sparsity):
                 parameters.append([90, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
 
-        # We want to specify all the trajectoreis we need to compute as requirements of this task,
+        # We want to specify all the trajectories we need to compute as requirements of this task,
         # so luigi handles their execution and scheduling, not us.
         regular_trajectories = [TrajectoryTask(model=model, max_order=max_order,
                                 parameters=x,
