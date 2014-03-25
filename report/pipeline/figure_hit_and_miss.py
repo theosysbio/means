@@ -59,8 +59,8 @@ class FigureHitAndMissData(Task):
         initial_conditions = [70.0, 30.0, 60.0]
 
         parameters = []
-        for c_2 in np.arange(1.5, 2.5, self.point_sparsity):
-            for c_4 in np.arange(0.8, 2.5, self.point_sparsity):
+        for c_2 in np.arange(1.5, 2.7, self.point_sparsity):
+            for c_4 in np.arange(0.6, 2.5, self.point_sparsity):
                 parameters.append([90.0, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
 
         # We want to specify all the trajectoreis we need to compute as requirements of this task,
@@ -166,7 +166,7 @@ class FigureHitAndMissTex(TexFigureTask):
 
     # Note that this is not a parameter, it is a constant
     timepoints_arange = [0.0, 40.0, 0.1]
-    max_orders = ListParameter(default=[1, 2, 3, 4, 5])
+    max_orders = ListParameter(default=[1, 2, 3, 4, 5, 6, 7])
     point_sparsity = FigureHitAndMissData.point_sparsity
 
     label = 'hit-and-miss'
