@@ -52,6 +52,9 @@ class FigureHitAndMissData(Task):
     number_of_ssa_simulations = IntParameter()
     point_sparsity = FloatParameter(default=0.1)
 
+    solver = TrajectoryTask.solver
+    solver_kwargs = TrajectoryTask.solver_kwargs
+
     def requires(self):
         model = P53Model()
         max_order = self.max_order
@@ -67,7 +70,9 @@ class FigureHitAndMissData(Task):
         # so luigi handles their execution and scheduling, not us.
         regular_trajectories = [TrajectoryTask(model=model, max_order=max_order,
                                 parameters=x,
-                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange)
+                                initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange,
+                                solver=self.solver,
+                                solver_kwargs=self.solver_kwargs)
                                 for x in parameters]
 
         ssa_trajectories = [SSATrajectoryTask(model=model,
@@ -78,6 +83,7 @@ class FigureHitAndMissData(Task):
                                               for x in parameters]
 
         return regular_trajectories + ssa_trajectories
+
     def _distance_between_trajectories(self, lookup, trajectory_collection):
         distance = 0.0
         for trajectory_a in trajectory_collection:
@@ -93,7 +99,7 @@ class FigureHitAndMissData(Task):
     def _return_object(self):
         success_x = []
         success_y = []
-        success_c = []
+        distances = []
 
         failure_x = []
         failure_y = []
@@ -125,12 +131,12 @@ class FigureHitAndMissData(Task):
                 success_y.append(y)
                 ssa_equivalent = ssa_trajectory_lookup[tuple(task.parameters)]
                 distance = self._distance_between_trajectories(ssa_equivalent, trajectory)
-                success_c.append(distance)
+                distances.append(distance)
             else:
                 raise Exception('Got {0!r} as trajectory, expected either SolverException'
                                 ' or TrajectoryCollection'.format(trajectory))
 
-        return success_x, success_y, success_c, failure_x, failure_y, failure_c
+        return success_x, success_y, distances, failure_x, failure_y, failure_c
 
 class FigureHitAndMiss(FigureTask):
 
@@ -139,45 +145,74 @@ class FigureHitAndMiss(FigureTask):
     number_of_ssa_simulations = FigureHitAndMissData.number_of_ssa_simulations
     point_sparsity = FigureHitAndMissData.point_sparsity
 
+    # We need other max_orders to be able to compute colour ranges
+    max_orders = ListParameter(item_type=int)
+
+    solver = FigureHitAndMissData.solver
+    solver_kwargs = FigureHitAndMissData.solver_kwargs
+
     def requires(self):
-        # I split the data aggregation and figure plotting into different tasks, thus this dependancy
-        # this is not strictly necessary, if you do not plot figures into subplots, (like we don't here)
-        # But would be desired if we do, essentially this dependency can be refactored to be implicit
-        return FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange,
-                                    number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                    point_sparsity=self.point_sparsity)
+
+        # Let's make sure self.max_order is always first
+        requirements = [FigureHitAndMissData(max_order=self.max_order, timepoints_arange=self.timepoints_arange,
+                                             number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                             point_sparsity=self.point_sparsity,
+                                             solver=self.solver,
+                                             solver_kwargs=self.solver_kwargs)]
+
+        # Add all other orders
+        for order in self.max_orders:
+            if order != self.max_order:
+                requirements.append(FigureHitAndMissData(max_order=order, timepoints_arange=self.timepoints_arange,
+                                             number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                             point_sparsity=self.point_sparsity,
+                                             solver=self.solver,
+                                             solver_kwargs=self.solver_kwargs))
+        return requirements
 
     def _return_object(self):
         from matplotlib import pyplot as plt
         from matplotlib import colors
         fig = plt.figure()
 
-        input_ = self.input()
+        all_data = self.input()
 
-        success_x, success_y, success_c, failure_x, failure_y, failure_c = input_.load()
+        min_dist = float('inf')
+        max_dist = -1
+
+        for input_ in all_data:
+            __, __,  input_distances, __, __, __ = input_.load()
+            max_dist = max(max_dist, max(input_distances))
+            min_dist = min(min_dist, min(input_distances))
+
+        # it is less-confusing if we use something close to zero for min_dist
+        min_dist = 1e-6
+
+        success_x, success_y, success_c, failure_x, failure_y, failure_c = self.input()[0].load()
+
         ax = fig.add_subplot(1, 1, 1)
 
         ax.set_xlabel('c_2')
         ax.set_ylabel('c_4')
         ax.set_title('max_order = {0}'.format(self.max_order))
 
-        # Green -> Blue
+        # Sky Blue -> Blue
         cdict_success = {'red': ((0.0, 0.0, 0.0),
                                  (1.0, 0.0, 0.0)),
 
                          'green': ((0.0, 1.0, 1.0),
                                   (1.0, 0.0, 0.0)),
 
-                         'blue': ((0.0, 0.0, 0.0),
+                         'blue': ((0.0, 1.0, 1.0),
                                  (1.0, 1.0, 1.0))
                         }
-        cmap_success = colors.LinearSegmentedColormap('BlueYellow', cdict_success)
+        cmap_success = colors.LinearSegmentedColormap('SkyBlueBlue', cdict_success)
 
 
         success_scatter = ax.scatter(success_x, success_y, c=success_c, s=80, label='Success', cmap=cmap_success,
-                                     edgecolor='', norm=colors.LogNorm())
+                                     edgecolor='', norm=colors.LogNorm(), marker='s', vmin=min_dist, vmax=max_dist)
 
-        # Blue -> Green
+        # Red -> Blue
         cdict_failure = {'red': ((0.0, 1.0, 1.0),
                                  (1.0, 0.0, 0.0)),
 
@@ -193,12 +228,12 @@ class FigureHitAndMiss(FigureTask):
 
         vmin = self.timepoints_arange[0]
         vmax = self.timepoints_arange[1]
-        failure_scatter = ax.scatter(failure_x, failure_y, marker='v', s=80, c=failure_c, cmap=cmap_failure,
+        failure_scatter = ax.scatter(failure_x, failure_y, marker='^', s=80, c=failure_c, cmap=cmap_failure,
                                      vmin=vmin, vmax=vmax, label='Failure', edgecolor='')
 
         #failure_circles_scatter = ax.scatter(failure_x, failure_y, marker='s', s=80, facecolors='', edgecolors='r')
 
-        ax.legend()
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
         colorbar_success = plt.colorbar(success_scatter, ax=ax)
         colorbar_success.set_label('Sum-of-squares distance from SSA result')
 
@@ -215,8 +250,9 @@ class FigureHitAndMissTex(TexFigureTask):
 
     # Note that this is not a parameter, it is a constant
     timepoints_arange = [0.0, 40.0, 0.1]
-    max_orders = ListParameter(default=[1, 2, 3, 4, 5, 6, 7])
+    max_orders = ListParameter(default=[1, 2, 3, 4, 5, 6, 7], item_type=int)
     point_sparsity = FigureHitAndMissData.point_sparsity
+
 
     label = 'hit-and-miss'
     caption = 'Some Caption'
@@ -225,10 +261,16 @@ class FigureHitAndMissTex(TexFigureTask):
 
     number_of_ssa_simulations = IntParameter(default=5000)
 
+    solver = FigureHitAndMissData.solver
+    solver_kwargs = FigureHitAndMissData.solver_kwargs
+
     def requires(self):
         return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
                                  number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                 point_sparsity=self.point_sparsity)
+                                 point_sparsity=self.point_sparsity,
+                                 max_orders=self.max_orders,
+                                 solver=self.solver,
+                                 solver_kwargs=self.solver_kwargs)
                 for max_order in self.max_orders]
 
 if __name__ == '__main__':
