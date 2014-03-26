@@ -18,22 +18,30 @@ class ConstantDerivativesProblem(ODEProblem):
 
 class TestSimulate(unittest.TestCase):
 
-    def test_simulation_of_simple_model(self):
-        """
-        Given the simplest possible problem, the one with constant derivatives,
-        results produced by the simulation should be easily predictable.
-        """
-        s = Simulation(ConstantDerivativesProblem())
-
-        trajectories = s.simulate_system(parameters=[0, 1],
-                                         initial_conditions=[3, 2],
-                                         timepoints=[0, 1, 2, 3])
+    def check_simple_problem(self, **solver_kwargs):
+        simulation_object = Simulation(ConstantDerivativesProblem(), **solver_kwargs)
+        trajectories = simulation_object.simulate_system(parameters=[0, 1],
+                                                         initial_conditions=[3, 2],
+                                                         timepoints=[0, 1, 2, 3])
         trajectories_dict = {trajectory.description.symbol: trajectory for trajectory in trajectories}
         y_1_trajectory = trajectories_dict[Symbol('y_1')]
         y_2_trajectory = trajectories_dict[Symbol('y_2')]
 
-        assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
-        assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
+        print 'Kwargs: {0!r} ... '.format(solver_kwargs),
+        try:
+            assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
+            assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
+            assert_array_almost_equal(y_1_trajectory.timepoints, [0, 1, 2, 3])
+            assert_array_almost_equal(y_2_trajectory.timepoints, [0, 1, 2, 3])
+        except AssertionError:
+            print 'FAILED'
+            raise
+        print 'OK'
+
+    def test_simple_problem_for_all_solvers(self):
+        for solver in Simulation.supported_solvers():
+            self.check_simple_problem(solver=solver)
+
 
 
 class TestSimulateWithSensitivities(unittest.TestCase):
