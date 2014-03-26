@@ -341,6 +341,16 @@ class TestModelEquality(unittest.TestCase):
 
         self.assertEqual(model_a, model_b)
 
+    def test_identical_models_have_equal_hash(self):
+        """
+        Given two identical models, they should have the same hash
+        """
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+                        propensities=['a+b+x+y', 'a-b+x-y'])
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+                        propensities=['a+b+x+y', 'a-b+x-y'])
+        self.assertEqual(hash(model_a), hash(model_b))
+
     def test_models_with_different_species_are_unequal(self):
         """
         Given models that differ by species names only, they should not be equal
