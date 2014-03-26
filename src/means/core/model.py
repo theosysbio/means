@@ -194,3 +194,11 @@ class Model(SerialisableObject, LatexPrintableObject):
                    ('propensities', map(str, data.propensities))]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
+
+
+    def __hash__(self):
+        hashable_payload = (tuple(self.species),
+                            tuple(self.parameters),
+                            tuple(self.propensities),
+                            tuple(self.stoichiometry_matrix))
+        return hash(hashable_payload)

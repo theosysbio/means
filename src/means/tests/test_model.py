@@ -341,6 +341,16 @@ class TestModelEquality(unittest.TestCase):
 
         self.assertEqual(model_a, model_b)
 
+    def test_identical_models_have_equal_hash(self):
+        """
+        Given two identical models, they should have the same hash
+        """
+        model_a = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+                        propensities=['a+b+x+y', 'a-b+x-y'])
+        model_b = Model(species=['a', 'b'], parameters=['x', 'y'], stoichiometry_matrix=[[2,3], [15,-1]],
+                        propensities=['a+b+x+y', 'a-b+x-y'])
+        self.assertEqual(hash(model_a), hash(model_b))
+
     def test_models_with_different_species_are_unequal(self):
         """
         Given models that differ by species names only, they should not be equal
@@ -356,6 +366,13 @@ class TestModelEquality(unittest.TestCase):
         self.assertNotEqual(model_a, model_c)
         self.assertNotEqual(model_b, model_c)
 
+        # Compare hashes as well
+        self.assertNotEqual(hash(model_a), hash(model_b))
+        self.assertNotEqual(hash(model_a), hash(model_c))
+        self.assertNotEqual(hash(model_b), hash(model_c))
+
+
+
     def test_models_with_different_constants_are_unequal(self):
         """
         Given two models, that differ by their constants only, they should return False on == comparison.
@@ -365,6 +382,7 @@ class TestModelEquality(unittest.TestCase):
         model_b = Model(species=['a', 'b'], parameters=['z', 'q'], stoichiometry_matrix=[[2,3], [15,-1]],
                         propensities=['a+b+z+q', 'a-b+z-q'])
         self.assertNotEqual(model_a, model_b)
+        self.assertNotEqual(hash(model_a), hash(model_b))
 
     def test_models_with_different_stoichiometry_matrices_are_unequal(self):
         """
@@ -376,6 +394,7 @@ class TestModelEquality(unittest.TestCase):
                         propensities=['a+b+x+y', 'a-b+x-y'])
 
         self.assertNotEqual(model_a, model_b)
+        self.assertNotEqual(hash(model_a), hash(model_b))
 
     def test_models_with_different_propensities_are_unequal(self):
         """
@@ -387,6 +406,9 @@ class TestModelEquality(unittest.TestCase):
                         propensities=['a+b+x+y', 'a-b+x'])
 
         self.assertNotEqual(model_a, model_b)
+        self.assertNotEqual(hash(model_a), hash(model_b))
+
+
 
     def test_models_with_equivalent_propensities_are_equal(self):
         """
