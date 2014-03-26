@@ -34,7 +34,7 @@ class FigureClosureAndMaxOrderData(Task):
             regular_trajectories.extend([TrajectoryTask(model=self.model, max_order=mo,
                                parameters=self.simul_params,
                                initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
-                               closure=clos_multiv["closure"], multivariate=clos_multiv["multivariate"])
+                               closure=clos_multiv["closure"], multivariate=clos_multiv["multivariate"], do_preload=False)
 
                                for mo in range(2, self.max_max_order + 1)])
 
@@ -131,7 +131,7 @@ class FigureClosureMaxOrderBase(FigureTask):
 
         return f
 
-class FigureClosureMaxOrderDataBase(FigureClosureAndMaxOrderData):
+class FigureClosureMaxOrderDataBase(Task):
 
     max_max_order = IntParameter()
 

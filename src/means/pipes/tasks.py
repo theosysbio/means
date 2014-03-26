@@ -510,6 +510,10 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
     """Keyword arguments to pass to solver"""
 
+    do_preload = luigi.BooleanParameter(default=True, significant=False)
+    """Whether to preload"""
+
+
     def requires(self):
         return MEATask(model=self.model, max_order=self.max_order, closure=self.closure,
                        multivariate=self.multivariate)
@@ -527,9 +531,9 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
             logger.debug('Preloading {0} {1}'.format(self.__class__.__name__, hex(id(self))))
             # Cache the load from file
             problem = self.input().load()
-            # Cache the right_hand_side_as_function
-            __ = problem.right_hand_side_as_function
-
+            if self.do_preload:
+                # Cache the right_hand_side_as_function
+                __ = problem.right_hand_side_as_function
 
 class SSATrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     """
