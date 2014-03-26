@@ -14,6 +14,16 @@ class PreloadingWorker(luigi.worker.Worker):
             task.preload()
         super(PreloadingWorker, self)._fork_task(children, task_id)
 
+    def _run_task(self, task_id):
+        if self.worker_processes == 1:
+            # if we have only one process, make sure to do the preloading here as well,
+            # for more than one process this is done before forking the task
+            task = self._Worker__scheduled_tasks[task_id]
+            if isinstance(task, TaskPreloadingHint):
+                task.preload()
+
+        super(PreloadingWorker, self)._run_task(task_id)
+
 class PreloadingWorkerSchedulerFactory(luigi.interface.WorkerSchedulerFactory):
     def create_worker(self, scheduler, worker_processes):
         return PreloadingWorker(scheduler=scheduler, worker_processes=worker_processes)
