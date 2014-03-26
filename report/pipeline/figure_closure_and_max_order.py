@@ -1,5 +1,6 @@
 import luigi
 from means.pipes import *
+from means.inference.distances import sum_of_squares
 import itertools
 
 
@@ -13,10 +14,38 @@ CLOSURE_DICTS = [
         {"closure": "log-normal",    "multivariate": False, "col": "r", "sty": "--", "alpha": 0.5}
         ]
 
+def get_traject(tasks, trajectory_buffers, max_order, sp, closure, multiv, ssa=False):
+    for ta, trajs in itertools.izip(tasks, trajectory_buffers):
+
+        if isinstance(ta, SSATrajectoryTask):
+            if ssa:
+                for t in trajs:
+                    if t.description.order == 1 and t.description.n_vector[sp]:
+                        return t
+            continue
+        elif ta.closure == closure and \
+                ta.max_order == max_order and \
+                ta.multivariate == multiv:
+            if isinstance(trajs, Exception):
+                return trajs
+
+            for t in trajs:
+                if t.description.order == 1 and t.description.n_vector[sp]:
+                    return t
+
+    raise Exception("Trajectory not found!!")
 
 
 
-class FigureClosureAndMaxOrderData(Task):
+class P53Model(means.Model):
+    def __init__(self):
+        from means.examples import MODEL_P53
+        super(P53Model, self).__init__(MODEL_P53.species, MODEL_P53.parameters, MODEL_P53.propensities,
+                                       MODEL_P53.stoichiometry_matrix)
+    def __str__(self):
+        return 'p53'
+
+class DataClosureAndMaxOrder(Task):
 
 
     timepoints_arange = ListParameter()
@@ -53,28 +82,6 @@ class FigureClosureAndMaxOrderData(Task):
 
 class FigureClosureMaxOrderBase(FigureTask):
 
-    def get_traject(self, tasks, trajectory_buffers, max_order, sp, closure, multiv, ssa=False):
-        for ta, trajs in itertools.izip(tasks, trajectory_buffers):
-
-            if isinstance(ta, SSATrajectoryTask):
-                if ssa:
-                    for t in trajs:
-                        if t.description.order == 1 and t.description.n_vector[sp]:
-                            return t
-                continue
-            elif ta.closure == closure and \
-                    ta.max_order == max_order and \
-                    ta.multivariate == multiv:
-                if isinstance(trajs, Exception):
-                    return trajs
-
-                for t in trajs:
-                    if t.description.order == 1 and t.description.n_vector[sp]:
-                        return t
-
-        raise Exception("Trajectory not found!!")
-
-
     def _return_object(self):
         import pylab as pl
 
@@ -92,7 +99,7 @@ class FigureClosureMaxOrderBase(FigureTask):
             for sps in range(n_species):
                 ax = axarr[mo-2, sps]
 
-                ssa_traj = self.get_traject(tasks, trajectory_buffers, 0, sps,
+                ssa_traj = get_traject(tasks, trajectory_buffers, 0, sps,
                                             0, 0, ssa=True)
                 mi, ma = min(ssa_traj.values), max(ssa_traj.values)
                 yl = ((mi - (ma - mi) /2.0), (ma + (ma - mi) /2.0))
@@ -101,7 +108,7 @@ class FigureClosureMaxOrderBase(FigureTask):
 
                 for clos_multiv in CLOSURE_DICTS:
 
-                    traj = self.get_traject(tasks, trajectory_buffers, max_order=mo, sp=sps,
+                    traj = get_traject(tasks, trajectory_buffers, max_order=mo, sp=sps,
                                             closure=clos_multiv["closure"],
                                             multiv=clos_multiv["multivariate"])
 
@@ -131,42 +138,98 @@ class FigureClosureMaxOrderBase(FigureTask):
 
         return f
 
-class FigureClosureMaxOrderDataBase(Task):
 
-    max_max_order = IntParameter()
-
-    def requires(self):
-        out = FigureClosureAndMaxOrderData( simul_params=self.simul_params,
-                                            initial_conditions=self.initial_conditions,
-                                            timepoints_arange=self.timepoints_arange,
-                                            max_max_order=self.max_max_order,
-                                            model=self.model)
-        return out
+class FigureSummaryDistanceBase(FigureTask):
     def _return_object(self):
-        return self.input().load()
-
-
-class P53Model(means.Model):
-    def __init__(self):
-        from means.examples import MODEL_P53
-        super(P53Model, self).__init__(MODEL_P53.species, MODEL_P53.parameters, MODEL_P53.propensities,
-                                       MODEL_P53.stoichiometry_matrix)
-    def __str__(self):
-        return 'p53'
 
 
 
-class FigureP53Data(FigureClosureMaxOrderDataBase):
+        input_ = self.input()
+        tasks, trajectory_buffers = zip(*input_.load())
+
+
+        results = CLOSURE_DICTS[:]
+
+        for trajs in trajectory_buffers:
+            if not isinstance(trajs, Exception):
+                n_species = len([None for t in trajs if t.description.order == 1])
+                continue
+
+
+        ssa_trajs = [get_traject(tasks, trajectory_buffers, 0, sps,
+                                            0, 0, ssa=True)
+                     for sps in range(n_species)]
+
+        ssa_dict={}
+        for s in ssa_trajs:
+            ssa_dict[s.description] = s
+
+        for clos_multiv in results:
+            clos_multiv["distances"] = []
+            clos_multiv["max_orders"] = []
+
+            for mo in range(2, self.max_max_order+1):
+                trajs = [get_traject(tasks, trajectory_buffers, max_order=mo, sp=sps,
+                                            closure=clos_multiv["closure"],
+                                            multiv=clos_multiv["multivariate"])
+                                    for sps in range(n_species)]
+
+                if len([True for t in trajs if not isinstance(t, Exception)]) == n_species:
+                   clos_multiv["distances"].append(sum_of_squares(trajs, ssa_dict))
+                   clos_multiv["max_orders"].append(mo)
+
+
+        import pylab as pl
+        fig = pl.figure(figsize=(16.0, 9.0))
+        pl.yscale('log')
+        #fig.set_yscale('log')
+        for res in results:
+            if res["multivariate"]:
+                mv = "multivariate"
+            else:
+                mv = "univariate"
+            if res["closure"] == "scalar":
+                mv = "value=0"
+
+            lab = "{0}, {1}".format(res["closure"], mv)
+            pl.plot(res["max_orders"], res["distances"], color=res["col"],
+                    linestyle=res["sty"], alpha=res["alpha"], marker="o", label=lab)
+
+        pl.legend(title="Closure")
+        pl.ylabel('Sum of square Distance to GSSA')
+
+        pl.xlabel('Max order')
+        return fig
+
+
+class DataP53(DataClosureAndMaxOrder):
     timepoints_arange = [0, 40, 0.1]
     initial_conditions = [70, 30, 60]
     simul_params = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     model = P53Model()
 
 class FigureP53(FigureClosureMaxOrderBase):
-    max_max_order = IntParameter(default=8)
+    max_max_order = IntParameter(default=4)
     def requires(self):
-        out = FigureP53Data(max_max_order=self.max_max_order)
+        out = DataP53(max_max_order=self.max_max_order)
         return out
+
+class FigureP53Summary(FigureSummaryDistanceBase):
+    max_max_order = IntParameter(default=4)
+    def requires(self):
+        out = DataP53(max_max_order=self.max_max_order)
+        return out
+
+class AllFigures(Task):
+
+    def requires(self):
+        out = []
+        out += [FigureP53, FigureP53Summary]
+
+        return out
+
+    def _return_object(self):
+        return self
 
 # class FigureHes1Data(FigureClosureMaxOrderDataBase):
 #     timepoints_arange = [0, 240, 1]
@@ -182,4 +245,4 @@ class FigureP53(FigureClosureMaxOrderBase):
 
 if __name__ == '__main__':
     # run(main_task_cls=FigureHes1)
-    run(main_task_cls=FigureP53)
+    run(main_task_cls=FigureP53Summary)
