@@ -47,9 +47,9 @@ class P53Model(means.Model):
 
 class FigureHitAndMissData(Task):
 
-    max_order = IntParameter()
-    timepoints_arange = ListParameter()
-    number_of_ssa_simulations = IntParameter()
+    max_order = TrajectoryTask.max_order
+    timepoints_arange = TrajectoryTask.timepoints_arange
+    number_of_ssa_simulations = SSATrajectoryTask.n_simulations
     point_sparsity = FloatParameter(default=0.1)
 
     solver = TrajectoryTask.solver
@@ -245,6 +245,66 @@ class FigureHitAndMiss(FigureTask):
 
         return fig
 
+class FigureSSAvMEATrajectory(FigureTask):
+
+    model = TrajectoryTask.model
+
+    timepoints_arange = TrajectoryTask.timepoints_arange
+    parameters = TrajectoryTask.parameters
+    initial_conditions = TrajectoryTask.initial_conditions
+
+    max_order = TrajectoryTask.max_order
+
+    solver = TrajectoryTask.solver
+    solver_kwargs = TrajectoryTask.solver_kwargs
+
+    number_of_ssa_simulations = SSATrajectoryTask.n_simulations
+
+    def requires(self):
+
+        ssa_trajectory = SSATrajectoryTask(model=self.model,
+                                           parameters=self.parameters,
+                                           initial_conditions=self.initial_conditions,
+                                           timepoints_arange=self.timepoints_arange,
+                                           n_simulations=self.number_of_ssa_simulations)
+
+        trajectory = TrajectoryTask(model=self.model, max_order=self.max_order,
+                                    parameters=self.parameters,
+                                    initial_conditions=self.initial_conditions,
+                                    timepoints_arange=self.timepoints_arange,
+                                    solver=self.solver,
+                                    solver_kwargs=self.solver_kwargs)
+
+        return [ssa_trajectory, trajectory]
+
+    def _return_object(self):
+        import matplotlib.pyplot as plt
+        figure = plt.figure()
+
+        ssa_trajectory_buffer, trajectory_buffer = self.input()
+        ssa_trajectories = ssa_trajectory_buffer.load()
+        ssa_trajectories = [ssa_trajectories[0]] # Let's take only the first trajectory
+        trajectories = trajectory_buffer.load()
+
+        number_of_ssa_trajectories = len(ssa_trajectories)
+
+        for i, (ssa_trajectory, trajectory) in enumerate(zip(ssa_trajectories, trajectories)):
+            assert(ssa_trajectory.description == trajectory.description)
+
+            plt.subplot(2, number_of_ssa_trajectories, i+1)
+            plt.title(ssa_trajectory.description.mathtext())
+
+            ssa_trajectory.plot(label='SSA')
+            trajectory.plot(label='Solver')
+            plt.legend()
+
+            plt.subplot(2, number_of_ssa_trajectories, i+1+number_of_ssa_trajectories)
+            plt.title(ssa_trajectory.description.mathtext() + ' - difference')
+            (ssa_trajectory - trajectory).plot(label='difference')
+
+
+        return figure
+
 class FigureHitAndMissTex(TexFigureTask):
     """
     Join all hit and miss figures into one tex file
@@ -267,7 +327,7 @@ class FigureHitAndMissTex(TexFigureTask):
     solver_kwargs = FigureHitAndMissData.solver_kwargs
 
     def requires(self):
-        return [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
+        hit_and_misses = [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
                                  number_of_ssa_simulations=self.number_of_ssa_simulations,
                                  point_sparsity=self.point_sparsity,
                                  max_orders=self.max_orders,
@@ -275,5 +335,39 @@ class FigureHitAndMissTex(TexFigureTask):
                                  solver_kwargs=self.solver_kwargs)
                 for max_order in self.max_orders]
 
+        return hit_and_misses
+
+class FigureHitAndMissInterestingCases(TexFigureTask):
+
+    model = P53Model()
+
+    solver = FigureSSAvMEATrajectory.solver
+    solver_kwargs = FigureSSAvMEATrajectory.solver_kwargs
+
+    number_of_ssa_simulations = FigureHitAndMissTex.number_of_ssa_simulations
+
+    label = 'hit-and-miss-interesting-cases'
+    caption = ''
+
+
+    def requires(self):
+
+        parameters = [90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01]
+        initial_conditions = [70.0, 30.0, 60.0]
+        timepoints_arange = FigureHitAndMissTex.timepoints_arange
+        max_order = 1
+
+        return [FigureSSAvMEATrajectory(model=self.model,
+                                        timepoints_arange=timepoints_arange,
+                                        parameters=parameters,
+                                        initial_conditions=initial_conditions,
+                                        max_order=max_order,
+                                        solver=self.solver,
+                                        solver_kwargs=self.solver_kwargs,
+                                        number_of_ssa_simulations=self.number_of_ssa_simulations)]
+
+
+
 if __name__ == '__main__':
-    run(main_task_cls=FigureHitAndMissTex)
+    #run(main_task_cls=FigureHitAndMissTex)
+    run()
