@@ -178,15 +178,17 @@ class FigureHitAndMiss(FigureTask):
         all_data = self.input()
 
         min_dist = float('inf')
-        max_dist = -1
 
+        all_input_distances = []
         for input_ in all_data:
             __, __,  input_distances, __, __, __ = input_.load()
-            max_dist = max(max_dist, max(input_distances))
-            min_dist = min(min_dist, min(input_distances))
+            all_input_distances.extend(input_distances)
+
+        # Get 99.5th percentile as the max_dist (i.e. exclude some outliers)
+        max_dist = np.percentile(all_input_distances, 99.5)
 
         # it is less-confusing if we use something close to zero for min_dist
-        min_dist = 1e-6
+        min_dist = 1e-2
 
         success_x, success_y, success_c, failure_x, failure_y, failure_c = self.input()[0].load()
 
@@ -203,7 +205,7 @@ class FigureHitAndMiss(FigureTask):
                          'green': ((0.0, 1.0, 1.0),
                                   (1.0, 0.0, 0.0)),
 
-                         'blue': ((0.0, 1.0, 1.0),
+                         'blue': ((0.0, 0.0, 0.0),
                                  (1.0, 1.0, 1.0))
                         }
         cmap_success = colors.LinearSegmentedColormap('SkyBlueBlue', cdict_success)
