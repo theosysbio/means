@@ -317,7 +317,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :return:
         """
         if not self.distance_landscape:
-            raise Exception('No distance landscape returned. Rerun inference with return_distance_landscape=True')
+            raise Exception('No distance landscape returned. Re-run inference with return_distance_landscape=True')
 
         from matplotlib import pyplot as plt
         from matplotlib.mlab import griddata
@@ -352,19 +352,66 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         # Some labels
         ax.clabel(cs, inline=True)
 
-        ax.set_xlabel('${0}$'.format(x_axis))
-        ax.set_ylabel('${0}$'.format(y_axis))
+         # Fix axes
+        from matplotlib.artist import setp
+        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
+        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
+        setp(ax.get_xticklabels(),rotation=90)
 
-        # x_sol = []
-        # y_sol = []
-        # for parameters, initial_conditions in self.solutions:
-        #     x_sol.append(parameters[0])
-        #     y_sol.append(parameters[1])
-        #
-        #     plt.plot(x_sol, y_sol, color='k')
-        #
-        # plt.plot(x_sol[0], y_sol[0], 'o', color='k')
-        # plt.plot(x_sol[-1], y_sol[-1], 'x', color='k')
+
+    def plot_intermediate_solutions_projection(self, x_axis, y_axis, legend=False, ax=None,
+                                               start_and_end_locations_only=False,
+                                               start_marker='bo',
+                                               end_marker='rx',
+                                               *args, **kwargs):
+
+
+
+        if not self.solutions:
+            raise Exception('No intermediate solutions returned. '
+                            'Re-run inference with return_intermediate_solutions=True')
+
+        from matplotlib import pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+
+        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+
+        index_x = all_parameters.index(str(x_axis))
+        index_y = all_parameters.index(str(y_axis))
+
+        x, y = [], []
+        for parameters, initial_conditions in self.solutions:
+            all_values = parameters + initial_conditions
+            x.append(all_values[index_x])
+            y.append(all_values[index_y])
+
+        if not start_and_end_locations_only:
+            ax.plot(x, y, *args, **kwargs)
+
+        max_x = max(x)
+        min_x = min(x)
+        padding_x = (max_x - min_x) * 0.1 / 2.0
+
+        max_y = max(y)
+        min_y = min(y)
+        padding_y = (max_y - min_y) * 0.1 / 2.0
+
+
+        ax.set_xlim(min(x)-padding_x, max(x)+padding_x)
+        ax.set_ylim(min(y)-padding_y, max(y)+padding_y)
+
+        ax.plot(x[0], y[0], start_marker, label='Start')
+        ax.plot(x[-1], y[-1], end_marker, label='End')
+
+        # Fix axes
+        from matplotlib.artist import setp
+        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
+        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
+        setp(ax.get_xticklabels(),rotation=90)
+
+        if legend:
+            ax.legend()
 
     @memoised_property
     def starting_trajectories(self):
