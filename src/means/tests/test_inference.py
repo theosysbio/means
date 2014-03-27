@@ -208,8 +208,8 @@ class _TestInferenceForRegressions(unittest.TestCase):
     def generate_inference_object(self):
         # Just so we pass the only test below
         class StubInfer():
-            def infer(self):
-                return None
+            def infer(self, return_intermediate_solutions=False):
+                return 'something'
 
         return StubInfer()
 
@@ -221,6 +221,10 @@ class _TestInferenceForRegressions(unittest.TestCase):
         result = object_.infer()
         self.validate_result(result)
 
+    def test_with_intermediate_solutions(self):
+        object_ = self.generate_inference_object()
+        result = object_.infer(return_intermediate_solutions=True)
+        self.validate_result(result)
 
 class TestSumOfSquaresForRegressions(_TestInferenceForRegressions):
     def generate_inference_object(self):
