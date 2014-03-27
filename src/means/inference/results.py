@@ -306,7 +306,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         """
         return self.__distance_landscape
 
-    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None):
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
         """
         Plots the projection of distance landscape (if it was returned), onto the
         parameters specified
@@ -347,7 +347,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         zi = griddata(x, y, z, xi, yi)
 
         # Plot contours
-        ax.contourf(xi, yi, zi)
+        ax.contourf(xi, yi, zi, *args, **kwargs)
         cs = ax.contour(xi, yi, zi, colors='k')
         # Some labels
         ax.clabel(cs, inline=True)
