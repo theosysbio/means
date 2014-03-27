@@ -3,6 +3,7 @@
 \usepackage{graphicx}
 \usepackage[font=footnotesize]{caption}
 \usepackage[noadjust]{cite}
+\usepackage[toc,page]{appendix}
 \usepackage{hyperref}
 \renewcommand*\abstractname{Summary}
 
@@ -14,14 +15,20 @@
 
 \maketitle
 
+\tableofcontents
 
-    \begin{abstract}
-    TODO An abstract here...
-	\end{abstract}
+
+\begin{abstract}
+TODO An abstract here...
+
+\end{abstract}
+	
 \newpage{}
 \input{intro}
 \newpage{}
 \input{package}
+\newpage{}
+\input{examples}
 \newpage{}
 \input{results}
 \newpage{}
@@ -29,5 +36,10 @@
 \newpage{}
 \bibliography{report.bib}{}
 \bibliographystyle{ieeetr}
+
+\newpage{}
+\begin{appendices}
+\input{tuto_appendix}
+\end{appendices}
    
 \end{document}
