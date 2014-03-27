@@ -218,12 +218,13 @@ class InferenceResult(SerialisableObject, MemoisableObject):
     __function_calls_made = None
     __warning_flag = None
     __solutions = None
+    __distance_landscape = None
 
     yaml_tag = '!inference-result'
 
     def __init__(self, inference,
                  optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status,
-                 solutions):
+                 solutions, distance_landscape):
 
         """
 
@@ -234,6 +235,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :param convergence_status:
         :type convergence_status: :class:`ConvergenceStatusBase`
         :param solutions:
+        :param distance_landscape: distance landscape - all the distances
         """
         self.__inference = inference
         self.__optimal_parameters = optimal_parameters
@@ -241,6 +243,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         self.__distance_at_minimum = distance_at_minimum
         self.__convergence_status = convergence_status
         self.__solutions = solutions
+        self.__distance_landscape = distance_landscape
 
     @property
     def inference(self):
@@ -248,6 +251,10 @@ class InferenceResult(SerialisableObject, MemoisableObject):
 
     @property
     def problem(self):
+        """
+
+        :rtype: :class:`~means.core.problems.ODEProblem`
+        """
         return self.inference.problem
 
 
@@ -287,6 +294,124 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :rtype: list[tuple]|None
         """
         return self.__solutions
+
+    @property
+    def distance_landscape(self):
+        """
+        The distance to the observed values at each point of the parameter space that was checked.
+        This is different from the solutions list as it returns all the values checked, not only the ones that
+        were chosen as intermediate steps by the solver
+        :return: a list of (parameters, conditions, distance) tuples or None if the inference did not track it
+        :rtype: list[tuple]|None
+        """
+        return self.__distance_landscape
+
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
+        """
+        Plots the projection of distance landscape (if it was returned), onto the
+        parameters specified
+
+        :param x_axis: symbol to plot on x axis
+        :param y_axis: symbol to plot on y axis
+        :param ax: axis object to plot onto
+        :return:
+        """
+        if not self.distance_landscape:
+            raise Exception('No distance landscape returned. Re-run inference with return_distance_landscape=True')
+
+        from matplotlib import pyplot as plt
+        from matplotlib.mlab import griddata
+        import numpy as np
+
+        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+
+        index_x = all_parameters.index(str(x_axis))
+        index_y = all_parameters.index(str(y_axis))
+
+        x = []
+        y = []
+        z = []
+        for parameters, initial_conditions, distance in self.distance_landscape:
+            all_values = list(parameters) + list(initial_conditions)
+            x.append(all_values[index_x])
+            y.append(all_values[index_y])
+            z.append(distance)
+
+        if ax is None:
+            ax = plt.gca()
+
+        xi = np.linspace(min(x), max(x), 100)
+        yi = np.linspace(min(y), max(y), 100)
+
+        # Interpolate points to a grid
+        zi = griddata(x, y, z, xi, yi)
+
+        # Plot contours
+        ax.contourf(xi, yi, zi, *args, **kwargs)
+        cs = ax.contour(xi, yi, zi, colors='k')
+        # Some labels
+        ax.clabel(cs, inline=True)
+
+         # Fix axes
+        from matplotlib.artist import setp
+        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
+        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
+        setp(ax.get_xticklabels(),rotation=90)
+
+
+    def plot_intermediate_solutions_projection(self, x_axis, y_axis, legend=False, ax=None,
+                                               start_and_end_locations_only=False,
+                                               start_marker='bo',
+                                               end_marker='rx',
+                                               *args, **kwargs):
+
+
+
+        if not self.solutions:
+            raise Exception('No intermediate solutions returned. '
+                            'Re-run inference with return_intermediate_solutions=True')
+
+        from matplotlib import pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+
+        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+
+        index_x = all_parameters.index(str(x_axis))
+        index_y = all_parameters.index(str(y_axis))
+
+        x, y = [], []
+        for parameters, initial_conditions in self.solutions:
+            all_values = parameters + initial_conditions
+            x.append(all_values[index_x])
+            y.append(all_values[index_y])
+
+        if not start_and_end_locations_only:
+            ax.plot(x, y, *args, **kwargs)
+
+        max_x = max(x)
+        min_x = min(x)
+        padding_x = (max_x - min_x) * 0.1 / 2.0
+
+        max_y = max(y)
+        min_y = min(y)
+        padding_y = (max_y - min_y) * 0.1 / 2.0
+
+
+        ax.set_xlim(min(x)-padding_x, max(x)+padding_x)
+        ax.set_ylim(min(y)-padding_y, max(y)+padding_y)
+
+        ax.plot(x[0], y[0], start_marker, label='Start')
+        ax.plot(x[-1], y[-1], end_marker, label='End')
+
+        # Fix axes
+        from matplotlib.artist import setp
+        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
+        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
+        setp(ax.get_xticklabels(),rotation=90)
+
+        if legend:
+            ax.legend()
 
     @memoised_property
     def starting_trajectories(self):
