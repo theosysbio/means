@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}
+\contentsline {section}{\numberline {2}Package Structure}{3}{section.2}
+\contentsline {section}{\numberline {3}Example of Usage}{4}{section.3}
+\contentsline {section}{\numberline {4}Results and Discussion}{5}{section.4}
+\contentsline {section}{\numberline {5}Conclusion}{6}{section.5}
+\contentsline {section}{Appendices}{8}{section*.3}
+\contentsline {section}{\numberline {A}\\Tutorials}{8}{Appendix.a.A}
