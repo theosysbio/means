@@ -61,6 +61,11 @@ def diff_png(a64, b64, generate_diff_images=True):
     if abs(a_rows - b_rows) > PNG_SHAPE_DIFF_TOLERANCE or abs(a_columns - b_columns) > PNG_SHAPE_DIFF_TOLERANCE:
         print "PNG images are different. Shapes mismatch: {0!r} v. {1!r}".format(a_data.shape, b_data.shape)
         diff = True
+
+        print 'Actual:'
+        print_base64_img(a_data)
+        print 'Expected:'
+        print_base64_img(b_data)
     else:
         # Equalise the data shapes
         if a_rows < b_rows:
