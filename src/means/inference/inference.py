@@ -465,7 +465,7 @@ class Inference(SerialisableObject, MemoisableObject):
                      timepoints_to_simulate, observed_trajectories_lookup,
                      distance_comparison_function,
                      simulation_instance,
-                     exception_limit):
+                     exception_limit, track_distance_landscape=False):
 
             self.problem = problem
             self.constraints = constraints
@@ -480,6 +480,11 @@ class Inference(SerialisableObject, MemoisableObject):
             self.exception_count = 0
             self.best_so_far_distance = None
             self.best_so_far_guess = None
+            self.track_distance_landscape = track_distance_landscape
+            if self.track_distance_landscape:
+                self.distance_landscape = []
+            else:
+                self.distance_landscape = None
 
 
         def _constraints_are_satisfied(self, current_guess):
@@ -492,11 +497,7 @@ class Inference(SerialisableObject, MemoisableObject):
         def _distance_to_simulated_trajectories(self, simulated_trajectories):
             return self.distance_comparison_function(simulated_trajectories, self.observed_trajectories_lookup)
 
-        def __call__(self, current_guess):
-            if not self._constraints_are_satisfied(current_guess):
-                return MAX_DIST
-
-            current_parameters, current_initial_conditions = self.extract_parameters_from_optimisation_guess(current_guess)
+        def get_distance(self, current_parameters, current_initial_conditions):
 
             if _some_params_are_negative(self.problem, current_parameters, current_initial_conditions):
                 return MAX_DIST
@@ -516,17 +517,32 @@ class Inference(SerialisableObject, MemoisableObject):
                 else:
                     return MAX_DIST
 
-
             dist = self._distance_to_simulated_trajectories(simulated_trajectories)
+            return dist
+
+        def __call__(self, current_guess):
+            current_parameters, current_initial_conditions = \
+                self.extract_parameters_from_optimisation_guess(current_guess)
+
+            if not self._constraints_are_satisfied(current_guess):
+                dist = MAX_DIST
+            else:
+                dist = self.get_distance(current_parameters, current_initial_conditions)
+
             # Keep track of the best-so-far score if we cancel early due to too many exceptions
             if dist < self.best_so_far_distance:
                 self.best_so_far_distance = dist
                 self.best_so_far_guess = current_guess
 
+            if self.track_distance_landscape:
+                self.distance_landscape.append((current_parameters, current_initial_conditions, dist))
+
             return dist
 
 
-    def _infer_raw(self, return_intermediate_solutions=False, solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
+
+    def _infer_raw(self, return_intermediate_solutions=False, return_distance_landscape=False,
+                   solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
 
         initial_guess = _to_guess(self.starting_parameters_with_variability, self.starting_conditions_with_variability)
 
@@ -538,7 +554,8 @@ class Inference(SerialisableObject, MemoisableObject):
                                                          self.observed_trajectories_lookup,
                                                          self._distance_between_trajectories_function,
                                                          self.simulation,
-                                                         exception_limit=solver_exceptions_limit)
+                                                         exception_limit=solver_exceptions_limit,
+                                                         track_distance_landscape=return_distance_landscape)
 
         try:
             result = fmin(distances_calculator, initial_guess, ftol=FTOL, disp=0, full_output=True,
@@ -576,24 +593,33 @@ class Inference(SerialisableObject, MemoisableObject):
         else:
             solutions = None
 
-        return optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions
+
+        distance_landscape = distances_calculator.distance_landscape
+
+        return optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, \
+               solutions, distance_landscape
 
     def _result_from_raw_result(self, raw_result):
-        optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions = raw_result
+        optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status, solutions, \
+            distance_landscape = raw_result
 
         result = InferenceResult(self, optimal_parameters, optimal_initial_conditions,
                                  distance_at_minimum, convergence_status,
-                                 solutions)
+                                 solutions, distance_landscape)
         return result
 
 
-    def infer(self, return_intermediate_solutions=False, solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
+    def infer(self, return_intermediate_solutions=False, return_distance_landscape=False,
+              solver_exceptions_limit=DEFAULT_SOLVER_EXCEPTIONS_LIMIT):
         """
 
         :param return_intermediate_solutions: Return the intermediate parameter solutions that optimisation
+        :param return_distance_landscape: Return the distance landscape that was explored
         """
-        raw_result = self._infer_raw(return_intermediate_solutions,
-                                     solver_exceptions_limit=solver_exceptions_limit)
+        raw_result = self._infer_raw(return_intermediate_solutions=return_intermediate_solutions,
+                                     return_distance_landscape=return_distance_landscape,
+                                     solver_exceptions_limit=solver_exceptions_limit,
+                                     )
         return self._result_from_raw_result(raw_result)
 
     @property

@@ -218,12 +218,13 @@ class InferenceResult(SerialisableObject, MemoisableObject):
     __function_calls_made = None
     __warning_flag = None
     __solutions = None
+    __distance_landscape = None
 
     yaml_tag = '!inference-result'
 
     def __init__(self, inference,
                  optimal_parameters, optimal_initial_conditions, distance_at_minimum, convergence_status,
-                 solutions):
+                 solutions, distance_landscape):
 
         """
 
@@ -234,6 +235,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :param convergence_status:
         :type convergence_status: :class:`ConvergenceStatusBase`
         :param solutions:
+        :param distance_landscape: distance landscape - all the distances
         """
         self.__inference = inference
         self.__optimal_parameters = optimal_parameters
@@ -241,6 +243,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         self.__distance_at_minimum = distance_at_minimum
         self.__convergence_status = convergence_status
         self.__solutions = solutions
+        self.__distance_landscape = distance_landscape
 
     @property
     def inference(self):
@@ -248,6 +251,10 @@ class InferenceResult(SerialisableObject, MemoisableObject):
 
     @property
     def problem(self):
+        """
+
+        :rtype: :class:`~means.core.problems.ODEProblem`
+        """
         return self.inference.problem
 
 
@@ -287,6 +294,77 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :rtype: list[tuple]|None
         """
         return self.__solutions
+
+    @property
+    def distance_landscape(self):
+        """
+        The distance to the observed values at each point of the parameter space that was checked.
+        This is different from the solutions list as it returns all the values checked, not only the ones that
+        were chosen as intermediate steps by the solver
+        :return: a list of (parameters, conditions, distance) tuples or None if the inference did not track it
+        :rtype: list[tuple]|None
+        """
+        return self.__distance_landscape
+
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None):
+        """
+        Plots the projection of distance landscape (if it was returned), onto the
+        parameters specified
+
+        :param x_axis: symbol to plot on x axis
+        :param y_axis: symbol to plot on y axis
+        :param ax: axis object to plot onto
+        :return:
+        """
+        if not self.distance_landscape:
+            raise Exception('No distance landscape returned. Rerun inference with return_distance_landscape=True')
+
+        from matplotlib import pyplot as plt
+        from matplotlib.mlab import griddata
+        import numpy as np
+
+        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+
+        index_x = all_parameters.index(str(x_axis))
+        index_y = all_parameters.index(str(y_axis))
+
+        x = []
+        y = []
+        z = []
+        for parameters, initial_conditions, distance in self.distance_landscape:
+            all_values = list(parameters) + list(initial_conditions)
+            x.append(all_values[index_x])
+            y.append(all_values[index_y])
+            z.append(distance)
+
+        if ax is None:
+            ax = plt.gca()
+
+        xi = np.linspace(min(x), max(x), 100)
+        yi = np.linspace(min(y), max(y), 100)
+
+        # Interpolate points to a grid
+        zi = griddata(x, y, z, xi, yi)
+
+        # Plot contours
+        ax.contourf(xi, yi, zi)
+        cs = ax.contour(xi, yi, zi, colors='k')
+        # Some labels
+        ax.clabel(cs, inline=True)
+
+        ax.set_xlabel('${0}$'.format(x_axis))
+        ax.set_ylabel('${0}$'.format(y_axis))
+
+        # x_sol = []
+        # y_sol = []
+        # for parameters, initial_conditions in self.solutions:
+        #     x_sol.append(parameters[0])
+        #     y_sol.append(parameters[1])
+        #
+        #     plt.plot(x_sol, y_sol, color='k')
+        #
+        # plt.plot(x_sol[0], y_sol[0], 'o', color='k')
+        # plt.plot(x_sol[-1], y_sol[-1], 'x', color='k')
 
     @memoised_property
     def starting_trajectories(self):
