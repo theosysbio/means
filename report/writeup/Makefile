@@ -11,4 +11,4 @@ report.pdf: $(ALL_TEX) report.bib
 	dvipdf $(basename $@)
 
 clean:
-	rm -f *{.log,.dvi,.aux,.out,.bbl,.pdf,.dvi, blg}
+	rm -f *{.log,.dvi,.aux,.out,.bbl,.pdf,.dvi,.blg,.toc}
