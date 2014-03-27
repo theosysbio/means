@@ -6,12 +6,27 @@
 \usepackage[toc,page]{appendix}
 \usepackage{hyperref}
 \usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{sidecap}
+\usepackage{subcaption}
+\usepackage{minted}
+\usepackage{framed}
+
+
 \renewcommand*\abstractname{Summary}
 
 % OUR COMMANDS
+%~ 
+%~ \newenvironment{pythoncode}%
+%~ {\begin{framed}
+%~ \begin{minted}{python}}%
+%~ {\end{minted}
+%~ \end{framed}}%
+
 % package name:
 \newcommand{\means}{\texttt{MEANS}}
 \newcommand{\pft}{\textit{p53}}
+\newcommand{\py}{\texttt{python}}
 
 \begin{document}
 \title{MEANS: a new python package for Moment Expansion Approximation, Inference and Simulation}
@@ -28,6 +43,12 @@
 \begin{abstract}
 TODO An abstract here...
 \end{abstract}
+
+TODO ABREVIATIONS table!!
+ODE 
+MEA
+TODO, make a bib entry for Lakatos, unpublished/in prep.
+
 \tableofcontents
 
 
