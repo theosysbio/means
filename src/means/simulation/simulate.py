@@ -38,7 +38,7 @@ import numpy as np
 from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
-from means.core import Moment, Moments
+from means.core import Moment, VarianceTerm
 
 def _validate_problem(problem):
 

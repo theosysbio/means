@@ -1,7 +1,7 @@
 import unittest
 import means
 from means.util.sympyhelpers import to_sympy_matrix
-from means.core import ODEProblem, ODETermBase, Moment, Moments
+from means.core import ODEProblem, ODETermBase, Moment, VarianceTerm
 from means.simulation import Simulation
 from numpy.testing import assert_array_almost_equal
 import numpy as np
@@ -18,22 +18,30 @@ class ConstantDerivativesProblem(ODEProblem):
 
 class TestSimulate(unittest.TestCase):
 
-    def test_simulation_of_simple_model(self):
-        """
-        Given the simplest possible problem, the one with constant derivatives,
-        results produced by the simulation should be easily predictable.
-        """
-        s = Simulation(ConstantDerivativesProblem())
-
-        trajectories = s.simulate_system(parameters=[0, 1],
-                                         initial_conditions=[3, 2],
-                                         timepoints=[0, 1, 2, 3])
+    def check_simple_problem(self, **solver_kwargs):
+        simulation_object = Simulation(ConstantDerivativesProblem(), **solver_kwargs)
+        trajectories = simulation_object.simulate_system(parameters=[0, 1],
+                                                         initial_conditions=[3, 2],
+                                                         timepoints=[0, 1, 2, 3])
         trajectories_dict = {trajectory.description.symbol: trajectory for trajectory in trajectories}
         y_1_trajectory = trajectories_dict[Symbol('y_1')]
         y_2_trajectory = trajectories_dict[Symbol('y_2')]
 
-        assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
-        assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
+        print 'Kwargs: {0!r} ... '.format(solver_kwargs),
+        try:
+            assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
+            assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
+            assert_array_almost_equal(y_1_trajectory.timepoints, [0, 1, 2, 3])
+            assert_array_almost_equal(y_2_trajectory.timepoints, [0, 1, 2, 3])
+        except AssertionError:
+            print 'FAILED'
+            raise
+        print 'OK'
+
+    def test_simple_problem_for_all_solvers(self):
+        for solver in Simulation.supported_solvers():
+            self.check_simple_problem(solver=solver)
+
 
 
 class TestSimulateWithSensitivities(unittest.TestCase):
@@ -206,12 +214,12 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
         left_hand_side_descriptors = [Moment(np.array([1, 0, 0]), symbol=y_0),
                          Moment(np.array([0, 1, 0]), symbol=y_1),
                          Moment(np.array([0, 0, 1]), symbol=y_2),
-                         Moments((0, 0), V_0_0),
-                         Moments((0, 1), V_0_1),
-                         Moments((0, 2), V_0_2),
-                         Moments((1, 1), V_1_1),
-                         Moments((1, 2), V_1_2),
-                         Moments((2, 2), V_2_2)]
+                         VarianceTerm((0, 0), V_0_0),
+                         VarianceTerm((0, 1), V_0_1),
+                         VarianceTerm((0, 2), V_0_2),
+                         VarianceTerm((1, 1), V_1_1),
+                         VarianceTerm((1, 2), V_1_2),
+                         VarianceTerm((2, 2), V_2_2)]
 
         right_hand_side = MutableDenseMatrix([[c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)], [c_3*y_0 - c_4*y_1], [c_4*y_1 - c_5*y_2], [2*V_0_0*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_0_2*c_2*y_0/(c_6 + y_0) - V_0_2*c_2*y_0/(c_6 + y_0) + c_0**Float('1.0', prec=15) + (c_1*y_0)**Float('1.0', prec=15) + (c_2*y_0*y_2/(c_6 + y_0))**Float('1.0', prec=15)], [V_0_0*c_3 - V_0_1*c_4 + V_0_1*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_1_2*c_2*y_0/(c_6 + y_0)], [V_0_1*c_4 - V_0_2*c_5 + V_0_2*(-c_1 + c_2*y_0*y_2/(c_6 + y_0)**2 - c_2*y_2/(c_6 + y_0)) - V_2_2*c_2*y_0/(c_6 + y_0)], [V_0_1*c_3 + V_0_1*c_3 - 2*V_1_1*c_4 + (c_3*y_0)**Float('1.0', prec=15) + (c_4*y_1)**Float('1.0', prec=15)], [V_0_2*c_3 + V_1_1*c_4 - V_1_2*c_4 - V_1_2*c_5 - (c_4*y_1)**Float('1.0', prec=15)], [V_1_2*c_4 + V_1_2*c_4 - 2*V_2_2*c_5 + (c_4*y_1)**Float('1.0', prec=15) + (c_5*y_2)**Float('1.0', prec=15)]])
 
@@ -315,9 +323,9 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         left_hand_side_descriptors = [Moment(np.array([1, 0]), symbol=y_0),
                          Moment(np.array([0, 1]), symbol=y_1),
-                         Moments((0, 0), V_0_0),
-                         Moments((0, 1), V_0_1),
-                         Moments((1, 1), V_1_1)]
+                         VarianceTerm((0, 0), V_0_0),
+                         VarianceTerm((0, 1), V_0_1),
+                         VarianceTerm((1, 1), V_1_1)]
 
         problem = ODEProblem('LNA', left_hand_side_descriptors, right_hand_side, constants)
 

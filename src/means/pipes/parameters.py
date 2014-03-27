@@ -50,11 +50,11 @@ class ListOfKeyValuePairsParameter(Parameter):
             for item in items:
                 if self._separator_key_value not in item:
                     raise ValueError('Cannot split {0!r} into key,value pairs'.format(item))
-                key_values.append(item.split(self._separator_key_value))
+                key_values.append(tuple(item.split(self._separator_key_value)))
 
             return key_values
         elif isinstance(x, list):
-            return x
+            return map(tuple, x)
         else:
             raise TypeError('Expected a list or string')
 

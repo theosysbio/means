@@ -172,6 +172,7 @@ class SolverBase(MemoisableObject):
         last_timepoint = timepoints[-1]
         try:
             simulated_timepoints, simulated_values = solver.simulate(last_timepoint, ncp_list=timepoints)
+
         except (Exception, self._solver_exception_class) as e:
             # The exceptions thrown by solvers are usually hiding the real cause, try to see if it is
             # our right_hand_side_as_function that is broken first
@@ -184,8 +185,9 @@ class SolverBase(MemoisableObject):
                 # If it is not, handle the original exception
                 self._handle_solver_exception(e)
 
-        return self._results_to_trajectories(simulated_timepoints, simulated_values)
+        trajectories =  self._results_to_trajectories(simulated_timepoints, simulated_values)
 
+        return trajectories
 
     def _handle_solver_exception(self, solver_exception):
         """
@@ -398,6 +400,17 @@ class ExplicitEulerSolver(SolverBase, UniqueNameInitialisationMixin):
     def unique_name(cls):
         return 'euler'
 
+    def simulate(self, timepoints):
+        # Euler solver does not return the correct timepoints for some reason, work around that by resampling them
+        trajectories = super(ExplicitEulerSolver, self).simulate(timepoints)
+
+        resampled_trajectories = []
+        for trajectory in trajectories:
+            resampled_trajectories.append(trajectory.resample(timepoints))
+
+        return resampled_trajectories
+
+
 class RungeKutta4Solver(SolverBase, UniqueNameInitialisationMixin):
 
     def _default_solver_instance(self):
@@ -409,6 +422,15 @@ class RungeKutta4Solver(SolverBase, UniqueNameInitialisationMixin):
     def unique_name(cls):
         return 'rungekutta4'
 
+    def simulate(self, timepoints):
+        # RungeKutta4 solver does not return the correct timepoints for some reason, work around that by resampling them
+        trajectories = super(RungeKutta4Solver, self).simulate(timepoints)
+
+        resampled_trajectories = []
+        for trajectory in trajectories:
+            resampled_trajectories.append(trajectory.resample(timepoints))
+
+        return resampled_trajectories
 
 class RungeKutta34Solver(SolverBase, UniqueNameInitialisationMixin):
 
