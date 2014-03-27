@@ -375,7 +375,7 @@ class InferenceStub(Inference):
     def __init__(self, answer_to_return):
         self.__answer_to_return = answer_to_return
 
-    def _infer_raw(self, return_intermediate_solutions=False, solver_exceptions_limit=None):
+    def _infer_raw(self, *args, **kwargs):
         return self.__answer_to_return
 
     def _result_from_raw_result(self, raw_result):

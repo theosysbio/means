@@ -159,6 +159,8 @@ class TestSerialisation(unittest.TestCase):
                             distance_at_minimum=15.8,
                             convergence_status=NormalConvergenceStatus(None, 100, 180),
                             solutions=[[([1, 2, 3, 4, 5, 6], [3, 2, 1]), ([3, 2, 1, 0, -1, -2], [1, 2, 3])]],
+                            distance_landscape=[([1, 2, 3, 4, 5, 6], [3, 2, 1], 15.4), ([3, 2, 1, 0, -1, -2], [1, 2, 3], 10),
+                                                 ([3, 2, 1, 0, -1, -2], [1, 2, 3], 3.4)]
                             )
         self._roundtrip(r)
 

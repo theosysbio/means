@@ -306,7 +306,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         """
         return self.__distance_landscape
 
-    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None):
         """
         Plots the projection of distance landscape (if it was returned), onto the
         parameters specified
@@ -347,7 +347,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         zi = griddata(x, y, z, xi, yi)
 
         # Plot contours
-        ax.contourf(xi, yi, zi, *args, **kwargs)
+        ax.contourf(xi, yi, zi)
         cs = ax.contour(xi, yi, zi, colors='k')
         # Some labels
         ax.clabel(cs, inline=True)
@@ -619,7 +619,8 @@ class InferenceResult(SerialisableObject, MemoisableObject):
                    ('optimal_initial_conditions', data.optimal_initial_conditions),
                    ('distance_at_minimum', data.distance_at_minimum),
                    ('convergence_status', data.convergence_status),
-                   ('solutions', data.solutions)]
+                   ('solutions', data.solutions),
+                   ('distance_landscape', data.distance_landscape)]
 
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
