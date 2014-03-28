@@ -208,17 +208,44 @@ class InferenceResultsCollection(SerialisableObject):
 
 
     def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
+        """
+        Plots the distance landscape jointly-generated from all the results
 
-        pass
+        :param x_axis: symbol to plot on x axis
+        :param y_axis: symbol to plot on y axis
+        :param ax: axis object to plot onto
+        :param args: arguments to pass to :func:`matplotlib.pyplot.contourf`
+        :param kwargs: keyword arguments to pass to :func:`matplotlib.pyplot.contourf`
+        :return:
+        """
+
+        # Gather all x, y, z's to plot first as this would make the gradient landscape better
+        x_all, y_all, z_all = [], [], []
+        for result in self.results:
+            x, y, z = result.distance_landscape_as_3d_data(x_axis, y_axis)
+            x_all.extend(x)
+            y_all.extend(y)
+            z_all.extend(z)
+
+        # Now plot the contour for x_all, y_all and z_all
+        plot_contour(x_all, y_all, z_all, x_axis, y_axis, ax=ax, *args, **kwargs)
 
 
     def plot_trajectory_projection(self, x_axis, y_axis,
-                                   legend=False, ax=None,
-                                   start_and_end_locations_only=False,
-                                   start_marker='bo',
-                                   end_marker='rx',
                                    *args, **kwargs):
-        pass
+        """
+        Plots trajectory projection on the specified x and y axes
+        See :meth:`InferenceResult.plot_trajectory_projection()` for information on the arguments and keyword arguments
+
+        :param x_axis: variable to be plotted on the x axis of the projection
+        :param y_axis: variable to be plotted on the y axis of the projection
+        :param args: arguments to be passed to :meth:`InferenceResult.plot_trajectory_projection()`
+        :param kwargs: keyword arguments to be passed to :meth:`InferenceResult.plot_trajectory_projection()`
+        """
+        # Just plot all of the trajectories
+        for result in self.results:
+            result.plot_trajectory_projection(x_axis, y_axis,
+                                              *args, **kwargs)
 
 
 class InferenceResult(SerialisableObject, MemoisableObject):
