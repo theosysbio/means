@@ -7,6 +7,7 @@ report.pdf: $(ALL_TEX) report.bib Makefile
 	echo "Generating pdf"
 	xelatex  --shell-escape $(basename $@).tex
 	bibtex $(basename $@)
+	makeglossaries $(basename $@)
 	xelatex  --shell-escape $(basename $@).tex 
 	xelatex  --shell-escape $(basename $@) 
 
