@@ -4,6 +4,7 @@ Inference Results
 This part of the package provides classes to store and manage the results
 of inference.
 """
+from means.inference.plotting import plot_contour, plot_2d_trajectory
 
 from means.io.serialise import SerialisableObject
 from means.util.logs import get_logger
@@ -206,6 +207,47 @@ class InferenceResultsCollection(SerialisableObject):
                            kwargs_optimal_trajectories={'label': 'Best Optimised Trajectory'})
 
 
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
+        """
+        Plots the distance landscape jointly-generated from all the results
+
+        :param x_axis: symbol to plot on x axis
+        :param y_axis: symbol to plot on y axis
+        :param ax: axis object to plot onto
+        :param args: arguments to pass to :func:`matplotlib.pyplot.contourf`
+        :param kwargs: keyword arguments to pass to :func:`matplotlib.pyplot.contourf`
+        :return:
+        """
+
+        # Gather all x, y, z's to plot first as this would make the gradient landscape better
+        x_all, y_all, z_all = [], [], []
+        for result in self.results:
+            x, y, z = result.distance_landscape_as_3d_data(x_axis, y_axis)
+            x_all.extend(x)
+            y_all.extend(y)
+            z_all.extend(z)
+
+        # Now plot the contour for x_all, y_all and z_all
+        plot_contour(x_all, y_all, z_all, x_axis, y_axis, ax=ax, *args, **kwargs)
+
+
+    def plot_trajectory_projection(self, x_axis, y_axis,
+                                   *args, **kwargs):
+        """
+        Plots trajectory projection on the specified x and y axes
+        See :meth:`InferenceResult.plot_trajectory_projection()` for information on the arguments and keyword arguments
+
+        :param x_axis: variable to be plotted on the x axis of the projection
+        :param y_axis: variable to be plotted on the y axis of the projection
+        :param args: arguments to be passed to :meth:`InferenceResult.plot_trajectory_projection()`
+        :param kwargs: keyword arguments to be passed to :meth:`InferenceResult.plot_trajectory_projection()`
+        """
+        # Just plot all of the trajectories
+        for result in self.results:
+            result.plot_trajectory_projection(x_axis, y_axis,
+                                              *args, **kwargs)
+
+
 class InferenceResult(SerialisableObject, MemoisableObject):
 
     __inference = None
@@ -306,6 +348,39 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         """
         return self.__distance_landscape
 
+    def parameter_index(self, parameter_name):
+
+        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+        index = all_parameters.index(str(parameter_name))
+
+        return index
+
+    def distance_landscape_as_3d_data(self, x_axis, y_axis):
+        """
+        Returns the distance landscape as three-dimensional data for the specified projection.
+
+        :param x_axis: variable to be plotted on the x axis of projection
+        :param y_axis: variable to be plotted on the y axis of projection
+        :return: a 3-tuple (x, y, z) where x and y are the lists of coordinates and z the list of distances at
+                 respective coordinates
+        """
+        if not self.distance_landscape:
+            raise Exception('No distance landscape returned. Re-run inference with return_distance_landscape=True')
+
+        index_x = self.parameter_index(x_axis)
+        index_y = self.parameter_index(y_axis)
+
+        x = []
+        y = []
+        z = []
+        for parameters, initial_conditions, distance in self.distance_landscape:
+            all_values = list(parameters) + list(initial_conditions)
+            x.append(all_values[index_x])
+            y.append(all_values[index_y])
+            z.append(distance)
+
+        return x, y, z
+
     def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
         """
         Plots the projection of distance landscape (if it was returned), onto the
@@ -318,48 +393,31 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :param kwargs: keyword arguments to pass to :func:`matplotlib.pyplot.contourf`
         :return:
         """
-        if not self.distance_landscape:
-            raise Exception('No distance landscape returned. Re-run inference with return_distance_landscape=True')
+        x, y, z = self.distance_landscape_as_3d_data(x_axis, y_axis)
+        plot_contour(x, y, z, x_axis, y_axis, ax=ax, *args, **kwargs)
 
-        from matplotlib import pyplot as plt
-        from matplotlib.mlab import griddata
-        import numpy as np
+    def solutions_as_2d_trajectories(self, x_axis, y_axis):
+        """
+        Returns the :attr:`InferenceResult.solutions` as a plottable 2d trajectory.
 
-        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
+        :param x_axis: the variable to be on the x axis of projection
+        :param y_axis: the variable to be on the y axis of preojection
+        :return: a tuple x, y specifying lists of x and y coordinates of projection
+        """
+        if not self.solutions:
+            raise Exception('No intermediate solutions returned. '
+                            'Re-run inference with return_intermediate_solutions=True')
 
-        index_x = all_parameters.index(str(x_axis))
-        index_y = all_parameters.index(str(y_axis))
+        index_x = self.parameter_index(x_axis)
+        index_y = self.parameter_index(y_axis)
 
-        x = []
-        y = []
-        z = []
-        for parameters, initial_conditions, distance in self.distance_landscape:
-            all_values = list(parameters) + list(initial_conditions)
+        x, y = [], []
+        for parameters, initial_conditions in self.solutions:
+            all_values = parameters + initial_conditions
             x.append(all_values[index_x])
             y.append(all_values[index_y])
-            z.append(distance)
 
-        if ax is None:
-            ax = plt.gca()
-
-        xi = np.linspace(min(x), max(x), 100)
-        yi = np.linspace(min(y), max(y), 100)
-
-        # Interpolate points to a grid
-        zi = griddata(x, y, z, xi, yi)
-
-        # Plot contours
-        ax.contourf(xi, yi, zi, *args, **kwargs)
-        cs = ax.contour(xi, yi, zi, colors='k')
-        # Some labels
-        ax.clabel(cs, inline=True)
-
-         # Fix axes
-        from matplotlib.artist import setp
-        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
-        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
-        setp(ax.get_xticklabels(),rotation=90)
-
+        return x, y
 
     def plot_trajectory_projection(self, x_axis, y_axis,
                                    legend=False, ax=None,
@@ -388,51 +446,17 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :param kwargs: Keyword arguments to pass to :func:`matplotlib.pyplot.plot` function
         """
 
-        if not self.solutions:
-            raise Exception('No intermediate solutions returned. '
-                            'Re-run inference with return_intermediate_solutions=True')
+        x, y = self.solutions_as_2d_trajectories(x_axis, y_axis)
 
-        from matplotlib import pyplot as plt
-        if ax is None:
-            ax = plt.gca()
+        plot_2d_trajectory(x, y,
+                           x_label=x_axis, y_label=y_axis,
+                           legend=legend,
+                           ax=ax,
+                           start_and_end_locations_only=start_and_end_locations_only,
+                           start_marker=start_marker,
+                           end_marker=end_marker,
+                           *args, **kwargs)
 
-        all_parameters = map(str, self.problem.parameters + list(self.problem.left_hand_side))
-
-        index_x = all_parameters.index(str(x_axis))
-        index_y = all_parameters.index(str(y_axis))
-
-        x, y = [], []
-        for parameters, initial_conditions in self.solutions:
-            all_values = parameters + initial_conditions
-            x.append(all_values[index_x])
-            y.append(all_values[index_y])
-
-        if not start_and_end_locations_only:
-            ax.plot(x, y, *args, **kwargs)
-
-        max_x = max(x)
-        min_x = min(x)
-        padding_x = (max_x - min_x) * 0.1 / 2.0
-
-        max_y = max(y)
-        min_y = min(y)
-        padding_y = (max_y - min_y) * 0.1 / 2.0
-
-
-        ax.set_xlim(min(x)-padding_x, max(x)+padding_x)
-        ax.set_ylim(min(y)-padding_y, max(y)+padding_y)
-
-        ax.plot(x[0], y[0], start_marker, label='Start')
-        ax.plot(x[-1], y[-1], end_marker, label='End')
-
-        # Fix axes
-        from matplotlib.artist import setp
-        ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
-        ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
-        setp(ax.get_xticklabels(), rotation=90)
-
-        if legend:
-            ax.legend()
 
     @memoised_property
     def starting_trajectories(self):
