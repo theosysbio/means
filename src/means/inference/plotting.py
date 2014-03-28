@@ -45,11 +45,11 @@ def plot_contour(x, y, z, x_label, y_label, ax=None, *args, **kwargs):
     # Interpolate points to a grid
     try:
         zi = griddata(x, y, z, xi, yi)
-    except KeyError:
+    except Exception as e:
         raise Exception("Got {0!r} while interpolating the landscape."
                         "this may be due to `matplotlib.delaunay` package not being able to"
                         "handle the interpolation. Try installing natgrid package via pip: "
-                        "`pip install git+git://github.com/matplotlib/natgrid.git`")
+                        "`pip install git+git://github.com/matplotlib/natgrid.git`".format(e))
 
     # Plot contours
     ax.contourf(xi, yi, zi, *args, **kwargs)
