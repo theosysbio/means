@@ -306,7 +306,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         """
         return self.__distance_landscape
 
-    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None):
+    def plot_distance_landscape_projection(self, x_axis, y_axis, ax=None, *args, **kwargs):
         """
         Plots the projection of distance landscape (if it was returned), onto the
         parameters specified
@@ -314,6 +314,8 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         :param x_axis: symbol to plot on x axis
         :param y_axis: symbol to plot on y axis
         :param ax: axis object to plot onto
+        :param args: arguments to pass to :func:`matplotlib.pyplot.contourf`
+        :param kwargs: keyword arguments to pass to :func:`matplotlib.pyplot.contourf`
         :return:
         """
         if not self.distance_landscape:
@@ -347,7 +349,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         zi = griddata(x, y, z, xi, yi)
 
         # Plot contours
-        ax.contourf(xi, yi, zi)
+        ax.contourf(xi, yi, zi, *args, **kwargs)
         cs = ax.contour(xi, yi, zi, colors='k')
         # Some labels
         ax.clabel(cs, inline=True)
@@ -359,13 +361,32 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         setp(ax.get_xticklabels(),rotation=90)
 
 
-    def plot_intermediate_solutions_projection(self, x_axis, y_axis, legend=False, ax=None,
-                                               start_and_end_locations_only=False,
-                                               start_marker='bo',
-                                               end_marker='rx',
-                                               *args, **kwargs):
+    def plot_trajectory_projection(self, x_axis, y_axis,
+                                   legend=False, ax=None,
+                                   start_and_end_locations_only=False,
+                                   start_marker='bo',
+                                   end_marker='rx',
+                                   *args, **kwargs):
+        """
+        Plots the projection of the trajectory through the parameter space the minimisation algorithm took.
 
+        Since parameter space is often high-dimensional and paper can realistically represent only two,
+        one needs to specify the ``x_axis``, and ``y_axis`` arguments with the variable names to project the
+        high-dimensional grid, on, i.e. ``x_axis='c_1'``, ``y_axis='c_4'``
 
+        :param x_axis: variable name (parameter or left hand side of equation) to project x axis onto
+        :type x_axis: str|:class:`~sympy.Symbol`
+        :param y_axis: variable name to project y axis onto
+        :type y_axis: str|:class:`~sympy.Symbol`
+        :param legend: Whether to display legend or not
+        :type legend: bool
+        :param ax: Axis to plot onto (defaults to :func:`matplotlib.pyplot.gca` if not set)
+        :param start_and_end_locations_only: If set to true, will not plot the trajectory, but only start and end parameter
+        :param start_marker: The marker to use for start of trajectory, defaults to blue circle
+        :param end_marker: The marker to use for end of trajectory, defaults to red x
+        :param args: Arguments to pass to :func:`matplotlib.pyplot.plot` function
+        :param kwargs: Keyword arguments to pass to :func:`matplotlib.pyplot.plot` function
+        """
 
         if not self.solutions:
             raise Exception('No intermediate solutions returned. '
@@ -408,7 +429,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
         from matplotlib.artist import setp
         ax.set_xlabel("${0}$".format(x_axis), fontsize=20)
         ax.set_ylabel("${0}$".format(y_axis), fontsize=20)
-        setp(ax.get_xticklabels(),rotation=90)
+        setp(ax.get_xticklabels(), rotation=90)
 
         if legend:
             ax.legend()
