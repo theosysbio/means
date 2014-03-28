@@ -63,7 +63,7 @@ class ListOfKeyValuePairsParameter(Parameter):
 
         str_items = []
         for item in items:
-            str_items.append(self._separator_key_value.join(item))
+            str_items.append(self._separator_key_value.join(map(str, item)))
         return self._separator.join(str_items)
 
 
@@ -74,7 +74,8 @@ class ModelParameter(Parameter):
         if isinstance(x, means.Model):
             return x
         else:
-            raise TypeError('{0!r} is not a model name, nor a `means.Model` object')
+            raise TypeError('{0!r} is not a `means.Model` object')
 
     def serialize(self, x):
         return x
+
