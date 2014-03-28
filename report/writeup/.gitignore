@@ -7,3 +7,12 @@
 *.pdf
 *.blg
 *.toc
+*.pyg
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.ist
