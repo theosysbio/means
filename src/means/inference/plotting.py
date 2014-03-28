@@ -31,8 +31,8 @@ def plot_contour(x, y, z, x_label, y_label, ax=None, *args, **kwargs):
         new_x.append(xi)
         new_y.append(yi)
 
-        # Use mean of distances. TODO: is this the right thing to do?
-        new_z.append(np.mean(zi_list))
+        # Use median of distances. TODO: is this the right thing to do?
+        new_z.append(np.median(zi_list))
     new_x, new_y, new_z = np.array(new_x, dtype=np.float), np.array(new_y, dtype=np.float), \
                           np.array(new_z, dtype=np.float)
 
