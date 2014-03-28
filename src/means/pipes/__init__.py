@@ -181,6 +181,6 @@ except ImportError:
 from interface import TaskPreloadingHint, PreloadingWorker, PreloadingWorkerSchedulerFactory, run
 from parameters import *
 from targets import PickleSerialiserWithAdditionalParameters, PickleSerialiser
-from tasks import Task, MEATask, TrajectoryTask, TaskBase, FigureTask, TexFigureTask, SSATrajectoryTask
+from tasks import Task, MEATask, TrajectoryTask, TaskBase, FigureTask, TexFigureTask, SSATrajectoryTask,InferenceTask
 
 import interface, parameters, targets, tasks
