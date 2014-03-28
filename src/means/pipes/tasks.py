@@ -451,10 +451,10 @@ class TrajectoryTaskBase(Task):
     """Model name to use"""
 
     # General parameters for trajectory
-    starting_parameters = ListParameter(item_type=float)
+    parameters = ListParameter(item_type=float)
     """Parameters to simulate trajectories for"""
 
-    starting_initial_conditions = ListParameter(item_type=float)
+    initial_conditions = ListParameter(item_type=float)
     """Initial conditions to use"""
 
     timepoints_arange = ListParameter(item_type=float)
@@ -472,8 +472,8 @@ class TrajectoryTaskBase(Task):
     def _return_object(self):
 
         timepoints = np.arange(*self.timepoints_arange)
-        parameters = self.starting_parameters
-        initial_conditions = self.starting_initial_conditions
+        parameters = self.parameters
+        initial_conditions = self.initial_conditions
 
         simulation = self._simulation_object()
 
@@ -580,6 +580,9 @@ class InferenceTask(Task):
 
     def _return_object(self):
         problem = self.input().load()
+        return self._compute_inference_result(problem)
+
+    def _compute_inference_result(self, problem):
         inference = means.Inference(problem,
                                     self.starting_parameters,
                                     self.starting_initial_conditions,
@@ -590,7 +593,6 @@ class InferenceTask(Task):
         inference_result = inference.infer(return_intermediate_solutions=self.return_intermediate_solutions,
                                            return_distance_landscape=self.return_distance_landscape)
         return inference_result
-
 
 class SSATrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     """
