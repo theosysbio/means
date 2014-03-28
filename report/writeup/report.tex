@@ -12,6 +12,8 @@
 \usepackage{minted}
 \usepackage{framed}
 
+\usepackage[acronym]{glossaries}
+\makeglossaries
 
 \renewcommand*\abstractname{Summary}
 
@@ -44,13 +46,16 @@
 TODO An abstract here...
 \end{abstract}
 
-TODO ABREVIATIONS table!!
-ODE 
-MEA
 TODO, make a bib entry for Lakatos, unpublished/in prep.
 
-\tableofcontents
 
+\tableofcontents
+\newpage{}
+% our acronyms
+\newacronym{ode}{ODE}{Ordinary Differential Equation}
+\newacronym{mea}{MEA}{Moment Expansion Approximation}
+
+\printglossaries
 
 \newpage{}
 \pagenumbering{arabic}
