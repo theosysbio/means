@@ -31,16 +31,22 @@ def plot_contour(x, y, z, x_label, y_label, ax=None, *args, **kwargs):
         new_x.append(xi)
         new_y.append(yi)
 
-        # Use mean of distances. TODO: is this the right thing to do?
-        new_z.append(np.mean(zi_list))
+        # Use median of distances. TODO: is this the right thing to do?
+        new_z.append(np.median(zi_list))
     new_x, new_y, new_z = np.array(new_x, dtype=np.float), np.array(new_y, dtype=np.float), \
                           np.array(new_z, dtype=np.float)
 
     # Replace x, y, z with new_x, new_y, new_z
     x, y, z = new_x, new_y, new_z
 
-    xi = np.linspace(np.min(x), np.max(x), 100)
-    yi = np.linspace(np.min(y), np.max(y), 100)
+    min_x = np.min(x)
+    max_x = np.max(x)
+
+    min_y = np.min(y)
+    max_y = np.max(y)
+
+    xi = np.linspace(min_x, max_x, 100)
+    yi = np.linspace(min_y, max_y, 100)
 
     # Interpolate points to a grid
     try:
@@ -78,18 +84,6 @@ def plot_2d_trajectory(x, y,
 
     x = np.array(x)
     y = np.array(y)
-
-    max_x = np.max(x)
-    min_x = np.min(x)
-    padding_x = (max_x - min_x) * 0.1 / 2.0
-
-    max_y = np.max(y)
-    min_y = np.min(y)
-    padding_y = (max_y - min_y) * 0.1 / 2.0
-
-
-    ax.set_xlim(min(x)-padding_x, max(x)+padding_x)
-    ax.set_ylim(min(y)-padding_y, max(y)+padding_y)
 
     ax.plot(x[0], y[0], start_marker, label='Start')
     ax.plot(x[-1], y[-1], end_marker, label='End')

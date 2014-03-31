@@ -535,6 +535,65 @@ class TrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
                 # Cache the right_hand_side_as_function
                 __ = problem.right_hand_side_as_function
 
+class InferenceTask(Task):
+
+    # All the parameters from MEAProblem, luigi does not support parametrised task hierarchies that well
+    max_order = MEATask.max_order
+    """Maximum order of MEA approximation to use"""
+    closure = MEATask.closure
+    """Closure method to use"""
+    multivariate = MEATask.multivariate
+    """Use multivariate closure (where available)"""
+
+    # Solver kwargs, list the missing ones here with default=None
+    solver = luigi.Parameter(default='ode15s')
+    """ODE solver to use, defaults to ode15s"""
+
+    solver_kwargs = ListOfKeyValuePairsParameter(default=[])
+    """Keyword arguments to pass to solver"""
+
+    model = ModelParameter()
+    """Model name to use"""
+
+    # General parameters for trajectory
+    starting_parameters = ListParameter(item_type=float)
+    """Parameters to start inference from"""
+
+    starting_initial_conditions = ListParameter(item_type=float)
+    """Initial conditions to start inference"""
+
+    variable_parameters = ListOfKeyValuePairsParameter()
+    """Variable parameters with a range of values for inference"""
+
+    observed_trajectories = ListParameter(item_type=means.Trajectory)
+    """Observed trajectories obtained from experiments"""
+
+    distance_function_type = luigi.Parameter(default='sum_of_squares')
+    """Distance function type to define the distance method"""
+
+    return_intermediate_solutions = luigi.Parameter(default=True)
+    return_distance_landscape = luigi.Parameter(default=True)
+
+    def requires(self):
+        return MEATask(model=self.model, max_order=self.max_order, closure=self.closure,
+                       multivariate=self.multivariate)
+
+    def _return_object(self):
+        problem = self.input().load()
+        return self._compute_inference_result(problem)
+
+    def _compute_inference_result(self, problem):
+        inference = means.Inference(problem,
+                                    self.starting_parameters,
+                                    self.starting_initial_conditions,
+                                    dict(self.variable_parameters),
+                                    self.observed_trajectories,
+                                    self.distance_function_type, solver=self.solver, **dict(self.solver_kwargs))
+
+        inference_result = inference.infer(return_intermediate_solutions=self.return_intermediate_solutions,
+                                           return_distance_landscape=self.return_distance_landscape)
+        return inference_result
+
 class SSATrajectoryTask(TrajectoryTaskBase, TaskPreloadingHint):
     """
     Generates a SSA trajectory for the particular set of parameters.

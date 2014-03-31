@@ -350,7 +350,7 @@ class Inference(SerialisableObject, MemoisableObject):
         assert(len(starting_parameters) == len(problem.parameters))
 
         if len(starting_conditions) < problem.number_of_equations:
-            starting_conditions = starting_conditions[:] \
+            starting_conditions = list(starting_conditions[:]) \
                                   + [0.0] * (problem.number_of_equations - len(starting_conditions))
 
         starting_parameters_with_variability, parameter_constraints = \
