@@ -4,7 +4,7 @@ For a more in-depth explanation, several step-by-step tutorials are available in
 Detailed installation instructions are available in the package \texttt{README}.
 
 \subsection{Model Definition}
-A common example of a kinetic system if the \pft{} tumour suppressor system.
+A common example of a kinetic system of the \pft{} tumour suppressor system.
 Whist relatively uncomplicated, it shows an interesting oscillatory behaviour and has been extensively studied \cite{geva-zatorsky_oscillations_2006, batchelor_ups_2009}.
 A simple version of this model can be formulated as a list of species; $p53$, $Mdm2$ and $Mdm2_p$ (precursor of $Mdm2$) and a list of reaction between species (fig.~\ref{fig:p53}).
 
@@ -92,9 +92,9 @@ propensities = ['c_0',
               'c_5*y_2']
 
 #Now we create a Model:
-my_model = means.Model(species, parameters,
+MY_MODEL = means.Model(species, parameters,
                        propensities, stoichiometry_matrix)
-print my_model
+print MY_MODEL
 \end{minted}
 \end{framed}
 
@@ -105,19 +105,20 @@ After definition of the model as a \py{} object, it becomes possible to use MEA 
 
 \begin{framed}
 \begin{minted}{python}
-problems_scalar = means.mea_approximation(my_model, max_order=2)
+problems_scalar = means.mea_approximation(MY_MODEL, max_order=2)
 # This is equivalent to
-# >>> problem_scalar = means.mea_approximation(my_model, max_order=2,
+# >>> problem_scalar = means.mea_approximation(MY_MODEL, max_order=2,
 #                                              closure="scalar", value=0)
 \end{minted}
 \end{framed}
 %~
-Here, we keep ODEs modeling moment up to second order. The options \texttt{closure="scalar"} and \texttt{value=0} mean we have assumed higher(than two)-order are equal zero.
+Here, we keep ODEs modelling moment up to second order. The options \texttt{closure="scalar"} and \texttt{value=0} mean we have assumed higher(than two)-order are equal zero.
 This is the assumption made in the original publication\cite{ale_general_2013}. In \means, it is also possible to derive higher-order moments from parametric distributions.
 
 \begin{framed}
 \begin{minted}{python}
-problem_logn = means.mea_approximation(my_model, max_order=2,
+# Here we use log-Normal parametric distribution, but we also support Normal and Gamma distributions
+problem_logn = means.mea_approximation(MY_MODEL, max_order=2,
                                           closure="log-normal",
                                           multivariate=True)
                                           
@@ -131,19 +132,53 @@ By providing initial conditions $y_i(t=0)$, and values for the constants, it is 
 
 \begin{framed}
 \begin{minted}{python}
-# Simulation with a common solver (cvODE)
+#Simulation with a common solver (cvODE)
 simulator = means.Simulation(problem_scalar, solver='cvode')
 
-# Values for c_0, c_1, ..., c_6
+#Values for c_0, c_1, ..., c_6
 constants = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
 initial_conditions = [70, 30, 60]
-# we want to simulate up to t=100 
+#we want to simulate up to t=100
 time = np.arange(0, 100, 0.01)
 
-# Generate trajectories for this parameters and initial conditions
+#Generate trajectories for this parameters and initial conditions
 trajectories = simulator.simulate_system(constants, initial_conditions, time)
 \end{minted}
 \end{framed}
+
+In addition, \means package also provide parameter inference using the experimentally observed trajectory,
+and a chosen distance method to compare the distance between trajectories from inference and observed data.
+\begin{framed}
+\begin{minted}{python}
+#Starting parameter values
+start_parameters = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+#Starting concentrations of each species
+initial_conditions = [70, 30, 60]
+#Parameters and accordant range that the user wants to vary
+variable_parameters = {'c_2':(0,10),'c_4':(0,10)}
+#Construct observed trajectory
+observed_values = np.array([301, 290.191955202941, 280.587012789919, 272.03059275347, 264.391791838931,
+                            257.559062245777, 251.436806654562, 245.94267026554, 241.005368499757,
+                            236.562930313664, 232.561266868355, 228.95299702774, 225.696477184875,
+                            222.754994848608, 220.096094392425, 217.69101016698, 215.514187376472,
+                            213.542875122678, 211.756779127717, 210.13776407335, 208.669597403576,
+                            207.337727947036, 206.129093917824, 205.03195581465, 204.035750512438,
+                            203.130963465903, 202.309016453409, 201.56216870432, 200.883429593812,
+                            200.266481369356, 199.705610605558, 199.19564727630, 198.731910494358,
+                            198.310160102979, 197.926553417265, 197.57760650846, 197.260159505222,
+                            196.971345454330, 196.708562342305, 196.469447928853])
+timepoints = timepoints = np.arange(0, 40, 0.1)
+description = problem_scalar.descriptor_for_symbol('y_0')
+observed_trajectory = means.Trajectory(timepoints,
+                                       observed_values,
+                                       description)
+inference = means.Inference(problem_scalar, start_parameters, initial_conditions, variable_parameters, [observed_trajectory])
+
+#Obtain inference result
+inference_result = inference.infer()
+
+\end{framed}
+\end{minted}{python}
 
 Finally, our package integrates with \texttt{matplotlib} to represent trajectories (fig.~\ref{fig:trajectories_exple}):
 
@@ -153,6 +188,8 @@ import matplotlib as plt
 plt.figure()
 trajectories.plot()
 plt.show()
+#We can also plot the inference result
+inference_result.plot()
 \end{minted}
 \end{framed}
 
