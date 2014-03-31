@@ -61,48 +61,18 @@ class InferenceTOSSATask(InferenceTask):
 class MultiDimensionInferenceFigure(FigureTask):
 
     model = ModelParameter()
-    """Model name to use"""
-
     max_order = MEATask.max_order
-    """Maximum order of MEA approximation to use"""
-
     closure = MEATask.closure
-    """Closure method to use"""
-
     multivariate = MEATask.multivariate
-    """Use multivariate closure (where available)"""
-
-        # General parameters for trajectory
     parameters = ListParameter(item_type=float)
-    """Parameters to simulate trajectories for"""
-
     initial_conditions = ListParameter(item_type=float)
-    """Initial conditions to use"""
-
     timepoints_arange = ListParameter(item_type=float)
-    """An arangement of the timepoints to simulate,
-       e.g. ``(0, 40, 0.1)`` would simulate from 0 to 40 in 0.1 increments"""
-
-    # Solver kwargs, list the missing ones here with default=None
     solver = luigi.Parameter(default='ode15s')
-    """ODE solver to use, defaults to ode15s"""
-
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
-    """Keyword arguments to pass to solver"""
-
-    # General parameters for trajectory
     starting_parameters = ListParameter(item_type=float)
-    """Parameters to start inference from"""
-
     starting_initial_conditions = ListParameter(item_type=float)
-    """Initial conditions to start inference"""
-
     variable_parameters = ListOfKeyValuePairsParameter()
-    """Variable parameters with a range of values for inference"""
-
     distance_function_type = luigi.Parameter(default='sum_of_squares')
-    """Distance function type to define the distance method"""
-
     n_simulations = IntParameter()
 
 
@@ -178,6 +148,113 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
 
     #distance_function_type = luigi.Parameter(default='sum_of_squares')
     n_simulations = IntParameter(default=5000)
+
+
+class FindTwoParametersForInference(Task):
+
+    model = P53Model()
+
+    max_order = MEATask.max_order
+    closure = MEATask.closure
+    multivariate = MEATask.multivariate
+
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
+                    0.96, 0.01]
+    initial_conditions = [70.0, 30.0, 60.0]
+    timepoints_arange = [0.0, 40.0, 0.1]
+
+    solver = luigi.Parameter(default='ode15s')
+    solver_kwargs = ListOfKeyValuePairsParameter(default=[])
+
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
+                    0.96, 0.01]
+    starting_initial_conditions = [70.0, 30.0, 60.0]
+
+    distance_function_type = luigi.Parameter(default='sum_of_squares')
+    n_simulations = IntParameter(default=5000)
+
+
+    def requires(self):
+        requirements = []
+        from itertools import combinations
+
+        for v1,v2 in combinations(self.model.parameters, 2):
+            variable_parameters = {(v1, None),(v2, None)}
+
+            inference = FigureTwoParameterForInference(model=self.model, max_order=self.max_order,closure=self.closure,
+                                  multivariate=self.multivariate, parameters=self.parameters,
+                                  initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
+                                  solver=self.solver, solver_kwargs=self.solver_kwargs,
+                                  starting_parameters=self.starting_parameters,
+                                  starting_initial_conditions=self.starting_initial_conditions,
+                                  variable_parameters=variable_parameters,
+                                  distance_function_type=self.distance_function_type,
+                                  n_simulations=self.n_simulations,
+                                    label='${0}$ and ${1}$'.format(v1,v2))
+            requirements.append(inference)
+        return requirements
+
+    def _return_object(self):
+        return 'running'
+
+class FigureTwoParameterForInference(FigureTask):
+
+    model = ModelParameter()
+    max_order = MEATask.max_order
+    closure = MEATask.closure
+    multivariate = MEATask.multivariate
+    parameters = ListParameter(item_type=float)
+    initial_conditions = ListParameter(item_type=float)
+    timepoints_arange = ListParameter(item_type=float)
+    solver = luigi.Parameter(default='ode15s')
+    solver_kwargs = ListOfKeyValuePairsParameter(default=[])
+    starting_parameters = ListParameter(item_type=float)
+    starting_initial_conditions = ListParameter(item_type=float)
+    variable_parameters = ListOfKeyValuePairsParameter()
+    distance_function_type = luigi.Parameter(default='sum_of_squares')
+    n_simulations = IntParameter()
+    label = Parameter(default=None, significant=False)
+
+    def requires(self):
+        return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
+                                  multivariate=self.multivariate, parameters=self.parameters,
+                                  initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
+                                  solver=self.solver, solver_kwargs=self.solver_kwargs,
+                                  starting_parameters=self.starting_parameters,
+                                  starting_initial_conditions=self.starting_initial_conditions,
+                                  variable_parameters=self.variable_parameters,
+                                  distance_function_type=self.distance_function_type,
+                                  n_simulations=self.n_simulations,
+                                  return_distance_landscape=True,
+                                  return_intermediate_solutions=True)
+
+    def _return_object(self):
+        from matplotlib import pyplot as plt
+        result = self.input().load()
+        fig = plt.figure(figsize=(15,5),dpi=327)
+        observed_trajectories_lookup = {obs_traj.description: obs_traj for obs_traj in result.observed_trajectories}
+        subplot_number = 0
+        n_columns = len(result.observed_trajectories)
+        for optimal in result.optimal_trajectories:
+            try:
+                observed_trajectory = observed_trajectories_lookup[optimal.description]
+            except KeyError:
+                continue
+
+            subplot_number += 1
+            plt.subplot(1,n_columns, subplot_number)
+            plt.title(observed_trajectory.description.mathtext())
+            observed_trajectory.plot(marker='x',color='k', label='Observed',linestyle='None')
+            optimal.plot(color='b',label='Optimal')
+        plt.legend()
+        plt.suptitle(self.label)
+
+        return fig
+
+
+
+
+
 
 
 if __name__ == '__main__':
