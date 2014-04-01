@@ -178,28 +178,17 @@ class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
 # noinspection PyArgumentList
 class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
 
-    # We need also need the data from all other figures to be able to unify the ranges
-    max_orders = ListParameter(item_type=int)
 
     def requires(self):
 
         # Let's make sure self.max_order is always first
-        requirements = [FigureHitAndMissData(max_order=self.max_order,
+        requirements = FigureHitAndMissData(max_order=self.max_order,
                                              timepoints_arange=self.timepoints_arange,
                                              number_of_ssa_simulations=self.number_of_ssa_simulations,
                                              point_sparsity=self.point_sparsity,
                                              solver=self.solver,
-                                             solver_kwargs=self.solver_kwargs)]
+                                             solver_kwargs=self.solver_kwargs)
 
-        # Add all other orders
-        # noinspection PyTypeChecker
-        for order in self.max_orders:
-            if order != self.max_order:
-                requirements.append(FigureHitAndMissData(max_order=order, timepoints_arange=self.timepoints_arange,
-                                                         number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                                         point_sparsity=self.point_sparsity,
-                                                         solver=self.solver,
-                                                         solver_kwargs=self.solver_kwargs))
         return requirements
 
     def _return_object(self):
@@ -209,14 +198,14 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
         fig = plt.figure()
         ax = fig.gca()
 
-        all_data = self.input()
+        data = self.input().load()
         levels = [10, 100, 500, 1000, 5000, 1e4, 1e5, 1e10, 1e20, 1e30, 1e40, 1e50, 1e60, 1e70, 1e80, 1e90, 1e100]
         # Data for current figure
 
         cmap = jet
         cmap.set_bad('k', 1)
-        ax.patch.set_color('k')
-        x_values, y_values, distance_grid, failure_mask, failure_times_grid, x_label, y_label = all_data[0].load()
+        ax.patch.set_hatch('//')
+        x_values, y_values, distance_grid, failure_mask, failure_times_grid, x_label, y_label = data
         distance_grid[np.isinf(distance_grid)] = 1e100  # Contour plots cannot handle infinities
         distance_grid = np.ma.array(distance_grid, mask=failure_mask)
 
@@ -230,6 +219,15 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
         ax.clabel(contours, inline=True, fmt="%.5g")
         ax.set_xlabel('${0}$'.format(x_label))
         ax.set_ylabel('${0}$'.format(y_label))
+
+        if not self.solver_kwargs:
+            solver_kwargs_string = ''
+        else:
+            solver_kwargs_string = ' ({0})'.format(';'.join(['{0}: {1}'.format(key, value)
+                                                             for key, value in self.solver_kwargs]))
+        ax.set_title('Solver: {0}{1}, max_order: {2}'.format(self.solver,
+                                                      solver_kwargs_string,
+                                                      self.max_order))
 
         return fig
 
@@ -318,7 +316,6 @@ class FigureHitAndMissTex(TexFigureTask):
         hit_and_misses = [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
                                            number_of_ssa_simulations=self.number_of_ssa_simulations,
                                            point_sparsity=self.point_sparsity,
-                                           max_orders=self.max_orders,
                                            solver=self.solver,
                                            solver_kwargs=self.solver_kwargs)
                 for max_order in self.max_orders]
