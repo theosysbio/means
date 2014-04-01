@@ -26,10 +26,16 @@ from means import TrajectoryCollection, SolverException
 from means.pipes import *
 import numpy as np
 import itertools
+from collections import namedtuple
 
 from means.util.logs import get_logger
 logger = get_logger(__name__)
 
+ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', 'timepoints_arange'])
+
+INTERESTING_PARAMETER_SETS = [ParameterSet(parameters=[90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01],
+                                           initial_conditions = [70.0, 30.0, 60.0],
+                                           timepoints_arange = [0.0, 40.0, 0.1])]
 
 class P53Model(means.Model):
     """
@@ -65,11 +71,17 @@ class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
     def y_values(self):
         return np.arange(0.6, 2.5, self.point_sparsity)
 
-    def x_label(self):
+    def x_param(self):
         return 'c_2'
 
-    def y_label(self):
+    def y_param(self):
         return 'c_4'
+
+    def x_param_index(self):
+        return 2
+
+    def y_param_index(self):
+        return 4
 
     def requires(self):
         model = P53Model()
@@ -78,9 +90,13 @@ class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
         initial_conditions = [70.0, 30.0, 60.0]
 
         parameters = []
-        for c_2 in self.x_values():
-            for c_4 in self.y_values():
-                parameters.append([90.0, 0.002, round(c_2, 6), 1.1, round(c_4, 6), 0.96, 0.01])
+        for x in self.x_values():
+            for y in self.y_values():
+                full_params = [90.0, 0.002, 1, 1.1, 1, 0.96, 0.01]
+                full_params[self.x_param_index()] = round(x, 6)
+                full_params[self.y_param_index()] = round(y, 6)
+
+                parameters.append(full_params)
 
         # We want to specify all the trajectories we need to compute as requirements of this task,
         # so luigi handles their execution and scheduling, not us.
@@ -172,24 +188,25 @@ class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
                 raise Exception('Got {0!r} as trajectory, expected either SolverException'
                                 ' or TrajectoryCollection'.format(trajectory))
 
-        return x_values, y_values, distance_grid, failure_mask, failure_times_grid, self.x_label(), self.y_label()
+        return x_values, y_values, distance_grid, failure_mask, failure_times_grid, self.x_param(), self.y_param()
 
 
 # noinspection PyArgumentList
 class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
 
+    draw_interesting_parameters = Parameter(significant=False, default=True)
 
     def requires(self):
 
         # Let's make sure self.max_order is always first
-        requirements = FigureHitAndMissData(max_order=self.max_order,
-                                             timepoints_arange=self.timepoints_arange,
-                                             number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                             point_sparsity=self.point_sparsity,
-                                             solver=self.solver,
-                                             solver_kwargs=self.solver_kwargs)
+        data = FigureHitAndMissData(max_order=self.max_order,
+                                    timepoints_arange=self.timepoints_arange,
+                                    number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                    point_sparsity=self.point_sparsity,
+                                    solver=self.solver,
+                                    solver_kwargs=self.solver_kwargs)
 
-        return requirements
+        return data
 
     def _return_object(self):
         from matplotlib import pyplot as plt
@@ -200,12 +217,11 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
 
         data = self.input().load()
         levels = [10, 100, 500, 1000, 5000, 1e4, 1e5, 1e10, 1e20, 1e30, 1e40, 1e50, 1e60, 1e70, 1e80, 1e90, 1e100]
-        # Data for current figure
 
         cmap = jet
         cmap.set_bad('k', 1)
         ax.patch.set_hatch('//')
-        x_values, y_values, distance_grid, failure_mask, failure_times_grid, x_label, y_label = data
+        x_values, y_values, distance_grid, failure_mask, failure_times_grid, x_param, y_param = data
         distance_grid[np.isinf(distance_grid)] = 1e100  # Contour plots cannot handle infinities
         distance_grid = np.ma.array(distance_grid, mask=failure_mask)
 
@@ -216,9 +232,9 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
                     vmax=1e10, vmin=1, cmap=cmap)
         contours = ax.contour(x_values, y_values, distance_grid,
                               [10, 100, 500, 1000, 5000, 1e4, 1e5, 1e10, 1e20, 1e40], colors='k')
-        ax.clabel(contours, inline=True, fmt="%.5g")
-        ax.set_xlabel('${0}$'.format(x_label))
-        ax.set_ylabel('${0}$'.format(y_label))
+        ax.clabel(contours, fmt="%.5g")
+        ax.set_xlabel('${0}$'.format(x_param))
+        ax.set_ylabel('${0}$'.format(y_param))
 
         if not self.solver_kwargs:
             solver_kwargs_string = ''
@@ -228,6 +244,16 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
         ax.set_title('Solver: {0}{1}, max_order: {2}'.format(self.solver,
                                                       solver_kwargs_string,
                                                       self.max_order))
+
+        if self.draw_interesting_parameters:
+            x_param_index = self.requires().x_param_index()
+            y_param_index = self.requires().y_param_index()
+
+            for param_set in INTERESTING_PARAMETER_SETS:
+                params = param_set.parameters
+                x = params[x_param_index]
+                y = params[y_param_index]
+                ax.plot([x], [y], color='k', marker='x', label='Interesting Point')
 
         return fig
 
@@ -328,6 +354,7 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
     solver_kwargs = FigureSSAvMEATrajectory.solver_kwargs
 
     number_of_ssa_simulations = FigureHitAndMissTex.number_of_ssa_simulations
+    max_order = FigureHitAndMiss.max_order
 
     label = 'hit-and-miss-interesting-cases'
     caption = ''
@@ -335,19 +362,21 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
     def requires(self):
 
         model = P53Model()
-        parameters = [90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01]
-        initial_conditions = [70.0, 30.0, 60.0]
-        timepoints_arange = FigureHitAndMissTex.timepoints_arange
-        max_order = 1
 
-        return [FigureSSAvMEATrajectory(timepoints_arange=timepoints_arange,
-                                        parameters=parameters,
-                                        initial_conditions=initial_conditions,
-                                        max_order=max_order,
-                                        solver=self.solver,
-                                        model=model,
-                                        solver_kwargs=self.solver_kwargs,
-                                        number_of_ssa_simulations=self.number_of_ssa_simulations)]
+        requirements = []
+        for parameter_set in INTERESTING_PARAMETER_SETS:
+            parameters = parameter_set.parameters
+            initial_conditions = parameter_set.initial_conditions
+            timepoints_arange = parameter_set.timepoints_arange
+
+            requirements.append([FigureSSAvMEATrajectory(timepoints_arange=timepoints_arange,
+                                            parameters=parameters,
+                                            initial_conditions=initial_conditions,
+                                            max_order=self.max_order,
+                                            solver=self.solver,
+                                            model=model,
+                                            solver_kwargs=self.solver_kwargs,
+                                            number_of_ssa_simulations=self.number_of_ssa_simulations)])
 
 
 
