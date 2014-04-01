@@ -98,7 +98,6 @@ print MY_MODEL
 \end{minted}
 \end{framed}
 
-%~ \subsection{Generating an \nomenclature[ODE]{ordinary differential equation} Problem}
 \subsection{Generating an \gls{ode} Problem}
 After definition of the model as a \py{} object, it becomes possible to use MEA to generate a set of \gls{ode}s (\emph{i.e.} a problem):
 
@@ -117,8 +116,9 @@ This is the assumption made in the original publication\cite{ale_general_2013}. 
 
 \begin{framed}
 \begin{minted}{python}
-# Here we use log-Normal parametric distribution, but we also support Normal and Gamma distributions
-problem_logn = means.mea_approximation(MY_MODEL, max_order=2,
+# Here we use log-normal parametric distribution, and upt to third order moment.
+# We could also use Normal and Gamma distributions
+problem_logn = means.mea_approximation(MY_MODEL, max_order=3,
                                           closure="log-normal",
                                           multivariate=True)
                                           
