@@ -2,8 +2,7 @@
 
 
 \subsection{Performance}\label{performance}
-The temporal dynamic of a molecular system can be described by the \gls{cme}.
-%~ \cite{}
+The temporal dynamic of a molecular system can be described by the \gls{cme} \todo{REF for CME}.
 \gls{gssa}\cite{gillespie_general_1976} produces individual realisations of the \gls{cme}.
 In order to obtain accurate estimates of the average dynamic within a population of cell, it it however necessary to perform multiple (often more than $10^4$) simulations.
 Despite recent effort \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive.
@@ -14,7 +13,7 @@ Since the only advantage of \gls{mea} over \gls{gssa} is computational speed, it
 In this section, we show that symbolic computations can be limiting for \gls{mea}.
 Then, we explain how we have optimised them, and finally increase performance by several order of magnitudes over to the original \mat{} implementation.
 In addition, ...\\
-TODO @saul NUMERICAL EVAL/solvers.
+\todo{@SL short intro about why it is importan to make solver fast}
 
 
 \subsubsection{Symbolic expressions}
@@ -30,29 +29,27 @@ n={{s+o-2} \choose {s}} -1
 As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments.
 
 In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; an efficient \py{} library.
-After implementation of the different features (TODO see section closure/...)
-%~ see \ref{}...
+After implementation of the different features (\todo{see section closure/...})
 , we have endavoured to optimise the processing speed.
 In a first place, we identified significant bottlenecks using \py{} profiling tools.
 Then, we designed specific ways to improve speed incrementally without changing the resulting \gls{ode}s.
-%see unitests
-Figure%~\ref{}
-~shows the cumulative effects of different optimisations.
+
+Figure~\ref{fig:mea_benchmark} shows the cumulative effects of different optimisations.
+
+
 
 
 The first step involved removing the expression simplification heuristic.
 In the original code\footnote{both from the publication and last year's MSc project}, the right-hand-side equations were simplified in order to produce shorter text file results.
 However, this was slow and did not benefit subsequent simulations and inference.
 For large expressions, simplification had also had an large memory footprint and was likely to fail.
-This optimisation resulted in a 
-%...
-TODO reduction of ....
+This optimisation resulted in a \todo{give numbers} %reduction of.
 
 The next bottleneck was the choice of substitution functions.
 As a part of \gls{mea}, it is necessary to replace raw moment symbols by expressions depending on central moments.
 Performing substitution can be done using the \texttt{substitute()} function from \sympy, but this is designed to substitute expressions by other expressions.
 In most cases, we only had to substitute atomic symbols by expression.
-For this purpose, the  \texttt{xreplace()} function was a much more appropriate alternative which resulted in ........TODO improvement.
+For this purpose, the  \texttt{xreplace()} function was a much more appropriate alternative which resulted in \todo{give numbers} improvement.
 
 In the original implementation, a matrix of central moment expression of size $(n-s) \times (n-s + 1)$ is directly generated when the default closure is applied.
 However, when using a parametric closure, a matrix of size $(n_2-s) \times (n_2-s + 1)$, where $n_2={{s+o-2 \mathbf{+1}} \choose {s}} -1$, was generated.
@@ -74,5 +71,15 @@ One advantage, is that, when needing to calculate two derivatives such as:  $\fr
 one can precompute $\frac{\partial{} f(x,y)}{\partial{} x}$ and use it for both calculation.
 In our implementation, we have use a procedure known as \emph{memoization} which, briefly, permits to store the results of a function call in an associative array.
 Then, the next time this function is called with the same arguments, it will return the stored results instead of recomputing it.
-TODO this resulted in !!
+\todo{give numbers}
 
+
+
+\begin{figure}
+\missingfigure{@QG make it!}
+%~ \includegraphics{handmade_figures/p53.eps}
+\caption{\emph{Performance improvement of symbnolic calculations}.
+~}
+
+\label{fig:mea_benchmark}
+\end{figure}
