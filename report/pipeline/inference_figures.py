@@ -71,12 +71,14 @@ class MultiDimensionInferenceFigure(FigureTask):
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
     starting_parameters = ListParameter(item_type=float)
     starting_initial_conditions = ListParameter(item_type=float)
-    variable_parameters = ListOfKeyValuePairsParameter()
     distance_function_type = luigi.Parameter(default='sum_of_squares')
     n_simulations = IntParameter()
 
+    # TOdo this should be a ListOfKeyValuePairsParameter
+    variable_parameters = ListOfKeyValuePairsParameter()
 
     def requires(self):
+
         return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
                                   multivariate=self.multivariate, parameters=self.parameters,
                                   initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
@@ -94,31 +96,47 @@ class MultiDimensionInferenceFigure(FigureTask):
         from matplotlib.colors import LogNorm
 
         inference_result = self.input().load()
+        variable_parameters = self.variable_parameters
         min_dist = min([x[2] for x in inference_result.distance_landscape])
         max_dist = max([x[2] for x in inference_result.distance_landscape])
 
         fig = plt.figure(figsize=(20,20), dpi=328)
         fig.subplots_adjust(wspace=0, hspace=0)
 
-        dimension = len(inference_result.problem.parameters)
-        for i,parameter_y in enumerate(inference_result.problem.parameters):
-            for j, parameter_x in enumerate(inference_result.problem.parameters):
+        parameters = [i for i,j in variable_parameters]
+        #todo: parameter -> variable parameter (list of tuples) extract the first item in tuple
+        dimension = len(parameters)
 
-                ax = plt.subplot(dimension,dimension, i*dimension + j + 1)
-                if i != j:
-                    inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
-                                                                        norm=LogNorm(), vmin=min_dist, vmax=max_dist)
+        if dimension > 2:
+            for i,parameter_y in enumerate(parameters):
+                for j, parameter_x in enumerate(parameters):
 
-                inference_result.plot_trajectory_projection(parameter_x,parameter_y,legend=False, ax=ax,
-                                                            start_and_end_locations_only=i==j,
-                                                            color='red',
-                                                            start_marker='ro',
-                                                            end_marker='rx')
-                if j != 0:
-                    ax.yaxis.set_visible(False)
+                    ax = plt.subplot(dimension,dimension, i*dimension + j + 1)
+                    if i != j:
+                        inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
+                                                                            norm=LogNorm(), vmin=min_dist, vmax=max_dist)
 
-                if i != dimension - 1:
-                    ax.xaxis.set_visible(False)
+                    inference_result.plot_trajectory_projection(parameter_x,parameter_y,legend=False, ax=ax,
+                                                                start_and_end_locations_only=i==j,
+                                                                color='red',
+                                                                start_marker='ro',
+                                                                end_marker='rx')
+                    if j != 0:
+                        ax.yaxis.set_visible(False)
+
+                    if i != dimension - 1:
+                        ax.xaxis.set_visible(False)
+        else:
+            ax = plt.gca()
+            parameter_x, parameter_y = parameters
+            inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
+                                                                norm=LogNorm(), vmin=min_dist, vmax=max_dist)
+
+            inference_result.plot_trajectory_projection(parameter_x, parameter_y,legend=False, ax=ax,
+                                                        start_and_end_locations_only=False,
+                                                        color='red',
+                                                        start_marker='ro',
+                                                        end_marker='rx')
 
         return fig
 
@@ -132,7 +150,7 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
     #closure = MEATask.closure
     #multivariate = MEATask.multivariate
 
-    parameters = [90.0, 0.002, 1.7, 1.1, 0.9, # todo: change to 0.93, thanx
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
                     0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
@@ -140,11 +158,11 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
     #solver = luigi.Parameter(default='ode15s')
     #solver_kwargs = ListOfKeyValuePairsParameter(default=[])
 
-    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.9, # todo: change to 0.93, thanx
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
                     0.96, 0.01]
     starting_initial_conditions = [70.0, 30.0, 60.0]
 
-    variable_parameters = zip(P53Model().parameters, [None] * len(P53Model().parameters))
+    variable_parameters = [('c_2', None), ('c_6', None)]
 
     #distance_function_type = luigi.Parameter(default='sum_of_squares')
     n_simulations = IntParameter(default=5000)
@@ -158,16 +176,14 @@ class FindTwoParametersForInference(Task):
     closure = MEATask.closure
     multivariate = MEATask.multivariate
 
-    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
-                    0.96, 0.01]
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
 
     solver = luigi.Parameter(default='ode15s')
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
 
-    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
-                    0.96, 0.01]
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93,0.96, 0.01]
     starting_initial_conditions = [70.0, 30.0, 60.0]
 
     distance_function_type = luigi.Parameter(default='sum_of_squares')
@@ -238,17 +254,20 @@ class FigureTwoParameterForInference(FigureTask):
         for optimal in result.optimal_trajectories:
             try:
                 observed_trajectory = observed_trajectories_lookup[optimal.description]
+                sum_of_sqr_distance = "{0:.2f}".format(np.sum(np.square(observed_trajectory.values - optimal.values)))
             except KeyError:
                 continue
 
             subplot_number += 1
-            plt.subplot(1,n_columns, subplot_number)
+            ax = plt.subplot(1,n_columns, subplot_number)
+            ax.annotate('Distance='+str(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=16,
+                xytext=(-5, 5), textcoords='offset points',
+                ha='right', va='bottom')
             plt.title(observed_trajectory.description.mathtext())
             observed_trajectory.plot(marker='x',color='k', label='Observed',linestyle='None')
             optimal.plot(color='b',label='Optimal')
         plt.legend()
         plt.suptitle(self.label)
-
         return fig
 
 
