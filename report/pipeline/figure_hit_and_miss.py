@@ -125,7 +125,13 @@ class FigureHitAndMissData(Task):
             if isinstance(trajectory, SolverException):
                 failure_x.append(x)
                 failure_y.append(y)
-                failure_c.append(trajectory.base_exception.t)
+                base_exception = trajectory.base_exception
+                try:
+                    failure_time = base_exception.t
+                except AttributeError:
+                    # Some solvers, i.e. RODAS do not give the time at failure.
+                    failure_time = np.nan
+                failure_c.append(failure_time)
             elif isinstance(trajectory, TrajectoryCollection):
                 success_x.append(x)
                 success_y.append(y)
@@ -211,8 +217,10 @@ class FigureHitAndMiss(FigureTask):
         cmap_success = colors.LinearSegmentedColormap('SkyBlueBlue', cdict_success)
 
 
-        success_scatter = ax.scatter(success_x, success_y, c=success_c, s=80, label='Success', cmap=cmap_success,
-                                     edgecolor='', norm=colors.LogNorm(), marker='s', vmin=min_dist, vmax=max_dist)
+        #success_scatter = ax.scatter(success_x, success_y, c=success_c, s=80, label='Success', cmap=cmap_success,
+        #                             edgecolor='', norm=colors.LogNorm(), marker='s', vmin=min_dist, vmax=max_dist)
+        from means.inference.plotting import plot_contour
+        plot_contour(success_x, success_y, success_c, 'a', 'b', vmin=min_dist, vmax=max_dist)
 
         # Red -> Blue
         cdict_failure = {'red': ((0.0, 1.0, 1.0),
@@ -230,16 +238,36 @@ class FigureHitAndMiss(FigureTask):
 
         vmin = self.timepoints_arange[0]
         vmax = self.timepoints_arange[1]
-        failure_scatter = ax.scatter(failure_x, failure_y, marker='^', s=80, c=failure_c, cmap=cmap_failure,
-                                     vmin=vmin, vmax=vmax, label='Failure', edgecolor='')
+
+        failure_x = np.array(failure_x)
+        failure_y = np.array(failure_y)
+        failure_c = np.array(failure_c)
+
+        nan_failure_times = np.isnan(failure_c)
+        failure_without_time_x, failure_without_time_y = failure_x[nan_failure_times], failure_y[nan_failure_times]
+
+        failure_x = failure_x[~nan_failure_times]
+        failure_y = failure_y[~nan_failure_times]
+        failure_c = failure_c[~nan_failure_times]
+
+        if len(failure_x):
+            failure_scatter = ax.scatter(failure_x, failure_y, marker='^', s=80, c=failure_c, cmap=cmap_failure,
+                                         vmin=vmin, vmax=vmax, label='Failure', edgecolor='')
+        else:
+            failure_scatter = None
+
+        if len(failure_without_time_x):
+            failure_no_time_scatter = ax.scatter(failure_without_time_x, failure_without_time_y,
+                                                 marker='^', s=80, c='r', edgecolor='', label='Failure')
 
         #failure_circles_scatter = ax.scatter(failure_x, failure_y, marker='s', s=80, facecolors='', edgecolors='r')
 
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
-        colorbar_success = plt.colorbar(success_scatter, ax=ax)
-        colorbar_success.set_label('Sum-of-squares distance from SSA result')
+        # if len(success_x):
+        #     colorbar_success = plt.colorbar(success_scatter, ax=ax)
+        #     colorbar_success.set_label('Sum-of-squares distance from SSA result')
 
-        if failure_x:
+        if failure_scatter:
             colorbar_failure = plt.colorbar(failure_scatter, ax=ax)
             colorbar_failure.set_label('Point of failure')
 
