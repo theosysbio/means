@@ -8,7 +8,7 @@ writeup: figures
 
 
 figures:
-	echo "TODO"
+	make -C  pipeline
 
 
 cleanall:
