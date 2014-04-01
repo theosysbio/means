@@ -31,6 +31,6 @@ setup(
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
         "PyYAML>=3.10",
-        "Assimulo==trunk",
+        "Assimulo>=2.5.1",
     ],
 )
