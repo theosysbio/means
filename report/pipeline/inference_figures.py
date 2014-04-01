@@ -73,12 +73,10 @@ class MultiDimensionInferenceFigure(FigureTask):
     starting_initial_conditions = ListParameter(item_type=float)
     distance_function_type = luigi.Parameter(default='sum_of_squares')
     n_simulations = IntParameter()
-
-    # TOdo this should be a ListOfKeyValuePairsParameter
     variable_parameters = ListOfKeyValuePairsParameter()
 
-    def requires(self):
 
+    def requires(self):
         return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
                                   multivariate=self.multivariate, parameters=self.parameters,
                                   initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
@@ -90,6 +88,7 @@ class MultiDimensionInferenceFigure(FigureTask):
                                   n_simulations=self.n_simulations,
                                   return_distance_landscape=True,
                                   return_intermediate_solutions=True)
+
 
     def _return_object(self):
         from matplotlib import pyplot as plt
@@ -104,7 +103,6 @@ class MultiDimensionInferenceFigure(FigureTask):
         fig.subplots_adjust(wspace=0, hspace=0)
 
         parameters = [i for i,j in variable_parameters]
-        #todo: parameter -> variable parameter (list of tuples) extract the first item in tuple
         dimension = len(parameters)
 
         if dimension > 2:
@@ -141,31 +139,37 @@ class MultiDimensionInferenceFigure(FigureTask):
         return fig
 
 
-
 class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
 
     model = P53Model()
-
-    #max_order = MEATask.max_order
-    #closure = MEATask.closure
-    #multivariate = MEATask.multivariate
-
-    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
-                    0.96, 0.01]
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
-
-    #solver = luigi.Parameter(default='ode15s')
-    #solver_kwargs = ListOfKeyValuePairsParameter(default=[])
-
-    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
-                    0.96, 0.01]
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     starting_initial_conditions = [70.0, 30.0, 60.0]
-
+    n_simulations = IntParameter(default=5000)
+    # Use a pair of parameters chosen based on the result from class FigureTwoParametersForInference
     variable_parameters = [('c_2', None), ('c_6', None)]
 
-    #distance_function_type = luigi.Parameter(default='sum_of_squares')
-    n_simulations = IntParameter(default=5000)
+class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
+
+    
+    label = "MultiDimensional"
+    caption = "MultiDimensional"
+    def requires(self):
+        max_order_list = range(1,6,1)
+        requirements = []
+        for order in max_order_list:
+            figure = SampleMultidimensionInferenceFigure(max_order=order)
+            requirements.append(figure)
+        return requirements
+
+
+
+
+
+
+
 
 
 class FindTwoParametersForInference(Task):
