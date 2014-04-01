@@ -1,5 +1,4 @@
 import sys
-sys.path.append("../utils")
 from report_unit import ReportUnit
 import subprocess
 import time

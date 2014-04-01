@@ -98,7 +98,6 @@ print MY_MODEL
 \end{minted}
 \end{framed}
 
-%~ \subsection{Generating an \nomenclature[ODE]{ordinary differential equation} Problem}
 \subsection{Generating an \gls{ode} Problem}
 After definition of the model as a \py{} object, it becomes possible to use MEA to generate a set of \gls{ode}s (\emph{i.e.} a problem):
 
@@ -117,8 +116,9 @@ This is the assumption made in the original publication\cite{ale_general_2013}. 
 
 \begin{framed}
 \begin{minted}{python}
-# Here we use log-Normal parametric distribution, but we also support Normal and Gamma distributions
-problem_logn = means.mea_approximation(MY_MODEL, max_order=2,
+# Here we use log-normal parametric distribution, and upt to third order moment.
+# We could also use Normal and Gamma distributions
+problem_logn = means.mea_approximation(MY_MODEL, max_order=3,
                                           closure="log-normal",
                                           multivariate=True)
                                           
@@ -146,7 +146,32 @@ trajectories = simulator.simulate_system(constants, initial_conditions, time)
 \end{minted}
 \end{framed}
 
-In addition, \means{} package allows parameter inference.
+
+Our package integrates with \plt{} to represent trajectories in a straightforward manner(fig.~\ref{fig:trajectories_exple}):
+
+\begin{framed}
+\begin{minted}{python}
+import matplotlib as plt
+plt.figure()
+trajectories.plot()
+plt.show()
+#We can also plot the inference result
+inference_result.plot()
+\end{minted}
+\end{framed}
+
+\begin{figure}
+\includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigurePlotTrajectExple/FigurePlotTrajectExple-pdf.pdf}
+
+\caption{\emph{Representing Trajectories}.
+Exemple representation of the trajectories for the \pft{} system.
+First order moments (top-panel) are the average number of molecules, second order moments (bottom-panel) are variances and covariances.
+}
+\label{fig:trajectories_exple}
+\end{figure}
+
+
+Finally, an important feature of \means{} is parameter inference.
 The overall goal of inference is to vary parameters in order to find "the" set of parameters for which the distance to observed trajectories is minimal.
 In this senario, observed trajectories could have been experimentally recorded at regulat time intervals:
 
@@ -164,7 +189,7 @@ observed_values = np.array([
 \end{framed}
 
 In the simplest case, starting parameters and initial values are chosen.
-Then, some parameters can be explicitely allowed to vary. 
+Then, some parameters can be explicitely allowed to vary:
 
 \begin{framed}
 \begin{minted}{python}
@@ -189,28 +214,6 @@ inference_result = inference.infer()
 \end{minted}
 \end{framed}
 
-Finally, our package integrates with \texttt{matplotlib} to represent trajectories (fig.~\ref{fig:trajectories_exple}):
-
-\begin{framed}
-\begin{minted}{python}
-import matplotlib as plt
-plt.figure()
-trajectories.plot()
-plt.show()
-#We can also plot the inference result
-inference_result.plot()
-\end{minted}
-\end{framed}
-
-\begin{figure}
-%\includegraphics{handmade_figures/trajectories_exple.pdf}
-\missingfigure{link this to a simple trajectory task}
-\caption{\emph{Representing Trajectories}.
-Representation of the trajectories for the \pft{} model.
-First order moments are means, and second order moments are variances and covariances.
-}
-\label{fig:trajectories_exple}
-\end{figure}
 
 
 

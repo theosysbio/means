@@ -207,17 +207,16 @@ class DataP53(DataClosureAndMaxOrder):
     initial_conditions = [70, 30, 60]
     simul_params = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     model = P53Model()
+    max_max_order = IntParameter(default=8)
 
 class FigureP53(FigureClosureMaxOrderBase):
-    max_max_order = IntParameter(default=4)
     def requires(self):
-        out = DataP53(max_max_order=self.max_max_order)
+        out = DataP53()
         return out
 
 class FigureP53Summary(FigureSummaryDistanceBase):
-    max_max_order = IntParameter(default=4)
     def requires(self):
-        out = DataP53(max_max_order=self.max_max_order)
+        out = DataP53()
         return out
 
 class AllFigures(Task):
@@ -229,7 +228,7 @@ class AllFigures(Task):
         return out
 
     def _return_object(self):
-        return self
+        return Task()
 
 # class FigureHes1Data(FigureClosureMaxOrderDataBase):
 #     timepoints_arange = [0, 240, 1]
@@ -246,3 +245,4 @@ class AllFigures(Task):
 if __name__ == '__main__':
     # run(main_task_cls=FigureHes1)
     run(main_task_cls=FigureP53Summary)
+    # run(main_task_cls=FigureP53Summary)
