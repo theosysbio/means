@@ -14,8 +14,6 @@ virtualenv --python=python2.7 $PYENV_HOME
 # PYTHON setup insrtructions go below
 cd $WORKSPACE
 
-./install_assimulo.sh
-
 # Install luigi
 pip install --quiet luigi
 

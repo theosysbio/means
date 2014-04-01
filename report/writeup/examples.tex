@@ -98,7 +98,6 @@ print MY_MODEL
 \end{minted}
 \end{framed}
 
-%~ \subsection{Generating an \nomenclature[ODE]{ordinary differential equation} Problem}
 \subsection{Generating an \gls{ode} Problem}
 After definition of the model as a \py{} object, it becomes possible to use MEA to generate a set of \gls{ode}s (\emph{i.e.} a problem):
 
@@ -117,8 +116,9 @@ This is the assumption made in the original publication\cite{ale_general_2013}. 
 
 \begin{framed}
 \begin{minted}{python}
-# Here we use log-Normal parametric distribution, but we also support Normal and Gamma distributions
-problem_logn = means.mea_approximation(MY_MODEL, max_order=2,
+# Here we use log-normal parametric distribution, and upt to third order moment.
+# We could also use Normal and Gamma distributions
+problem_logn = means.mea_approximation(MY_MODEL, max_order=3,
                                           closure="log-normal",
                                           multivariate=True)
                                           
@@ -146,41 +146,8 @@ trajectories = simulator.simulate_system(constants, initial_conditions, time)
 \end{minted}
 \end{framed}
 
-In addition, \means package also provide parameter inference using the experimentally observed trajectory,
-and a chosen distance method to compare the distance between trajectories from inference and observed data.
-\begin{framed}
-\begin{minted}{python}
-#Starting parameter values
-start_parameters = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
-#Starting concentrations of each species
-initial_conditions = [70, 30, 60]
-#Parameters and accordant range that the user wants to vary
-variable_parameters = {'c_2':(0,10),'c_4':(0,10)}
-#Construct observed trajectory
-observed_values = np.array([301, 290.191955202941, 280.587012789919, 272.03059275347, 264.391791838931,
-                            257.559062245777, 251.436806654562, 245.94267026554, 241.005368499757,
-                            236.562930313664, 232.561266868355, 228.95299702774, 225.696477184875,
-                            222.754994848608, 220.096094392425, 217.69101016698, 215.514187376472,
-                            213.542875122678, 211.756779127717, 210.13776407335, 208.669597403576,
-                            207.337727947036, 206.129093917824, 205.03195581465, 204.035750512438,
-                            203.130963465903, 202.309016453409, 201.56216870432, 200.883429593812,
-                            200.266481369356, 199.705610605558, 199.19564727630, 198.731910494358,
-                            198.310160102979, 197.926553417265, 197.57760650846, 197.260159505222,
-                            196.971345454330, 196.708562342305, 196.469447928853])
-timepoints = timepoints = np.arange(0, 40, 0.1)
-description = problem_scalar.descriptor_for_symbol('y_0')
-observed_trajectory = means.Trajectory(timepoints,
-                                       observed_values,
-                                       description)
-inference = means.Inference(problem_scalar, start_parameters, initial_conditions, variable_parameters, [observed_trajectory])
 
-#Obtain inference result
-inference_result = inference.infer()
-
-\end{framed}
-\end{minted}{python}
-
-Finally, our package integrates with \texttt{matplotlib} to represent trajectories (fig.~\ref{fig:trajectories_exple}):
+Our package integrates with \plt{} to represent trajectories in a straightforward manner(fig.~\ref{fig:trajectories_exple}):
 
 \begin{framed}
 \begin{minted}{python}
@@ -194,14 +161,59 @@ inference_result.plot()
 \end{framed}
 
 \begin{figure}
-%\includegraphics{handmade_figures/trajectories_exple.pdf}
-TODOOOOOO
+\includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigurePlotTrajectExple/FigurePlotTrajectExple-pdf.pdf}
+
 \caption{\emph{Representing Trajectories}.
-Representation of the trajectories for the \pft{} model.
-First order moments are means, and second order moments are variances and covariances.
+Exemple representation of the trajectories for the \pft{} system.
+First order moments (top-panel) are the average number of molecules, second order moments (bottom-panel) are variances and covariances.
 }
 \label{fig:trajectories_exple}
 \end{figure}
+
+
+Finally, an important feature of \means{} is parameter inference.
+The overall goal of inference is to vary parameters in order to find "the" set of parameters for which the distance to observed trajectories is minimal.
+In this senario, observed trajectories could have been experimentally recorded at regulat time intervals:
+
+\begin{framed}
+\begin{minted}{python}
+#Construct observed trajectory
+observed_values = np.array([ 
+        301. ,  290.2,  280.6,  272. ,  264.4,  257.6,  251.4,  245.9,
+        241. ,  236.6,  232.6,  229. ,  225.7,  222.8,  220.1,  217.7,
+        215.5,  213.5,  211.8,  210.1,  208.7,  207.3,  206.1,  205. ,
+        204. ,  203.1,  202.3,  201.6,  200.9,  200.3,  199.7,  199.2,
+        198.7,  198.3,  197.9,  197.6,  197.3,  197. ,  196.7,  196.5])
+
+\end{minted}
+\end{framed}
+
+In the simplest case, starting parameters and initial values are chosen.
+Then, some parameters can be explicitely allowed to vary:
+
+\begin{framed}
+\begin{minted}{python}
+#Starting parameter values
+start_parameters = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+#Starting concentrations of each species
+initial_conditions = [70, 30, 60]
+#Parameters and accordant range that the user wants to vary
+variable_parameters = {'c_2':(0,10),'c_4':(0,10)}
+        
+timepoints = timepoints = np.arange(0, 40, 0.1)
+description = problem_scalar.descriptor_for_symbol('y_0')
+observed_trajectory = means.Trajectory(timepoints,
+                                       observed_values,
+                                       description)
+inference = means.Inference(problem_scalar, start_parameters, 
+                            initial_conditions, variable_parameters, 
+                            [observed_trajectory])
+
+#Obtain inference result
+inference_result = inference.infer()
+\end{minted}
+\end{framed}
+
 
 
 

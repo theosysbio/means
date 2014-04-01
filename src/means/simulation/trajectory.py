@@ -423,7 +423,7 @@ class TrajectoryCollection(SerialisableObject):
 
         total_subplots = subplot_counter
 
-        for trajectory in self.trajectories:
+        for i,trajectory in enumerate(self.trajectories):
             description = trajectory.description
             key, title = _key_and_title(description)
 
@@ -433,6 +433,9 @@ class TrajectoryCollection(SerialisableObject):
             plt.title(title)
             trajectory.plot()
             plt.legend(bbox_to_anchor=(1, 1), loc=2, ncol=2)
+
+            if i == len(self.trajectories) - 1:
+                plt.xlabel('time')
 
         return plt.gcf()
 
