@@ -1,4 +1,4 @@
-ALL_FIGURE_TASKS := figure_traject_plot_exple.py
+ALL_FIGURE_TASKS := figure_traject_plot_exple.py figure_closure_and_max_order.py
 
 
 all: 

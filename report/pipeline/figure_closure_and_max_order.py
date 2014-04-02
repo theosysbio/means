@@ -35,8 +35,6 @@ def get_traject(tasks, trajectory_buffers, max_order, sp, closure, multiv, ssa=F
 
     raise Exception("Trajectory not found!!")
 
-
-
 class P53Model(means.Model):
     def __init__(self):
         from means.examples import MODEL_P53
@@ -138,7 +136,6 @@ class FigureClosureMaxOrderBase(FigureTask):
 
         return f
 
-
 class FigureSummaryDistanceBase(FigureTask):
     def _return_object(self):
 
@@ -180,7 +177,7 @@ class FigureSummaryDistanceBase(FigureTask):
 
 
         import pylab as pl
-        fig = pl.figure(figsize=(16.0, 9.0))
+        fig = pl.figure(figsize=(16.0, 6.0))
         pl.yscale('log')
         #fig.set_yscale('log')
         for res in results:
@@ -195,29 +192,82 @@ class FigureSummaryDistanceBase(FigureTask):
             pl.plot(res["max_orders"], res["distances"], color=res["col"],
                     linestyle=res["sty"], alpha=res["alpha"], marker="o", label=lab)
 
-        pl.legend(title="Closure")
+        pl.axis(xmin=1.5, xmax=self.max_max_order + 0.5)
+
+        pl.legend(title="Closure", loc=6)
         pl.ylabel('Sum of square Distance to GSSA')
 
         pl.xlabel('Max order')
         return fig
-
 
 class DataP53(DataClosureAndMaxOrder):
     timepoints_arange = [0, 40, 0.1]
     initial_conditions = [70, 30, 60]
     simul_params = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     model = P53Model()
-    max_max_order = IntParameter(default=8)
 
 class FigureP53(FigureClosureMaxOrderBase):
+    max_max_order = IntParameter(default=7)
     def requires(self):
-        out = DataP53()
+        out = DataP53(max_max_order = self.max_max_order)
         return out
 
 class FigureP53Summary(FigureSummaryDistanceBase):
+    max_max_order = IntParameter(default=7)
     def requires(self):
-        out = DataP53()
+        out = DataP53(max_max_order = self.max_max_order)
         return out
+
+
+class FigureP53Simple(FigureP53):
+
+    def _return_object(self):
+        import pylab as pl
+
+        input_ = self.input()
+        tasks, trajectory_buffers = zip(*input_.load())
+
+        for trajs in trajectory_buffers:
+            if not isinstance(trajs, Exception):
+                n_species = len([None for t in trajs if t.description.order == 1])
+                continue
+
+        # f, axarr = pl.subplots(1, 2, sharex=True, figsize=(9.0, 9.0))
+        f, axarr = pl.subplots(1, 2, sharey=True, figsize=(16.0, 6.0))
+        sps= 0
+        ssa_traj = get_traject(tasks, trajectory_buffers, 0, sps,
+                                            0, 0, ssa=True)
+        mi, ma = min(ssa_traj.values), max(ssa_traj.values)
+        yl = ((mi - (ma - mi) /5.0), (ma + (ma - mi) /10.0))
+
+
+        for i,mo in enumerate([3,7]):
+            ax = axarr[i]
+            for clos_multiv in CLOSURE_DICTS:
+                traj = get_traject(tasks, trajectory_buffers, max_order=mo, sp=sps,
+                                            closure=clos_multiv["closure"],
+                                            multiv=clos_multiv["multivariate"])
+
+                if isinstance(traj, Exception):
+                    continue
+                ax.plot(ssa_traj.timepoints, ssa_traj.values, color="k", linewidth=2)
+                ax.plot(traj.timepoints, traj.values, color=clos_multiv["col"],
+                            linestyle=clos_multiv["sty"],
+                            alpha=clos_multiv["alpha"]
+                    )
+
+                f.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0., wspace=0)
+                text="Max order: {0}".format(mo)
+                ax.text(0.95, 0.95, text,
+                    verticalalignment='top', horizontalalignment='right', fontsize=11, transform=ax.transAxes)
+                if i ==0:
+                    ax.set_ylabel('#Molecules')
+                ax.set_xlabel('time')
+                ax.axis(ymin=yl[0], ymax=yl[1])
+
+        pl.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.05)
+        return f
+
 
 class AllFigures(Task):
 
@@ -245,4 +295,5 @@ class AllFigures(Task):
 if __name__ == '__main__':
     # run(main_task_cls=FigureHes1)
     run(main_task_cls=FigureP53Summary)
+    run(main_task_cls=FigureP53Simple)
     # run(main_task_cls=FigureP53Summary)
