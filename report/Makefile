@@ -2,12 +2,16 @@
 
 all: writeup
 
-writeup: figures
-	@echo "COMPILEN LATX REPORT!!=================================="
+writeup: pipeline_figures mea_speed_figure
+	@echo "COMPILING LATEX REPORT!!=================================="
 	make -C  writeup
 
 
-figures:
+
+
+mea_speed_figure:
+	make -C  figure_mea_speed
+pipeline_figures:
 	make -C  pipeline
 
 
