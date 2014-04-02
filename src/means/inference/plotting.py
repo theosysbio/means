@@ -6,7 +6,7 @@ def _label_axes(ax, x_label, y_label, fontsize=20, rotate_x_ticks=True):
         from matplotlib.artist import setp
         setp(ax.get_xticklabels(), rotation=90)
 
-def plot_contour(x, y, z, x_label, y_label, ax=None, *args, **kwargs):
+def plot_contour(x, y, z, x_label, y_label, ax=None, fmt='%.3f', *args, **kwargs):
 
     from matplotlib import pyplot as plt
     from matplotlib.mlab import griddata
@@ -62,7 +62,7 @@ def plot_contour(x, y, z, x_label, y_label, ax=None, *args, **kwargs):
     cs = ax.contour(xi, yi, zi, colors='k')
 
     # Some labels for contour lines
-    ax.clabel(cs, inline=True)
+    ax.clabel(cs, inline=True, fmt=fmt)
 
     _label_axes(ax, '${0}$'.format(x_label), '${0}$'.format(y_label), fontsize=20, rotate_x_ticks=True)
 
@@ -73,6 +73,8 @@ def plot_2d_trajectory(x, y,
                        start_and_end_locations_only=False,
                        start_marker='bo',
                        end_marker='rx',
+                       start_label='Start',
+                       end_label='End',
                        *args, **kwargs):
 
     if ax is None:
@@ -85,8 +87,22 @@ def plot_2d_trajectory(x, y,
     x = np.array(x)
     y = np.array(y)
 
-    ax.plot(x[0], y[0], start_marker, label='Start')
-    ax.plot(x[-1], y[-1], end_marker, label='End')
+
+
+    if start_marker != 'arrow':
+        ax.plot(x[0], y[0], start_marker, label=start_label)
+    else:
+        ax.plot(x[0], y[0], 'xk')
+        ax.annotate(start_label, xy=(x[0], y[0]), xytext=(0.95, 0.01),
+                    textcoords='axes fraction', xycoords='data', arrowprops=dict({'color' : 'k', 'arrowstyle':"->"}),
+                    horizontalalignment='right',verticalalignment='bottom')
+    if end_marker != 'arrow':
+        ax.plot(x[-1], y[-1], end_marker, label=end_label)
+    else:
+        ax.plot(x[-1], y[-1], 'xk')
+        ax.annotate(end_label, xy=(x[-1], y[-1]), xytext=(0.05, 0.95),
+                    textcoords='axes fraction', xycoords='data', arrowprops=dict({'color' : 'k', 'arrowstyle':"->"}, ),
+                    horizontalalignment='left',verticalalignment='top')
 
     _label_axes(ax, '${0}$'.format(x_label), '${0}$'.format(y_label), fontsize=20, rotate_x_ticks=True)
 

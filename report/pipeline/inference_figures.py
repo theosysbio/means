@@ -75,6 +75,10 @@ class MultiDimensionInferenceFigure(FigureTask):
     n_simulations = IntParameter()
     variable_parameters = ListOfKeyValuePairsParameter()
 
+    xlim = Parameter(significant=False, default=None)
+    ylim = Parameter(significant=False, default=None)
+    vmax = Parameter(significant=False, default=None)
+    vmin = Parameter(significant=False, default=None)
 
     def requires(self):
         return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
@@ -96,10 +100,14 @@ class MultiDimensionInferenceFigure(FigureTask):
 
         inference_result = self.input().load()
         variable_parameters = self.variable_parameters
+
         min_dist = min([x[2] for x in inference_result.distance_landscape])
         max_dist = max([x[2] for x in inference_result.distance_landscape])
 
-        fig = plt.figure(figsize=(20,20), dpi=328)
+        vmin = self.vmin if self.vmin is not None else min_dist
+        vmax = self.vmax if self.vmax is not None else max_dist
+
+        fig = plt.figure(figsize=(5,5), dpi=328)
         fig.subplots_adjust(wspace=0, hspace=0)
 
         parameters = [i for i,j in variable_parameters]
@@ -112,7 +120,8 @@ class MultiDimensionInferenceFigure(FigureTask):
                     ax = plt.subplot(dimension,dimension, i*dimension + j + 1)
                     if i != j:
                         inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
-                                                                            norm=LogNorm(), vmin=min_dist, vmax=max_dist)
+                                                                            norm=LogNorm(), vmin=vmin, vmax=vmax,
+                                                                            fmt='%.4g')
 
                     inference_result.plot_trajectory_projection(parameter_x,parameter_y,legend=False, ax=ax,
                                                                 start_and_end_locations_only=i==j,
@@ -127,14 +136,50 @@ class MultiDimensionInferenceFigure(FigureTask):
         else:
             ax = plt.gca()
             parameter_x, parameter_y = parameters
+
+            str_parameters = map(str, inference_result.problem.parameters)
+            index_x = str_parameters.index(str(parameter_x))
+            index_y = str_parameters.index(str(parameter_y))
+
+            start_x = inference_result.starting_parameters[index_x]
+            start_y = inference_result.starting_parameters[index_y]
+
+            optimal_x = inference_result.optimal_parameters[index_x]
+            optimal_y = inference_result.optimal_parameters[index_y]
+
+            start_label = 'Start ($c_2={0:.4f}$, $c_6={1:.4f}$)'.format(start_x, start_y)
+            end_label = 'End ($c_2={0:.4f}$, $c_6={1:.4f}$)'.format(optimal_x, optimal_y)
+
             inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
-                                                                norm=LogNorm(), vmin=min_dist, vmax=max_dist)
+                                                                norm=LogNorm(), vmin=vmin, vmax=vmax,
+                                                                fmt='%.4g')
 
             inference_result.plot_trajectory_projection(parameter_x, parameter_y,legend=False, ax=ax,
                                                         start_and_end_locations_only=False,
                                                         color='red',
-                                                        start_marker='ro',
-                                                        end_marker='rx')
+                                                        start_marker='arrow',
+                                                        end_marker='arrow', start_label=start_label,
+                                                        end_label=end_label)
+            xlim = ax.get_xlim()
+
+            padding_x = (xlim[1] - xlim[0]) / 10.0
+            xlim = (xlim[0]-padding_x, xlim[1]+padding_x)
+            ax.set_xlim(xlim)
+
+            ylim = ax.get_ylim()
+
+            padding_y = (ylim[1] - ylim[0]) / 10.0
+            ylim = (ylim[0]-padding_y, ylim[1]+padding_y)
+            ax.set_ylim(ylim)
+
+
+            if self.xlim is not None:
+                ax.set_xlim(self.xlim)
+            if self.ylim is not None:
+                ax.set_ylim(self.ylim)
+
+
+            ax.set_title('Max order = {0}'.format(self.max_order))
 
         return fig
 
@@ -145,7 +190,6 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
     parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
-    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     starting_initial_conditions = [70.0, 30.0, 60.0]
     n_simulations = IntParameter(default=5000)
     # Use a pair of parameters chosen based on the result from class FigureTwoParametersForInference
@@ -156,14 +200,22 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
     
     label = "MultiDimensional"
     caption = "MultiDimensional"
+    max_order_list = ListParameter(default=[1,2,3,4,5])
+    standalone=True
+    number_of_columns = 1
+
     def requires(self):
-        max_order_list = range(1,6,1)
+
         requirements = []
-        for order in max_order_list:
-            figure = SampleMultidimensionInferenceFigure(max_order=order)
+        for order in self.max_order_list:
+            figure = SampleMultidimensionInferenceFigure(max_order=order,
+                                                                 starting_parameters=[90.0, 0.002, 1.7, 1.1,
+                                                                                      0.93, 0.96, 0.01],
+                                                                 xlim=(1.5, 2),
+                                                                 vmin=1,
+                                                                 vmax=1e10)
             requirements.append(figure)
         return requirements
-
 
 
 
@@ -201,7 +253,7 @@ class FindTwoParametersForInference(Task):
         for v1,v2 in combinations(self.model.parameters, 2):
             variable_parameters = {(v1, None),(v2, None)}
 
-            inference = FigureTwoParameterForInference(model=self.model, max_order=self.max_order,closure=self.closure,
+            inference = FigureInferenceStartEndSSA(model=self.model, max_order=self.max_order,closure=self.closure,
                                   multivariate=self.multivariate, parameters=self.parameters,
                                   initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
                                   solver=self.solver, solver_kwargs=self.solver_kwargs,
@@ -217,7 +269,7 @@ class FindTwoParametersForInference(Task):
     def _return_object(self):
         return 'running'
 
-class FigureTwoParameterForInference(FigureTask):
+class FigureInferenceStartEndSSA(FigureTask):
 
     model = ModelParameter()
     max_order = MEATask.max_order
@@ -255,28 +307,28 @@ class FigureTwoParameterForInference(FigureTask):
         observed_trajectories_lookup = {obs_traj.description: obs_traj for obs_traj in result.observed_trajectories}
         subplot_number = 0
         n_columns = len(result.observed_trajectories)
-        for optimal in result.optimal_trajectories:
+        opt, start, obs = None, None, None
+        for starting, optimal in zip(result.starting_trajectories, result.optimal_trajectories):
+            assert(starting.description == optimal.description)
             try:
                 observed_trajectory = observed_trajectories_lookup[optimal.description]
-                sum_of_sqr_distance = "{0:.2f}".format(np.sum(np.square(observed_trajectory.values - optimal.values)))
             except KeyError:
                 continue
+            sum_of_sqr_distance = np.sum(np.square(observed_trajectory.values - optimal.values))
 
             subplot_number += 1
-            ax = plt.subplot(1,n_columns, subplot_number)
-            ax.annotate('Distance='+str(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=16,
+            ax = plt.subplot(1, n_columns, subplot_number)
+            ax.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=16,
                 xytext=(-5, 5), textcoords='offset points',
                 ha='right', va='bottom')
             plt.title(observed_trajectory.description.mathtext())
-            observed_trajectory.plot(marker='x',color='k', label='Observed',linestyle='None')
-            optimal.plot(color='b',label='Optimal')
+            observed_trajectory.plot(marker='x',color='k', label='SSA', linestyle='None')
+            optimal.plot(color='b', label='Optimal')
+            starting.plot(color='r', label='Starting')
+
         plt.legend()
         plt.suptitle(self.label)
         return fig
-
-
-
-
 
 
 
