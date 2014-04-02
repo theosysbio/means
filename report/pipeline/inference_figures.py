@@ -82,7 +82,8 @@ class MultiDimensionInferenceFigure(FigureTask):
 
     def requires(self):
         return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
-                                  multivariate=self.multivariate, parameters=self.parameters,
+                                  multivariate=self.multivariate,
+                                  parameters=self.parameters,
                                   initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
                                   solver=self.solver, solver_kwargs=self.solver_kwargs,
                                   starting_parameters=self.starting_parameters,
@@ -187,7 +188,7 @@ class MultiDimensionInferenceFigure(FigureTask):
 class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
 
     model = P53Model()
-    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    #parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
     starting_initial_conditions = [70.0, 30.0, 60.0]
@@ -204,17 +205,45 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
     standalone=True
     number_of_columns = 1
 
+    interesting_parameters = [
+        [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01],
+        # [90.0, 0.002, 1.77, 1.1, 0.93, 0.96, 3.2736],
+        # [90.0, 0.002, 1.7040, 1.1, 0.93, 0.96, 0.7822],
+    ]
     def requires(self):
 
         requirements = []
         for order in self.max_order_list:
-            figure = SampleMultidimensionInferenceFigure(max_order=order,
-                                                                 starting_parameters=[90.0, 0.002, 1.7, 1.1,
-                                                                                      0.93, 0.96, 0.01],
-                                                                 xlim=(1.5, 2),
-                                                                 vmin=1,
-                                                                 vmax=1e10)
-            requirements.append(figure)
+            for p in self.interesting_parameters:
+                figure = SampleMultidimensionInferenceFigure(max_order=order,
+                                                             starting_parameters=p,
+                                                             parameters=p,
+                                                             xlim=(1.5, 2),
+                                                             vmin=1,
+                                                             vmax=1e10)
+
+                requirements.append(figure)
+
+                param_str = ', '.join([ '{0:.4f}'.format(x) for x in p ])
+                label = 'Inference starting at {0}, max order = {1}'.format(param_str, order)
+                trajectory_figure = FigureInferenceStartEndSSA(model=SampleMultidimensionInferenceFigure.model,
+                                           max_order=order,
+                                           # closure=self.closure,
+                                           #  multivariate=self.multivariate,
+                                           parameters=p,
+                                           initial_conditions=SampleMultidimensionInferenceFigure.initial_conditions,
+                                           timepoints_arange=SampleMultidimensionInferenceFigure.timepoints_arange,
+                                           #solver=self.solver, solver_kwargs=self.solver_kwargs,
+                                           starting_parameters=p,
+                                  starting_initial_conditions=SampleMultidimensionInferenceFigure.initial_conditions,
+                                  variable_parameters=SampleMultidimensionInferenceFigure.variable_parameters,
+                                  # distance_function_type=self.distance_function_type,
+                                  n_simulations=5000, # TODO: Find where this comes from
+                                  label=label
+                                  )
+
+                requirements.append(trajectory_figure)
+
         return requirements
 
 
