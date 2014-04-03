@@ -93,49 +93,61 @@ For instance, with the same \pft{} system and closure method,
 we predict that computation up to \gls{ode}s up $8^{th}$ order will take 44 minutes with \means{} and as much as 128 days with the original implementation.
 This improvement will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions
 
+
 \subsection{Moment Expansion Closure}
-Ale \emph{et al.} predicted that increasing the maximal moment order would necessarily result in better approximation \cite{ale_general_2013}.
-In addition, preliminary work \todo{cite Eszter,unpublished} indicated that using a parametric distributions for \gls{mea} 
-closure could greatly improve approximation. 
 
-The dramatic increase in performance compared to the original code as well as the implementation of parametric closures made it possible to verify these claims.
+In \gls{mea} the temporal derivative of each central moment of order $n$ is expressed in terms of moment of order $i+1$.
+For this reason, it is necessary to ``close'' the expenstion by providing a closed form for the higher order moments.
+In the original work \cite{ale_general_2013}, higher order central moments are assumed null. 
+This is a strong a not necessarily valid assumption. 
+
+Parametric probability distribution can be used to express moment of arbitrary orders. 
+For instance, a multivariate normal distribution is parametrised only by means (\emph{i.e } first order raw moment)
+and a covariance matrix (\emph{ second order central moment}). As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
+A promissing area of research involves closing moment expression by parametric forms or highest order central moments instead of assuming them to be null.
+
+
+
+
+
+
+Ale \emph{et al.} predicted that higher maximal moment order would necessarily result in better approximation \cite{ale_general_2013}.
+In addition, preliminary work \todo{cite Eszter, unpublished} suggests that using a parametric distributions for \gls{mea}
+closure could greatly improve approximation.
+The dramatic improvement in performance compared to the original code and implementation of parametric closures
+made it possible to verify both of these claims.
+
 Figure~\ref{fig:max_order_and_closure_on_distance} shows the effect of increasing maximal moment order and different type of closures.
-The \pft system with the originally studied parameters  \cite{ale_general_2013} was used.
-
-For normal and scalar closures, the approximation globally improves with maximal moment order (reduced distance to \gls{gssa}). 
+The \pft system, with parameters from \cite{ale_general_2013}, was investigated.
+For normal and scalar closures, as expected, the approximation globally improves with maximal moment order (reduced distance to \gls{gssa}).
 However, for 7$~{th}$ order, the scalar closure had an increased distance, and solving normal closures \gls{ode}s was not possible.
-Note that for even maximal moment orders, normal and scalar are rigourously equal.
-This is expected because normal distribution is symetrical, thus odd central moments are always zero.
+Note that for even maximal moment orders, normal and scalar are rigorously equal.
+This is expected since normal distribution is symmetrical (\emph{i.e.} odd central moments are always zero).
 
-In contrast, log$-$nomal closures are fitting to the ground through trajectory well for maximal moment order of three, 
-but the approximation gets less and less accurate for closure at higher and higher order moments.
-A closer look at the trajectories indicate that, in this latter case,
-oscilations are damping too quickly (fig.~\ref{fig:max_order_and_closure_on_distance}b).
+In contrast, log$-$nomal closures are fitting to the ground through trajectory well for maximal moment order of three,
+but the approximation gets less and less accurate for higher maximal order moments.
+A deeper look at the trajectories indicate that, in this latter case,
+oscillations are damping too quickly (fig.~\ref{fig:max_order_and_closure_on_distance}b).
 Interestingly for even maximum moment order log$-$normal closures generated \gls{ode}s which,
-despide our effort, could not be numerically solved.
+despite our efforts, could not be numerically solved.
 
-For this system and parameter set, univariate and multivariate distributions closures were very similar.
+Finally, for this system and parameter set, univariate and multivariate distributions closures were very similar.
+For other systems such as \emph{hes1}, it was advantageous to model covariance (data not show).
 
-
-
-
+This results indicates that the quality of the approximation depends both on the type of closure, on the maximal moment order and on their interaction. This makes it difficult to \emph{a priori} define which closure and maximal moment order should be used for a given system.
 
 \begin{figure}
 
 \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
 \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf}
-
-\caption{\emph{Effect of different closure methods and maximal moment order on simulation accuracy}
+%~
+\caption{\emph{Effect of different closure methods and maximal moment order on simulation accuracy}.
 The \pft system was modeled using \gls{mea} with five types of closure and for maximal moment order up to seven.
 Resulting trajectories were all compared to an average of 5000 \gls{gssa} simulations using sum of square distance (a).
 Distance is in log scale.
 For illustration puroses, complete trajectories of a single species (\pft) for max order three and seven are shown (b).
-Black lines inducate the average of \gls{gssa} simulations. Missing points (b) and lines (a) indicate solver failure 
-TODO(see failure section.)
+Black lines inducate the average of \gls{gssa} simulations. Missing points (b) and lines (a) indicate solver failure
+TODO(see failure section.)}
 
-
-}
-
- 
 \label{fig:max_order_and_closure_on_distance}
 \end{figure}
