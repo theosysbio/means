@@ -2,7 +2,7 @@
 \label{sec:design_considerations}
 
 Our software development has been heavily inspired by the Agile methodology\todo{Add a ref to agilemanifesto.org}. 
-The key principles of this methodology have been neatly summarised in a blog post by Kelly Waters\footnote{Available at \url{http://www.allaboutagile.com/what-is-agile-10-key-principles/}}:
+The key principles of this methodology have been neatly summarised in a blog post by Kelly Waters\footnote{Available at \url{http://www.allaboutagile.com/what-is-agile-10-key-principles/}}\todo{@QG can your bib management software handle web links?}:
 
 \blockquote{
     [The] characteristics that are common to all agile methods, and the things that I think make agile fundamentally different to a more traditional waterfall approach to software development [..] are:
@@ -21,7 +21,25 @@ The key principles of this methodology have been neatly summarised in a blog pos
     \end{enumerate}
 }
 
+We have particularly focused on capturing requirements well and tracking when they change. 
+Delivering new content in small iterations, one feature at a time, getting feedback from our stakeholders and potential users as fast as possible.
 
+\subsection{Requirements}
+
+We spent the initial meetings with the supervisors capturing the main requirements for this project. These requirements were captured in the form of user stories, that describe an imaginary scenario in which the software is used. 
+The relatively free-form of story telling allows the requirement gathering process to focus on the user's point of view, rather than getting slowed down with the implementation details. 
+After all, the end user does not need to care about the implementation, it is our job, as software engineers, to make sure it is appropriate for the requirements specified.
+This is very much what the \emph{Capture requirements at a high level} statement in the previous list of agile key concepts stands for.
+
+We were able to write down four user stories, listed below:
+
+\blockquote{As a researcher studying biological systems, I would like to perform a variety of simulations, with different parameter sets, and compare the results of these simulations.}
+
+\blockquote{As a researcher studying the approximation method, I would like to be able to compare the changes to the approximation quality, when the approximation parameters (i.e. the closure method) are changed.}
+
+\blockquote{As a researcher studying biological systems, I would like to be able to infer the set of parameters of the model given the data, but this idea is still not very popular in the field and I am not sure if its feasible.}
+
+\blockquote{As a systems biologist, I do not care about the input format of the data, as I am computer-savvy enough to write a script to match the input format.}
 
 
 
