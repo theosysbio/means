@@ -198,7 +198,8 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
 
 class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
-    
+    closure = MEATask.closure
+    multivariate = MEATask.multivariate
     label = "MultiDimensional"
     caption = "MultiDimensional"
     max_order_list = ListParameter(default=[1,2,3,4,5])
@@ -207,8 +208,8 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
     interesting_parameters = [
         [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01],
-        # [90.0, 0.002, 1.77, 1.1, 0.93, 0.96, 3.2736],
-        # [90.0, 0.002, 1.7040, 1.1, 0.93, 0.96, 0.7822],
+         [90.0, 0.002, 1.77, 1.1, 0.93, 0.96, 3.2736],
+         [90.0, 0.002, 1.7040, 1.1, 0.93, 0.96, 0.7822],
     ]
     def requires(self):
 
@@ -216,6 +217,8 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
         for order in self.max_order_list:
             for p in self.interesting_parameters:
                 figure = SampleMultidimensionInferenceFigure(max_order=order,
+                                                             closure=self.closure,
+                                                             multivariate=self.multivariate,
                                                              starting_parameters=p,
                                                              parameters=p,
                                                              xlim=(1.5, 2),
@@ -224,12 +227,12 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
                 requirements.append(figure)
 
-                param_str = ', '.join([ '{0:.4f}'.format(x) for x in p ])
+                param_str = ', '.join(['{0:.4f}'.format(x) for x in p ])
                 label = 'Inference starting at {0}, max order = {1}'.format(param_str, order)
                 trajectory_figure = FigureInferenceStartEndSSA(model=SampleMultidimensionInferenceFigure.model,
                                            max_order=order,
-                                           # closure=self.closure,
-                                           #  multivariate=self.multivariate,
+                                           closure=self.closure,
+                                           multivariate=self.multivariate,
                                            parameters=p,
                                            initial_conditions=SampleMultidimensionInferenceFigure.initial_conditions,
                                            timepoints_arange=SampleMultidimensionInferenceFigure.timepoints_arange,
