@@ -1,0 +1,7 @@
+#!/bin/bash
+# Reuired for neat integration with TexPad app, from
+# https://github.com/vallettaventures/TexpadKB/blob/master/tpbuild-scripts/latexmk.tpbuild
+# Texpad build (.tpbuild) file to use latexmk
+
+echo latexmk -pdf $TEXPAD_ROOTFILE
+latexmk -pdf $TEXPAD_ROOTFILE
