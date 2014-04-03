@@ -12,7 +12,7 @@ Since the only advantage of \gls{mea} over \gls{gssa} is computational speed, it
 In this section, we show that symbolic computations can be limiting for \gls{mea}.
 Then, we explain how we have optimised them, and finally increase performance by several order of magnitudes over to the original \mat{} implementation.
 In addition, ...\\
-\todo{@SL short intro about why it is importan to make solver fast}
+\todo{@SL short intro about why it is important to make solver fast}
 
 
 \subsubsection{Symbolic expressions}
@@ -96,26 +96,21 @@ This improvement will hopefully contribute to make \gls{mea} realistically usabl
 
 \subsection{Moment Expansion Closure}
 
-In \gls{mea} the temporal derivative of each central moment of order $n$ is expressed in terms of moment of order $i+1$.
+In \gls{mea} the temporal derivative of each central moment of order $n$ is expressed in terms of moment of order $n+1$.
 For this reason, it is necessary to ``close'' the expenstion by providing a closed form for the higher order moments.
 In the original work \cite{ale_general_2013}, higher order central moments are assumed null. 
-This is a strong a not necessarily valid assumption. 
+This is a strong and not necessarily valid assumption. 
 
 Parametric probability distribution can be used to express moment of arbitrary orders. 
 For instance, a multivariate normal distribution is parametrised only by means (\emph{i.e } first order raw moment)
-and a covariance matrix (\emph{ second order central moment}). As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
-A promissing area of research involves closing moment expression by parametric forms or highest order central moments instead of assuming them to be null.
-
-
-
-
-
-
-Ale \emph{et al.} predicted that higher maximal moment order would necessarily result in better approximation \cite{ale_general_2013}.
-In addition, preliminary work \todo{cite Eszter, unpublished} suggests that using a parametric distributions for \gls{mea}
+and a covariance matrix (\emph{i.e.} second order central moments). 
+As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
+A promissing area of research involves closing moment expression by parametric forms of highest order central moments instead
+of assuming them to be null.
+Preliminary work \todo{cite Eszter, unpublished} suggests that using a parametric distributions for \gls{mea}
+In addition, Ale \emph{et al.} predicted that higher maximal moment order would necessarily result in better approximation \cite{ale_general_2013}.
 closure could greatly improve approximation.
-The dramatic improvement in performance compared to the original code and implementation of parametric closures
-made it possible to verify both of these claims.
+The dramatic improvement in performance compared to the original code and implementation of parametric closures made it possible to verify both of these claims.
 
 Figure~\ref{fig:max_order_and_closure_on_distance} shows the effect of increasing maximal moment order and different type of closures.
 The \pft system, with parameters from \cite{ale_general_2013}, was investigated.
