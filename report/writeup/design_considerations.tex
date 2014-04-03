@@ -24,7 +24,7 @@ The key principles of this methodology have been neatly summarised in a blog pos
 We have particularly focused on capturing requirements well and tracking when they change. 
 Delivering new content in small iterations, one feature at a time, getting feedback from our stakeholders and potential users as fast as possible.
 
-\subsection{Requirements}
+\subsection{Requirements Gathering}
 
 We spent the initial meetings with the supervisors capturing the main requirements for this project. These requirements were captured in the form of user stories, that describe an imaginary scenario in which the software is used. 
 The relatively free-form of story telling allows the requirement gathering process to focus on the user's point of view, rather than getting slowed down with the implementation details. 
@@ -41,5 +41,13 @@ We were able to write down four user stories, listed below:
 
 \blockquote{As a systems biologist, I do not care about the input format of the data, as I am computer-savvy enough to write a script to match the input format.}
 
+The vagueness of these user stories show that there is no clearly established pipeline for the use of this software. 
+For example, when we asked to elaborate on  what was meant by ``compare the results", we were not able to get any clear description of this, as it depends very much on the specific problem being investigated.
+And this is very much expected, given the overall exploratory nature of the method. 
 
+What this use case tells us, however, is that we need to be very careful to not impose any constraints that would limit the creativity of the users and support as many use cases as possible.
 
+We believe that this freedom for the user is not possible to achieve from a command line application as it, almost by definition, imposes a specific pipeline through the process. Similarly, we believe that immediate feedback, rather than the feedback at the end of the computational pipeline, is necessary for data analysis to occur efficiently. 
+We think that interactivity is the key to solving the problems described above.
+That is why we chose an interaction-centered approach in the design of this package, and made sure it integrates nicely with 
+ \todo{how to quote this again?}IPython notebook environment.
