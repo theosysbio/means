@@ -60,3 +60,38 @@ In our opinion, flexibility of command line applications comes with the expense 
 We believe that the best way we can achieve both flexibility and minimise the gap between the data processing and analysis with the help of package-like structure and interactive python environments, such as IPython notebook\todo{Cite ipython notebook}.
 We therefore have spent our development efforts on designing an intuitive modular system for the package, and ensuring integration with this environment. This structure is further described in \autoref{sec:package}.
 
+\subsection{Package Structure}
+\label{sec:package}
+
+In order to make the code easier to maintain and manage, we have chosen to structure the main \means  package into nine different smaller submodules, each responsible for a different part of the system. We have taken a great care to ensure that all the necessary features are still importable using the pythonic shorthand \verb"from means import *", as to ensure it is easy enough to use in interactive environments where it might be uncomfortable to deal with modularity explicitly.
+
+The nine submodules mentioned earlier and their functions are listed below:
+\begin{enumerate}
+    \item \verb"means.core" -- the core functionality, such as the definitions of key classes
+    \item \verb"means.approximation" -- implementations of the \gls{lna} and \gls{mea} approximation methods.
+    
+    \item \verb"means.simulation" -- implementation of various \gls{ode} solving algorithms.
+    \item \verb"means.inference" -- implementation of parameter inference methods
+    \item \verb"means.io" -- implementation of input and output routines
+    \item \verb"means.util" -- utility functions used across the modules, internal to the package
+    \item \verb"means.tests" -- various tests for the package functionality, hidden from the user by default
+    \item \verb"means.examples" -- definitions of example models that are used throughout tutorials, needs to explicitly be imported by the user.
+    \item \verb"means.pipes" -- optional module providing wrappers for pipeline support
+\end{enumerate}
+
+Each of these submodules are described in detail below.
+
+\subsubsection{{\tt means.core} -- core classes used within all other packages}
+% If you are editing this, please also edit src/means/core/__init__.py docstring
+% to keep the two consistent
+This package stores the common classes that are used within all of the other means sub-packages.
+
+The module exposes the descriptor classes, such as \verb"Descriptor",
+\verb"VarianceTerm", \verb"Moment" and
+\verb"ODETermBase" that are used to describe the types of trajectories generated,
+as well as certain terms in the ODE equations.
+
+Similarly, both the \verb"StochasticProblem" and
+\verb"ODEProblem" classes that are used in stochastic and deterministic simulations respectively are exposed by this module.
+
+Finally, the \verb"Model" class, which provides a standard interface to describe a biological model, and can be thought to be the center of the whole package, is also implemented here.
