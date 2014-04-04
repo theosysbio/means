@@ -95,3 +95,17 @@ Similarly, both the \verb"StochasticProblem" and
 \verb"ODEProblem" classes that are used in stochastic and deterministic simulations respectively are exposed by this module.
 
 Finally, the \verb"Model" class, which provides a standard interface to describe a biological model, and can be thought to be the center of the whole package, is also implemented here.
+
+\subsubsection{{\tt means.approximation} -- approximation methods for biological models}
+
+The approximation submodule implements \gls{ode} and \gls{mea} approximation methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:making-a-model} for a detailed description on how this encoding is done).
+
+The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned. The split into sub-packages allows us to keep the routines specific for each of these different methods separate and not polluting each other's namespace. This also provides a clear path for future developers implementing new approximation methods -- just create another sub-package.
+
+Both of the approximation methods, while in a different packages, still inherit from the same base class, intuitively named \verb"ApproximationBaseClass", which defines the common interface all approximation methods need to provide, namely the dependancy on \verb"Model" and public \verb"run()" method that does all the heavy lifting and returns a \verb"ODEProblem" object that can be simulated.
+This common interface is required for any pipeline using the approximation methods to be method-agnostic. In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless whether \gls{lna} or \gls{mea} is used. 
+It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing the approximation method, but it will also be immediately compatible with all the packages using the approximations.
+
+The advantages described above apply for mostly software that is using all or part of the \means package to perform designated tasks. The necessity of creating approximation objects and running the \verb"run()" function on them to obtain the ordinary differential equations soon becomes a burden in the interactive environments. In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
+
+
