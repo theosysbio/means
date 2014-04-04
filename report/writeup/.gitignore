@@ -16,3 +16,6 @@
 *.gls
 *.glsdefs
 *.ist
+*.fls
+*.fdb_latexmk
+*.synctex.gz
