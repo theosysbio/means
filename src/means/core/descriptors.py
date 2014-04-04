@@ -1,6 +1,16 @@
-#todo docsting. wait for decision on geting rid of variance term -> moment corresponding to variance
+"""
+Descriptors
+-----------
+Descriptors are small classes that describe the terms in ODE equations or the meaning of the trajectory generations.
+They are the key objects in parameter inference as they provide ways for the system to know which trajectory
+generated to compare to which of the trajectories observed.
 
+Descriptor objects can be initialised directly, and the appropriate class documentations
+should be viewed for instructions on how to do so.
 
+If one would like to create a new descriptor object, such object must inherit from the :class:`Descriptor` object
+defined below.
+"""
 import numpy as np
 import sympy
 from means.io.serialise import SerialisableObject
@@ -10,6 +20,19 @@ class Descriptor(SerialisableObject):
     yaml_tag = u"!descriptor"
 
     def mathtext(self):
+        """
+        Return the mathtext_ representation of this object.
+        Used in the legend labels while plotting the trajectories.
+        Should include the dollar signs (``$``) separating the mathtext from plaintext, e.g. ::
+
+            def mathtext(self):
+                return "Some plain text string before the math representation of lambda $\lambda$"
+
+
+        Defaults to the same representation as provided by ``__str__``.
+
+        .. _mathtext: http://matplotlib.org/1.3.1/users/mathtext.html
+        """
         return str(self)
 
 class ODETermBase(Descriptor):
