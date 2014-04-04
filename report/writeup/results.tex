@@ -1,5 +1,7 @@
 \section{Results and Discussion} \label{results}
 
+
+
 \subsection{Performance}\label{performance}
 The temporal dynamic of a molecular system can be described by the \gls{cme} \todo{REF for CME}.
 \gls{gssa}\cite{gillespie_general_1976} produces individual realisations of the \gls{cme}.
@@ -146,3 +148,16 @@ TODO(see failure section.)}
 
 \label{fig:max_order_and_closure_on_distance}
 \end{figure}
+
+\subsection{Inference}
+Inference using sum of squares distance method infer parameter values by exploring the parameter space and compare the trajectory resulting from inference and the trajectory obtained from experimental data \todo{Ref}.
+
+%\begin{figure}
+%\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.7_1.1_0.93_0.96_0.01-ode15s--90.0_0.002_1.7_1.1_0.93_0.96_0.01-sum_of_squares-5000}.pdf}
+
+%\caption{sometext}
+%\label{sometext}
+%\end{figure}
+
+In order to study the performance of the inference method in \means package, we used p53 model and allowed variability for all parameters, with starting values the values from \todo{Ref}.Due to the lack of experimental concentrations for each of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. To visualise how the system explored the multi-dimensional parameter space, we plotted the cross-section for every pair of parameters and the trajectory of how the system behaved through time. Since the starting values are the true values, these trajectories are expected to stay around the starting points. However, the system is actually able to explore a wide parameter space and eventually stop at the point where the inference method shows the distance from the observed value is at the minimum. This may suggest that parameter inference is inaccurate, as it might be trapped at local minima. 
+To test the hypotheTo explicitly study the if the unexpected inference result was due to local minima, we used a pair of parameters, $c_2$ and $c_6$, the resulting parameter space and trajectories for each species at different orders have suggest that ... The trajectory of each species is also plotted in a separate figure to demonstrate the concentration changes. By comparing the trajectories for each species, $c_2$ and $c_6$ are identified with the ability to produce almost perfect optimal trajectory for each species that match the trajectories obtained of \gls{gssa}.
