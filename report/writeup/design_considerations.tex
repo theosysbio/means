@@ -127,7 +127,7 @@ Examples on how to use these classes are provided in \autoref{sec:example-simula
 \subsubsection{{\tt means.inference} -- parameter inference methods}
 The inference sub-package is responsible for storing the parameter inference routines. 
 
-% Change src/inference/__init__.py if you are modifying this
+% Change src/means/inference/__init__.py if you are modifying this
 This part of the package provides utilities for parameter inference.
 Parameter inference will try to find the set of parameters which
 produces trajectories with minimal distance to the observed trajectories.
@@ -142,6 +142,30 @@ Some basic inference result plotting functionality is also provided by the packa
 \verb"InferenceResult" class for more information on this. \todo{Link to documentation/provide it in examples section}
 
 \subsubsection{{\tt means.io} -- reading and writing of \means-specific objects}
+% change src/means/io/__init__.py if you are changing this
+The module implements common methods to serialise and deserialise \means objects.
+Namely the module provides functions \verb`means.io.dump` and  \verb`means.io.load` that would
+serialise and deserialise the said objects into \todo{figure out how I want to cite this}YAML format.
+These serialised representations can be written to or read from files with the help of
+\verb`means.io.to_file` and \verb`means.io.from_file` functions.
+% this is not in __init__.py, but is required for report
+The YAML format has been chosen due to it's ability to balance human and machine readability. Some examples of the YAML serialised objects can be seen in the \todo{write IO tutorial and link here}.
+
+%this is in __init__.py again
+For the user's convenience, the said methods are also attached to all serialisable objects,
+e.g. \verb`means.core.Model.from_file()` method would allow the user to read a \verb`means.core.Model` object from file directly.
+
+%also in __init__.py
+We do not provide any convenience functions for binary serialisation of the object, because \verb`pickle` package,
+which is in the default distribution of Python, has no problems of performing these tasks on \means objects. 
+We recommend using \verb`pickle`, rather than \verb`means.io` whenever fast serialisation is preferred to human
+readability.
+
+% still in __init__.py
+Finally, this module also provides support for the input from SBML files.
+If the \verb`libsbml` is installed in the user's system and has the appropriate python bindings, the function \verb`means.io.read_sbml` can be used to parse the files in SBML format
+to \verb`means.core.Model` objects. See example usage in \todo{Link to some tutorial}.
+
 \subsubsection{{\tt means.util} -- utility functions used within the package}
 \subsubsection{{\tt means.tests} -- tests for the software}
 \todo{This mostly should be a link to testing section}
