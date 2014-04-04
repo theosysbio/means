@@ -175,13 +175,32 @@ as well as functions that help with memoisation of CPU intensive function result
 These functions are designed to be package-specific.
 The users of the software are generally discouraged to use any of these functions.
 
-\subsubsection{{\tt means.tests} -- tests for the software}
-\todo{This mostly should be a link to testing section}
+\subsubsection{{\tt means.tests} -- ensuring the working implementation}
+The tests package contains, rather unsurprisingly, the tests for our implementation.
+Our approach to testing is described in \autoref{sec:testing}
+
 \subsubsection{{\tt means.examples} -- example models used in the documentation}
+The examples package contain a set of toy models used in the documentation.
+The models included with the package are:
+\begin{itemize}
+    \item a sample Michaelis-Menten kinetics model as in \cite{ale_general_2013};
+    \item Dimerisation model, also in \cite{ale_general_2013};
+    \item P53 model, described in \cite{ale_general_2013} and in \autoref{fig:p53} of this document;
+    \item HES1 model, based on the description in \cite{ale_general_2013} \todo{Was it in ale?};
+    \item A textbook example of Lotka-Volterra dynamics \todo{@QG - where did you pull it from}.
+\end{itemize}
+
+These example models are designed to help us to illustrate important concepts of the package in the documentation, but are otherwise independent from the package, and therefore need to be imported separately. The user of the software is nevertheless encouraged to experiment with these toy models herself.
+
 \subsubsection{{\tt means.pipes} -- convenience functions for data pipelines}
-\todo{This should mostly be a link to pipelines section}
+The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package. \todo{Cite luigi somehwere, figure out how}.
+
+The pipeline support is covered in detail in \autoref{sec:pipelines}.
 
 \subsection{Testing}
+\label{sec:testing}
+\todo{Testing testing testing OY!}
 \subsection{Pipelines}
+\label{sec:pipelines}
 \todo{Let's use this section to explain how we generated this report.}
 
