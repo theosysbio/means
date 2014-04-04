@@ -108,4 +108,20 @@ It is easy to see how this design pattern increases the code maintainability and
 
 The advantages described above apply for mostly software that is using all or part of the \means package to perform designated tasks. The necessity of creating approximation objects and running the \verb"run()" function on them to obtain the ordinary differential equations soon becomes a burden in the interactive environments. In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
 
+\subsubsection{{\tt means.simulation} -- stochastic and deterministic simulation routines}
+
+The next submodule in the list provides the routines for performing deterministic and stochastic simulations. These simulations are performed with the help of \verb"Simulation" and \verb"SSASimulation" classes defined in this sub-module.
+
+Unlike the approximation package, the simulation routines could not share the same interface, as they have different inputs -- stochastic simulation need \verb"StochasticProblem" that provides the stoichiometry matrix as well as hazard functions to simulate stochastically, while the deterministic simulation routine requires a \verb"ODEProblem" object that is essentially a collection of ordinary differential equations.
+Nevertheless, the classes still share the same interface, that provides a \verb"simulate_system()" method which in turn generates a set of \verb"Trajectory" objects, to keep them consistent.
+
+Also unlike the approximation submodule, we deliberately do not provide the convenience methods for performing simulations and force the user to create the \verb"Simulation" objects herself. 
+The reason for this decision is twofold. 
+Firstly, the convenience functions for simulations would have to have a lot of parameters, in order to be as flexible as the explicit creation of the simulator objects. 
+This is a non-issue for the approximation objects, whose heavy-lifting function takes zero parameters, so all of the complexity is in the constructor parameters only.
+Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines. 
+Shorthand function would not provide a way to exploit this caching of computation, as it would force to create a new simulation object, even if it could be reused, therefore we did not code that workflow.
+
+Examples on how to use these classes are provided in \autoref{sec:example-simulation}.
+
 
