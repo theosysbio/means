@@ -125,6 +125,22 @@ Shorthand function would not provide a way to exploit this caching of computatio
 Examples on how to use these classes are provided in \autoref{sec:example-simulation}.
 
 \subsubsection{{\tt means.inference} -- parameter inference methods}
+The inference sub-package is responsible for storing the parameter inference routines. 
+
+% Change src/inference/__init__.py if you are modifying this
+This part of the package provides utilities for parameter inference.
+Parameter inference will try to find the set of parameters which
+produces trajectories with minimal distance to the observed trajectories.
+
+Different distance functions are implemented (such as functions minimising the sum of squares error
+or functions based on parametric likelihood), but it is also possible to use custom distance functions.
+
+The package provides support for both inference from a single starting point (\verb"Inference")
+or inference from random starting points (\verb"InferenceWithRestarts").
+
+Some basic inference result plotting functionality is also provided by the package, see the documentation for
+\verb"InferenceResult" class for more information on this. \todo{Link to documentation/provide it in examples section}
+
 \subsubsection{{\tt means.io} -- reading and writing of \means-specific objects}
 \subsubsection{{\tt means.util} -- utility functions used within the package}
 \subsubsection{{\tt means.tests} -- tests for the software}
