@@ -63,6 +63,7 @@ Blue arrows indicate mediation of a reaction by a species.
 \end{figure}
 
 \subsection{Making a Model}
+\label{sec:making-a-model}
 
 Once the model has been mathematically characterised, it is straightforward to define it in \means:
 
@@ -99,6 +100,7 @@ print MY_MODEL
 \end{framed}
 
 \subsection{Generating an \gls{ode} Problem}
+\label{sec:approximation-example}
 After definition of the model as a \py{} object, it becomes possible to use MEA to generate a set of \gls{ode}s (\emph{i.e.} a problem):
 
 
@@ -126,6 +128,7 @@ problem_logn = means.mea_approximation(MY_MODEL, max_order=3,
 \end{framed}
 
 \subsection{Simulating Trajectories}
+\label{sec:example-simulation}
 By providing initial conditions $y_i(t=0)$, and values for the constants, it is possible to simulate the temporal dynamic of the system:
 
 

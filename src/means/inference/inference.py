@@ -1,16 +1,3 @@
-"""
-Parameter Inference
------
-
-This part of the package provides utilities for parameter inference.
-Parameter inference will try to find the set of parameters which
-produces trajectories with minimal distance to the observed trajectories.
-Different distance functions are implemented (e.g. based on parametric likelihood),
-but it is also possible to use custom distance functions.
-Parameter inference support parallel computing and can use random
-restarts (see :class:`~means.inference.InferenceWithRestarts`).
-"""
-
 from scipy.optimize import fmin
 from sympy import Symbol
 

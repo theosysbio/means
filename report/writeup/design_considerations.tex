@@ -95,3 +95,112 @@ Similarly, both the \verb"StochasticProblem" and
 \verb"ODEProblem" classes that are used in stochastic and deterministic simulations respectively are exposed by this module.
 
 Finally, the \verb"Model" class, which provides a standard interface to describe a biological model, and can be thought to be the center of the whole package, is also implemented here.
+
+\subsubsection{{\tt means.approximation} -- approximation methods for biological models}
+
+The approximation submodule implements \gls{ode} and \gls{mea} approximation methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:making-a-model} for a detailed description on how this encoding is done).
+
+The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned. The split into sub-packages allows us to keep the routines specific for each of these different methods separate and not polluting each other's namespace. This also provides a clear path for future developers implementing new approximation methods -- just create another sub-package.
+
+Both of the approximation methods, while in a different packages, still inherit from the same base class, intuitively named \verb"ApproximationBaseClass", which defines the common interface all approximation methods need to provide, namely the dependancy on \verb"Model" and public \verb"run()" method that does all the heavy lifting and returns a \verb"ODEProblem" object that can be simulated.
+This common interface is required for any pipeline using the approximation methods to be method-agnostic. In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless whether \gls{lna} or \gls{mea} is used. 
+It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing the approximation method, but it will also be immediately compatible with all the packages using the approximations.
+
+The advantages described above apply for mostly software that is using all or part of the \means package to perform designated tasks. The necessity of creating approximation objects and running the \verb"run()" function on them to obtain the ordinary differential equations soon becomes a burden in the interactive environments. In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
+
+\subsubsection{{\tt means.simulation} -- stochastic and deterministic simulation routines}
+
+The next submodule in the list provides the routines for performing deterministic and stochastic simulations. These simulations are performed with the help of \verb"Simulation" and \verb"SSASimulation" classes defined in this sub-module.
+
+Unlike the approximation package, the simulation routines could not share the same interface, as they have different inputs -- stochastic simulation need \verb"StochasticProblem" that provides the stoichiometry matrix as well as hazard functions to simulate stochastically, while the deterministic simulation routine requires a \verb"ODEProblem" object that is essentially a collection of ordinary differential equations.
+Nevertheless, the classes still share the same interface, that provides a \verb"simulate_system()" method which in turn generates a set of \verb"Trajectory" objects, to keep them consistent.
+
+Also unlike the approximation submodule, we deliberately do not provide the convenience methods for performing simulations and force the user to create the \verb"Simulation" objects herself. 
+The reason for this decision is twofold. 
+Firstly, the convenience functions for simulations would have to have a lot of parameters, in order to be as flexible as the explicit creation of the simulator objects. 
+This is a non-issue for the approximation objects, whose heavy-lifting function takes zero parameters, so all of the complexity is in the constructor parameters only.
+Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines. 
+Shorthand function would not provide a way to exploit this caching of computation, as it would force to create a new simulation object, even if it could be reused, therefore we did not code that workflow.
+
+Examples on how to use these classes are provided in \autoref{sec:example-simulation}.
+
+\subsubsection{{\tt means.inference} -- parameter inference methods}
+The inference sub-package is responsible for storing the parameter inference routines. 
+
+% Change src/means/inference/__init__.py if you are modifying this
+This part of the package provides utilities for parameter inference.
+Parameter inference will try to find the set of parameters which
+produces trajectories with minimal distance to the observed trajectories.
+
+Different distance functions are implemented (such as functions minimising the sum of squares error
+or functions based on parametric likelihood), but it is also possible to use custom distance functions.
+
+The package provides support for both inference from a single starting point (\verb"Inference")
+or inference from random starting points (\verb"InferenceWithRestarts").
+
+Some basic inference result plotting functionality is also provided by the package, see the documentation for
+\verb"InferenceResult" class for more information on this. \todo{Link to documentation/provide it in examples section}
+
+\subsubsection{{\tt means.io} -- reading and writing of \means-specific objects}
+% change src/means/io/__init__.py if you are changing this
+The module implements common methods to serialise and deserialise \means objects.
+Namely the module provides functions \verb`means.io.dump` and  \verb`means.io.load` that would
+serialise and deserialise the said objects into \todo{figure out how I want to cite this}YAML format.
+These serialised representations can be written to or read from files with the help of
+\verb`means.io.to_file` and \verb`means.io.from_file` functions.
+% this is not in __init__.py, but is required for report
+The YAML format has been chosen due to it's ability to balance human and machine readability. Some examples of the YAML serialised objects can be seen in the \todo{write IO tutorial and link here}.
+
+%this is in __init__.py again
+For the user's convenience, the said methods are also attached to all serialisable objects,
+e.g. \verb`means.core.Model.from_file()` method would allow the user to read a \verb`means.core.Model` object from file directly.
+
+%also in __init__.py
+We do not provide any convenience functions for binary serialisation of the object, because \verb`pickle` package,
+which is in the default distribution of Python, has no problems of performing these tasks on \means objects. 
+We recommend using \verb`pickle`, rather than \verb`means.io` whenever fast serialisation is preferred to human
+readability.
+
+% still in __init__.py
+Finally, this module also provides support for the input from SBML files.
+If the \verb`libsbml` is installed in the user's system and has the appropriate python bindings, the function \verb`means.io.read_sbml` can be used to parse the files in SBML format
+to \verb`means.core.Model` objects. See example usage in \todo{Link to some tutorial}.
+
+\subsubsection{{\tt means.util} -- utility functions used within the package}
+% change src/means/util/__init__.py if you're changing this
+This package contains helper functions that did not fit into any other packages.
+These functions include helper functions for common operations when dealing with \verb`sympy`,
+as well as functions that help with memoisation of CPU intensive function results.
+
+These functions are designed to be package-specific.
+The users of the software are generally discouraged to use any of these functions.
+
+\subsubsection{{\tt means.tests} -- ensuring the working implementation}
+The tests package contains, rather unsurprisingly, the tests for our implementation.
+Our approach to testing is described in \autoref{sec:testing}
+
+\subsubsection{{\tt means.examples} -- example models used in the documentation}
+The examples package contain a set of toy models used in the documentation.
+The models included with the package are:
+\begin{itemize}
+    \item a sample Michaelis-Menten kinetics model as in \cite{ale_general_2013};
+    \item Dimerisation model, also in \cite{ale_general_2013};
+    \item P53 model, described in \cite{ale_general_2013} and in \autoref{fig:p53} of this document;
+    \item HES1 model, based on the description in \cite{ale_general_2013} \todo{Was it in ale?};
+    \item A textbook example of Lotka-Volterra dynamics \todo{@QG - where did you pull it from}.
+\end{itemize}
+
+These example models are designed to help us to illustrate important concepts of the package in the documentation, but are otherwise independent from the package, and therefore need to be imported separately. The user of the software is nevertheless encouraged to experiment with these toy models herself.
+
+\subsubsection{{\tt means.pipes} -- convenience functions for data pipelines}
+The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package. \todo{Cite luigi somehwere, figure out how}.
+
+The pipeline support is covered in detail in \autoref{sec:pipelines}.
+
+\subsection{Testing}
+\label{sec:testing}
+\todo{Testing testing testing OY!}
+\subsection{Pipelines}
+\label{sec:pipelines}
+\todo{Let's use this section to explain how we generated this report.}
+
