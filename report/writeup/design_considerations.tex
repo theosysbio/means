@@ -167,6 +167,14 @@ If the \verb`libsbml` is installed in the user's system and has the appropriate 
 to \verb`means.core.Model` objects. See example usage in \todo{Link to some tutorial}.
 
 \subsubsection{{\tt means.util} -- utility functions used within the package}
+% change src/means/util/__init__.py if you're changing this
+This package contains helper functions that did not fit into any other packages.
+These functions include helper functions for common operations when dealing with \verb`sympy`,
+as well as functions that help with memoisation of CPU intensive function results.
+
+These functions are designed to be package-specific.
+The users of the software are generally discouraged to use any of these functions.
+
 \subsubsection{{\tt means.tests} -- tests for the software}
 \todo{This mostly should be a link to testing section}
 \subsubsection{{\tt means.examples} -- example models used in the documentation}
