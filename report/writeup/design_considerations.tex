@@ -1,26 +1,26 @@
 \section{Approach to Software Design}
 \label{sec:design_considerations}
 
-Our software development has been heavily inspired by the Agile methodology\cite{_manifesto_????}. 
-Agile methodology has been established as an alternative to the traditional waterfall method which views requirements gathering, software design and implementation as a linear process. 
+Our software development has been heavily inspired by the Agile methodology\cite{_manifesto_????}.
+Agile methodology has been established as an alternative to the traditional waterfall method which views requirements gathering, software design and implementation as a linear process.
 In contrast to this traditional view, agile methodology centres around iterative approach to software development, and aims to minimise the cost caused by problems along the way.
 
-The key principles of this methodology have been neatly summarised in a blog post by Kelly Waters\cite{_what_????}:
+The key principles of this methodology have been neatly summarised by Kelly Waters\cite{_what_????}:
 
 \blockquote{
-    [The] characteristics that are common to all agile methods, and the things that I think make agile fundamentally different to a more traditional waterfall approach to software development [..] are:
+    [The] characteristics that are common to all agile methods, and the things that I think make agile fundamentally different to a more traditional waterfall approach to software development [\ldots] are:
     
     \begin{enumerate}
-        \item Active user involvement is imperative 
-        \item The team must be empowered to make decisions 
-        \item Requirements evolve but the timescale is fixed 
-        \item Capture requirements at a high level; lightweight \& visual 
-        \item Develop small, incremental releases and iterate 
-        \item Focus on frequent delivery of products 
-        \item Complete each feature before moving on to the next 
-        \item Apply the 80/20 rule 
-        \item Testing is integrated throughout the project lifecycle -– test early and often 
-        \item A collaborative \& cooperative approach between all stakeholders is essential 
+        \item Active user involvement is imperative
+        \item The team must be empowered to make decisions
+        \item Requirements evolve but the timescale is fixed
+        \item Capture requirements at a high level; lightweight \& visual
+        \item Develop small, incremental releases and iterate
+        \item Focus on frequent delivery of products
+        \item Complete each feature before moving on to the next
+        \item Apply the 80/20 rule
+        \item Testing is integrated throughout the project lifecycle -– test early and often
+        \item A collaborative \& cooperative approach between all stakeholders is essential
     \end{enumerate}
 }
 
@@ -28,35 +28,43 @@ While these may sound very vague requirements, they capture the recommendations 
 
 \subsection{Requirements Gathering}
 One of the key parts of any project is the requirements gathering process -- no amount of skill or hard work will help if the work is misdirected.
-Naturally, we took great interest of getting these requirements right.
+Naturally, we took great interest in getting these requirements right.
 
-As per the blogpost cited above, it is suggested to ``capture requirements \emph{at a high level}". 
-``High level" is emphasised here to warn about the temptation to get into the discussions about low-level implementation details in the requirements gathering stage. 
-These discussions are often in a risk to constrain the requirements with the implementation details, while ideally we would like the requirements to influence the implementation decisions, and not the other way around.
+Capturing requirements at ``\emph{at a high level}" was important for this project since the temptation to discuss about low-level implementation before gathering requirements was great.
+These discussions are often constraining the requirements with the implementation details, while ideally we wanted the requirements to influence the implementation decisions, and not the other way around.
 
-The easiest way to keep the requirements in a high level is to limit the discussion to a set of scenarios of how the users would like to use the software. These scenarios are commonly referred to \emph{user stories} and usually follow the template ``As (some user type, e.g. \emph{a scientist)} I would like to (some action, e.g. \emph{perform these calculations}) because (optionally, the reason for this use case)".
-The first part of this relatively free-form stories allows us to get a view of the potential user base of the software, e.g. whether it is researchers who are going to be the software, or maybe it is mostly undergraduate students, each requiring different approach to the problem. The second part of these stories allows us to get a set of important use cases for the problem, while the third part allow us to judge the relative importance of each of the use cases.
+The easiest way to keep the requirements in a high level was to limit the discussion to a set of scenarios of usage.
+These scenarios are commonly referred to \emph{user stories} and usually follow the template: ``As (some user type, \eg{} \emph{a scientist)} I would like to (some action, \eg{} \emph{perform these calculations}) because (optionally, the reason for this use case)".
+The first part of this relatively free-form gives a view of the potential user base of the software.
+For instance researchers and undergraduate students may have different requierements.
+The second part, provides a set of important use cases for the problem.
+Finally, the third part assesses the relative importance of each of the use cases.
 
-We were able to write down four user stories, listed below:
+We were able to write down four representative user stories, listed below:
 \begin{enumerate}
 
     \item \emph{As a researcher studying biological systems, I would like to perform a variety of simulations, with different parameter sets, and compare the results of these simulations.}
 
-    \item \emph{As a researcher studying the approximation method, I would like to be able to compare the changes to the approximation quality, when the approximation parameters (i.e. the closure method) are changed.}
+    \item \emph{As a researcher studying the approximation method, I would like to be able to compare the changes to the approximation quality, when the approximation parameters (\ie{} the closure method) are changed.}
 
-    \item \emph{As a researcher studying biological systems, I would like to be able to infer the set of parameters of the model given the data, but this idea is still not very popular in the field and I am not sure if its feasible.}
+    \item \emph{As a researcher studying biological systems, I would like to be able to infer the set of parameters of the model given the data, but this idea is still not very popular in my field and I am not sure if it is feasible.}
 
-    \item \emph{As a systems biologist, I have to deal with multiple data formats on case by case basis, and would like to support them all or have a simple format that could be easily writable, because I am computer-savvy enough to write a conversion script.}
+    \item \emph{As a systems biologist, I have to deal with multiple data formats on case by case basis, and would like to support them all or have a simple format that could be easily writeable, because I am computer-savvy enough to write a conversion script.}
+    \todo{QG: I struggle with this last story.}
 \end{enumerate}
 
-The pattern emerging from these use cases is that our project software should not be designed to act as a standalone piece of software, and merely be an intermediate step in some larger data analysis step. For instance, the \emph{comparison} process in the first two user stories could not be clarified in more detail, because the techniques employed in that step are chosen in a very \emph{ad-hoc} fashion. 
+The pattern emerging from these use cases was that our project software should not be designed to act as a standalone piece of software, \todo{QG: second part of sentence ambiguous}and merely be an intermediate step in some larger data analysis step.
+For instance, the \emph{comparison} process in the first two user stories could not be clarified in more detail, because the techniques employed in that step are chosen in a very \emph{ad-hoc} fashion.
 
-Similarly, the fourth user story basically tells us that it is not clear where the input for the model will come from and which format it would be therefore the software needs to be able to either be general enough to work with them all or have a simple enough format for the researcher to do the conversion herself. 
-This is not at all surprising, given the exploratory nature of the method, of course, yet not less important to achieve. 
+Similarly, the fourth user story indicates that the origin of the input data and its format are undefined.
+Therefore the software needed be general enough to support multiple input formats, or have a simple enough format allowing researchers to convert their data to.
+This was not unsurprising, given the exploratory nature of the method,\todo{QG: not clear} of course, yet not less important to achieve.
 
-It was this observation that prompted us to move away from the traditional command-line application model for this software. 
-In our opinion, flexibility of command line applications comes with the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend. Similarly, command line applications create an artificial gap between the data processing and data analysis step, i.e. writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
+This observation encouraged us to move away from the traditional command-line application model for this software\todo{cite last year report}.
+In our opinion, flexibility of command-line applications comes at the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend.
+Similarly, command-line applications create an artificial gap between the data processing and data analysis step, \ie{} writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
 
+\todo{"Instead, we ... "}
 We believe that the best way we can achieve both flexibility and minimise the gap between the data processing and analysis with the help of package-like structure and interactive python environments, such as IPython notebook\todo{Cite ipython notebook}.
 We therefore have spent our development efforts on designing an intuitive modular system for the package, and ensuring integration with this environment. This structure is further described in \autoref{sec:package}.
 
