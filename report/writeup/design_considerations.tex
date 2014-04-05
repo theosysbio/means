@@ -64,16 +64,20 @@ This observation encouraged us to move away from the traditional command-line ap
 In our opinion, flexibility of command-line applications comes at the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend.
 Similarly, command-line applications create an artificial gap between the data processing and data analysis step, \ie{} writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
 
-\todo{"Instead, we ... "}
+\todo{"Instead, we ... " We need to bi rigth to the point : we made a python package!!, it is called MEANS! :D}
 We believe that the best way we can achieve both flexibility and minimise the gap between the data processing and analysis with the help of package-like structure and interactive python environments, such as IPython notebook\todo{Cite ipython notebook}.
-We therefore have spent our development efforts on designing an intuitive modular system for the package, and ensuring integration with this environment. This structure is further described in \autoref{sec:package}.
+We therefore have spent our development efforts on designing an intuitive modular system for the package, and ensuring integration with this environment.
+This structure is further described in \autoref{sec:package}.
+
 
 \subsection{Package Structure}
 \label{sec:package}
 
-In order to make the code easier to maintain and manage, we have chosen to structure the main \means  package into nine different smaller submodules, each responsible for a different part of the system. We have taken a great care to ensure that all the necessary features are still importable using the pythonic shorthand \verb"from means import *", as to ensure it is easy enough to use in interactive environments where it might be uncomfortable to deal with modularity explicitly.
+In order to make the code easier to maintain and manage, we have divided \means{} package into nine different smaller submodules, each responsible for a different part of the system.
+We have paid particular attention in making all the necessary features importable using the pythonic shorthand \verb"from means import *", 
+as to ensure it is simple enough to use \means{} in interactive environments where it might be uncomfortable to deal with modularity explicitly.
 
-The nine submodules mentioned earlier and their functions are listed below:
+The nine submodules in \means{} ands their respective role are listed below:
 \begin{enumerate}
     \item \verb"means.core" -- the core functionality, such as the definitions of key classes
     \item \verb"means.approximation" -- implementations of the \gls{lna} and \gls{mea} approximation methods.
@@ -87,7 +91,7 @@ The nine submodules mentioned earlier and their functions are listed below:
     \item \verb"means.pipes" -- optional module providing wrappers for pipeline support
 \end{enumerate}
 
-Each of these submodules are described in detail below.
+Each submodule is described in detail below.
 
 \subsubsection{{\tt means.core} -- core classes used within all other packages}
 % If you are editing this, please also edit src/means/core/__init__.py docstring
@@ -106,35 +110,39 @@ Finally, the \verb"Model" class, which provides a standard interface to describe
 
 \subsubsection{{\tt means.approximation} -- approximation methods for biological models}
 
-The approximation submodule implements \gls{ode} and \gls{mea} approximation methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:making-a-model} for a detailed description on how this encoding is done).
+The approximation submodule implements \gls{lna} and \gls{mea} methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:making-a-model} for a detailed description on how this encoding is done).
 
-The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned. The split into sub-packages allows us to keep the routines specific for each of these different methods separate and not polluting each other's namespace. This also provides a clear path for future developers implementing new approximation methods -- just create another sub-package.
+The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned.
+This keeps specific routines in separate modules, thus avoiding \gls{lna} and \gls{mea} implementations namespace polutiong each other.
+This also provides a clear path for future developers to implement new approximation methods -- simply creating another sub-package.
 
-Both of the approximation methods, while in a different packages, still inherit from the same base class, intuitively named \verb"ApproximationBaseClass", which defines the common interface all approximation methods need to provide, namely the dependancy on \verb"Model" and public \verb"run()" method that does all the heavy lifting and returns a \verb"ODEProblem" object that can be simulated.
-This common interface is required for any pipeline using the approximation methods to be method-agnostic. In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless whether \gls{lna} or \gls{mea} is used. 
-It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing the approximation method, but it will also be immediately compatible with all the packages using the approximations.
+Despite being in different packages, both approximation methods inherit from the same base class, intuitively named \verb"ApproximationBaseClass".
+This base class defines the common interface all approximation methods; namely, the dependancy on \verb"Model" and public \verb"run()" method that implements the mathematics and returns a \verb"ODEProblem" object that can be simulated.
+This common interface is required for any pipeline using the approximation methods to be method-agnostic.
+In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless of whether \gls{lna} or \gls{mea} was used. 
+It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing an approximation method, but it will also be immediately compatible with all the packages using the approximations.
 
-The advantages described above apply for mostly software that is using all or part of the \means package to perform designated tasks. The necessity of creating approximation objects and running the \verb"run()" function on them to obtain the ordinary differential equations soon becomes a burden in the interactive environments. In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
+The advantages described above apply mostly for software using all or part of the \means{} package to perform designated tasks\todo{QG: not v clear}.
+The necessity of creating approximation objects and running their \verb"run()" function in order obtain the \gls{ode}s soon becomes a burden in the interactive environments.
+In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
 
 \subsubsection{{\tt means.simulation} -- stochastic and deterministic simulation routines}
 
-The next submodule in the list provides the routines for performing deterministic and stochastic simulations. These simulations are performed with the help of \verb"Simulation" and \verb"SSASimulation" classes defined in this sub-module.
+The next submodule in the list provides the routines for performing deterministic and stochastic simulations.
+These simulations are performed via \verb"Simulation" and \verb"SSASimulation" classes defined in this sub-module.
 
-Unlike the approximation package, the simulation routines could not share the same interface, as they have different inputs -- stochastic simulation need \verb"StochasticProblem" that provides the stoichiometry matrix as well as hazard functions to simulate stochastically, while the deterministic simulation routine requires a \verb"ODEProblem" object that is essentially a collection of ordinary differential equations.
-Nevertheless, the classes still share the same interface, that provides a \verb"simulate_system()" method which in turn generates a set of \verb"Trajectory" objects, to keep them consistent.
+Unlike the approximation package, the simulation routines could not share the same interface, as they have different inputs -- a stochastic simulation needs \verb"StochasticProblem" that provides the stoichiometry matrix as well as hazard functions to simulate stochastically, while the deterministic simulation routine requires an \verb"ODEProblem" object that is essentially a collection of ordinary differential equations.
+Nevertheless, the classes still share the same interface, providing a \verb"simulate_system()" method which in turn generates a set of \verb"Trajectory" objects, to keep them consistent.
 
 Also unlike the approximation submodule, we deliberately do not provide the convenience methods for performing simulations and force the user to create the \verb"Simulation" objects herself. 
-The reason for this decision is twofold. 
 Firstly, the convenience functions for simulations would have to have a lot of parameters, in order to be as flexible as the explicit creation of the simulator objects. 
 This is a non-issue for the approximation objects, whose heavy-lifting function takes zero parameters, so all of the complexity is in the constructor parameters only.
 Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines. 
 Shorthand function would not provide a way to exploit this caching of computation, as it would force to create a new simulation object, even if it could be reused, therefore we did not code that workflow.
 
-Examples on how to use these classes are provided in \autoref{sec:example-simulation}.
+Examples on how to use both classes are provided in \autoref{sec:example-simulation}.
 
 \subsubsection{{\tt means.inference} -- parameter inference methods}
-The inference sub-package is responsible for storing the parameter inference routines. 
-
 % Change src/means/inference/__init__.py if you are modifying this
 This part of the package provides utilities for parameter inference.
 Parameter inference will try to find the set of parameters which
@@ -157,7 +165,8 @@ serialise and deserialise the said objects into \todo{figure out how I want to c
 These serialised representations can be written to or read from files with the help of
 \verb`means.io.to_file` and \verb`means.io.from_file` functions.
 % this is not in __init__.py, but is required for report
-The YAML format has been chosen due to it's ability to balance human and machine readability. Some examples of the YAML serialised objects can be seen in the \todo{write IO tutorial and link here}.
+The YAML format has been chosen due to it's ability to balance human and machine readability. 
+Some examples of the YAML serialised objects can be seen in the \todo{write IO tutorial and link here}.
 
 %this is in __init__.py again
 For the user's convenience, the said methods are also attached to all serialisable objects,
@@ -195,10 +204,11 @@ The models included with the package are:
     \item Dimerisation model, also in \cite{ale_general_2013};
     \item P53 model, described in \cite{ale_general_2013} and in \autoref{fig:p53} of this document;
     \item HES1 model, based on the description in \cite{ale_general_2013} \todo{Was it in ale?};
-    \item A textbook example of Lotka-Volterra dynamics \todo{@QG - where did you pull it from}.
+    \item A textbook example of Lotka-Volterra dynamics \todo{QG: cite the original LV book/paper}.
 \end{itemize}
 
-These example models are designed to help us to illustrate important concepts of the package in the documentation, but are otherwise independent from the package, and therefore need to be imported separately. The user of the software is nevertheless encouraged to experiment with these toy models herself.
+These example models are designed to help us to illustrate important concepts of the package in the documentation, but are otherwise independent from the package, and therefore need to be imported separately.
+The user of the software is nevertheless encouraged to experiment with these toy models.
 
 \subsubsection{{\tt means.pipes} -- convenience functions for data pipelines}
 The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package. \todo{Cite luigi somehwere, figure out how}.
