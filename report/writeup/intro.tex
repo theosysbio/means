@@ -1,3 +1,101 @@
 \section{Introduction} \label{intro}
+\subsection{Moment Closure Methods}
+
+
+%why studing systems
+Most biological systems, such as cells, organisms, populations and ecosystems are intrinsecaly comlex and non-linear.
+For this reason, some aspect of these systems are extremely difficult to understand and predict, both qualitatively and quantitatively.
+Using explicit models to describe them provide an abstract and extensible framework that allows to infer starte of a system from experimental data. 
+In addition, models permit to meake testable predictions on the behaviour of the system when parameters are modified.
+In the last few decades, using mathematical representations of biological interactions has been an increasingly promissing and wide aspect of research in biology.
+Many areas of biology, such as ecology, population biology or and biochemestry, use kinetic modeling to describe and understand temporal dynamics of their repective systems.
+
+%Deterministic modeling (pro and limits)
+Deterministic modeleing of dynamic systems involves 
+
+This approach has been extremely usful for describing many systems, but it faces severe limitations when modeleing small discrete quantities.
+For inscance, macromolecules in a cell can be present in a very small amount (less than 100). 
+In this situation, the assumption of deterministic modelling will not be met. 
+This has been shown to result in quantitative inacuracy, or, in the worst cases, qualitatively eroneous predictions.
+
+
+%Stochastic modeling (pro, limits)
+In order to overcome limitations of deterministic modeling, stochastic modeling has been advances as a solution.
+It relies on \gls{cme}, which is a set of differential (or difference) equations providing an \emph{exact} description of the system.
+Exept for very simple systems, the \gls{cme} cannot be solved analytically. 
+However, it is possible to simmulate single realisations of the chemical master equation using \gls{gssa}.
+If enough (generaly several thouthands), simulations are perfomed, very accurate estimations of the system can be obtained.
+Despide extensive effort on increasing the efficiency of such simulations, either by describing new algorithms, or by improving implementations,
+they remain too slow for certain problems. 
+In particular, when trying to infer biological parameters from experimental data, according to an explicit model,
+it is necessary to perform many simulations. 
+In extreme cases, such as for \gls{abc}, a very large number of simulations are necessary in order to obtain an accurate posterior distributions for parameters.
+For prameter inference, stochatsic simulations are unfortunately  criticaly slow and cannot be used, even for relatively simple systems.
+
+
+In order to overcome performance limitations of stochatsic simulations whist providing accurate enough results, approximations have been used.
+\Gls{lna}, for instance, approximates the 
+\gls{cme}
+by taking in acount only the means (first order raw moments), and the variances and covrariances (second order central moments).
+This method has been shown to be valid when the amount of each species is large and for systems with first order reactions (such as  a -> b, but not a + c  -> b).
+Another appraoch has been to expand the \gls{cme} by expressing central moment in terms of second or third order central moment.
+Recently, this concept has been generalised to expand the \gls{cme} up to any arbitrary moment order.
+\cite{ale_general_2013}
+This method, \gls{mea}, has shown very promissing results, but has not yet been investigated in detail. 
+In addition, no comprehensive public implementation is avalable for the community. 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%closure
+
+
+To model the changes in concentrations using \gls{mea}, higher order moment are required to express the lower order moments, i.e. the $ith$ moment depends on the $(i+1)th$ moment. 
+This makes the expressions for moment infinitely long, and the \glspl{ode} impossible to solve. 
+Therefore, a closure method is necessary to approximate the expressions for higher order moments either by assuming the higher order moments are zeros, or by assuming a parametric distribution of the population. 
+Moment closure is particularly useful for stochastic population models, as it leads to a set of \emph{"closed"} solvable differential equations to model the system. \todo{cite Moment-closure approximations for mass-action models}
+
+
+Assuming zeros of all higher order moments reduces the computation effort, as the higher order moments are simply neglected.
+However, this method does exploit any parametric distribution for the population, resulting in inaccurate simulation if the type of distribution was known. 
+
+In contrast, several parametric moment closure methods are available, where they estimate higher order moments using an assumed distribution type.
+This allows researchers to use the known distribution type to model the system more precisely. 
+
+In \means, we have deployed both non-parametric and three parametric closure methods - Normal, Log-normal and Gamma closure.
+For each method, the data can be either univariate or multivariate. 
+Univariate is used when only one species is modelled in a system, or when multiple species can be regarded as one species, for instance, in dimerisation reactions. 
+
+Each of the parametric method is based on a therem.
+Normal closure uses Isserlis\rq , theorem or Wick\rq s theorem to compute higher order moments in terms of covariance matrix.\todo{cite On a formula for the product-moment coefficient of any order of a normal frequency distribution in any number of variables} 
+The theorem assumes that the population distribution for all the species in the system is a zero mean multivariate normal random vector. 
+It approximates the even order moments as the sum of products of all the possible pairs of partitions, whereas the odd order moments are defined to be zeros. 
+For example, the fourth order moments $\mathrm{E}[x_1x_2x_3x_4] = \mathrm{E}[x_1x_2]\ \mathrm{E}[x_3x_4] + \mathrm{E}[x_1x_3]\ \mathrm{E}[x_2x_4]+\ \mathrm{E}[x_1x_4]\ \mathrm{E}[x_2x_3]$. 
+In the univariate case, the therem works by simply setting the covariances and to zeros. 
+
+Log-normal closure was first documented by Crow. \todo{cite the book Theory and Applications} 
+Similarly, Log-normal closure also estimates higher order moments in terms of log-covariance matrix, but the odd order moments are estimated based on the algorithm described in  Singh \& Hespanha, 2006. \todo{cite Lognormal Moment Closures for Biochemical Reactions} The advantage of using Log-normal closure, compared with Normal closure, is that its skewness and non-negative properties better describe populations in reality.\todo{cite Novel moment closure approximations in stochastic epidemics}
+
+Current definitions of Gamma distribution result in different types of Gamma moment closure methods.\todo{cite On a multivariate-gamma and On a multivariate gamma distribution} Both definitions of multivariate Gamma distribution use the parameters  to express the first and second order moments, and any higher order moments can be derived from multinomial formula. \todo {cite Eszter unpublished} One of the limitations of Gamma closure is incorrect modelling for systems with negatively correlated species. 
+Moreover, prior knowledge about the population distribution is critical in choosing the parameter values for Gamma distribution. 
+
+Using \means, we intend to further explore the quality of these closure methods using several bio-models, and the results are analysed in Results and Discussion.
+ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% bottleneck
+The aim of our work was to provide a comprehensive implementation of \gls{mea} with parametric moment closure. 
+We focussed on maintanability, usability and performance. 
+We provide \means, a new \py{} package for Moment Expansion Approximation, iNference and Simulations.
+Implementing \gls{mea}, but also \gls{gssa} and \gls{lna}. 
+In the report herein, we explain which decisions drove the design of the packge. 
+Then, we explain how we have structured the code and improved maitanability by writing unittests.
+Some example of intended use are presented to illustarte usability.
+We then demonstate how we manages to dramaticaly improved performance during development.
+Importantly, we further have used our package to critically assess \gls{mea}.
+Finally, Our package also comes with an exhaustive documentation as well as a large set of tutorials, both printed in the appendix of this document.
+
 
 blabe bla \cite{ale_general_2013}
+

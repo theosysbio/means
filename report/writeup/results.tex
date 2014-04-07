@@ -1,5 +1,7 @@
 \section{Results and Discussion} \label{results}
 
+
+
 \subsection{Performance}\label{performance}
 The temporal dynamic of a molecular system can be described by the \gls{cme} \todo{REF for CME}.
 \gls{gssa}\cite{gillespie_general_1976} produces individual realisations of the \gls{cme}.
@@ -146,3 +148,24 @@ TODO(see failure section.)}
 
 \label{fig:max_order_and_closure_on_distance}
 \end{figure}
+
+\subsection{Inference}
+Inference uses a distance method to infer parameter values by exploring the parameter space and compare the trajectory resulting from inference and the trajectory obtained from experimental data. 
+
+In order to study the performance of the inference method in \means package, we used "sum of squares" distance method and p53 model. Due to the lack of experimental concentrations of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. With full variability for all parameters in the p53 model, and starting values equal to the values from \todo{Ref}, it is expected that the resulting parameter values would be the same as the starting values. To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters and the trajectory of how concentration for each species changed through time. Unexpectedly, trajectories simulated with the true parameter values are identified as distant from the \gls{gssa} trajectories, which forced the system to follow the distant gradient and infer incorrect parameter values. This result can be explained by inference method trapped at local minima, or the inference method cannot infer the right parameter set. 
+
+To test if the unexpected inference method can find the minima, we recorded the inferred parameter values using pairs of parameters at a time, and used these values as the starting values to re-generated the distance landscape (see Figure \todo{figure number}). Here, we explicitly allow $c_2$ and $c_6$ values to vary, but keep other parameter values the true values, because $c_2$ and $c_6$ with variability in their values are able to produce an almost perfect match with the \gls{gssa} trajectories of all species (data not shown). 
+
+Using the end point of the local minima as the starting point for $c_2$ and $c_6$, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point in this case is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for three species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
+
+Based on these results, we can conclude that the inference method here is inaccurate, further investigation into the system minima  is necessary to develop an effective inference method. 
+
+\todo{choose a set of distance landscape and trajectory figures}
+\begin{figure}
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.7_1.1_0.93_0.96_0.01-ode15s--90.0_0.002_1.7_1.1_0.93_0.96_0.01-sum_of_squares-5000}.pdf}
+
+\caption{\emph{Title}}
+\label{fig:parameter_space_for_c2_c6}
+\end{figure}
+
+
