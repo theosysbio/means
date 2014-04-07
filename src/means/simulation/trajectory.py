@@ -252,7 +252,7 @@ class TrajectoryWithSensitivityData(Trajectory):
         :type sensitivity_data: list[:class:`~means.approximation.simulation.simulate.Trajectory`]
         """
         super(TrajectoryWithSensitivityData, self).__init__(timepoints, values, description)
-        self._sensitivity_data = sensitivity_data
+        self._sensitivity_data = TrajectoryCollection(sensitivity_data)
 
     @classmethod
     def from_trajectory(cls, trajectory, sensitivity_data):
@@ -370,6 +370,9 @@ class TrajectoryCollection(SerialisableObject):
     trajectories = None
 
     def __init__(self, trajectories):
+        # Hack to allow passing instantiated TrajectoryCollection objects as well
+        if isinstance(trajectories, self.__class__):
+            trajectories = trajectories.trajectories
         self._trajectories = trajectories
 
     @property
