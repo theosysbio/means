@@ -50,26 +50,22 @@ We were able to write down four representative user stories, listed below:
 
     \item \emph{As a researcher studying biological systems, I would like to be able to infer the set of parameters of the model given the data, but this idea is still not very popular in my field and I am not sure if it is feasible.}
 
-    \item \emph{As a systems biologist, I have to deal with multiple data formats on case by case basis, and would like to support them all or have a simple format that could be easily writeable, because I am computer-savvy enough to write a conversion script.}
-    \todo{QG: I struggle with this last story.}
+    \item \emph{As a systems biologist, I am used to dealing with multiple data formats, and I am computer-savvy enough to adapt to any format implemented by the software, as long as it is reasonably simple.}
 \end{enumerate}
 
-The pattern emerging from these use cases was that our project software should not be designed to act as a standalone piece of software, \todo{QG: second part of sentence ambiguous}and merely be an intermediate step in some larger data analysis step.
-For instance, the \emph{comparison} process in the first two user stories could not be clarified in more detail, because the techniques employed in that step are chosen in a very \emph{ad-hoc} fashion.
+The pattern emerging from these use cases was that our project software should be designed to be an intermediate step in some larger data analysis process, and should not try to limit the remaining steps of the process.
+For instance, the \emph{comparison} process in the first two user stories could not be clarified in more detail, because the techniques are employed there in a very \emph{ad-hoc} fashion.
 
 Similarly, the fourth user story indicates that the origin of the input data and its format are undefined.
 Therefore the software needed be general enough to support multiple input formats, or have a simple enough format allowing researchers to convert their data to.
-This was not unsurprising, given the exploratory nature of the method,\todo{QG: not clear} of course, yet not less important to achieve.
 
 This observation encouraged us to move away from the traditional command-line application model for this software\todo{cite last year report}.
 In our opinion, flexibility of command-line applications comes at the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend.
 Similarly, command-line applications create an artificial gap between the data processing and data analysis step, \ie{} writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
 
-\todo{"Instead, we ... " We need to bi rigth to the point : we made a python package!!, it is called MEANS! :D}
-We believe that the best way we can achieve both flexibility and minimise the gap between the data processing and analysis with the help of package-like structure and interactive python environments, such as IPython notebook\todo{Cite ipython notebook}.
-We therefore have spent our development efforts on designing an intuitive modular system for the package, and ensuring integration with this environment.
-This structure is further described in \autoref{sec:package}.
-
+In order to satisfy these requirements, we designed \means package with flexibility and interactivity in mind. 
+The flexibility requirement impacted certain decisions made while structuring the package, which are further described in \autoref{sec:package}.
+Interactivity of the package has been ensured by coding specific behaviours for the IPython interactive python environment \todo{Cite ipython notebook}.
 
 \subsection{Package Structure}
 \label{sec:package}
