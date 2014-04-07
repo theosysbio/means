@@ -17,7 +17,6 @@ setup(
               'means.tests',
               'means.util',
               'means.pipes'],
-    scripts=['bin/means'],
     url=None, # TODO: url
     license=None, # TODO: license
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
