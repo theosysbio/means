@@ -27,6 +27,7 @@ The key principles of this methodology have been neatly summarised by Kelly Wate
 While these may sound very vague requirements, they capture the recommendations based on years of trial-and-error on software development in the industry, and generally act as good guidelines to follow for projects with short deadlines.
 
 \subsection{Requirements Gathering}
+\label{sec:requirements-gathering}
 One of the key parts of any project is the requirements gathering process -- no amount of skill or hard work will help if the work is misdirected.
 Naturally, we took great interest in getting these requirements right.
 
@@ -217,7 +218,37 @@ The pipeline support is covered in detail in \autoref{sec:pipelines}.
 
 \subsection{Testing}
 \label{sec:testing}
-\todo{Testing testing testing OY!}
+
+``Test early and often" has now become one of the the catch-phrases associated with \emph{agile} software development (see \autoref{sec:design_considerations}). 
+This catchy sentence gives a twofold advice: integrate testing as early as possible to your development lifecycle, and perform as many tests as possible.
+
+Starting testing early is of particular importance because the cost of discovering problems increases exponentially with effort put into the process.  
+For instance, we were quite happy to allow some extra time fixing an unexpected problem with our code early on in the project, but we would be seriously stressed if some riddle popped up as we are writing this report, due to the deadline approaching. 
+Similarly, it some scenarios such problem might just invalidate all the previous hard work done earlier on.
+
+In other words, early testing allows to specify the requirements
+    \footnote{We use the word \emph{requirements} in a slightly different sense in this section compared to the one in \autoref{sec:requirements-gathering}. 
+    Here the term \emph{requirements} is used from the code perspective and is synonymous to \emph{specification}, \emph{contract}, \emph{interface} of the code, whereas the same term in the previous section refers to the overall requirements of the software, which may be captured by a combination of these code-specific requirements described here.} 
+for the code early on and allow us to ensure they continue to be satisfied as we progress through the development lifecycle. 
+
+
+We were in particularly good position to start testing early, due to the work done by the people working on this project previously. 
+As a starting point, we started by the output from this project as the true behaviour of the system, encode this requirement in the code, and find an automatic way of checking that this is still the case. 
+We call these tests \emph{regression} tests as they are designed to validate that we have not introduced any new faults to the system,
+essentially establishing a baseline performance of it.
+We chose to use all of the examples given in the previous year's group report as a good starting point of our regression tests.
+
+In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\todo{cite Mr. Jenkins}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and ensure to notify us if there are problems with it. 
+This way we can eliminate the human factor and ensure that the tests are really run often and completely and therefore ensure the continuous compliance with the specification.
+
+As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this, better, picture a GC content counting algorithm for some DNA sequence. 
+A regression test (sometimes also called functional test) would run the algorithm on whole DNA sequence and check that the overall output is, say, 60\%. 
+Unit tests would only test a small subset of the system, for instance, it could check that given a particular window of DNA, the overall GC count is correctly computed in that window. Similarly, it could check that given a couple of counts obtained from such windows, they are averaged correctly and so on. 
+
+It is possible to imagine that if combination of these unit tests are all fine, the functional test result should also be fine, so we are not losing any information by replacing these bulky tests with more fine-grained ones. It is also not hard to picture how this fine-graining could help spot problems with code faster, which is the main reason of these transitions.
+
+\todo{Pick out the \% test coverage in jenkins and write about this}
+
 \subsection{Pipelines}
 \label{sec:pipelines}
 \todo{Let's use this section to explain how we generated this report.}
