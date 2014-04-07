@@ -60,7 +60,7 @@ class SSASimulation(SerialisableObject):
 
 
     def simulate_system(self, parameters, initial_conditions, timepoints,
-                        return_moments=True, max_moment_order=1, number_of_processes=1):
+                        max_moment_order=1, number_of_processes=1):
         """
         Perform Gillespie SSA simulations and returns trajectories for of each species.
         Each trajectory is interpolated at the given time points.
@@ -74,8 +74,9 @@ class SSASimulation(SerialisableObject):
         :param timepoints: A list of time points to simulate the system for
 
         :param number_of_processes: the number of parallel process to be run
-        :param return_moments: whether the moments should be calculated between all individual simulations
-        :param max_moment_order: up to which order the moment should be calculated.
+        :param max_moment_order: the highest moment order to calculate the trajectories to.
+                                 if set to zero, the individual trajectories will be returned, instead of
+                                 the averaged moments.
         E.g. a value of one will return means, a values of two, means, variances and covariance and so on.
 
 
@@ -83,7 +84,8 @@ class SSASimulation(SerialisableObject):
             or a list of lists of trajectories (one per simulation) if `return_average == False`.
         :rtype: list[:class:`~means.simulation.Trajectory`]
         """
-        assert(max_moment_order > 0)
+        max_moment_order = int(max_moment_order)
+        assert(max_moment_order >= 0)
 
         n_simulations = self.__n_simulations
         self._validate_parameters(parameters, initial_conditions)
@@ -129,12 +131,12 @@ class SSASimulation(SerialisableObject):
         for i in resampled_results:
             idx = len(i[0].values) - 1
 
-        if not return_moments:
-            return TrajectoryCollection(resampled_results)
+        if max_moment_order == 0:
+            # Return a list of TrajectoryCollection objects
+            return map(TrajectoryCollection, resampled_results)
 
-        return TrajectoryCollection(self._compute_moments(resampled_results, max_moment_order))
-        #mean_trajectories = [sum(trajs)/float(len(trajs)) for trajs in zip(*resampled_results)]
-        #return mean_trajectories
+        moments = self._compute_moments(resampled_results, max_moment_order)
+        return TrajectoryCollection(moments)
 
     def _compute_moments(self, all_trajectories, max_moment_order):
 
