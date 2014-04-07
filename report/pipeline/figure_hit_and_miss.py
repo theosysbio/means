@@ -31,15 +31,29 @@ from collections import namedtuple
 from means.util.logs import get_logger
 logger = get_logger(__name__)
 
-ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', 'timepoints_arange'])
+ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', 'timepoints_arange',
+                                           'marker', 'label'])
 
 INTERESTING_PARAMETER_SETS = [ParameterSet(parameters=[90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01],
-                                           initial_conditions = [70.0, 30.0, 60.0],
-                                           timepoints_arange = [0.0, 40.0, 0.1])]
+                                           initial_conditions=[70.0, 30.0, 60.0],
+                                           timepoints_arange=[0.0, 40.0, 0.1],
+                                           marker='x', label='$c_2=2.5$ and $c_4=1.8$'),
+                              ParameterSet(parameters=[90.0, 0.002, 2.0, 1.1, 1.8, 0.96, 0.01],
+                                           initial_conditions=[70.0, 30.0, 60.0],
+                                           timepoints_arange=[0.0, 40.0, 0.1],
+                                           marker='^', label='$c_2=2.0$ and $c_4=1.8$'),
+                              ParameterSet(parameters=[90.0, 0.002, 1.8, 1.1, 1.4, 0.96, 0.01],
+                                           initial_conditions=[70.0, 30.0, 60.0],
+                                           timepoints_arange=[0.0, 40.0, 0.1],
+                                           marker='o', label='$c_2=1.8$ and $c_4=1.4$'),
+                              ParameterSet(parameters=[90.0, 0.002, 2.4, 1.1, 0.7, 0.96, 0.01],
+                                           initial_conditions=[70.0, 30.0, 60.0],
+                                           timepoints_arange=[0.0, 40.0, 0.1],
+                                           marker='v', label='$c_2=2.3$ and $c_4=0.7$')]
 
 class P53Model(means.Model):
     """
-    A wrapper around means. Model that initialises it with P53 parameters and changes the __unicode__ function to
+    A wrapper around means. Model that initialises it with P53 parameters and changes the __str__ function to
     print a shorter string
     """
     def __init__(self):
@@ -61,6 +75,9 @@ class HitAndMissDataParametersMixin(object):
 
     solver = TrajectoryTask.solver
     solver_kwargs = TrajectoryTask.solver_kwargs
+
+    closure = TrajectoryTask.closure
+    multivariate = TrajectoryTask.multivariate
 
 
 class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
@@ -104,7 +121,9 @@ class FigureHitAndMissData(HitAndMissDataParametersMixin, Task):
                                 parameters=x,
                                 initial_conditions=initial_conditions, timepoints_arange=self.timepoints_arange,
                                 solver=self.solver,
-                                solver_kwargs=self.solver_kwargs)
+                                solver_kwargs=self.solver_kwargs,
+                                closure=self.closure,
+                                multivariate=self.multivariate)
                                 for x in parameters]
 
         ssa_trajectories = [SSATrajectoryTask(model=model,
@@ -204,7 +223,9 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
                                     number_of_ssa_simulations=self.number_of_ssa_simulations,
                                     point_sparsity=self.point_sparsity,
                                     solver=self.solver,
-                                    solver_kwargs=self.solver_kwargs)
+                                    solver_kwargs=self.solver_kwargs,
+                                    closure=self.closure,
+                                    multivariate=self.multivariate)
 
         return data
 
@@ -253,7 +274,7 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
                 params = param_set.parameters
                 x = params[x_param_index]
                 y = params[y_param_index]
-                ax.plot([x], [y], color='k', marker='x', label='Interesting Point')
+                ax.plot([x], [y], color='k', marker=param_set.marker, label=param_set.label)
 
         return fig
 
@@ -266,11 +287,14 @@ class FigureSSAvMEATrajectory(FigureTask):
     initial_conditions = TrajectoryTask.initial_conditions
 
     max_order = TrajectoryTask.max_order
+    closure = TrajectoryTask.closure
+    multivariate = TrajectoryTask.multivariate
 
     solver = TrajectoryTask.solver
     solver_kwargs = TrajectoryTask.solver_kwargs
 
     number_of_ssa_simulations = SSATrajectoryTask.n_simulations
+    title = Parameter(default=None, significant=False)
 
     def requires(self):
 
@@ -278,14 +302,16 @@ class FigureSSAvMEATrajectory(FigureTask):
                                            parameters=self.parameters,
                                            initial_conditions=self.initial_conditions,
                                            timepoints_arange=self.timepoints_arange,
-                                           n_simulations=self.number_of_ssa_simulations)
+                                           n_simulations=self.number_of_ssa_simulations,)
 
         trajectory = TrajectoryTask(model=self.model, max_order=self.max_order,
                                     parameters=self.parameters,
                                     initial_conditions=self.initial_conditions,
                                     timepoints_arange=self.timepoints_arange,
                                     solver=self.solver,
-                                    solver_kwargs=self.solver_kwargs)
+                                    solver_kwargs=self.solver_kwargs,
+                                    closure=self.closure,
+                                    multivariate=self.multivariate)
 
         return [ssa_trajectory, trajectory]
 
@@ -297,23 +323,40 @@ class FigureSSAvMEATrajectory(FigureTask):
         ssa_trajectories = ssa_trajectory_buffer.load()
         ssa_trajectories = [ssa_trajectories[0]] # Let's take only the first trajectory
         trajectories = trajectory_buffer.load()
-
         number_of_ssa_trajectories = len(ssa_trajectories)
 
-        for i, (ssa_trajectory, trajectory) in enumerate(zip(ssa_trajectories, trajectories)):
-            assert(ssa_trajectory.description == trajectory.description)
+        if isinstance(trajectories, TrajectoryCollection):
+            for i, (ssa_trajectory, trajectory) in enumerate(zip(ssa_trajectories, trajectories)):
+                assert(ssa_trajectory.description == trajectory.description)
 
-            plt.subplot(2, number_of_ssa_trajectories, i+1)
-            plt.title(ssa_trajectory.description.mathtext())
+                plt.subplot(1, number_of_ssa_trajectories, i+1)
+                if self.title is not None:
+                    plt.title(self.title)
+                else:
+                    plt.title(ssa_trajectory.description.mathtext())
 
-            ssa_trajectory.plot(label='SSA')
-            trajectory.plot(label='Solver')
-            plt.legend()
+                ssa_trajectory.plot(label='SSA')
+                trajectory.plot(label='Solver')
+                plt.legend()
 
-            plt.subplot(2, number_of_ssa_trajectories, i+1+number_of_ssa_trajectories)
-            plt.title(ssa_trajectory.description.mathtext() + ' - difference')
-            (ssa_trajectory - trajectory).plot(label='difference')
+                # plt.subplot(2, number_of_ssa_trajectories, i+1+number_of_ssa_trajectories)
+                # plt.title(ssa_trajectory.description.mathtext() + ' - difference')
+                # (ssa_trajectory - trajectory).plot(label='difference')
+        elif isinstance(trajectories, SolverException):
+            for i, ssa_trajectory in enumerate(ssa_trajectories):
 
+                plt.subplot(1, number_of_ssa_trajectories, i+1)
+
+                if self.title is not None:
+                    plt.title(self.title)
+                else:
+                    plt.title(ssa_trajectory.description.mathtext())
+
+                ssa_trajectory.plot(label='SSA')
+                plt.plot([], [], label='Solver (failed)')
+                plt.legend()
+        else:
+            raise Exception("Got unexpected kind of trajectories output: {0!r}".format(trajectories))
 
         return figure
 
@@ -337,16 +380,32 @@ class FigureHitAndMissTex(TexFigureTask):
 
     solver = FigureHitAndMissData.solver
     solver_kwargs = FigureHitAndMissData.solver_kwargs
+    closure = FigureHitAndMiss.closure
+    no_multivariate = BooleanParameter(default=False)
 
     def requires(self):
         hit_and_misses = [FigureHitAndMiss(max_order=max_order, timepoints_arange=self.timepoints_arange,
                                            number_of_ssa_simulations=self.number_of_ssa_simulations,
                                            point_sparsity=self.point_sparsity,
                                            solver=self.solver,
-                                           solver_kwargs=self.solver_kwargs)
-                for max_order in self.max_orders]
+                                           solver_kwargs=self.solver_kwargs,
+                                           closure=self.closure,
+                                           multivariate=not self.no_multivariate)
+                          for max_order in self.max_orders]
 
-        return hit_and_misses
+        interesting_cases = [FigureHitAndMissInterestingCases(
+                                                              solver=self.solver,
+                                                              solver_kwargs=self.solver_kwargs,
+                                                              number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                                              max_order=max_order,
+                                                              closure=self.closure,
+                                                              multivariate=not self.no_multivariate
+                                                              )
+                              for max_order in self.max_orders]
+
+
+
+        return hit_and_misses + interesting_cases
 
 class FigureHitAndMissInterestingCases(TexFigureTask):
 
@@ -359,6 +418,9 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
     label = 'hit-and-miss-interesting-cases'
     caption = ''
 
+    closure = FigureHitAndMiss.closure
+    multivariate = FigureHitAndMiss.multivariate
+
     def requires(self):
 
         model = P53Model()
@@ -369,14 +431,19 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
             initial_conditions = parameter_set.initial_conditions
             timepoints_arange = parameter_set.timepoints_arange
 
-            requirements.append([FigureSSAvMEATrajectory(timepoints_arange=timepoints_arange,
+            requirements.append(FigureSSAvMEATrajectory(timepoints_arange=timepoints_arange,
                                             parameters=parameters,
                                             initial_conditions=initial_conditions,
                                             max_order=self.max_order,
                                             solver=self.solver,
                                             model=model,
                                             solver_kwargs=self.solver_kwargs,
-                                            number_of_ssa_simulations=self.number_of_ssa_simulations)])
+                                            number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                            title=parameter_set.label,
+                                            closure=self.closure,
+                                            multivariate=self.multivariate))
+
+        return requirements
 
 
 
