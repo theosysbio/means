@@ -172,22 +172,25 @@ In order to study the performance of the parameter inference procedure using \ac
 
 In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments. This approximation is bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}\sisitodo{figure is needed}.
 
-We have decided started parameter inference procedure at the correct parameter values, expecting to see an immediate result and no movement in the parameter space. To much of our surprise, however, when the inference is allowed to navigate the complete parameter space, not only did the procedure the procedure did move around, but it was able to find a set of parameters, that when expressed in terms of first order moments, are able to match the observed trajectories completely.
+We have started parameter inference procedure at the correct parameter values, expecting to see an immediate result and no movement in the parameter space. To much of our surprise, however, when the inference is allowed to navigate the complete parameter space, not only did the procedure move around, but it was able to find a set of parameters, that when expressed in terms of first order moments, are able to match the observed trajectories completely.
 
 The set of parameters obtained by the inference were very different from the actual SSA simulations, but the approximated trajectories were identical. This strongly questions the suitability of parameter inference procedures in obtaining the correct parameter sets.
 
 \sisitodo[inline]{Need figure here showing that they are really close}
 \sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
 
-In order to gain some insight into what is happening, we first attempted to restrict ourselves to easier to comprehend two-dimensional space.
+In order to gain some insight into the reason of unexpected inference performance, we first attempted to restrict ourselves to easier to comprehend two-dimensional space.
 To do this, we restricted our parameter inference procedure to only move through pair of parameters only, while all other parameters are fixed (to their true values). 
 We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
 
-Interestingly, we were able to observe the same behaviour for the parameter pairs ....
-\sisitodo[inline]{list the parameter pairs that work, add figure for $c_2$, $c_6$.}
-We have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
+Interestingly, we were able to observe the same behaviour for the parameter pairs $c_0$ and $c_6$, $c_1$ and $c_2$, and finally $c_2$ and $c_6$.
+\begin{figure}
+\includegraphics[width=0.95\textwidth]{../pipeline}
+\caption{\emph{Parameter pair $c_2$ and $c_6$ can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.}}
+\label{fig:}
+\end{figure}
 
-\sisitodo[inline]{look up autoref function, and refer to correct figure, it is not Figure 5 any more, as it was before}
+We have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
  
 \sisitodo[inline]{See the commented text below this todo -- instead of it please talk a bit more about how the landscape looks for the max\_order = 1. Then go on and talk about higher-order moments, explicitly mentioning that you were able to find close-enough trajectories for all of them, however, neither of them were accurate parameter wise}
 %If the inference method was correct, the starting point in the distance landscape would already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
