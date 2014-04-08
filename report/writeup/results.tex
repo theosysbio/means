@@ -18,21 +18,25 @@ In addition, ...\\
 \sauliustodo{Write short intro about why it is important to make solver fast}
 
 
-\subsubsection{Symbolic expressions}
+\subsubsection{Optimising \acrlong{mea}}
 
 
 \gls{mea} involves derivation of a system \gls{ode}s from a model.
 This procedure\cite{ale_general_2013}, involves lengthy symbolic calculations.
 Even for very simple models (\eg{} three species, five reactions), they cannot be realised manually.
-The number $n$ of modelled moments (\ie{} the number of generated \gls{ode}s), for a system with $s$ species and up to moments of order $o$ is defined by: \quentintodo{Does not make sense for 3 species, and 2nd-order moments (3+2-2 choose 3) - 1 = 0}
+The number $n$ of modelled moments (\ie{} the number of generated \gls{ode}s), for a system with $s$ species and up to moments of order $o$ is defined by: \quentintodo[inline]{Does not make sense for 3 species, and 2nd-order moments (3+2-2 choose 3) - 1 = 0}
 \begin{equation}
 n={{s+o-2} \choose {s}} -1
 \end{equation}
 As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. \todo{Add an example numbers illustrating this}
 
-In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; an efficient \py{} library.
-After implementation of the different features (\todo{see section closure/...})
-, we have endeavoured to optimise the processing speed.
+In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
+the symbolic computation routines.
+
+Once the implementation of additional features was done (see \todo{autoref to closure}), we have
+endeavoured to see if we could optimise the runtime of the algorithm.
+After all, \gls{mea} is designed to be an efficient alternative for stochastic simulations. 
+
 In a first place, we identified significant bottlenecks using \py{} profiling tools.
 Then, we designed specific ways to improve speed incrementally without changing the resulting \gls{ode}s.
 
