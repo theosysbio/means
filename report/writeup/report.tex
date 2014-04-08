@@ -38,12 +38,15 @@
 \newcommand{\eg}{\emph{e.g.}}
 \newcommand{\ie}{\emph{i.e.}}
 
+\newcommand{\sauliustodo}[1]{\todo[color=cyan]{\textbf{SL:} #1}}
+\newcommand{\sisitodo}[1]{\todo[color=yellow]{\textbf{SF:} #1}}
+\newcommand{\quentintodo}[1]{\todo[color=red]{\textbf{QG:} #1}}
+\newcommand{\citationneeded}[1]{\todo[color=brown]{\textbf{Citation Needed:} #1}}
+
 \begin{document}
 \title{MEANS: a new python package for Moment Expansion Approximation, Inference and Simulation}
 \author{Sisi Fan, Quentin Geissmann, Saulius Lukauskas}
 \date{\today}
-
-
 
 \clearpage\maketitle
 \thispagestyle{empty}
@@ -51,11 +54,10 @@
 
 \pagenumbering{roman}
 \begin{abstract}
-TODO An abstract here...
+\todo{An abstract here...}
 \end{abstract}
 
-TODO, make a bib entry for Lakatos, unpublished/in prep.
-
+\citationneeded{make a bib entry for Lakatos, unpublished/in prep.}
 
 \tableofcontents
 
