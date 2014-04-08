@@ -32,7 +32,7 @@ As a consequence, the complexity of the calculation is predicted to increase exp
 
 In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; an efficient \py{} library.
 After implementation of the different features (\todo{see section closure/...})
-, we have endavoured to optimise the processing speed.
+, we have endeavoured to optimise the processing speed.
 In a first place, we identified significant bottlenecks using \py{} profiling tools.
 Then, we designed specific ways to improve speed incrementally without changing the resulting \gls{ode}s.
 
@@ -43,16 +43,16 @@ Figure~\ref{fig:mea_speed} shows the cumulative effects of different optimisatio
 
 \includegraphics[width=1.0\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
 \caption{\emph{Cumulative performance improvement of symbolic calculations resulting from optimisation}.
-The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were meseared for original matlab implementation (a) and different optimisations (b$-$f).
+The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
 In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
 Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed (see main text).
-Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memoization) \texttt{sympy.diff()} allowed even better performance.
+Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
 The time complexity appears exponential ($2^{O(n)}$, where $n$ is the maximal moments order) in every case, 
 Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
 No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
-Nine replicates were performed on the same CPU. For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuraty in measuring very short durations}
+Nine replicates were performed on the same CPU. For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations}
 \label{fig:mea_speed}
 \end{figure}
 
@@ -87,9 +87,9 @@ Generally, these type of differentiations can be simplified several differentiat
 \end{equation}
 One advantage, is that, when needing to calculate two derivatives such as:  $\frac{\partial{} ^ 2 f(x,y)}{\partial{} x \partial{} y}$ and $\frac{\partial{} ^ 2 f(x,y)}{\partial{} x^2}$, 
 one can precompute $\frac{\partial{} f(x,y)}{\partial{} x}$ and use it for both calculation.
-In our implementation, we have use a procedure known as \emph{memoization} which, briefly, permits to store the results of a function call in an associative array.
+In our implementation, we have use a procedure known as \emph{memorisation} which, briefly, permits to store the results of a function call in an associative array.
 Then, the next time this function is called with the same arguments, it will return the stored results instead of recomputing it.
-This also resulted in an overall perfomance improvement (fig.~\ref{fig:mea_speed}, f).
+This also resulted in an overall performance improvement (fig.~\ref{fig:mea_speed}, f).
 
 Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
 For instance, with the same \pft{} system and closure method, 
@@ -100,7 +100,7 @@ This improvement will hopefully contribute to make \gls{mea} realistically usabl
 \subsection{Moment Expansion Closure}
 
 In \gls{mea} the temporal derivative of each central moment of order $n$ is expressed in terms of moment of order $n+1$.
-For this reason, it is necessary to ``close'' the expenstion by providing a closed form for the higher order moments.
+For this reason, it is necessary to ``close'' the expansion by providing a closed form for the higher order moments.
 In the original work \cite{ale_general_2013}, higher order central moments are assumed null. 
 This is a strong and not necessarily valid assumption. 
 
@@ -108,7 +108,7 @@ Parametric probability distribution can be used to express moment of arbitrary o
 For instance, a multivariate normal distribution is parametrised only by means (\emph{i.e } first order raw moment)
 and a covariance matrix (\emph{i.e.} second order central moments). 
 As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
-A promissing area of research involves closing moment expression by parametric forms of highest order central moments instead
+A promising area of research involves closing moment expression by parametric forms of highest order central moments instead
 of assuming them to be null.
 Preliminary work \todo{cite Eszter, unpublished} suggests that using a parametric distributions for \gls{mea}
 In addition, Ale \emph{et al.} predicted that higher maximal moment order would necessarily result in better approximation \cite{ale_general_2013}.
@@ -122,7 +122,7 @@ However, for 7$~{th}$ order, the scalar closure had an increased distance, and s
 Note that for even maximal moment orders, normal and scalar are rigorously equal.
 This is expected since normal distribution is symmetrical (\emph{i.e.} odd central moments are always zero).
 
-In contrast, log$-$nomal closures are fitting to the ground through trajectory well for maximal moment order of three,
+In contrast, log$-$normal closures are fitting to the ground through trajectory well for maximal moment order of three,
 but the approximation gets less and less accurate for higher maximal order moments.
 A deeper look at the trajectories indicate that, in this latter case,
 oscillations are damping too quickly (fig.~\ref{fig:max_order_and_closure_on_distance}b).
@@ -140,32 +140,48 @@ This results indicates that the quality of the approximation depends both on the
 \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf}
 %~
 \caption{\emph{Effect of different closure methods and maximal moment order on simulation accuracy}.
-The \pft system was modeled using \gls{mea} with five types of closure and for maximal moment order up to seven.
+The \pft system was modelled using \gls{mea} with five types of closure and for maximal moment order up to seven.
 Resulting trajectories were all compared to an average of 5000 \gls{gssa} simulations using sum of square distance (a).
 Distance is in log scale.
-For illustration puroses, complete trajectories of a single species (\pft) for max order three and seven are shown (b).
-Black lines inducate the average of \gls{gssa} simulations. Missing points (b) and lines (a) indicate solver failure
+For illustration purposes, complete trajectories of a single species (\pft) for max order three and seven are shown (b).
+Black lines indicate the average of \gls{gssa} simulations. Missing points (b) and lines (a) indicate solver failure
 TODO(see failure section.)}
 
 \label{fig:max_order_and_closure_on_distance}
 \end{figure}
 
 \subsection{Inference}
-Inference uses a distance method to infer parameter values by exploring the parameter space and compare the trajectory resulting from inference and the trajectory obtained from experimental data. 
+Inference uses a distance method to infer parameter values by exploring the parameter space and comparing the distance between inferred system behaviour with experimental data. 
 
-In order to study the performance of the inference method in \means package, we used "sum of squares" distance method and p53 model. Due to the lack of experimental concentrations of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. With full variability for all parameters in the p53 model, and starting values equal to the values from \todo{Ref}, it is expected that the resulting parameter values would be the same as the starting values. To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters and the trajectory of how concentration for each species changed through time. Unexpectedly, trajectories simulated with the true parameter values are identified as distant from the \gls{gssa} trajectories, which forced the system to follow the distant gradient and infer incorrect parameter values. This result can be explained by inference method trapped at local minima, or the inference method cannot infer the right parameter set. 
+In order to study the performance of the inference method in \means package, we used "sum of squares" distance method and p53 model. 
+Due to the lack of experimental concentrations of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. 
+With full variability for all parameters in the p53 model, and starting values equal to the values from \cite{gillespie_general_1976}, it is expected that the inference method would return the same values as the starting values. 
+To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters. 
+Unexpectedly, trajectories simulated with the true parameter values are identified as distant from the \gls{gssa} trajectories, which forced the system to follow the distant gradient and infer incorrect parameter values. This result implies inference method is trapped at local minima, and it cannot infer the right parameter set. 
 
-To test if the unexpected inference method can find the minima, we recorded the inferred parameter values using pairs of parameters at a time, and used these values as the starting values to re-generated the distance landscape (see Figure \todo{figure number}). Here, we explicitly allow $c_2$ and $c_6$ values to vary, but keep other parameter values the true values, because $c_2$ and $c_6$ with variability in their values are able to produce an almost perfect match with the \gls{gssa} trajectories of all species (data not shown). 
+To confirm if the inference method can find the global minima, we recorded the inferred parameter values using one pair of parameters at a time for all possible pairs of parameters, and used these values as the starting values to re-generated the distance landscape (see Figure 5 \todo{check if it's the right number}). 
+Here, we explicitly allow $c_2$ and $c_6$ values to vary, but keep other parameter values the true values, because $c_2$ and $c_6$ with variability in their values are able to produce an almost perfect match with the \gls{gssa} trajectories of all species (data not shown). 
+If the inference method is correct, the starting point in the distance landscape should already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
+However, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for three species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
 
-Using the end point of the local minima as the starting point for $c_2$ and $c_6$, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point in this case is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for three species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
+Based on these results, we can conclude that the inference method here is inaccurate.
 
-Based on these results, we can conclude that the inference method here is inaccurate, further investigation into the system minima  is necessary to develop an effective inference method. 
-
-\todo{choose a set of distance landscape and trajectory figures}
 \begin{figure}
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.7_1.1_0.93_0.96_0.01-ode15s--90.0_0.002_1.7_1.1_0.93_0.96_0.01-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
 
-\caption{\emph{Title}}
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
+
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
+
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
+
+\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
+\caption{\emph{Distance landscape and trajectories for each species using different maximal orders.} Only the values for $c_2$ and $c_6$ are allowed to change in the inference, and their starting values are inferred from inference using the true values.}
 \label{fig:parameter_space_for_c2_c6}
 \end{figure}
 
