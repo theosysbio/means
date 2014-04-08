@@ -152,36 +152,56 @@ TODO(see failure section.)}
 \subsection{Inference}
 Inference uses a distance method to infer parameter values by exploring the parameter space and comparing the distance between inferred system behaviour with experimental data. 
 
-In order to study the performance of the inference method in \means package, we used "sum of squares" distance method and p53 model. 
+In order to study the performance of the inference method in \means, we used "sum of squares" distance method and p53 model. 
 Due to the lack of experimental concentrations of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. 
-With full variability for all parameters in the p53 model, and starting values equal to the values from \cite{gillespie_general_1976}, it is expected that the inference method would return the same values as the starting values. 
-To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters. 
-Unexpectedly, trajectories simulated with the true parameter values are identified as distant from the \gls{gssa} trajectories, which forced the system to follow the distant gradient and infer incorrect parameter values. This result implies inference method is trapped at local minima, and it cannot infer the right parameter set. 
+With full variability for all the parameters in the p53 model, and starting values equal to the values from \cite{gillespie_general_1976}, it is expected that the inference method would return the same values as the starting values. 
+To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters. \sisitodo{find the 7 dimensional figure} 
+Unexpectedly, trajectories simulated with the true parameter values are distant from the \gls{gssa} trajectories, forcing the system to follow the distant gradient and infer incorrect parameter values. This result implies inference method is may not infer the right parameter set. 
 
-To confirm if the inference method can find the global minima, we recorded the inferred parameter values using one pair of parameters at a time for all possible pairs of parameters, and used these values as the starting values to re-generated the distance landscape (see Figure 5 \todo{check if it's the right number}). 
+To confirm if the inference method can find the global minima, we recorded the inferred parameter values using one pair of parameters at a time for all possible pairs of parameters, and used these values as the starting values to re-generated the distance landscape (see Figure 5 \sisitodo{check if it's the right number}). 
 Here, we explicitly allow $c_2$ and $c_6$ values to vary, but keep other parameter values the true values, because $c_2$ and $c_6$ with variability in their values are able to produce an almost perfect match with the \gls{gssa} trajectories of all species (data not shown). 
-If the inference method is correct, the starting point in the distance landscape should already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
-However, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for three species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
+If the inference method was correct, the starting point in the distance landscape would already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
+However, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for all the species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
 
 Based on these results, we can conclude that the inference method here is inaccurate.
-
 \begin{figure}
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
+\centering
+    \begin{subfigure}
+    \includegraphics[width=0.2\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
+    \includegraphics[width=0.2\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
 
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \includegraphics[width=0.2\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
+    \includegraphics[width=0.2\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
+    \includegraphics[width=0.2\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
 
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
-
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
-
-\includegraphics[width=0.25\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-\includegraphics[width=0.72\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
-\caption{\emph{Distance landscape and trajectories for each species using different maximal orders.} Only the values for $c_2$ and $c_6$ are allowed to change in the inference, and their starting values are inferred from inference using the true values.}
-\label{fig:parameter_space_for_c2_c6}
+\caption{\emph{Distance landscape and trajectories for each species using different maximal orders.} Among seven parameters, only the values for $c_2$ and $c_6$ are inferred, with starting values inferred from inference using the true values. In the distance landscape on the left, the warmer the colour, the further the inferred trajectories are from the \gls{gssa} trajectories. The \gls{gssa} trajectories are generated using the new parameter values labelled as \emph{start}. In the trajectories for each species, the starting trajectories are simulated using the starting values of $c_2$ and $c_6$, the optimal trajectories are generated based on the end point in distance landscape, and the \gls{gssa} trajectories are also generated based on the end point in the distance landscape.} 
+\label{fig:parameter_inference_c2_c6}
 \end{figure}
 
-
+\begin{figure}
+\centering
+    \begin{subfigure}
+    \includegraphics[width=0.6\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
+    \includegraphics[width=0.6\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+    \begin{subfigure}    
+    \includegraphics[width=0.6\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+    \begin{subfigure}   
+    \includegraphics[width=0.6\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+    \begin{subfigure}
+    \includegraphics[width=0.6\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+\end{figure}
