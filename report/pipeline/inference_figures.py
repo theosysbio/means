@@ -71,8 +71,10 @@ class MultiDimensionInferenceFigure(FigureTask):
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
     starting_parameters = ListParameter(item_type=float)
     starting_initial_conditions = ListParameter(item_type=float)
+    variable_parameters = ListOfKeyValuePairsParameter()
     distance_function_type = luigi.Parameter(default='sum_of_squares')
     n_simulations = IntParameter()
+<<<<<<< HEAD
     variable_parameters = ListOfKeyValuePairsParameter()
 
     xlim = Parameter(significant=False, default=None)
@@ -80,6 +82,10 @@ class MultiDimensionInferenceFigure(FigureTask):
     vmax = Parameter(significant=False, default=None)
     vmin = Parameter(significant=False, default=None)
 
+=======
+
+
+>>>>>>> parent of bf62b7f... find pairs of parameters that generate overlapping optimal and observed trajectories
     def requires(self):
         return InferenceTOSSATask(model=self.model, max_order=self.max_order,closure=self.closure,
                                   multivariate=self.multivariate,
@@ -100,8 +106,11 @@ class MultiDimensionInferenceFigure(FigureTask):
         from matplotlib.colors import LogNorm
 
         inference_result = self.input().load()
+<<<<<<< HEAD
         variable_parameters = self.variable_parameters
 
+=======
+>>>>>>> parent of bf62b7f... find pairs of parameters that generate overlapping optimal and observed trajectories
         min_dist = min([x[2] for x in inference_result.distance_landscape])
         max_dist = max([x[2] for x in inference_result.distance_landscape])
 
@@ -111,6 +120,7 @@ class MultiDimensionInferenceFigure(FigureTask):
         fig = plt.figure(figsize=(5,5), dpi=328)
         fig.subplots_adjust(wspace=0, hspace=0)
 
+<<<<<<< HEAD
         parameters = [i for i,j in variable_parameters]
         dimension = len(parameters)
 
@@ -162,6 +172,27 @@ class MultiDimensionInferenceFigure(FigureTask):
                                                         end_marker='arrow', start_label=start_label,
                                                         end_label=end_label)
             xlim = ax.get_xlim()
+=======
+        dimension = len(inference_result.problem.parameters)
+        for i,parameter_y in enumerate(inference_result.problem.parameters):
+            for j, parameter_x in enumerate(inference_result.problem.parameters):
+
+                ax = plt.subplot(dimension,dimension, i*dimension + j + 1)
+                if i != j:
+                    inference_result.plot_distance_landscape_projection(parameter_x, parameter_y,
+                                                                        norm=LogNorm(), vmin=min_dist, vmax=max_dist)
+
+                inference_result.plot_trajectory_projection(parameter_x,parameter_y,legend=False, ax=ax,
+                                                            start_and_end_locations_only=i==j,
+                                                            color='red',
+                                                            start_marker='ro',
+                                                            end_marker='rx')
+                if j != 0:
+                    ax.yaxis.set_visible(False)
+
+                if i != dimension - 1:
+                    ax.xaxis.set_visible(False)
+>>>>>>> parent of bf62b7f... find pairs of parameters that generate overlapping optimal and observed trajectories
 
             padding_x = (xlim[1] - xlim[0]) / 10.0
             xlim = (xlim[0]-padding_x, xlim[1]+padding_x)
@@ -182,6 +213,7 @@ class MultiDimensionInferenceFigure(FigureTask):
 
             ax.set_title('Max order = {0}'.format(self.max_order))
 
+<<<<<<< HEAD
         return fig
 
 
@@ -189,6 +221,10 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
 
     model = P53Model()
     #parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+=======
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.9, # todo: change to 0.93, thanx
+                    0.96, 0.01]
+>>>>>>> parent of bf62b7f... find pairs of parameters that generate overlapping optimal and observed trajectories
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
     starting_initial_conditions = [70.0, 30.0, 60.0]
@@ -252,7 +288,15 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
 
 
+<<<<<<< HEAD
 
+=======
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.9, # todo: change to 0.93, thanx
+                    0.96, 0.01]
+    starting_initial_conditions = [70.0, 30.0, 60.0]
+
+    variable_parameters = zip(P53Model().parameters, [None] * len(P53Model().parameters))
+>>>>>>> parent of bf62b7f... find pairs of parameters that generate overlapping optimal and observed trajectories
 
 
 
@@ -264,14 +308,16 @@ class FindTwoParametersForInference(Task):
     closure = MEATask.closure
     multivariate = MEATask.multivariate
 
-    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
+                    0.96, 0.01]
     initial_conditions = [70.0, 30.0, 60.0]
     timepoints_arange = [0.0, 40.0, 0.1]
 
     solver = luigi.Parameter(default='ode15s')
     solver_kwargs = ListOfKeyValuePairsParameter(default=[])
 
-    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93,0.96, 0.01]
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, # todo: change to 0.93, thanx
+                    0.96, 0.01]
     starting_initial_conditions = [70.0, 30.0, 60.0]
 
     distance_function_type = luigi.Parameter(default='sum_of_squares')
@@ -353,6 +399,7 @@ class FigureInferenceStartEndSSA(FigureTask):
             ax.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=16,
                 xytext=(-5, 5), textcoords='offset points',
                 ha='right', va='bottom')
+            plt.subplot(1,n_columns, subplot_number)
             plt.title(observed_trajectory.description.mathtext())
             observed_trajectory.plot(marker='x',color='k', label='SSA', linestyle='None')
             optimal.plot(color='b', label='Optimal')
@@ -360,6 +407,7 @@ class FigureInferenceStartEndSSA(FigureTask):
 
         plt.legend()
         plt.suptitle(self.label)
+
         return fig
 
 
