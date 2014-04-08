@@ -4,19 +4,18 @@
 
 \subsection{Performance}\label{performance}
 \sauliustodo{I think this should be moved somewhere earlier in the report as it justifies the pretext of our work}
-The temporal dynamic of a molecular system can be described by the \gls{cme} \citationneeded{CME reference}.
-\gls{gssa}\cite{gillespie_general_1976} produces individual realisations of the \gls{cme}.
-In order to obtain accurate estimates of the average dynamic within a population of cell, it is however necessary to perform multiple (often more than $10^4$) simulations.
-Despite recent effort \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive.
-This is critical when performing, for instance, parameter inference.
-This limitation led to the development of approximations such as \gls{lna}\cite{komorowski_bayesian_2009} and \gls{mea}\cite{ale_general_2013} which can perform in a more reasonable time.
+The temporal dynamics of a molecular system can be described by the \acrfull{cme}\citationneeded{CME reference}.
+\acrfull{gssa}\cite{gillespie_general_1976} simulates these stochastic dynamics directly returning a set of individual trajectories for a list of particles observed.
+In order to obtain accurate estimates of the average dynamic within a population of cell (\ie{} the mean dynamics), it is however necessary to perform multiple (often more than $10^4$) simulations.
+Despite recent efforts \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive. \quentintodo{Do you know the Big-Oh complexity?} This time-complexity is a limiting factor in downstream analysis techniques,
+for instance parameter inference that often requires repetition of these experiments for a large set of parameter values.
 
-Since the only advantage of \gls{mea} over \gls{gssa} is computational speed, it was paramount to provide an efficient an implementation of \gls{mea}.
-In this section, we show that symbolic computations can be limiting for \gls{mea}.
-Then, we explain how we have optimised them, and finally increase performance by several order of magnitudes over to the original \mat{} implementation.
-In addition, ...\\
-\sauliustodo{Write short intro about why it is important to make solver fast}
+This particular limitation led to the development of approximations such as \acrfull{lna}\cite{komorowski_bayesian_2009} and \acrfull{mea}\cite{ale_general_2013} which model the mean behaviour directly, without evaluating the individual particle behaviours, and therefore can perform in a more realistic time.
 
+Since the main driving force for development of these approximation algorithms is the potential reduction of the time taken to perform the  analysis, it is paramount to make the implementation as efficient as possible.
+
+In this section, we explore the implementation factors that influence the runtime of the algorithm, and describe the optimisations done to increase the performance of it. In particular, we show that symbolic computations can be limiting the algorithm and explain the techniques used to optimised them. We also quantify the increase of performance  and show that it is several order of magnitudes better than the original \mat{} implementation.
+In addition, we explore other limiting factors we have less control of, such as the choice of \gls{ode} solver, and discuss their potential implications to the analysis of biological systems.
 
 \subsubsection{Optimising \acrlong{mea}}
 
@@ -24,26 +23,22 @@ In addition, ...\\
 \gls{mea} involves derivation of a system \gls{ode}s from a model.
 This procedure\cite{ale_general_2013}, involves lengthy symbolic calculations.
 Even for very simple models (\eg{} three species, five reactions), they cannot be realised manually.
-The number $n$ of modelled moments (\ie{} the number of generated \gls{ode}s), for a system with $s$ species and up to moments of order $o$ is defined by: \quentintodo[inline]{Does not make sense for 3 species, and 2nd-order moments (3+2-2 choose 3) - 1 = 0}
-\begin{equation}
-n={{s+o-2} \choose {s}} -1
-\end{equation}
-As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. \todo{Add an example numbers illustrating this}
+The number equations in the generated \gls{ode} system, for a model with $s$ species and up to moments of order $o$ can be estimated by the following equation: 
+\quentintodo[inline]{Does not make sense for 3 species, and 2nd-order moments (3+2-2 choose 3) - 1 = 0}
+\begin{displaymath}
+    \text{Number of equations} = {{s + o - 2} \choose {s}} - 1
+\end{displaymath}
+As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. \quentintodo[inline]{Add an example numbers illustrating this: "For instance, for a 2-species system ...."}
 
-In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
-the symbolic computation routines.
+%In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
+%the symbolic computation routines.
 
-Once the implementation of additional features was done (see \todo{autoref to closure}), we have
-endeavoured to see if we could optimise the runtime of the algorithm.
-After all, \gls{mea} is designed to be an efficient alternative for stochastic simulations. 
+In order to increase the scalability of the method, we have identified significant bottlenecks in our procedures using \py{} profiling tools. We have then attempted to iteratively remove these bottlenecks one by one. Figure~\ref{fig:mea_speed} shows the cumulative effects of different optimisations.
 
-In a first place, we identified significant bottlenecks using \py{} profiling tools.
-Then, we designed specific ways to improve speed incrementally without changing the resulting \gls{ode}s.
-
-Figure~\ref{fig:mea_speed} shows the cumulative effects of different optimisations.
+\quentintodo[inline]{Explain why no original python performance line, reduce the detail in caption, make it more evident it is log-normal}
 
 
-\begin{figure}
+\begin{figure}[tbh]
 
 \includegraphics[width=1.0\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
 \caption{\emph{Cumulative performance improvement of symbolic calculations resulting from optimisation}.
@@ -52,7 +47,7 @@ In a first place, the calls to \texttt{sympy.simplify()} where removed (b).
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
 Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed (see main text).
 Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-The time complexity appears exponential ($2^{O(n)}$, where $n$ is the maximal moments order) in every case, 
+The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
 Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
 No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
@@ -60,6 +55,7 @@ Nine replicates were performed on the same CPU. For optimisation c$-$f, values c
 \label{fig:mea_speed}
 \end{figure}
 
+\quentintodo[inline]{Simplify this, move out the specific details to your individual report, it is enough to give just the overview here.}
 
 The first step involved removing the expression simplification heuristic.
 In the original code\footnote{both from the publication and last year's MSc project}, the right-hand-side equations were simplified in order to produce shorter text file results.
@@ -95,11 +91,10 @@ In our implementation, we have use a procedure known as \emph{memorisation} whic
 Then, the next time this function is called with the same arguments, it will return the stored results instead of recomputing it.
 This also resulted in an overall performance improvement (fig.~\ref{fig:mea_speed}, f).
 
-Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
+In conclusion, reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
 For instance, with the same \pft{} system and closure method, 
-we predict that computation up to \gls{ode}s up $8^{th}$ order will take 44 minutes with \means{} and as much as 128 days with the original implementation.
-This improvement will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions
-
+we predict that computation up to \gls{ode}s up $8^{th}$ order will take 44 minutes with \means{} and as much as 128 days with the original implementation.\quentintodo{Add a number saying how long it would have taken for the first iteration of optimisation as well.}
+These improvement have allowed us to explore the performance of MEA in higher depth, and will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions.
 
 \subsection{Moment Expansion Closure}
 
