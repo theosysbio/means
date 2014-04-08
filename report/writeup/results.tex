@@ -165,21 +165,37 @@ This is not true for all of the systems. For instance, we have observed that in 
 
 The results in this section show that, while it might be convenient to believe that using higher order moments would provide better approximations, the results indicate that this is not necessarily the case as there seems to be the \emph{sweet spot} parameter set that gives the best results. Unfortunately, this makes it difficult to \emph{a priori} define which closure and maximal moment order should be used for a given system. The section \sauliustodo{link to the section} explores this phenomenon on wider scale of parameters.
 
-\subsection{Inference}
-Inference uses a distance method to infer parameter values by exploring the parameter space and comparing the distance between inferred system behaviour with experimental data. 
+\subsection{Parameter Inference using \acrlong{mea}}
+Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data. 
 
-In order to study the performance of the inference method in \means, we used "sum of squares" distance method and p53 model. 
-Due to the lack of experimental concentrations of the species, the averaged concentration change through time from $5000$ \gls{gssa} are used as the observed trajectories. 
-With full variability for all the parameters in the p53 model, and starting values equal to the values from \cite{gillespie_general_1976}, it is expected that the inference method would return the same values as the starting values. 
-To visualise how the system explored the multi-dimensional parameter space, we studied the cross-section for all possible pairs of parameters. \sisitodo{find the 7 dimensional figure} 
-Unexpectedly, trajectories simulated with the true parameter values are distant from the \gls{gssa} trajectories, forcing the system to follow the distant gradient and infer incorrect parameter values. This result implies inference method is may not infer the right parameter set. 
+In order to study the performance of the parameter inference procedure using \acrlong{mea}, we took the average trajectory obtained from the  $5000$ \gls{gssa} simulations of the \pft{} with a certain parameter set and used it as the observed dataset we want to infer the parameters from. Essentially, the inference procedure is expected to return the said parameter set back to us.
 
-To confirm if the inference method can find the global minima, we recorded the inferred parameter values using one pair of parameters at a time for all possible pairs of parameters, and used these values as the starting values to re-generated the distance landscape (see Figure 5 \sisitodo{check if it's the right number}). 
-Here, we explicitly allow $c_2$ and $c_6$ values to vary, but keep other parameter values the true values, because $c_2$ and $c_6$ with variability in their values are able to produce an almost perfect match with the \gls{gssa} trajectories of all species (data not shown). 
-If the inference method was correct, the starting point in the distance landscape would already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
-However, the resulting distance landscape figures and trajectories for each species clearly indicate that the starting point is not the global minima, because: Firstly, the trajectories in the distance landscape shows the starting point can be distant from the minima; Secondly, the possible range for $c_6$, despite the maximal order for \gls{mea}, is mostly more than 10 times larger than the true value; Thirdly, the trajectories for all the species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
+In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments. This approximation is bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}\sisitodo{figure is needed}.
 
-Based on these results, we can conclude that the inference method here is inaccurate.
+We have decided started parameter inference procedure at the correct parameter values, expecting to see an immediate result and no movement in the parameter space. To much of our surprise, however, when the inference is allowed to navigate the complete parameter space, not only did the procedure the procedure did move around, but it was able to find a set of parameters, that when expressed in terms of first order moments, are able to match the observed trajectories completely.
+
+The set of parameters obtained by the inference were very different from the actual SSA simulations, but the approximated trajectories were identical. This strongly questions the suitability of parameter inference procedures in obtaining the correct parameter sets.
+
+\sisitodo[inline]{Need figure here showing that they are really close}
+\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
+
+In order to gain some insight into what is happening, we first attempted to restrict ourselves to easier to comprehend two-dimensional space.
+To do this, we restricted our parameter inference procedure to only move through pair of parameters only, while all other parameters are fixed (to their true values). 
+We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
+
+Interestingly, we were able to observe the same behaviour for the parameter pairs ....
+\sisitodo[inline]{list the parameter pairs that work, add figure for $c_2$, $c_6$.}
+We have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
+
+\sisitodo[inline]{look up autoref function, and refer to correct figure, it is not Figure 5 any more, as it was before}
+ 
+\sisitodo[inline]{See the commented text below this todo -- instead of it please talk a bit more about how the landscape looks for the max\_order = 1. Then go on and talk about higher-order moments, explicitly mentioning that you were able to find close-enough trajectories for all of them, however, neither of them were accurate parameter wise}
+%If the inference method was correct, the starting point in the distance landscape would already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
+
+In conclusion, the data makes us question the validity of parameter inference approaches using \gls{mea} approximation.
+As seen in \sisitodo{remind which figures} distance landscape shows that the starting point (which is the correct parameter set) can be distant from the minima. Similarly, the distance procedure, if uncontrolled, is able to find itself exploring the values for some parameters (i.e. $c_6$) that are more than 10 times larger than the true value, which not be very meaningful biologically.\sisitodo{great point, but also needs coverage above}
+\sisitodo{not clear what you meant here}Finally, the trajectories for all the species in the p53 model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
+
 \begin{figure}
 \centering
     \begin{subfigure}[t]{0.2\textwidth}
