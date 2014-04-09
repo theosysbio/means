@@ -177,7 +177,7 @@ class FigureSummaryDistanceBase(FigureTask):
 
 
         import pylab as pl
-        fig = pl.figure(figsize=(16.0, 6.0))
+        fig = pl.figure(figsize=(16.0, 5.0))
         pl.yscale('log')
         #fig.set_yscale('log')
         for res in results:
@@ -194,7 +194,7 @@ class FigureSummaryDistanceBase(FigureTask):
 
         pl.axis(xmin=1.5, xmax=self.max_max_order + 0.5)
 
-        pl.legend(title="Closure", loc=6)
+        pl.legend(title="Closure", bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
         pl.ylabel('Sum of square Distance to GSSA')
 
         pl.xlabel('Max order')
@@ -233,7 +233,7 @@ class FigureP53Simple(FigureP53):
                 continue
 
         # f, axarr = pl.subplots(1, 2, sharex=True, figsize=(9.0, 9.0))
-        f, axarr = pl.subplots(1, 2, sharey=True, figsize=(16.0, 6.0))
+        f, axarr = pl.subplots(1, 2, sharey=True, figsize=(16.0, 5.0))
         sps= 0
         ssa_traj = get_traject(tasks, trajectory_buffers, 0, sps,
                                             0, 0, ssa=True)

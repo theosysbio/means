@@ -3,41 +3,43 @@
 
 
 \subsection{Performance}\label{performance}
-\sauliustodo{I think this should be moved somewhere earlier in the report as it justifies the pretext of our work}
 The temporal dynamics of a molecular system can be described by the \acrfull{cme}\citationneeded{CME reference}.
 \acrfull{gssa}\cite{gillespie_general_1976} simulates these stochastic dynamics directly returning a set of individual trajectories for a list of particles observed.
 In order to obtain accurate estimates of the average dynamic within a population of cell (\ie{} the mean dynamics), it is however necessary to perform multiple (often more than $10^4$) simulations.
-Despite recent efforts \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive. \quentintodo{Do you know the Big-Oh complexity?} This time-complexity is a limiting factor in downstream analysis techniques,
-for instance parameter inference that often requires repetition of these experiments for a large set of parameter values.
+Despite recent efforts \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive. 
+This time-complexity is a limiting factor in downstream analysis techniques, for
+instance parameter inference that often requires repetition of these experiments for a large set of parameter values.
 
-This particular limitation led to the development of approximations such as \acrfull{lna}\cite{komorowski_bayesian_2009} and \acrfull{mea}\cite{ale_general_2013} which model the mean behaviour directly, without evaluating the individual particle behaviours, and therefore can perform in a more realistic time.
+This particular limitation led to the development of approximations such as \acrfull{lna}\cite{komorowski_bayesian_2009} and \acrfull{mea}\cite{ale_general_2013}
+ which model the mean behaviour directly, without evaluating the individual particle behaviours, and therefore can perform in a more realistic time.
 
-Since the main driving force for development of these approximation algorithms is the potential reduction of the time taken to perform the  analysis, it is paramount to make the implementation as efficient as possible.
+Since the main driving force for development of these approximation algorithms is the potential reduction of the time taken to perform the analysis, 
+it is paramount to make the implementation as efficient as possible.
 
-In this section, we explore the implementation factors that influence the runtime of the algorithm, and describe the optimisations done to increase the performance of it. In particular, we show that symbolic computations can be limiting the algorithm and explain the techniques used to optimised them. We also quantify the increase of performance  and show that it is several order of magnitudes better than the original \mat{} implementation.
+In this section, we explore the implementation factors that influence the runtime of the algorithm, and describe the optimisations done to increase the its performance.
+In particular, we show that symbolic computations can be limiting the algorithm and explain the techniques used to optimised them.
+We also quantify the increase in performance we achieved and show that it is several orders of magnitude faster than the original \mat{} implementation.
 In addition, we explore other limiting factors we have less control of, such as the choice of \gls{ode} solver, and discuss their potential implications to the analysis of biological systems.
 
 \subsubsection{Optimising \acrlong{mea}}
 \label{sec:optimising_mea}
 
-
 \gls{mea} involves derivation of a system \gls{ode}s from a model.
 This procedure\cite{ale_general_2013}, involves lengthy symbolic calculations.
 Even for very simple models (\eg{} three species, five reactions), they cannot be realised manually.
 The number equations in the generated \gls{ode} system, for a model with $s$ species and up to moments of order $o$ can be estimated by the following equation: 
-\quentintodo[inline]{Does not make sense for 3 species, and 2nd-order moments (3+2-2 choose 3) - 1 = 0}
 \begin{displaymath}
-    \text{Number of equations} = {{s + o - 2} \choose {s}} - 1
+    \text{Number of equations} = {{s + o} \choose {s}} - 1
 \end{displaymath}
-As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. \quentintodo[inline]{Add an example numbers illustrating this: "For instance, for a 2-species system ...."}
+As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. 
+For example, in a system with five species,  performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with  20, 55, 125 and 251 equations, respectively. 
 
 %In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
 %the symbolic computation routines.
 
-In order to increase the scalability of the method, we have identified significant bottlenecks in our procedures using \py{} profiling tools. We have then attempted to iteratively remove these bottlenecks one by one. Figure~\ref{fig:mea_speed} shows the cumulative effects of different optimisations.
-
-\quentintodo[inline]{Explain why no original python performance line, reduce the detail in caption, make it more evident it is log-normal}
-
+In order to increase the scalability of the method, we have identified significant bottlenecks in our procedures using \py{} profiling tools.
+We have then attempted to iteratively remove these bottlenecks one by one. Figure~\ref{fig:mea_speed} shows the cumulative effects of different optimisations.
+The performance assessment were realised on algorithm when performing log-normal closure in order to show the effect of improvements specific to parametric closure (fig.~\ref{fig:mea_speed}d). 
 
 \begin{figure}[tbh]
 
@@ -46,7 +48,7 @@ In order to increase the scalability of the method, we have identified significa
 The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
 In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
-Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed (see main text).
+Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
 Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
 The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
 Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
@@ -56,54 +58,22 @@ Nine replicates were performed on the same CPU. For optimisation c$-$f, values c
 \label{fig:mea_speed}
 \end{figure}
 
-\quentintodo[inline]{Simplify this, move out the specific details to your individual report, it is enough to give just the overview here.}
 
-The first step involved removing the expression simplification heuristic.
-In the original code\footnote{both from the publication and last year's MSc project}, the right-hand-side equations were simplified in order to produce shorter text file results.
-However, this was slow and did not benefit subsequent simulations and inference.
-For large expressions, simplification had also had an large memory footprint and was likely to fail.
-This optimisation significantly improved the scalability of the method (see fig.~\ref{fig:mea_speed}, b).
 
-The next bottleneck was the choice of substitution functions.
-As a part of \gls{mea}, it is necessary to replace raw moment symbols by expressions depending on central moments.
-Performing substitution can be done using the \texttt{substitute()} function from \sympy, but this is designed to substitute expressions by other expressions.
-In most cases, we only had to substitute atomic symbols by expression.
-For this purpose, the  \texttt{xreplace()} function was a much more appropriate alternative which resulted in a better scalability (see fig.~\ref{fig:mea_speed}, c).
-
-In the original implementation, a matrix of central moment expression of size $(n-s) \times (n-s + 1)$ is directly generated when the default closure is applied.
-However, when using a parametric closure, a matrix of size $(n_2-s) \times (n_2-s + 1)$, where $n_2={{s+o-2 \mathbf{+1}} \choose {s}} -1$, was generated.
-The $n_2 - n$ rows corresponding to higher-order moments have then to be deleted.
-In contrast, out implementation generates a $(n-s) \times (n_2-s + 1)$ matrix regardless of the closure method.
-In addition to improve code readability, consistency and flexibility \footnote{see QG's individual report}, this improved overall performance (fig.~\ref{fig:mea_speed}, d) for cases where closure is applied while keeping the default closure computation fast.
-
-Another simple way to improve computation time was to remove calls to the function \texttt{solve()} which was only used in straightforward cases (\eg{} solving: $a + 2b = c$ for $a$).
-It was therefore much more efficient (fig.~\ref{fig:mea_speed}, e) to use simple arithmetic to find solution.
-
-Finally, partial derivation of expression over several variables and order is extensively performed during the approximation.
-Generally, these type of differentiations can be simplified several differentiation of first order:
-\begin{equation}
-\frac{\partial{} ^ 2 f(x,y)}{\partial x \partial y}  =
-\frac{\partial{} \frac{\partial{} f(x,y)}{\partial x}}{\partial y} =
-\frac{\partial{} \frac{\partial{} f(x,y)}{\partial{} y}}{\partial{} x}
-\end{equation}
-One advantage, is that, when needing to calculate two derivatives such as:  $\frac{\partial{} ^ 2 f(x,y)}{\partial{} x \partial{} y}$ and $\frac{\partial{} ^ 2 f(x,y)}{\partial{} x^2}$, 
-one can precompute $\frac{\partial{} f(x,y)}{\partial{} x}$ and use it for both calculation.
-In our implementation, we have use a procedure known as \emph{memorisation} which, briefly, permits to store the results of a function call in an associative array.
-Then, the next time this function is called with the same arguments, it will return the stored results instead of recomputing it.
-This also resulted in an overall performance improvement (fig.~\ref{fig:mea_speed}, f).
-
-In conclusion, reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
+Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
 For instance, with the same \pft{} system and closure method, 
-we predict that computation up to \gls{ode}s up $8^{th}$ order will take 44 minutes with \means{} and as much as 128 days with the original implementation.\quentintodo{Add a number saying how long it would have taken for the first iteration of optimisation as well.}
+we predict that computation up to \gls{ode}s up $8^{th}$ order will take 46 minutes with \means{}, 5 hours after the first optimisation (fig.~\ref{fig:mea_speed}b) and as much as 148 days with the original implementation.
 These improvement have allowed us to explore the performance of MEA in higher depth, and will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions.
 
 \subsection{Moment Expansion Closure}
 
-In \gls{mea} the temporal derivative of each central moment is expressed in terms of the higher order moment. 
+In \gls{mea} the time derivative of each central moment is expressed in terms of the higher order moment. 
 This behaviour essentially has no upper bound and continues to the moments of infinite order. 
-Since we cannot evaluate these expressions in the limit analytically, it is necessary to ``close'' the expansion by providing a closed form for the higher order moments. This also makes the method an ``aproximation" rather than an exact method.
+Since we cannot evaluate these expressions in the limit analytically, it is necessary to ``close'' the expansion by providing a closed form for the higher order moments.
+This also makes the method an ``aproximation" rather than an exact method.
 
-In the original work \cite{ale_general_2013}, higher order central moments are assumed to be equal to zero. This is very clean mathematically, but is a strong and not necessarily valid assumption. 
+In the original work \cite{ale_general_2013}, higher order central moments are assumed to be equal to zero.
+This is very convenient, but is a strong and not necessarily valid assumption. 
 
 As an alternative, parametric probability distribution can be used to express moments of arbitrary orders. 
 For instance, a multivariate normal distribution is parametrised only by means (\ie{} first order raw moment)
@@ -111,12 +81,13 @@ and a covariance matrix (\ie{} second order central moments).
 As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
 A promising area of research involves closing moment expression by parametric forms of highest order central moments instead
 of assuming them to be null.
-Preliminary work \citationneeded{Eszter, unpublished} suggests that using a parametric distributions for \gls{mea} \quentintodo[inline]{Finish this sentence!}
-In addition, Ale \emph{et al.} predicted that higher maximal moment order would \quentintodo{are you sure? didn't Michael deny this}necessarily result in better approximation \cite{ale_general_2013}.
+Preliminary work \citationneeded{Eszter, unpublished} suggests that using a parametric distributions for \gls{mea} is, in some cases, a better approximation.
+In addition, Ale \emph{et al.} predicted that ``including more moments would improve the estimation''\cite{ale_general_2013}.
 
-The dramatic improvement in performance compared to the \mat{} prototype (see \autoref{sec:optimising_mea}) has made it possible for us to explore the dynamics of both the higher-order and probabilistic moment closures and verify the claims about their performance efficiently.
+The dramatic improvement in performance compared to the \mat{} prototype (see \autoref{sec:optimising_mea}) has rendered the exploration of higher-order and parametric moment closures possible.
+Therefore, we were naturaly interested in investigating the effect of maximal moment order and different type of closures on the quality of the approximation.
+igure~\ref{fig:max_order_and_closure_on_distance_summary} summarises our resutlts on the \pft{} model.
 
-\quentintodo[inline]{Consider making this figure a barchart}
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
@@ -126,23 +97,30 @@ Distance is in log scale. Missing values indicate solver failure for that partic
     \label{fig:max_order_and_closure_on_distance_summary}
 \end{figure}
 
-
-Figure~\ref{fig:max_order_and_closure_on_distance_summary} summarises the effect of increasing maximal moment order and different type of closures.
 The \pft{} system, with parameters from \cite{ale_general_2013}, was investigated.
-As mentioned earlier it is expected that the approximation accuracy increases as the maximal moment order does, \ie{} distance to \gls{gssa} obtained means decreases as maximal moment order increases. 
-This trend is true for for normal and scalar closures, up to maximal moment order six. 
+As mentioned earlier it is expected that the approximation accuracy increases with the maximal moment order, \ie{} distance to \gls{gssa} obtained should decreases
+ as maximal moment order increases. 
+For normal and scalar closures, this trend we observe this trend up to maximal moment order six. 
+However, this does not stand for seventh order moment.
 
-This trend is not true for the seventh order moment, though.
 \quentintodo[inline]{Todo double check the labels in the legend, was it really normal that was worse and scalar that failed?}
+
 As seen in the figure, the closure using the normal distribution had performed worse than the sixth order closure when maximum order was set to seven.
-We could not obtain the result for the seventh order closure using the standard scalar closure, as the ODE solver has failed simulating the problem, which usually indicates a stiff \gls{ode} problem. 
-The generated trajectories are shown in the \autoref{fig:max_order_and_closure_on_distance_trajectories}. One can see the trajectory generated from the normal distribution closure mismatch the trajectory obtained from the \gls{gssa} simulations by quite a wide margin (\emph{purple line, subplot on the right-hand-side}). 
+We could not obtain the result for the seventh order closure using the standard scalar closure, as the ODE solver has failed simulating the problem, which usually indicates a ``stiff'' \gls{ode} problem\citationneeded{stiff odes}. 
+The generated trajectories are shown in \autoref{fig:max_order_and_closure_on_distance_trajectories}. 
+Trajectory generated from the normal distribution closure seem to `mismatch' the trajectory obtained from the \gls{gssa} simulations by a margin.
+% (\emph{purple line, subplot on the right-hand-side}). 
 
-It is hard to determine the reason for this behaviour, it might be a limitation of the approximation method, or a limitation of the \gls{ode} solver available. It is hard to know which explanation is more likely as, we cannot test the two hypotheses separately. All we can say is that have been able to observe a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
+The reason for this behaviour is uncertain; it might be a limitation of the approximation method, or a numerical limitation of the available \gls{ode} solver.
+It is hard to know which explanation is more likely since we cannot test the two hypotheses separately. 
+Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
 
-\quentintodo{I cannot see that to be true, from the figure}
-Note that for even maximal moment orders, normal and scalar are rigorously equal.
-\quentintodo{Not intuitive to me, explain}This is expected since normal distribution is symmetrical (\emph{i.e.} odd central moments are always zero).
+Note that for even maximal moment orders, normal and scalar are identical.
+When the maximal moment order is even, it means that the perametric expression of an odd (the next) order moment was used for closure.
+Normal distribution is symmetrical. One consequence is that odd central moments are always zero. 
+For instance, the sckew (\ie{} third order central moment) of a normal distribution is zero.
+Therefore, this behaviour is perfecty normal.
+
 
 \begin{figure}
     \centering
@@ -152,18 +130,22 @@ Note that for even maximal moment orders, normal and scalar are rigorously equal
     \label{fig:max_order_and_closure_on_distance_trajectories}
 \end{figure}
 
-Log-normal closure method is also displaying a similar behaviour with regards to the approximation of ground truth trajectories, though less extreme. 
-The ground truth trajectory seems to be well approximated when the maximal moment order is three, but the approximation gets less and less accurate for higher maximal order moments.
+ 
+for log-normal closure, the ground truth trajectory seems to be well approximated when the maximal moment order is three, but the approximation gets less and less accurate for higher maximal order moments.
 A deeper look at the trajectories indicate that, in this latter case,
 oscillations are damped too quickly, as opposed to the behaviour seen using normal closure, where the oscillation amplitude increases (see \autoref{fig:max_order_and_closure_on_distance_trajectories}, red line).
 
-\quentintodo{what?} Interestingly for even maximum moment order log-normal closures generated \gls{ode}s which,
-despite our efforts, could not be numerically solved.
+Interestingly, for even maximum moment order (\ie{} 2, 4, 6) log-normal closures generated \gls{ode}s which, despite our efforts, could not be numerically solved.
 
 Finally, it seems that the results obtained from multivariate distribution closures and  univariate distribution closures, which do not model the covariance terms, are the same for this particular system. 
-This is not true for all of the systems. For instance, we have observed that in the \emph{hes1}, it is advantageous to model covariance (data not show\quentintodo{show data, otherwise our point is weak}).
+This is not true for all of the systems. 
+For instance, we have observed that in the \emph{hes1}, it is advantageous to model covariance (data not show).
+\quentintodo{put hes1 exple if time}
 
-The results in this section show that, while it might be convenient to believe that using higher order moments would provide better approximations, the results indicate that this is not necessarily the case as there seems to be the \emph{sweet spot} parameter set that gives the best results. Unfortunately, this makes it difficult to \emph{a priori} define which closure and maximal moment order should be used for a given system. The section \sauliustodo{link to the section} explores this phenomenon on wider scale of parameters.
+Surprisingly, higher order moment closure did not necessarily result in better approximations.
+In addition, our results indicate that there might be a complex interaction between the type of closure and the maximal moment order. 
+Unfortunately, this makes it difficult to define \emph{a priori} which closure and maximal moment order should be used for a given system.
+These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data. 
