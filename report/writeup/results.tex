@@ -165,32 +165,49 @@ In order to determine the base case performance, we performed the parameter infe
 
 We have started parameter inference procedure at the correct parameter values, expecting to see an immediate result and no movement in the parameter space. To much of our surprise, however, when the inference is allowed to navigate the complete parameter space, not only did the procedure move around, but it was able to find a set of parameters, that when expressed in terms of first order moments, are able to match the observed trajectories completely.
 
-The set of parameters obtained by inference were very different from the actual \gls{gssa} simulations, but the approximated trajectories were identical. This strongly questions the suitability of parameter inference procedures in obtaining the correct parameter sets.
+The set of parameters obtained by inference were very different from the actual \gls{gssa} simulations, but the approximated trajectories were identical (see \autoref{fig:parameter_pairs}. This strongly questions the suitability of parameter inference procedures in obtaining the correct parameter sets.
 
-\sisitodo[inline]{Need figure here showing that they are really close}
-\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.9\textwidth}
+    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c2-c6}.pdf}
+    \label{fig:parameter_pair_c2_c6}
+    \caption{Parameter pair $c_2$ and $c_6$}
+    \end{subfigure}
+    
+    \begin{subfigure}[t]{0.9\textwidth}
+    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c1}.pdf}
+    \label{fig:parameter_pair_c0_c1}
+    \caption{Parameter pair $c_0$ and $c_1$}
+    \end{subfigure}
+    
+    \begin{subfigure}[t]{0.9\textwidth}
+    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c6}.pdf}
+    \label{fig:parameter_pair_c0_c6}
+    \caption{Parameter pair $c_0$ and $c_6$}
+    \end{subfigure}
+   
+    \begin{subfigure}[t]{0.9\textwidth}
+    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c1-c6}.pdf}
+    \label{fig:parameter_pair_c1_c6}
+    \caption{Parameter pair $c_1$ and $c_6$}
+    \end{subfigure}
+
+    \caption{\emph{Four parameter pairs can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.} 
+    The distance from the SSA trajectory for each species is displayed in each subfigure.
+    Trajectories are simulated using maximum order 1. The three columns in each row represent the three species in the \pft{} model.}
+    \label{fig:parameter_pairs}
+\end{figure}
+
+%\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
 
 In order to gain some insight into the reason of unexpected inference performance, we first attempted to restrict ourselves to easier to comprehend two-dimensional space.
 To do this, we restricted our parameter inference procedure to only move through pair of parameters only, while all other parameters are fixed (to their true values). 
 We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
 
-Interestingly, we were able to observe the same behaviour for the parameter pairs $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_2$ and $c_6$ (see \autoref{fig:c2_c6_parameter_pair}).
+Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (see \autoref{fig:parameter_pairs}).
+We then have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c2-c6}.pdf}
-    \caption{\emph{Parameter pair $c_2$ and $c_6$ can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.} The distance from the SSA trajectory for each species is displayed in each subfigure.}
-    \label{fig:c2_c6_parameter_pair}
-\end{figure}
-
-We have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
- 
-\sisitodo[inline]{See the commented text below this todo -- instead of it please talk a bit more about how the landscape looks for the max\_order = 1. Then go on and talk about higher-order moments, explicitly mentioning that you were able to find close-enough trajectories for all of them, however, neither of them were accurate parameter wise}
-%If the inference method was correct, the starting point in the distance landscape would already have a low distance, and the end point should overlap with the starting point, i.e. the true values of $c_2$ and $c_6$.
-
-In conclusion, the data makes us question the validity of parameter inference approaches using \gls{mea} approximation.
-As seen in \autoref{fig:parameter_inference_landscape_trajectories} distance landscape shows that the starting point (which is the correct parameter set) can be distant from the minima. Similarly, the distance procedure, if uncontrolled, is able to find itself exploring the values for some parameters (i.e. $c_6$) that are more than 10 times larger than the true value, which not be very meaningful biologically.\sisitodo{great point, but also needs coverage above}
-Finally, the trajectories for all the species in the \pft{} model sometime demonstrate misfit between the optimal trajectory obtained from inference and the "observed trajectory" from \gls{gssa}. 
 
 \begin{figure}
 \centering
@@ -231,13 +248,24 @@ Finally, the trajectories for all the species in the \pft{} model sometime demon
     
 \caption{\emph{Distance landscape and trajectories at different maximal orders for \pft{} model.}  Among seven parameters, only the values for $c_2$ and $c_6$ are inferred, with starting values inferred from inference using the true values.
 The left column displays distance landscapes, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories. 
+The numbers in the distance landscape indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
 The \gls{gssa} trajectories are generated using the new parameter values labelled as \emph{start}. 
 Three trajectories are shown for each species. 
 The starting trajectories are simulated using the starting values are indicated above the trajectories, with $c_2$ and $c_6$ inferred using \emph{sum of squares} distance method. 
 Both the optimal and the \gls{gssa} trajectories are generated based on the end point in correspondent distance landscape.
 The distance displayed for each species represent the distance between the optimal and \gls{gssa} trajectories.} 
-\autoref{fig:parameter_inference_landscape_trajectories}
 \label{fig:parameter_inference_landscape_trajectories}
 \end{figure}
+
+
+
+
+As seen in \autoref{fig:parameter_inference_landscape_trajectories}, the optimal trajectories obtained using inference are mostly overlap with the \gls{gssa} trajectories, especially for lower orders.  This result is suspicious, because the parameter values inferred, as indicated in the correspondent distance, is far from the true values. 
+In fact, the inferred value for $c_6$) can be more than 10 times larger than the true value, which is not meaningful biologically.
+Furthermore, when using higher maximal order for inference, a slight gap between the optimal and \gls{gssa} trajectories does not imply better inference result, because the inferred parameter values are still incorrect. 
+
+The deviation between inferred and correct parameter values can be explained using the distance landscape, as the starting point i.e. the true parameter values, can be distant from the minima. As the maximal order increases, the distance gradient becomes less sharp, disables the system to find the minima.
+
+In conclusion, the data makes us question the validity of parameter inference approaches using \gls{mea} approximation.
 
 
