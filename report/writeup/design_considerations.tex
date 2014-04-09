@@ -59,13 +59,13 @@ For instance, the \emph{comparison} process in the first two user stories could 
 Similarly, the fourth user story indicates that the origin of the input data and its format are undefined.
 Therefore the software needed be general enough to support multiple input formats, or have a simple enough format allowing researchers to convert their data to.
 
-This observation encouraged us to move away from the traditional command-line application model for this software\todo{cite last year report}.
+This observation encouraged us to move away from the traditional command-line application model for this software\cite{babtie_moment_2013}.
 In our opinion, flexibility of command-line applications comes at the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend.
 Similarly, command-line applications create an artificial gap between the data processing and data analysis step, \ie{} writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
 
 In order to satisfy these requirements, we designed \means{} package with flexibility and interactivity in mind. 
 The flexibility requirement impacted certain decisions made while structuring the package, which are further described in \autoref{sec:package}.
-Interactivity of the package has been ensured by coding specific behaviours for the IPython interactive python environment \todo{Cite ipython notebook}.
+Interactivity of the package has been ensured by coding specific behaviours for the IPython interactive python environment \cite{perez_ipython:_2007}.
 
 \subsection{Package Structure}
 \label{sec:package}
@@ -119,7 +119,7 @@ This common interface is required for any pipeline using the approximation metho
 In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless of whether \gls{lna} or \gls{mea} was used. 
 It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing an approximation method, but it will also be immediately compatible with all the packages using the approximations.
 
-The advantages described above apply mostly for software using all or part of the \means{} package to perform designated tasks\todo{QG: not v clear}.
+The advantages described above apply mostly for software using all or part of the \means{} package to perform designated tasks\sauliustodo{QG: not v clear}.
 The necessity of creating approximation objects and running their \verb"run()" function in order obtain the \gls{ode}s soon becomes a burden in the interactive environments.
 In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
 
@@ -158,7 +158,7 @@ Some basic inference result plotting functionality is also provided by the packa
 % change src/means/io/__init__.py if you are changing this
 The module implements common methods to serialise and deserialise \means objects.
 Namely the module provides functions \verb`means.io.dump` and  \verb`means.io.load` that would
-serialise and deserialise the said objects into \todo{figure out how I want to cite this}YAML format.
+serialise and deserialise the said objects into YAML format\cite{_official_????}.
 These serialised representations can be written to or read from files with the help of
 \verb`means.io.to_file` and \verb`means.io.from_file` functions.
 % this is not in __init__.py, but is required for report
@@ -176,7 +176,7 @@ We recommend using \verb`pickle`, rather than \verb`means.io` whenever fast seri
 readability.
 
 % still in __init__.py
-Finally, this module also provides support for the input from SBML files.
+Finally, this module also provides support for the input from SBML files\cite{hucka_systems_2003}.
 If the \verb`libsbml` is installed in the user's system and has the appropriate python bindings, the function \verb`means.io.read_sbml` can be used to parse the files in SBML format
 to \verb`means.core.Model` objects. See example usage in \todo{Link to some tutorial}.
 
@@ -200,15 +200,15 @@ The models included with the package are:
     \item a sample Michaelis-Menten kinetics model as in \cite{ale_general_2013};
     \item Dimerisation model, also in \cite{ale_general_2013};
     \item P53 model, described in \cite{ale_general_2013} and in \autoref{fig:p53} of this document;
-    \item HES1 model, based on the description in \cite{ale_general_2013} \todo{Was it in ale?};
-    \item A textbook example of Lotka-Volterra dynamics \todo{QG: cite the original LV book/paper}.
+    \item HES1 model, based on the description in \cite{ale_general_2013};
+    \item A textbook example of Lotka-Volterra dynamics \cite{billard_lotka-volterra_1977}.
 \end{itemize}
 
 These example models are designed to help us to illustrate important concepts of the package in the documentation, but are otherwise independent from the package, and therefore need to be imported separately.
 The user of the software is nevertheless encouraged to experiment with these toy models.
 
 \subsubsection{{\tt means.pipes} -- convenience functions for data pipelines}
-The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package. \todo{Cite luigi somehwere, figure out how}.
+The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package\cite{_luigi_????}.
 
 The pipeline support is covered in detail in \autoref{sec:pipelines}.
 
@@ -234,7 +234,7 @@ We call these tests \emph{regression} tests as they are designed to validate tha
 essentially establishing a baseline performance of it.
 We chose to use all of the examples given in the previous year's group report as a good starting point of our regression tests.
 
-In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\todo{cite Mr. Jenkins}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and ensure to notify us if there are problems with it. 
+In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and ensure to notify us if there are problems with it. 
 This way we can eliminate the human factor and ensure that the tests are really run often and completely and therefore ensure the continuous compliance with the specification.
 
 As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this, better, picture a GC content counting algorithm for some DNA sequence. 

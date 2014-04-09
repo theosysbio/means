@@ -108,7 +108,7 @@ class MultiDimensionInferenceFigure(FigureTask):
         vmin = self.vmin if self.vmin is not None else min_dist
         vmax = self.vmax if self.vmax is not None else max_dist
 
-        fig = plt.figure(figsize=(5,5), dpi=328)
+        fig = plt.figure(figsize=(20,20), dpi=328)
         fig.subplots_adjust(wspace=0, hspace=0)
 
         parameters = [i for i,j in variable_parameters]
@@ -196,6 +196,24 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
     # Use a pair of parameters chosen based on the result from class FigureTwoParametersForInference
     variable_parameters = [('c_2', None), ('c_6', None)]
 
+
+
+class SevenDimensionalInferenceFigure(MultiDimensionInferenceFigure):
+
+    model = P53Model()
+    max_order = 1
+    closure = 'scalar'
+    multivariate=True
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    initial_conditions = [70.0, 30.0, 60.0]
+    timepoints_arange = [0.0, 40.0, 0.1]
+    starting_initial_conditions = [70.0, 30.0, 60.0]
+    starting_parameters=[90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    n_simulations=5000
+    n_simulations = IntParameter(default=5000)
+    variable_parameters = [('c_0', None), ('c_1', None), ('c_2', None), ('c_3', None),
+                           ('c_4', None), ('c_5', None),('c_6', None)]
+
 class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
     closure = MEATask.closure
@@ -241,7 +259,7 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
                                   starting_initial_conditions=SampleMultidimensionInferenceFigure.initial_conditions,
                                   variable_parameters=SampleMultidimensionInferenceFigure.variable_parameters,
                                   # distance_function_type=self.distance_function_type,
-                                  n_simulations=5000, # TODO: Find where this comes from
+                                  n_simulations=5000,
                                   label=label
                                   )
 
@@ -295,6 +313,7 @@ class FindTwoParametersForInference(Task):
                                   distance_function_type=self.distance_function_type,
                                   n_simulations=self.n_simulations,
                                     label='${0}$ and ${1}$'.format(v1,v2))
+
             requirements.append(inference)
         return requirements
 
