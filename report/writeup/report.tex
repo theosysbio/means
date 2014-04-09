@@ -1,5 +1,5 @@
 \documentclass[11pt,a4paper]{article}
-
+\usepackage{standalone}
 \usepackage{graphicx}
 \usepackage[font=footnotesize]{caption}
 \usepackage[noadjust]{cite}
@@ -16,6 +16,10 @@
 \usepackage{parskip} % Spaces between paragraphs
 
 \usepackage[acronym]{glossaries}
+
+
+\input{ipynbsupportdefinitions.tex}
+
 \makeglossaries
 \renewcommand*\abstractname{Summary}
 
@@ -26,6 +30,9 @@
 %~ \begin{minted}{python}}%
 %~ {\end{minted}
 %~ \end{framed}}%
+
+% http://www.tex.ac.uk/cgi-bin/texfaq2html?label=altabcr
+\setcounter{MaxMatrixCols}{50}
 
 % package name:
 \newcommand{\means}{\texttt{MEANS}}

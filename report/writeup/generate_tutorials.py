@@ -26,9 +26,20 @@ def process_file(filename, resulting_filename):
 
     # Move section names one level down
     contents = re.sub(r"\\paragraph", "\\subparagraph", contents)
-    contents = re.sub(r"\\subsubsection", "\\paragraph", contents)
+    contents = re.sub(r"\\subsubsection", "\\paragraph\\\\", contents)
     contents = re.sub(r"\\subsection", "\\subsubsection", contents)
     contents = re.sub(r"\\section", "\\subsection", contents)
+
+    # ODEProblem formatting
+    contents = contents.replace('<h1>ODEProblem</h1>', r'\textbf{ODEProblem}')
+    contents = re.sub(r"<p>(.*?)</p>", r"\1 \\\\", contents)
+    contents = re.sub(r"<code>(.*?)</code>", r"\\verb#\1#", contents)
+    contents = contents.replace('<ul>', r'\begin{itemize}')
+    contents = contents.replace('</ul>', r'\end{itemize}')
+    contents = re.sub(r"<li>(.*?)</li>", r"\\item \1", contents)
+    contents = contents.replace('<hr />', r'\rule{4cm}{0.4pt}')
+
+    contents = contents.replace(r"$\LaTeX$", "\LaTeX")
 
     with open(resulting_filename, 'w') as f:
         f.write(contents)
