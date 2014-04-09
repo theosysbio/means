@@ -4,6 +4,45 @@ import re
 import shutil
 import tempfile
 
+def remove_in_tags(match):
+    code_block = match.group(0)
+    lines = code_block.split('\n')
+    answer_lines = []
+
+    # Append the incolor
+    start_line = lines[0]
+    end_line = lines[-1]
+    strip_length = None
+    type = None
+    for line in lines[1:-1]:
+        if strip_length is None:
+            match = re.match(r"\{\\color\{(in|out)color\}(?P<type>In |Out)\[\{\\color\{(in|out)color\}(?P<digit>\d+)\}\]:\}", line)
+
+            if match:
+
+                line = line[len(match.group(0))+1:]
+                type = match.group('type')
+                strip_length = len(match.group('digit')) + len(type) + 4
+        else:
+            line = line[strip_length:]
+
+        answer_lines.append(line)
+
+    if type is None:
+        start_line = start_line.replace(r"\begin{Verbatim}", r"\begin{StdOutVerbatim}")
+        end_line = end_line.replace(r"\end{Verbatim}", r"\end{StdOutVerbatim}")
+    elif type == 'In ':
+        start_line = start_line.replace(r"\begin{Verbatim}", r"\begin{InputVerbatim}")
+        end_line = end_line.replace(r"\end{Verbatim}", r"\end{InputVerbatim}")
+    elif type == 'Out':
+        start_line = start_line.replace(r"\begin{Verbatim}", r"\begin{OutputVerbatim}")
+        end_line = end_line.replace(r"\end{Verbatim}", r"\end{OutputVerbatim}")
+    else:
+        raise Exception("Unknown output type")
+
+    return '\n'.join([start_line] + answer_lines + [end_line])
+
+
 def process_file(filename, resulting_filename):
     # Hacky, I know, but faster than finding the way to do that programmatically
     cmd = 'ipython nbconvert --to latex "{0}"'.format(filename)
@@ -41,9 +80,22 @@ def process_file(filename, resulting_filename):
 
     contents = contents.replace(r"$\LaTeX$", "\LaTeX")
 
+    # Remove In [123]: blocks
+    contents = re.sub(r"\\begin{Verbatim}(.|\n)*?\\end{Verbatim}", remove_in_tags, contents, flags=re.MULTILINE)
+
+
     # Change verbatims to use the version with background fill
-    contents = contents.replace(r"\begin{Verbatim}", r"\begin{BGVerbatim}")
-    contents = contents.replace(r"\end{Verbatim}", r"\end{BGVerbatim}")
+    #contents = contents.replace(r"\begin{Verbatim}", r"\begin{BGVerbatim}")
+    #contents = contents.replace(r"\end{Verbatim}", r"\end{BGVerbatim}")
+    # Remove In [number]:
+    #contents = re.sub(r"\{\\color\{incolor\}In \[\{\\color\{incolor\}\d+\}\]:\}", "", contents)
+
+    # Remove standalone Out[]'s as well
+    contents = re.sub(r"\\texttt\{\\color\{outcolor\}Out\[\{\\color\{outcolor\}\d+\}\]:\}",
+                      r"{\\color{outcolor}Output:}", contents)
+    # Remove the offset padding resulting from the removal of In
+    #contents = re.sub(r"^\s+\\PY", r"\\PY", contents, flags=re.MULTILINE)
+
 
     with open(resulting_filename, 'w') as f:
         f.write(contents)

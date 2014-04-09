@@ -51,11 +51,22 @@
     % extracted from the output of `pandoc -s`
     \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
     \definecolor{notebookgray}{rgb}{0.96, 0.96, 0.96}
-    \newenvironment{BGVerbatim}
+    \newenvironment{InputVerbatim}
  {\VerbatimEnvironment
-  \begin{tcolorbox}[colback=notebookgray]
+  \begin{tcolorbox}[colback=notebookgray,oversize,opacityframe=0]
   \begin{Verbatim}}
  {\end{Verbatim}\end{tcolorbox}}
+ \newenvironment{StdOutVerbatim}
+ {\VerbatimEnvironment
+  \begin{tcolorbox}[colback=notebookgray,oversize,opacityframe=0]
+  \begin{Verbatim}}
+ {\end{Verbatim}\end{tcolorbox}}
+ \newenvironment{OutputVerbatim}
+ {\VerbatimEnvironment
+  \begin{tcolorbox}[colback=notebookgray,oversize,opacityframe=0]
+  \begin{Verbatim}}
+ {\end{Verbatim}\end{tcolorbox}}
+
 
     
     
