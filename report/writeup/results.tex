@@ -47,21 +47,23 @@ The performance assessment were realised on algorithm when performing log-normal
 \includegraphics[width=0.95\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
 \caption{\emph{Cumulative performance improvement of symbolic 
 calculations resulting from optimisation}.
-%The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
-%In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
-%Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
-%Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
-%Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-%The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
+The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
+In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
+Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
+Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
+Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). 
+Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
+The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
 %Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
-%Nine replicates were performed on the same CPU. For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations
+Nine replicates were performed on the same CPU. 
+For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations
 }
 \label{fig:mea_speed}
 \end{figure}
 
-
+\quentintodo{move the stats here}
 
 Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
 For instance, with the same \pft{} system and closure method, 
