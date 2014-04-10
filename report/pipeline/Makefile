@@ -1,6 +1,6 @@
 ALL_FIGURE_TASKS := figure_traject_plot_exple.py figure_closure_and_max_order.py
 
-ALL_FIGURE_TO_CLEAN := task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf 
+ALL_FIGURE_TO_CLEAN := task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf
 
 all: 
 	for i in $(ALL_FIGURE_TASKS); do \
