@@ -252,6 +252,20 @@ In addition, our results indicate that there might be a complex interaction betw
 Unfortunately, this makes it difficult to define \emph{a priori} which closure and maximal moment order should be used for a given system.
 These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
 
+\subsection{Choice of Parameters Affects \acrshort{mea} Accuracy}
+
+The previous section has described that it may be hard to predict which maximum order to use in order to get best approximation of the true behaviour of the system \emph{a priori}. 
+In this section we explore this behaviour in a global scale.
+We are explicitly interested to see how the choice of parameters affect both the ability for the \gls{ode} solvers to generate the trajectories and the quality of these trajectories.
+
+In order to achieve this, we first fixed all the parameters but $c_2$ and $c_4$ to the same values as the ones used in the previous section.
+Then we varied the two free parameters at equal increments of $0.1$ within the ranges
+$c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$). By doing this, we generated a grid $5000$-iteration \gls{gssa} trajectories for each of these parameter values, that we took as the ground truth value for that parameter set.
+
+We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets. 
+We have also recorded the parameter sets for which the solvers failed to produce a result. 
+We then computed the sum-of-squares distances between each of the simulated trajectories and their \gls{gssa} equivalents and summarised the data into a set of contour plots, which we discuss bellow.
+
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
