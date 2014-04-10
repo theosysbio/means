@@ -104,7 +104,7 @@ This performance improvement is illustrated in the tutorial \autoref{sec:reuse_o
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
 The performance of numerical \gls{ode} solvers themselves also plays a critical role.
 
-These solvers differ in many ways ranging from a set of parameters to different heuristics and even algorithms.
+These solvers differ by their respective options, heuristics or algorithms.
 Choice of the \emph{best} solver for an \acrlongpl{ode} system depends very much on the particular problem to simulate.
 However certain solvers tend to be more generally adopted than others\cite{andersson_workbench_2012}.
 
@@ -132,7 +132,8 @@ We call the latter parameter set the \emph{unsafe}.
        \label{fig:runtimes-safe-unsafe-euler}
    \end{subfigure}
    
-    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets, one harder to simulate than the other as it makes the problem stiff.
+    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets.
+     The ``safe'' parameter set is very stable, while the ``unsafe'' one leads to stiff problems, which are harder to solve.
     The time axis is in log-scale. Regression lines through the marked points is represented.
     Note that the number of equations increases exponentially with maximum order, essentially making this a log-log plot.}
 \label{fig:runtimes-safe-unsafe}
@@ -142,12 +143,12 @@ We call the latter parameter set the \emph{unsafe}.
 Heuristic solvers tend to automatically adjust the step size depending on the problem in hand, adjusting for the rate of stochastic events being simulated.
 It is therefore expected that they would perform worse for stiff problems, where the timeframes between the events become shorter and shorter, which requires more time steps.
 
-In contrast, Euler solver, uses a constant step size, and therefore the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
+In contrast, Euler solver, uses a constant step size, thus the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
 
 Since \gls{ode} solvers are inherently heuristic, their CPU performance may suffer considerably for unstable systems.
 
 Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
-The complete list of available solvers used in available in the documentation\citationneeded{refer to docs}.
+The complete list of available solvers used is available in the documentation\citationneeded{refer to docs}.
 Naturally, we were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
 This exhaustive analysis reviled that \texttt{ode15s} was the most performant solver for this problem.
 It outperformed other solvers for both safe and unsafe parameter sets.
