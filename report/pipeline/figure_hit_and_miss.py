@@ -37,19 +37,24 @@ ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', '
 INTERESTING_PARAMETER_SETS = [ParameterSet(parameters=[90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01],
                                            initial_conditions=[70.0, 30.0, 60.0],
                                            timepoints_arange=[0.0, 40.0, 0.1],
-                                           marker='x', label='$c_2=2.5$ and $c_4=1.8$'),
+                                           marker='$\\times$', label='$c_2=2.5$ and $c_4=1.8$'),
                               ParameterSet(parameters=[90.0, 0.002, 2.0, 1.1, 1.8, 0.96, 0.01],
                                            initial_conditions=[70.0, 30.0, 60.0],
                                            timepoints_arange=[0.0, 40.0, 0.1],
-                                           marker='^', label='$c_2=2.0$ and $c_4=1.8$'),
-                              ParameterSet(parameters=[90.0, 0.002, 1.8, 1.1, 1.4, 0.96, 0.01],
+                                           marker='$\\ast$', label='$c_2=2.0$ and $c_4=1.8$'),
+                              ParameterSet(parameters=[90.0, 0.002, 1.6, 1.1, 2.1, 0.96, 0.01],
                                            initial_conditions=[70.0, 30.0, 60.0],
                                            timepoints_arange=[0.0, 40.0, 0.1],
-                                           marker='o', label='$c_2=1.8$ and $c_4=1.4$'),
+                                           marker='$\\bullet$', label='$c_2=1.6$ and $c_4=2.1$'),
                               ParameterSet(parameters=[90.0, 0.002, 2.4, 1.1, 0.7, 0.96, 0.01],
                                            initial_conditions=[70.0, 30.0, 60.0],
                                            timepoints_arange=[0.0, 40.0, 0.1],
-                                           marker='v', label='$c_2=2.3$ and $c_4=0.7$')]
+                                           marker='$\\blacksquare$', label='$c_2=2.3$ and $c_4=0.7$'),
+                              ParameterSet(parameters=[90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01],
+                                           initial_conditions=[70.0, 30.0, 60.0],
+                                           timepoints_arange=[0.0, 40.0, 0.1],
+                                           marker='$\\star$', label='$c_2=1.7$ and $c_4=0.93$, as in original paper'),
+                              ]
 
 class P53Model(means.Model):
     """
@@ -274,7 +279,7 @@ class FigureHitAndMiss(HitAndMissDataParametersMixin, FigureTask):
                 params = param_set.parameters
                 x = params[x_param_index]
                 y = params[y_param_index]
-                ax.plot([x], [y], color='k', marker=param_set.marker, label=param_set.label)
+                ax.plot([x], [y], color='k', ms=10, marker=param_set.marker, label=param_set.label)
 
         return fig
 
@@ -335,9 +340,14 @@ class FigureSSAvMEATrajectory(FigureTask):
                 else:
                     plt.title(ssa_trajectory.description.mathtext())
 
-                ssa_trajectory.plot(label='SSA')
-                trajectory.plot(label='Solver')
+                ssa_trajectory.plot(label='SSA', color='b')
+                trajectory.plot(label='Solver', color='r')
                 plt.legend()
+
+                sum_of_sqr_distance = np.sum(np.square(ssa_trajectory.values - trajectory.values))
+                plt.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance), xy=(1, 0),
+                             xycoords='axes fraction', fontsize=16, xytext=(-5, 5),
+                             textcoords='offset points', ha='right', va='bottom')
 
                 # plt.subplot(2, number_of_ssa_trajectories, i+1+number_of_ssa_trajectories)
                 # plt.title(ssa_trajectory.description.mathtext() + ' - difference')
@@ -439,13 +449,28 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
                                             model=model,
                                             solver_kwargs=self.solver_kwargs,
                                             number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                            title=parameter_set.label,
+                                            title='Point at {0} ({1})'.format(parameter_set.label, parameter_set.marker),
                                             closure=self.closure,
                                             multivariate=self.multivariate))
 
         return requirements
 
+class HitAndMissAll(Task):
+    interesting_kwargs = [dict(solver='ode15s'),
+                          dict(solver='rodas', max_orders=range(1, 7), point_sparsity=0.2),
+                          dict(solver='euler', solver_kwargs=[('h', 0.01)])]
+    def requires(self):
+        tasks = []
 
+        for kwargs in self.interesting_kwargs:
+
+            tasks.append(FigureHitAndMissTex(**kwargs))
+
+        return tasks
+
+    def _return_object(self):
+        raise Exception('This task intentionally raises exception, '
+                        'as it is main goal is to just try out requires()')
 
 if __name__ == '__main__':
-    run()
+    run(main_task_cls=HitAndMissAll)
