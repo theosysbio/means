@@ -28,9 +28,10 @@ In addition, we explore other limiting factors we have less control of, such as 
 This procedure\cite{ale_general_2013}, involves lengthy symbolic calculations.
 Even for very simple models (\eg{} three species, five reactions), they cannot be realised manually.
 The number equations in the generated \gls{ode} system, for a model with $s$ species and up to moments of order $o$ can be estimated by the following equation: 
-\begin{displaymath}
+\begin{equation}
     \text{Number of equations} = {{s + o} \choose {s}} - 1
-\end{displaymath}
+    \label{eq:number_of_equations}
+\end{equation}
 As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. 
 For example, in a system with five species,  performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with  20, 55, 125 and 251 equations, respectively. 
 
@@ -43,18 +44,20 @@ The performance assessment were realised on algorithm when performing log-normal
 
 \begin{figure}[tbh]
 
-\includegraphics[width=1.0\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
-\caption{\emph{Cumulative performance improvement of symbolic calculations resulting from optimisation}.
-The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
-In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
-Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
-Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
-Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
-Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
-No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
-However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
-Nine replicates were performed on the same CPU. For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations}
+\includegraphics[width=0.95\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
+\caption{\emph{Cumulative performance improvement of symbolic 
+calculations resulting from optimisation}.
+%The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
+%In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
+%Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
+%Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
+%Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
+%The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
+%Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
+%No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
+%However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
+%Nine replicates were performed on the same CPU. For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations
+}
 \label{fig:mea_speed}
 \end{figure}
 
@@ -65,7 +68,7 @@ For instance, with the same \pft{} system and closure method,
 we predict that computation up to \gls{ode}s up $8^{th}$ order will take 46 minutes with \means{}, 5 hours after the first optimisation (fig.~\ref{fig:mea_speed}b) and as much as 148 days with the original implementation.
 These improvement have allowed us to explore the performance of MEA in higher depth, and will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions.
 
-\subsubsection{Evaluating Trajectories Efficiently}
+\subsubsection{Evaluating Expressions Efficiently}
 
 \todo[inline]{New Section: Somebody please review}
 
@@ -77,7 +80,70 @@ Even though it is a great improvement from the original prototype, 46 minutes is
 Evaluating these expressions is a completely different story however.
 Since we need to evaluate each expression hundreds, if not thousands of times when performing the simulations of the system, we want to make these tasks as efficient as possible, as every microsecond counts. 
 
-In order to minimise the overhead of computations, we use the {\tt autowrap} module, built into {\tt sympy} to compile our numeric expressions into C and wrap the python interface around them so the end user does not see any difference. This process adds some overhead when the first evaluation is performed, as the system needs to be compiled, however the subsequent evaluations are orders of magnitude faster (illustrated in the \autoref{sec:reuse_of_simulation_objects}).
+In order to minimise the overhead of computations, we use the {\tt autowrap} module, built into {\tt sympy} to compile our numeric expressions into C and then wrap the same \py{} interface around them so the end user does not see any difference. 
+This process adds some overhead, of course, as the system needs to be compiled from scratch. 
+We have managed to control this overhead by caching these precompiled expressions in memory. 
+Due to this caching, this overhead is present only in the first evaluation of expressions, while all other evaluations are an order of magnitude faster. 
+This performance improvement is illustrated further in the tutorial \autoref{sec:reuse_of_simulation_objects}.
+
+\subsubsection{Comparing the Performance of Different \gls{ode} Solvers}
+\todo[inline]{New Section: Please review}
+
+The symbolic expression evaluation speed, while incredibly important, is only half of the factors contributing to the scalability of the simulation procedures. 
+The other half comes from the \gls{ode} solvers themselves.
+
+These solvers differ in many ways ranging from a set of parameters to
+different heuristics and even algorithms. 
+Choice of the \emph{best} solver for one's \acrlongpl{ode} system depends very much on the particular problem one is trying to simulate, however certain solvers tend to be accepted more generally than others.
+
+CVODE\citationneeded{CVODE?} is an example of one of the widely used solvers. As described in \autoref{sec:ode_simulations}, we implement two variants of this solver, \verb#ode15s# and \verb#cvode#.
+Each of these solvers point to the same back-end implementation of CVODE provided by \verb#assimulo# package\citationneeded{assimulo}. The \verb#ode15s# solver just comes with a set of parameters that mimics the \mat{} solver with the same name.
+
+Besides CVODE solvers, our package is able to perform simulations using 7 other solvers, using completely different algorithms from the aforementioned two.
+The complete list of the solvers used in available in the documentation\citationneeded{refer to docs}. 
+ 
+Naturally, it would be interesting to compare these solvers against each other and see how they perform on our toy problems. 
+Here we base our comparison on the runtimes of the solvers, in the later \sauliustodo{ref to new section once I create it} we compare them in terms of accuracy and stability as well.
+
+In order to measure the runtime performance of the solvers, we performed a set of simulations of the \acrlong{mea} of the \pft{} model. 
+We deliberately chose two sets of parameters: one that we know is fairly stable and easy to simulate with, so called \emph{safe} parameter set; and another parameter set that is known to cause the trajectories to become stiff and therefore make the solvers struggle. We call the latter parameter set the \emph{unsafe} parameter set.
+ 
+\begin{figure}[tb]
+   \centering
+   \begin{subfigure}[t]{0.45\textwidth}
+       \includegraphics[width=\textwidth]{../pipeline/task-output/solver-runtimes/runtimes-ode15s.pdf}
+       \caption{\texttt{ode15s}}
+       \label{fig:runtimes-safe-unsafe-ode15s}
+   \end{subfigure}
+   ~
+   \begin{subfigure}[t]{0.45\textwidth}
+       \includegraphics[width=\textwidth]{../pipeline/task-output/solver-runtimes/runtimes-euler.pdf}
+       \caption{Euler}
+       \label{fig:runtimes-safe-unsafe-euler}
+   \end{subfigure}
+   
+    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets, one harder to simulate than the other as it makes the problem stiff. The time axis is in log-scale, lines shown are regression lines through the marked points. Note that the number of equations increases exponentially with maximum order, essentially making this a log-log plot.}
+\label{fig:runtimes-safe-unsafe}
+\end{figure}
+
+Since heuristic solvers tend to automatically adjust the step size depending on the problem in hand, adjusting for the rate of stochastic events being simulated. It is therefore expected that such solver would perform worse for stiff problems, where the timeframes between the events become shorter and shorter and therefore more steps are needed.
+Indeed, the \texttt{ode15s} solver seems to clearly indicate this as seen in \autoref{fig:runtimes-safe-unsafe-ode15s}.
+Euler solver, on the other hand, uses a constant step size, and therefore the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
+
+Essentially, this result aims to remind one that the \gls{ode} solvers are inherently heuristic. Whenever these heuristics do not work, the cpu performance of the solver algorithms might suffer considerably.
+
+Taking the above paragraph into account, it is interesting to see which of the solvers perform the best on the given parameter set. 
+To do so, we ran the same simulations on all of the solvers at our disposal, and their variants.
+The results are summarised in \autoref{fig:solver-runtimes}.
+
+\sauliustodo[inline]{Describe these results, after you get some sleep}
+
+\begin{figure}[bt]
+    \centering
+    \includegraphics[width=\textwidth]{../pipeline/task-output/solver-runtimes/runtimes-all.pdf}
+    \caption{Comparison of all solver runtimes}
+    \label{fig:solver-runtimes}
+\end{figure}
 
 
 \subsection{Moment Expansion Closure}
@@ -105,7 +171,7 @@ igure~\ref{fig:max_order_and_closure_on_distance_summary} summarises our resutlt
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
+    \includegraphics[width=0.95\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
     \caption{\emph{Effect of different closure methods and maximal moment order on simulation accuracy}. The \pft system was modelled using \gls{mea} with five types of closure and for maximal moment order up to seven.
 Resulting trajectories were all compared to an average of 5000 \gls{gssa} simulations using sum of square distance (a).
 Distance is in log scale. Missing values indicate solver failure for that particular set of parameters.}
@@ -139,7 +205,7 @@ Therefore, this behaviour is perfecty normal.
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{../pipeline/task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf}
+    \includegraphics[width=0.95\textwidth]{../pipeline/task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf}
 %~
     \caption{\emph{Complete trajectories of a single species (\pft) for max order three and seven are shown} Black lines indicate the average of \gls{gssa} simulations. Missing lines, compared to the legend in  m\autoref{fig:max_order_and_closure_on_distance_summary} indicate solver failure.}
     \label{fig:max_order_and_closure_on_distance_trajectories}
@@ -189,25 +255,25 @@ The set of parameters obtained by inference were very different from the actual 
     \label{fig:parameter_pair_c2_c6}
     \caption{Parameter pair $c_2$ and $c_6$}
     \end{subfigure}
-    
+    ~
     \begin{subfigure}[t]{0.9\textwidth}
     \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c1}.pdf}
     \label{fig:parameter_pair_c0_c1}
     \caption{Parameter pair $c_0$ and $c_1$}
     \end{subfigure}
-    
+    ~
     \begin{subfigure}[t]{0.9\textwidth}
     \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c6}.pdf}
     \label{fig:parameter_pair_c0_c6}
     \caption{Parameter pair $c_0$ and $c_6$}
     \end{subfigure}
-   
+    ~
     \begin{subfigure}[t]{0.9\textwidth}
     \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c1-c6}.pdf}
     \label{fig:parameter_pair_c1_c6}
     \caption{Parameter pair $c_1$ and $c_6$}
     \end{subfigure}
-
+    ~
     \caption{\emph{Four parameter pairs can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.} 
     The distance from the SSA trajectory for each species is displayed in each subfigure.
     Trajectories are simulated using maximum order 1. The three columns in each row represent the three species in the \pft{} model.}
@@ -229,27 +295,31 @@ We then have chosen the pair of parameters that allowed the inference procedure 
     \begin{subfigure}[t]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
+    ~
     \begin{subfigure}[b]{0.6\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
-       
+    ~
     \begin{subfigure}[t]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
+    ~
     \begin{subfigure}[b]{0.6\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}    
-    
+    ~
     \begin{subfigure}[b]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
+    ~
     \begin{subfigure}[b]{0.6\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}    
-        
+     ~   
     \begin{subfigure}[b]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
+    ~
     \begin{subfigure}[b]{0.6\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}    
@@ -257,6 +327,7 @@ We then have chosen the pair of parameters that allowed the inference procedure 
     \begin{subfigure}[b]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
+    ~
     \begin{subfigure}[b]{0.6\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
@@ -282,5 +353,3 @@ Furthermore, when using higher maximal order for inference, a slight gap between
 The deviation between inferred and correct parameter values can be explained using the distance landscape, as the starting point i.e. the true parameter values, can be distant from the minima. As the maximal order increases, the distance gradient becomes less sharp, disables the system to find the minima.
 
 In conclusion, the data makes us question the validity of parameter inference approaches using \gls{mea} approximation.
-
-
