@@ -18,7 +18,7 @@ it is paramount to make the implementation as efficient as possible.
 
 In this section, we explore the implementation factors that influence the runtime of the algorithm, and describe the optimisations done to increase the its performance.
 In particular, we show that symbolic computations can be limiting the algorithm and explain the techniques used to optimised them.
-We also quantify the increase in performance we achieved and show that it is several orders of magnitude faster than the original \mat{} implementation.
+We also quantify the increase in performance we achieved and show that it is several orders of magnitude faster than the original \mat{} prototype.
 In addition, we explore other limiting factors we have less control of, such as the choice of \gls{ode} solver, and discuss their potential implications to the analysis of biological systems.
 
 \subsubsection{Optimising \acrlong{mea}}
@@ -58,7 +58,7 @@ The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal mome
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
 Nine replicates were performed on the same CPU. 
-For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations
+For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.
 }
 \label{fig:mea_speed}
 \end{figure}
@@ -72,11 +72,9 @@ These improvement have allowed us to explore the performance of MEA in higher de
 
 \subsubsection{Evaluating Expressions Efficiently}
 
-\sauliustodo[inline]{QG: reviewed, what do you think ?}
-
 As mentioned in the introduction to this section, the reduction of computational cost was the main reason for developing of approximation methods.
-As described in the previous section, in order to be able to explore the approximation methods in more depth,
-we needed to make the generation of the set of equations as efficient as possible. 
+In order to be able to explore the approximation methods in more depth,
+we needed to make the generation of the set of equations as efficient as possible, as mentioned in the previous section.
 
 Generating a set of equations (\ie{} and \gls{ode} problem) is generally only the first step.
 In most cases, the result is used to perform simulations with different parameters.
@@ -103,7 +101,6 @@ This performance improvement is illustrated in the tutorial \autoref{sec:reuse_o
 
 \subsubsection{Comparing the Performance of Different \gls{ode} Solvers}
 
-\sauliustodo[inline]{QG: reviewed, what do you think ?}
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
 The performance of numerical \gls{ode} solvers themselves also plays a critical role.
 
