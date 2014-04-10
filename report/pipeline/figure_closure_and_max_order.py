@@ -177,7 +177,7 @@ class FigureSummaryDistanceBase(FigureTask):
 
 
         import pylab as pl
-        fig = pl.figure(figsize=(16.0, 5.0))
+        fig = pl.figure(figsize=(8.0, 2.5))
         pl.yscale('log')
         #fig.set_yscale('log')
         for res in results:
@@ -190,7 +190,7 @@ class FigureSummaryDistanceBase(FigureTask):
 
             lab = "{0}, {1}".format(res["closure"], mv)
             pl.plot(res["max_orders"], res["distances"], color=res["col"],
-                    linestyle=res["sty"], alpha=res["alpha"], marker="o", label=lab)
+                    linestyle=res["sty"], alpha=res["alpha"], marker="o", label=lab, linewidth=2)
 
         pl.axis(xmin=1.5, xmax=self.max_max_order + 0.5)
 
@@ -232,8 +232,8 @@ class FigureP53Simple(FigureP53):
                 n_species = len([None for t in trajs if t.description.order == 1])
                 continue
 
-        # f, axarr = pl.subplots(1, 2, sharex=True, figsize=(9.0, 9.0))
-        f, axarr = pl.subplots(1, 2, sharey=True, figsize=(16.0, 5.0))
+
+        f, axarr = pl.subplots(1, 2, sharey=True, figsize=(8.0, 2.5))
         sps= 0
         ssa_traj = get_traject(tasks, trajectory_buffers, 0, sps,
                                             0, 0, ssa=True)
