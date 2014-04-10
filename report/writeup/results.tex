@@ -18,7 +18,7 @@ it is paramount to make the implementation as efficient as possible.
 
 In this section, we explore the implementation factors that influence the runtime of the algorithm, and describe the optimisations done to increase the its performance.
 In particular, we show that symbolic computations can be limiting the algorithm and explain the techniques used to optimised them.
-We also quantify the increase in performance we achieved and show that it is several orders of magnitude faster than the original \mat{} implementation.
+We also quantify the increase in performance we achieved and show that it is several orders of magnitude faster than the original \mat{} prototype.
 In addition, we explore other limiting factors we have less control of, such as the choice of \gls{ode} solver, and discuss their potential implications to the analysis of biological systems.
 
 \subsubsection{Optimising \acrlong{mea}}
@@ -58,7 +58,7 @@ The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal mome
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
 Nine replicates were performed on the same CPU. 
-For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations
+For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.
 }
 \label{fig:mea_speed}
 \end{figure}
@@ -72,11 +72,9 @@ These improvement have allowed us to explore the performance of MEA in higher de
 
 \subsubsection{Evaluating Expressions Efficiently}
 
-\sauliustodo[inline]{QG: reviewed, what do you think ?}
-
 As mentioned in the introduction to this section, the reduction of computational cost was the main reason for developing of approximation methods.
-As described in the previous section, in order to be able to explore the approximation methods in more depth,
-we needed to make the generation of the set of equations as efficient as possible. 
+In order to be able to explore the approximation methods in more depth,
+we needed to make the generation of the set of equations as efficient as possible, as mentioned in the previous section.
 
 Generating a set of equations (\ie{} and \gls{ode} problem) is generally only the first step.
 In most cases, the result is used to perform simulations with different parameters.
@@ -103,7 +101,6 @@ This performance improvement is illustrated in the tutorial \autoref{sec:reuse_o
 
 \subsubsection{Comparing the Performance of Different \gls{ode} Solvers}
 
-\sauliustodo[inline]{QG: reviewed, what do you think ?}
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
 The performance of numerical \gls{ode} solvers themselves also plays a critical role.
 
@@ -260,33 +257,36 @@ Parameter inference procedure aims to obtain the correct parameter values for th
 
 %In order to study the performance of the parameter inference procedure using \acrlong{mea}, we took the average trajectory obtained from the  $5000$ \gls{gssa} simulations of the \pft{} with a certain parameter set and used it as the observed dataset we want to infer the parameters from. Essentially, the inference procedure is expected to return the said parameter set back to us.
 In order to study the performance of the parameter inference procedure using \acrlong{mea},
-we generated $5000$ \gls{gssa} simulations of the \pft{} with a certain parameter set.
+we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. We believe this number of \gls{gssa} simulations to be sufficient to capture the behaviour of this model system in full.
 Then, we used the average as an observed dataset from which to infer parameters.
-In this way, we know exactly what are the ``true'' parameters.
+In this way, we know exactly what are the ``true'' parameters for every inference procedure we perform.
 
 In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments (see \autoref{fig:7_dimensional_parameter_space}).
 This approximation is bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}.
 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
-\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
-In the parameter inference procedure, all seven parameters were free and started from the correct values.
-The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{gssa} trajectories.}
-\label{fig:7_dimensional_parameter_space}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
+%\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
+%In the parameter inference procedure, all seven parameters were free and started from the correct values.
+%The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{gssa} trajectories.}
+%\label{fig:7_dimensional_parameter_space}
+%\end{figure}
 
 
 The starting parameters were the correct ones, so we expected immediate convergence (\ie{} no movement in the parameter space).
-Surprisingly, when parameters are free, inference was able to find a different set of parameters for which observed and theoretical trajectories are extremely similar.
-This result was unexpected, because, in this case, \gls{mea} was modelling means (no higher order moments).
+Surprisingly, when parameters are free, inference was able to find a set of parameters, mind very different from the ``correct" ones, for which observed and theoretical trajectories are extremely similar.\sisitodo{Can you add a figure showing how similar they are here?}
+This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
 
-The set of parameters obtained by inference were very different from the ``true'' parameters (from \gls{gssa} simulations),
-but the approximated trajectories were identical (see \autoref{fig:parameter_pairs}).
-This strongly questions the suitability of parameter inference procedures in obtaining the correct parameter sets.
 
-\begin{figure}
+%\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
+
+In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves to, easier to comprehend, two-dimensional space.
+To do this, we restricted our parameter inference procedure to only have only a pair of free parameters at a time (all other parameters are fixed to their true values).
+We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
+
+\begin{figure}[tb]
     \centering
     \begin{subfigure}[t]{0.9\textwidth}
     \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c2-c6}.pdf}
@@ -300,44 +300,36 @@ This strongly questions the suitability of parameter inference procedures in obt
     \caption{Parameter pair $c_0$ and $c_1$}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.9\textwidth}
-    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c6}.pdf}
-    \label{fig:parameter_pair_c0_c6}
-    \caption{Parameter pair $c_0$ and $c_6$}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[t]{0.9\textwidth}
-    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c1-c6}.pdf}
-    \label{fig:parameter_pair_c1_c6}
-    \caption{Parameter pair $c_1$ and $c_6$}
-    \end{subfigure}
-    ~
-    \caption{\emph{Four parameter pairs can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.}
+    \caption{\emph{Two out of four parameter pairs that can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.}
     The distance from the SSA trajectory for each species is displayed in each subfigure.
     Trajectories are simulated using maximum order 1. The three columns in each row represent the three species in the \pft{} model.}
     \label{fig:parameter_pairs}
 \end{figure}
 
-%\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
-
-In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves to, easier to comprehend, two-dimensional space.
-To do this, we restricted our parameter inference procedure to only have only a pair of free parameters at a time (all other parameters are fixed to their true values).
-We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
-
-Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (see \autoref{fig:parameter_pairs}).
+Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (first two pictured in the\autoref{fig:parameter_pairs}).
 We then have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
+\sisitodo[inline]{Change the figures to show one of the species for the plots, not all three -- the information is redundant now, and this would allow to make them larger while using the same space on the page}
 
+\sisitodo[inline]{Unify the height of the two figures}
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{Distance Landscape}
+    \label{fig:inference_phenomenon:maxorder:1:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.65\textwidth}
+    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{Trajectories}
+    \label{fig:inference_phenomenon:maxorder:1:trajectories}
+    \end{subfigure}
+    \caption{The distance landscapes and observed trajectories for the parameter inference performed for first order moment expansion approximation}
+    \label{fig:inference_phenomenon:maxorder:1}
+\end{figure}
 
 \begin{figure}
-\centering
-    \begin{subfigure}[t]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.6\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \end{subfigure}
-    ~
+    \centering
     \begin{subfigure}[t]{0.2\textwidth}
     \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
@@ -381,18 +373,16 @@ The distance displayed for each species represent the distance between the optim
 \label{fig:parameter_inference_landscape_trajectories}
 \end{figure}
 
+\sisitodo[inline]{I do not like the way the subsequent paragraphs were worded as they do not tell the reader anything and pretty much are "look at the figure yourself. I rewrote part of the text to try to explain a couple of things we want to explain. Read through it, and see if you can add anything.}
 
+In order to understand this phenomenon, we aimed to explore the distance landscape of the particular problem. As one can see from the distance landscape pictured in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the parameter inference starts in a high-distance zone, which is expected as \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
+What is surprising to observe, however, that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
 
+We then moved on to explore this behaviour for the higher-order \gls{mea} approximations. We were able to observe that the starting trajectory becomes closer to the real trajectory as we increase the maximum order of the moments, with the best results when the moments were closed at the maximum order of three. 
+We can also see that the distance landscapes become more and more level for higher order moments, however, the parameter inference process still not stationary and able to  drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
 
-As seen in \autoref{fig:parameter_inference_landscape_trajectories}, the optimal trajectories obtained using inference are mostly overlaping with the \gls{gssa} trajectories,
-especially for lower orders.
-This result is suspicious, because the parameter values inferred, as indicated in the correspondent distance, is far from the true values\sisitodo{QG: I do not get this}.
-In fact, the inferred value for $c_6$ can be more than 10 times larger than the true value, which is not meaningful biologically.
-Furthermore, when using higher maximal order for inference, a slight gap between the optimal and \gls{gssa} trajectories does not imply better inference result,
-because the inferred parameter values are still incorrect.
+\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
+\sisitodo[inline]{Didn't we look at log normal closure/even higher order moments, I don't remember that much blue!}
 
-The deviation between inferred and correct parameter values can be explained using the distance landscape,
-as the starting point \ie{} the true parameter values, can be distant from the minima.
-As the maximal order increases, the distance gradient becomes less sharp, preventing the system from finding the minima.
-
-In conclusion, these result raises interrogations about the validity of parameter inference approaches using \gls{mea} approximation.
+In conclusion, we do not seem to be able to recover the correct parameter set even in the best case, when the parameter inference does not need to do any work at all. 
+This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
