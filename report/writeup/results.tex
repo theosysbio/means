@@ -3,7 +3,7 @@
 
 
 \subsection{Performance}\label{performance}
-The temporal dynamics of a molecular system can be described by the \acrfull{cme}\citationneeded{CME reference}.
+The temporal dynamics of a molecular system can be described by the \acrfull{cme}\cite{kampen_stochastic_2011}.
 \acrfull{gssa}\cite{gillespie_general_1976} simulates these stochastic dynamics directly returning a set of individual trajectories for a list of particles observed.
 In order to obtain accurate estimates of the average dynamic within a population of cell (\ie{} the mean dynamics), it is however necessary to perform multiple (often more than $10^4$) simulations.
 Despite recent efforts \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive. 
@@ -111,9 +111,9 @@ These solvers differ in many ways ranging from a set of parameters to different 
 Choice of the \emph{best} solver for an \acrlongpl{ode} system depends very much on the particular problem to simulate.
 However certain solvers tend to be more generally adopted than others\cite{andersson_workbench_2012}.
 
-CVODE\citationneeded{CVODE?} is an example of one of the most widely used solvers.
+CVODE\cite{hindmarsh_sundials_2005} is an example of one of the most widely used solvers.
 As described in \autoref{sec:ode_simulations}, we implement two variants of this solver, \verb#ode15s# and \verb#cvode#.
-Both solvers point to the same back-end implementation of CVODE provided by \verb#assimulo# package\citationneeded{assimulo}.
+Both solvers point to the same back-end implementation of CVODE provided by \verb#assimulo# package\cite{andersson_christian_assimulo:_????}.
 The only diference is that \verb#ode15s# solver's default parameters mimics the eponymous \mat{} solver.
 
 Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
@@ -183,7 +183,7 @@ and a covariance matrix (\ie{} second order central moments).
 As a consequence, it is possible to express any arbitrary moment from means, variances and covariances. 
 A promising area of research involves closing moment expression by parametric forms of highest order central moments instead
 of assuming them to be null.
-Preliminary work \citationneeded{Eszter, unpublished} suggests that using a parametric distributions for \gls{mea} is, in some cases, a better approximation.
+Preliminary work \cite{lakatos_preparation_2014} suggests that using a parametric distributions for \gls{mea} is, in some cases, a better approximation.
 In addition, Ale \emph{et al.} predicted that ``including more moments would improve the estimation''\cite{ale_general_2013}.
 
 The dramatic improvement in performance compared to the \mat{} prototype (see \autoref{sec:optimising_mea}) has rendered the exploration of higher-order and parametric moment closures possible.
