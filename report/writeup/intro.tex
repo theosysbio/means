@@ -1,10 +1,8 @@
 \section{Introduction} \label{intro}
-\subsection{Moment Closure Methods}
 
-Most biological systems, such as cells, organisms, populations and ecosystems are intricaly complex and non-linear.
+Most biological systems, such as cells, organisms, populations and ecosystems are intrinscaly complex and non-linear.
 For this reason, some aspect of these systems are extremely difficult to understand and predict, both qualitatively and quantitatively\cite{klipp_systems_2013}.
-Using explicit models to describe them provide an abstract and extensible
-framework which allows to infer state of a system from experimental data.
+Using explicit models to describe them provide an abstract and extensible framework which allows to infer the state of a system from experimental data.
 In addition, models permit to make testable predictions on the behaviour of the system when parameters are modified.
 In the last few decades, using mathematical representations of biological interactions has been an increasingly fruitful and wide aspect of biological research.
 Many areas of biology, such as ecology, population biology and biochemistry,
@@ -20,10 +18,10 @@ In this situation, the assumptions of deterministic modelling may fail.
 This has been shown to result in quantitative inaccuracy, and, in the worst cases, qualitatively erroneous predictions.
 
 
-In order to overcome limitations of deterministic modelling, stochastic modelling has been advanced as a solution.
+In order to overcome the limitations of deterministic modelling, stochastic modelling has been advanced as a solution.
 It relies on \gls{cme}, which is a set of differential (or difference) equations providing an \emph{exact} description of a system\cite{kampen_stochastic_2011}.
 Except for very simple systems, the \gls{cme} cannot be solved analytically.
-However, it is possible to simulate single realisations of the chemical master equation using \gls{gssa}.
+However, it is possible to simulate single realisation of the Chemical Master Equation using \gls{gssa}.
 If enough (generally several thousands), simulations are performed, very accurate estimations of the system can be obtained.
 Despite extensive effort on increasing the efficiency of such simulations, either by describing new algorithms, or by improving implementations,
 they remain too slow for certain problems.
@@ -52,7 +50,7 @@ to express any moment in terms of parameters of this distribution\cite{milner_mo
 Therefore, instead of closing moment expansion with an absolute (scalar) value, it can be closed by expressions in
 terms of distribution parameters such as mean and variance, which are lower order moments.
 In principle, \emph{a priori} information on the system can help to decide what type of closure is appropriate for a given system.
-Preliminary investigation of this ``parametric moment expansion closure'' in the context of MEA has reviled promising preliminary results\cite{lakatos_preparation_2014}.
+Preliminary investigation of this ``parametric moment expansion closure`` in the context of MEA has reviled promising preliminary results\cite{lakatos_preparation_2014}.
 
 \gls{mea} being a very recent development, no comprehensive public implementation is available to the community.
 An in-house \mat{} package was developed by the authors of the original publication and a \py{} implementation was attempted by last year's MSc students\cite{babtie_moment_2013}.
@@ -61,11 +59,11 @@ However, both implementations are still prototypical and mostly undocumented.
 The aim of our work was to improve and extend existing tools in order to provide a comprehensive implementation of \gls{mea}.
 We provide \means{}, a \py{} package for Moment Expansion Approximation, iNference and Simulations.
 Our package implement \gls{mea}, but also \gls{gssa} and \gls{lna}.
-In addition, moment expansion closure can be performed using Normal, Log-Normal and Gamma distributions as well as the original scalar closure.
+In addition, moment expansion closure can be performed using Normal, Log-Normal and Gamma distributions as well as the original scalar (or zero) closure.
 
 In the report herein, we explain which decisions drove the design of the package.
 Then, we describe how we have dramatically restructured the original code in order to improve maintainability.
 Afterwards, some examples of intended use and tutorials are presented to the illustrate the usability and the scope of \means.
-We then demonstrate how we managed to considerably improve performance during development.
+We then demonstrate how we managed to considerably improve the performance during development.
 Importantly, we further used our package to critically assess \gls{mea}, and address potential limitations.
 Finally, an exhaustive documentation for future maintainers and users was printed in the appendix of this document.
