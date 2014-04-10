@@ -42,6 +42,20 @@ def remove_in_tags(match):
 
     return '\n'.join([start_line] + answer_lines + [end_line])
 
+def with_label(hierarchy_name):
+
+    def f(match):
+        name = match.group(1)
+        name_as_label = name.lower()
+        name_as_label = re.sub('[^a-zA-Z_]', '_', name_as_label)
+        name_as_label = re.sub('_+', '_', name_as_label)
+
+
+        return '\\{0}{{{1}}}\\label{{sec:{2}}}'.format(hierarchy_name, name, name_as_label)
+
+    return f
+
+
 
 def process_file(filename, resulting_filename):
     # Hacky, I know, but faster than finding the way to do that programmatically
@@ -64,10 +78,10 @@ def process_file(filename, resulting_filename):
     contents = re.sub(r"\\begin\{Verbatim\}(.|\n)*?interactive namespace(.|\n)*?\\end\{Verbatim\}", "", contents, re.MULTILINE)
 
     # Move section names one level down
-    contents = re.sub(r"\\paragraph", "\\subparagraph", contents)
-    contents = re.sub(r"\\subsubsection\{(.*?)\}", r"\\paragraph{\1}", contents)
-    contents = re.sub(r"\\subsection", "\\subsubsection", contents)
-    contents = re.sub(r"\\section", "\\subsection", contents)
+    contents = re.sub(r"\\paragraph\{(.*?)\}", with_label('subparagraph'), contents)
+    contents = re.sub(r"\\subsubsection\{(.*?)\}", with_label('paragraph'), contents)
+    contents = re.sub(r"\\subsection\{(.*?)\}", with_label('subsubsection'), contents)
+    contents = re.sub(r"\\section\{(.*?)\}", with_label('subsection'), contents)
 
     # ODEProblem formatting
     contents = contents.replace('<h1>ODEProblem</h1>', r'\textbf{ODEProblem}')
