@@ -3,15 +3,16 @@
 
 Most biological systems, such as cells, organisms, populations and ecosystems are intricaly complex and non-linear.
 For this reason, some aspect of these systems are extremely difficult to understand and predict, both qualitatively and quantitatively\cite{klipp_systems_2013}.
-Using explicit models to describe them provide an abstract and extensible framework that allows to infer state of a system from experimental data.
+Using explicit models to describe them provide an abstract and extensible
+framework which allows to infer state of a system from experimental data.
 In addition, models permit to make testable predictions on the behaviour of the system when parameters are modified.
 In the last few decades, using mathematical representations of biological interactions has been an increasingly fruitful and wide aspect of biological research.
 Many areas of biology, such as ecology, population biology and biochemistry,
 use kinetic modelling to describe and understand temporal dynamics of their respective systems.
 
-Deterministic modelling of dynamic systems generally involves listing the interacting agents (species) of a system and decomposing
-it in individual processes (\eg{} chemical reactions).
-Processes are mathematically described with explicit rate parameters, and \glspl{ode} are used to express the amount of species over time.
+Deterministic modelling of dynamic systems generally involves listing
+interacting agents (species) and decomposing a system in individual processes (\eg{} chemical reactions).
+Processes are mathematically described with explicit rate parameters, and \glspl{ode} are used to express the change in the amount of species over time.
 Generally, systems are assumed to be homogeneous, and the amount of each species is approximated as a continuous quantity.
 This approach has been extremely useful for describing many systems, but it faces severe limitations when modelling small discrete quantities.
 For instance, macromolecules in a cell can be present in a very small amount (less than 100).
@@ -30,7 +31,7 @@ In particular, when trying to infer biological parameters from experimental data
 it is necessary to perform many simulations.
 In extreme cases, such as for \gls{abc}\cite{toni_approximate_2009}, a very large number of simulations are necessary in order to obtain an 
 accurate posterior distributions for parameters.
-For parameter inference, stochastic simulations are unfortunately critically slow and can rarely be used, even for relatively simple systems.
+Therefore, for parameter inference, stochastic simulations are unfortunately critically slow and can rarely be used, even for relatively simple systems.
 
 In order to overcome performance limitations of stochastic simulations whist providing accurate enough results, approximations have been used.
 \Gls{lna}, for instance, approximates the \gls{cme}
