@@ -37,7 +37,7 @@ These discussions are often constraining the requirements with the implementatio
 The easiest way to keep the requirements in a high level was to limit the discussion to a set of scenarios of usage.
 These scenarios are commonly referred to \emph{user stories} and usually follow the template: ``As (some user type, \eg{} \emph{a scientist)} I would like to (some action, \eg{} \emph{perform these calculations}) because (optionally, the reason for this use case)".
 The first part of this relatively free-form gives a view of the potential user base of the software.
-For instance researchers and undergraduate students may have different requierements.
+For instance researchers and undergraduate students may have different requirements.
 The second part, provides a set of important use cases for the problem.
 Finally, the third part assesses the relative importance of each of the use cases.
 
@@ -74,7 +74,7 @@ In order to make the code easier to maintain and manage, we have divided \means{
 We have paid particular attention in making all the necessary features importable using the pythonic shorthand \verb"from means import *", 
 as to ensure it is simple enough to use \means{} in interactive environments where it might be uncomfortable to deal with modularity explicitly.
 
-The nine submodules in \means{} ands their respective role are listed below:
+The nine submodules in \means{} and their respective role are listed below:
 \begin{enumerate}
     \item \verb"means.core" -- the core functionality, such as the definitions of key classes
     \item \verb"means.approximation" -- implementations of the \gls{lna} and \gls{mea} approximation methods.
@@ -107,21 +107,21 @@ Finally, the \verb"Model" class, which provides a standard interface to describe
 
 \subsubsection{{\tt means.approximation} -- approximation methods for biological models}
 
-The approximation submodule implements \gls{lna} and \gls{mea} methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:making-a-model} for a detailed description on how this encoding is done).
+The approximation submodule implements \gls{lna} and \gls{mea} methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:Model-definition} \sauliustodo{not sure how to fix this} for a detailed description on how this encoding is done).
 
 The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned.
-This keeps specific routines in separate modules, thus avoiding \gls{lna} and \gls{mea} implementations namespace polutiong each other.
+This keeps specific routines in separate modules, thus avoiding \gls{lna} and \gls{mea} implementations namespace polluting each other.
 This also provides a clear path for future developers to implement new approximation methods -- simply creating another sub-package.
 
 Despite being in different packages, both approximation methods inherit from the same base class, intuitively named \verb"ApproximationBaseClass".
-This base class defines the common interface all approximation methods; namely, the dependancy on \verb"Model" and public \verb"run()" method that implements the mathematics and returns a \verb"ODEProblem" object that can be simulated.
+This base class defines the common interface all approximation methods; namely, the dependency on \verb"Model" and public \verb"run()" method that implements the mathematics and returns a \verb"ODEProblem" object that can be simulated.
 This common interface is required for any pipeline using the approximation methods to be method-agnostic.
 In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless of whether \gls{lna} or \gls{mea} was used. 
 It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing an approximation method, but it will also be immediately compatible with all the packages using the approximations.
 
-The advantages described above apply mostly for software using all or part of the \means{} package to perform designated tasks\sauliustodo{QG: not v clear}.
+The advantages described above apply mostly to software using all or part of the \means{} package to perform designated tasks\sauliustodo{QG: not v clear}.
 The necessity of creating approximation objects and running their \verb"run()" function in order obtain the \gls{ode}s soon becomes a burden in the interactive environments.
-In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example}.
+In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example} \sauliustodo{autoref problem}.
 
 \subsubsection{{\tt means.simulation} -- stochastic and deterministic simulation routines}
 
@@ -137,7 +137,7 @@ This is a non-issue for the approximation objects, whose heavy-lifting function 
 Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines. 
 Shorthand function would not provide a way to exploit this caching of computation, as it would force to create a new simulation object, even if it could be reused, therefore we did not code that workflow.
 
-Examples on how to use both classes are provided in \autoref{sec:example-simulation}.
+Examples on how to use both classes are provided in \autoref{sec:example-simulation}\sauliustodo{another autoref}.
 
 \subsubsection{{\tt means.inference} -- parameter inference methods}
 % Change src/means/inference/__init__.py if you are modifying this
@@ -146,7 +146,7 @@ Parameter inference will try to find the set of parameters which
 produces trajectories with minimal distance to the observed trajectories.
 
 Different distance functions are implemented (such as functions minimising the sum of squares error
-or functions based on parametric likelihood), but it is also possible to use custom distance functions.
+or functions based on parametric likelihood), but it is also possible to use customised distance functions.
 
 The package provides support for both inference from a single starting point (\verb"Inference")
 or inference from random starting points (\verb"InferenceWithRestarts").
@@ -156,7 +156,7 @@ Some basic inference result plotting functionality is also provided by the packa
 
 \subsubsection{{\tt means.io} -- reading and writing of \means-specific objects}
 % change src/means/io/__init__.py if you are changing this
-The module implements common methods to serialise and deserialise \means objects.
+The module implements common methods to serialise and deserialise objects in \means.
 Namely the module provides functions \verb`means.io.dump` and  \verb`means.io.load` that would
 serialise and deserialise the said objects into YAML format\cite{_official_????}.
 These serialised representations can be written to or read from files with the help of
@@ -184,7 +184,7 @@ to \verb`means.core.Model` objects. See example usage in \todo{Link to some tuto
 % change src/means/util/__init__.py if you're changing this
 This package contains helper functions that did not fit into any other packages.
 These functions include helper functions for common operations when dealing with \verb`sympy`,
-as well as functions that help with memoisation of CPU intensive function results.
+as well as functions that help with memorisation of CPU intensive function results.
 
 These functions are designed to be package-specific.
 The users of the software are generally discouraged to use any of these functions.
@@ -237,7 +237,7 @@ We chose to use all of the examples given in the previous year's group report as
 In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and ensure to notify us if there are problems with it. 
 This way we can eliminate the human factor and ensure that the tests are really run often and completely and therefore ensure the continuous compliance with the specification.
 
-As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this, better, picture a GC content counting algorithm for some DNA sequence. 
+As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this better, picture a GC content counting algorithm for some DNA sequence. 
 A regression test (sometimes also called functional test) would run the algorithm on whole DNA sequence and check that the overall output is, say, 60\%. 
 Unit tests would only test a small subset of the system, for instance, it could check that given a particular window of DNA, the overall GC count is correctly computed in that window. Similarly, it could check that given a couple of counts obtained from such windows, they are averaged correctly and so on. 
 
