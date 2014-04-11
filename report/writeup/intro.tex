@@ -7,7 +7,7 @@ In addition, models allow to make testable predictions about the behaviour of th
 In the last few decades, use of mathematical representations of biological interactions has been an increasingly fruitful and wide aspect of biological research.
 Many areas of biology, such as ecology, population biology and biochemistry, now
 use kinetic modelling to describe and understand temporal dynamics of their respective systems.
-
+\gls{maxord}
 Deterministic modelling of dynamic systems generally involves listing
 interacting agents (species) and decomposing a system in individual processes (\eg{} chemical reactions).
 Processes are mathematically described with explicit rate parameters, and \acrfullpl{ode} are used to express the change in the amount of species over time.
@@ -21,7 +21,7 @@ This has been shown to result in quantitative inaccuracy\cite{ale_general_2013},
 Stochastic modelling has been used as an alternative to deterministic modelling, when these assumptions are violated.
 It relies on \gls{cme}, which is a set of differential (or difference) equations providing an \emph{exact} description of a system\cite{kampen_stochastic_2011}.
 Except for very simple systems, the \gls{cme} cannot be solved analytically.
-However, it is possible to simulate single realisation of the Chemical Master Equation using \gls{gssa}.
+However, it is possible to simulate single realisation of the Chemical Master Equation using \gls{ssa}.
 If enough (generally several thousands), simulations are performed, very accurate estimations of the system can be obtained.
 Despite extensive effort on increasing the efficiency of such simulations, either by describing new algorithms, or by improving implementations,
 they remain too slow for certain problems.
@@ -67,7 +67,7 @@ However, both implementations are still prototypical and not ready to be made av
 The aim of our work was to improve and extend existing tools in order to provide a comprehensive publication-ready implementation of \gls{mea}.
 We provide \means{}, a \py{} package for Moment Expansion Approximation, iNference and Simulation. 
 Here we build on top of the existing functionality in the aforementioned \py{} implementation, aiming to restructure it to make it easier to manage, as well as document it better. 
-We also implement the support moment expansion closure using Normal, Log-Normal and Gamma distributions in addition to the original scalar (or zero) closure. Similarly, we provide \gls{gssa} implementation in the package as well as support for different \gls{ode} solvers and additional visualisation functionality.
+We also implement the support moment expansion closure using Normal, Log-Normal and Gamma distributions in addition to the original scalar (or zero) closure. Similarly, we provide \gls{ssa} implementation in the package as well as support for different \gls{ode} solvers and additional visualisation functionality.
 
 In the report herein, we explain the decisions that drove the design of the package.
 Then, we describe the new restructured structure of the code that improves it's maintenabilty.
@@ -96,13 +96,13 @@ Finally, all author took part in writing the documentation of the package.
 
 More specifically, SF and QG worked conjointly on implementing parametric moment closures for \gls{mea}.
 SL and SF worked on  investigating limitations of inference together.
-SL and QG investigated together the impact of closure distribution and maximal moment order on the accuracy and success of the simulation.
+SL and QG investigated together the impact of closure distribution and \gls{maxord} on the accuracy and success of the simulation.
 
 
 SF implemented support for \gls{lna} method and \gls{sbml} standard.
 She also wrote most of the large collection of tutorials.
 QG was involved in implementing the core of symbolic calculation for \gls{mea}, as well as optimising its performance.
-In addition, he implemented support for \gls{gssa}.
+In addition, he implemented support for \gls{ssa}.
 SL implemented the core simulation and inference mechanisms and improve their performance.
 He was responsible for setting up and maintaining the continuous integration server.
 Importantly, SL spend a significant amount of time sharing his software project experience with the rest of the group.
