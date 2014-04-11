@@ -24,6 +24,8 @@ from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
 from means.simulation.descriptors import PerturbedTerm
 
+TRAJECTORY_DPI = 328
+TRAJECTORY_FIGSIZE = (5, 3)
 
 class Trajectory(SerialisableObject):
     """
@@ -104,8 +106,8 @@ class Trajectory(SerialisableObject):
     def _repr_png_(self):
         from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
+        fig = plt.figure(figsize=TRAJECTORY_FIGSIZE, dpi=TRAJECTORY_DPI)
         ax = self._create_plot()
-        fig = plt.gcf()
         data = print_figure(fig, 'png')
         plt.close(fig)
         return data
@@ -118,8 +120,8 @@ class Trajectory(SerialisableObject):
     def _repr_svg_(self):
         from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
+        fig = plt.figure(figsize=TRAJECTORY_FIGSIZE, dpi=TRAJECTORY_DPI)
         ax = self._create_plot()
-        fig = plt.gcf()
         data = print_figure(fig, 'svg')
         plt.close(fig)
         return data
@@ -127,7 +129,7 @@ class Trajectory(SerialisableObject):
     @property
     def svg(self):
         from IPython.display import SVG
-        return SVG(self._repr_png_())
+        return SVG(self._repr_svg_())
 
     def resample(self, new_timepoints, extrapolate=False):
 
@@ -397,7 +399,7 @@ class TrajectoryCollection(SerialisableObject):
         else:
             return answer
 
-    def _create_figure(self):
+    def _create_figure(self, open_new_figure=False):
 
         def _key_and_title(description):
             if isinstance(description, Moment):
@@ -426,6 +428,13 @@ class TrajectoryCollection(SerialisableObject):
 
         total_subplots = subplot_counter
 
+        if open_new_figure:
+            # Create a new figure whose size depends on the number of subplots
+            fig = plt.figure(figsize=(TRAJECTORY_FIGSIZE[0], TRAJECTORY_FIGSIZE[1]*total_subplots),
+                             dpi=TRAJECTORY_DPI)
+        else:
+            fig = plt.gcf()
+
         for i,trajectory in enumerate(self.trajectories):
             description = trajectory.description
             key, title = _key_and_title(description)
@@ -440,7 +449,7 @@ class TrajectoryCollection(SerialisableObject):
             if i == len(self.trajectories) - 1:
                 plt.xlabel('time')
 
-        return plt.gcf()
+        return fig
 
     def plot(self):
         self._create_figure()
@@ -448,7 +457,7 @@ class TrajectoryCollection(SerialisableObject):
     def _repr_png_(self):
         from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
-        fig = self._create_figure()
+        fig = self._create_figure(open_new_figure=True)
         data = print_figure(fig, 'png')
         plt.close(fig)
         return data
@@ -461,7 +470,7 @@ class TrajectoryCollection(SerialisableObject):
     def _repr_svg_(self):
         from IPython.core.pylabtools import print_figure
         from matplotlib import pyplot as plt
-        fig = self._create_figure()
+        fig = self._create_figure(open_new_figure=True)
         data = print_figure(fig, 'svg')
         plt.close(fig)
         return data
@@ -469,7 +478,7 @@ class TrajectoryCollection(SerialisableObject):
     @property
     def svg(self):
         from IPython.display import SVG
-        return SVG(self._repr_png_())
+        return SVG(self._repr_svg_())
 
     def __unicode__(self):
         return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
