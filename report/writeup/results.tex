@@ -407,16 +407,17 @@ and moves back to the border between the two tiers when the maximum order is set
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
-In order to study the performance of the parameter inference procedure using \acrlong{mea},
-we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. We believe this number of \gls{gssa} simulations to be sufficient to capture the behaviour of this simple system in full.
+To study the performance of the parameter inference procedure using \acrlong{mea},
+we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. 
+We believe this number of \gls{gssa} simulations is sufficient to capture the behaviour of this simple system in full.
 Then, we used the average as an observed dataset from which to infer parameters.
 In this way, we know exactly the values for the true parameters for every inference procedure.
 
-In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments.%(see \autoref{fig:7_dimensional_parameter_space}).
-This approximation is bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}.
+In order to determine the accuracy of inference, we used the \pft{} model expressed only in terms of the first order moments.
+This approximation was bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}.
 
 
-%\begin{figure}
+%\begin{figure}parameter pairs are pictured
 %\centering
 %\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
 %\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
@@ -427,27 +428,27 @@ This approximation is bound to be very inaccurate for the particular system, as 
 
 
 We deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
-Surprisingly, when parameters are free, the inference procedure was able to find a set of parameters, but very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference}).
+Surprisingly, when parameters were free, the inference procedure was able to find a set of parameters, but very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference}).
 This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
-    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
+    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the empirical data at maximal order of $1$.}
 Each column represents one species in the \pft{} model. 
-The starting trajectories were generated based on the true parameter values, 
+The starting trajectories (red) were generated based on the true parameter values, 
 as the inference procedure started from the true values, 
-while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
-Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
+while the optimal trajectories (blue) were generated based on the inferred parameters, where all seven parameters were free.
+Averaged trajectories from $5000$ \gls{gssa} simulations ($\times$) were regarded as experimental data to compare with the starting and optimal trajectories.}
     \label{fig:range-free-parameter-inference}
 \end{figure}
 
 
 %\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
 
-In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves to, easier to comprehend, two-dimensional space.
-To do this, we limited our parameter inference procedure to have only a pair of free parameters at a time (all other parameters are fixed to their true values).
-We performed this for all combinations of two parameters and checked if we can reproduce the interesting behaviour.
+In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves to a two-dimensional space, which is easier to understand.
+To do this, we limited our parameter inference procedure to have only a pair of free parameters at a time (all other parameters were fixed to their true values).
+We performed this for all combinations of two parameters.
 
 \begin{figure}[tb]
     \centering
@@ -463,18 +464,18 @@ We performed this for all combinations of two parameters and checked if we can r
     \caption{Parameter pair $c_0$ and $c_1$}
     \end{subfigure}
     ~
-    \caption{\emph{Two out of four parameter pairs that can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.}
+    \caption{\emph{Two out of four parameter pairs that can produce a perfect match between inferred optimal trajectories and SSA trajectories for one species in \pft{} model.}
     Trajectories for one out of three species are shown here for clear demonstration.
     The distance from the SSA trajectory for each species is displayed in each subfigure.
-    Trajectories are simulated using maximum order 1. The three columns in each row represent the three species in the \pft{} model.}
+    Trajectories are simulated using maximum order of 1.}
     \label{fig:parameter_pairs}
 \end{figure}
 
-Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (first two pictured in the \autoref{fig:parameter_pairs}).
-We then have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
+Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and, finally, $c_0$ and $c_6$ (first two parameter pairs are pictured in the \autoref{fig:parameter_pairs}).
+We then chose the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average: $c_2$ and $c_6$.
 
 
-\begin{figure}
+\begin{figure}a region large enough
     \centering
     \begin{subfigure}[t]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
@@ -499,27 +500,34 @@ We then have chosen the pair of parameters that allowed the inference procedure 
     \caption{Trajectories}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
     \end{subfigure} 
-    \caption{\emph{Contour plot of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model show incorrect inference.}
+    \caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model showing incorrect inference.}
     Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
-    Each row displays a contour plot and correspondent trajectories using different maximal order in \gls{mea}.
+    Each row displays a contour plot and corresponding trajectories using different maximal order in \gls{mea}.
+    Note that the scales in the contour plots using different maximal orders are different.
     In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
     In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom. 
-    Although the optimal trajectories match with the \gls{gssa} trajectories, the correspondent contour plot shows wrong values are inferred.
-    The white space in the contour plots represent the parameter space not explored by the system.}
-    \label{fig:inference_phenomenon:maxorder:1}
+    Although the optimal trajectories (blue) match with the \gls{gssa} trajectories ($\times$), the corresponding contour plot shows wrong values are inferred.
+    The white space in the contour plots represent the unexplored parameter space.}
+    \label{fig:inference_phenomenon:lower_order}
 \end{figure}
 
 
-Through further investigation in the contour plots and trajectories with different maximal orders, we found that inference based on lower order (especially maximal order 1) \gls{mea} is more problematic than inference based on higher order \gls{mea}. 
-This might because based on lower order \gls{mea}, the system is able to explore a larger region and identify a low-distance region with parameters that are easier to approximate with, and leads to incorrect results.
-For example, optimal trajectories simulated at lower order can match with the \gls{gssa} trajectories completely, which is also consistent with the result in \autoref{sec:hit-and-miss}. 
-Moreover, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the starting point of parameter inference represents the true values, but is labelled as a high-distance zone, 
-because \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
+Through further investigations in the contour plots and trajectories with different maximal orders, 
+we found that inference based on lower order 
+(see \autoref{fig:inference_phenomenon:lower_order}) 
+\gls{mea} is more problematic than inference based on higher order \gls{mea} 
+(see \autoref{fig:inference_phenomenon:higher_order}). 
+This might because inference using lower order \gls{mea} approximations allows the \pft{} model to explore a region large enough that a low-distance area can be identified.
+Yet the low-distance area  implies that the parameters values are easier to approximate with, but not necessarily the true parameter values.
+For example, optimal trajectories simulated at lower order can mabut not necessarily the true parameter valuestch with the \gls{gssa} trajectories completely, which is also consistent with the result in \autoref{sec:hit-and-miss}. 
+Moreover, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, 
+the starting point of parameter inference, \ie{} true values, is labelled as a high-distance zone. 
+This unexpected high-distance can be explained by \gls{mea} unable to capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
  
 %What is surprising to observe, however, is that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
 
-Generally, inference based on higher order \gls{mea} is able to produce more realistic results, as reflected by less distance between the starting trajectories and the \gls{gssa} trajectories, and shallower distance gradients in the contour plots. The slightly more correct inference may be a result of more accurate \gls{mea} approximation. However, the parameter inference process is still not stationary and is able to drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
+Generally, inference based on higher order \gls{mea} is able to produce more realistic results, as reflected by less distance between the starting trajectories and the \gls{gssa} trajectories, and shallower distance gradients in the contour plots (see \autoref{fig:inference_phenomenon:higher_order}). The slightly more correct inference may be a result of more accurate \gls{mea} approximation. However, the parameter inference process is still not stationary and is able to drift away from the correct set of parameters.
 
 
 \begin{figure}
@@ -556,17 +564,18 @@ Generally, inference based on higher order \gls{mea} is able to produce more rea
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
    
-\caption{\emph{Contour plot of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
-    Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
+\caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
+    Among seven parameters, only the values for $c_2$ and $c_6$ were inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
     Each row displays a contour plot and correspondent trajectories using different maximal order in \gls{mea}.
-    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
+    Note that the scale in the contour plots at different orders can be different.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{gssa} trajectories.
     The white space in the contour plots represent the parameter space not explored by the system. 
-    In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom.}
-\label{fig:parameter_inference_landscape_trajectories}
+    In the trajectory plots, the distance between the optimal (blue) and \gls{gssa} trajectories ($\times$) are indicated at the bottom.}
+\label{fig:inference_phenomenon:higher_order}
 \end{figure}
 
 
 %\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
 
-In conclusion, parameter inference does not work well in general. Recovering the correct parameter set remains challenging, even with higher order \gls{mea} approximations. This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
+In conclusion, recovering the correct parameter set remains challenging, even with higher order \gls{mea} approximations. This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
