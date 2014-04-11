@@ -31,8 +31,14 @@ from collections import namedtuple
 from means.util.logs import get_logger
 logger = get_logger(__name__)
 
-ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', 'timepoints_arange',
+_ParameterSet = namedtuple('ParameterSet', ['parameters', 'initial_conditions', 'timepoints_arange',
                                            'marker', 'label'])
+
+class ParameterSet(_ParameterSet):
+
+    # Make the printing clean
+    def __str__(self):
+        return self.marker.replace('$', '').replace('\\', '')
 
 INTERESTING_PARAMETER_SETS = [ParameterSet(parameters=[90.0, 0.002, 2.5, 1.1, 1.8, 0.96, 0.01],
                                            initial_conditions=[70.0, 30.0, 60.0],
@@ -322,7 +328,9 @@ class FigureSSAvMEATrajectory(FigureTask):
 
     def _return_object(self):
         import matplotlib.pyplot as plt
-        figure = plt.figure()
+        from matplotlib.pyplot import FormatStrFormatter
+
+        figure = plt.figure(figsize=(5,5))
 
         ssa_trajectory_buffer, trajectory_buffer = self.input()
         ssa_trajectories = ssa_trajectory_buffer.load()
@@ -330,11 +338,13 @@ class FigureSSAvMEATrajectory(FigureTask):
         trajectories = trajectory_buffer.load()
         number_of_ssa_trajectories = len(ssa_trajectories)
 
+        fmt = FormatStrFormatter('%.3g')
         if isinstance(trajectories, TrajectoryCollection):
             for i, (ssa_trajectory, trajectory) in enumerate(zip(ssa_trajectories, trajectories)):
                 assert(ssa_trajectory.description == trajectory.description)
 
-                plt.subplot(1, number_of_ssa_trajectories, i+1)
+                ax = plt.subplot(1, number_of_ssa_trajectories, i+1)
+                ax.yaxis.set_major_formatter(fmt)
                 if self.title is not None:
                     plt.title(self.title)
                 else:
@@ -364,9 +374,13 @@ class FigureSSAvMEATrajectory(FigureTask):
 
                 ssa_trajectory.plot(label='SSA')
                 plt.plot([], [], label='Solver (failed)')
+
                 plt.legend()
         else:
             raise Exception("Got unexpected kind of trajectories output: {0!r}".format(trajectories))
+
+        plt.xlabel('Time')
+        plt.ylabel('Concentration')
 
         return figure
 
@@ -403,19 +417,7 @@ class FigureHitAndMissTex(TexFigureTask):
                                            multivariate=not self.no_multivariate)
                           for max_order in self.max_orders]
 
-        interesting_cases = [FigureHitAndMissInterestingCases(
-                                                              solver=self.solver,
-                                                              solver_kwargs=self.solver_kwargs,
-                                                              number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                                              max_order=max_order,
-                                                              closure=self.closure,
-                                                              multivariate=not self.no_multivariate
-                                                              )
-                              for max_order in self.max_orders]
-
-
-
-        return hit_and_misses + interesting_cases
+        return hit_and_misses
 
 class FigureHitAndMissInterestingCases(TexFigureTask):
 
@@ -423,7 +425,7 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
     solver_kwargs = FigureSSAvMEATrajectory.solver_kwargs
 
     number_of_ssa_simulations = FigureHitAndMissTex.number_of_ssa_simulations
-    max_order = FigureHitAndMiss.max_order
+    max_orders = FigureHitAndMissTex.max_orders
 
     label = 'hit-and-miss-interesting-cases'
     caption = ''
@@ -431,40 +433,64 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
     closure = FigureHitAndMiss.closure
     multivariate = FigureHitAndMiss.multivariate
 
+    parameter_set = Parameter()
+
+    standalone = True
+
+    number_of_columns = 2
+
     def requires(self):
 
         model = P53Model()
 
         requirements = []
-        for parameter_set in INTERESTING_PARAMETER_SETS:
-            parameters = parameter_set.parameters
-            initial_conditions = parameter_set.initial_conditions
-            timepoints_arange = parameter_set.timepoints_arange
+        parameter_set = self.parameter_set
 
+        parameters = parameter_set.parameters
+        initial_conditions = parameter_set.initial_conditions
+        timepoints_arange = parameter_set.timepoints_arange
+
+        for max_order in self.max_orders:
             requirements.append(FigureSSAvMEATrajectory(timepoints_arange=timepoints_arange,
-                                            parameters=parameters,
-                                            initial_conditions=initial_conditions,
-                                            max_order=self.max_order,
-                                            solver=self.solver,
-                                            model=model,
-                                            solver_kwargs=self.solver_kwargs,
-                                            number_of_ssa_simulations=self.number_of_ssa_simulations,
-                                            title='Point at {0} ({1})'.format(parameter_set.label, parameter_set.marker),
-                                            closure=self.closure,
-                                            multivariate=self.multivariate))
+                                                        parameters=parameters,
+                                                        initial_conditions=initial_conditions,
+                                                        max_order=max_order,
+                                                        solver=self.solver,
+                                                        model=model,
+                                                        solver_kwargs=self.solver_kwargs,
+                                                        number_of_ssa_simulations=self.number_of_ssa_simulations,
+                                                        title='Point at {0} ({1})'.format(parameter_set.label,
+                                                                                          parameter_set.marker),
+                                                        closure=self.closure,
+                                                        multivariate=self.multivariate))
 
         return requirements
 
 class HitAndMissAll(Task):
-    interesting_kwargs = [dict(solver='ode15s'),
+    interesting_kwargs = [dict(solver='ode15s', max_orders=range(1, 8)),
+                          dict(solver='dopri5'),
                           dict(solver='rodas', max_orders=range(1, 7), point_sparsity=0.2),
-                          dict(solver='euler', solver_kwargs=[('h', 0.01)])]
+                          dict(solver='euler', solver_kwargs=[('h', 0.01)])
+                          ]
     def requires(self):
         tasks = []
 
         for kwargs in self.interesting_kwargs:
 
             tasks.append(FigureHitAndMissTex(**kwargs))
+
+            for parameter_set in INTERESTING_PARAMETER_SETS:
+                if 'star' in parameter_set.marker:
+                    continue # We know a lot about that one already
+
+                kwargs_to_keep = {'solver', 'solver_kwargs', 'number_of_ssa_simulations', 'max_orders',
+                                  'closure', 'multiariate'}
+
+                interesting_parameters_kwargs = {key: value for key, value in kwargs.iteritems()
+                                                 if key in kwargs_to_keep}
+
+                tasks.append(FigureHitAndMissInterestingCases(parameter_set=parameter_set,
+                                                              **interesting_parameters_kwargs))
 
         return tasks
 
