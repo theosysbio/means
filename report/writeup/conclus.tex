@@ -21,14 +21,18 @@ We also realised that for large regions of the parameter space, all numerical so
 Finally, we pointed out that parameter inference based on \gls{mea} approximation cannot produce the expected parameter values, even though the inferred species trajectories can be a perfect match to the empirical data. Using higher order for \gls{mea} may improve the accuracy of parameter inference slightly, however, the true parameter values cannot be recovered even using \gls{maxord} of 6.
 Reporting these unforeseen limitations will hopefully help researchers to improve simulation and inference using \gls{mea}.
 
+
+We can see several directions to improve \means{} for the future resarchers.
+For numerical evaluation performance, it could be very
+advantageous to use modern libraries such a \texttt{Theano}\cite{bergstra_theano:_2010}.
+It would be extremely interesting to try to stabilise numerical solvers, and to reduce the ``unsafe'' parameter regions.
+Finally, it could reveal very fruitful to use Bayesian framework for parameter inference (\ie{} Bayesian inference).
+This would allow to consider the posterior distribution of parameters instead of working with point estimates.
+
 Altogether, our implementation should facilitate further research and improve adoption of \acrlong{mea} by the community.
 We believe \means{} could be a valuable assess for researchers to model non-linear kinetic system.
+
  
-%We intend to release \means as open source software available 
-
-
-\begin{verbatim}
-* (Un)Availability of our package
-\end{verbatim}
+We intend to publish \means as open-source software, available for the entire community, in the near future. 
 
 \todo[inline]{Once we are all good, we need to zip the task-output data and make it share it somewhere as well as whole report depends on it}

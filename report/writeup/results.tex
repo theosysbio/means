@@ -100,6 +100,11 @@ Therefore, we used caching to keep precompiled expressions in memory.
 As a consequence, the overhead is present only in the first evaluation of expressions, whilst all other evaluations are an order of magnitude faster.
 This performance improvement is illustrated in the tutorial \autoref{sec:reuse_of_simulation_objects}.
 
+\contrib{
+The principal contributor for this section is QG.
+More information are available in his individual report.}
+
+
 \subsubsection{Comparing the Performance of Different \gls{ode} Solvers}
 
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
@@ -181,6 +186,10 @@ However, they also differ in their accuracy and stability.
 In fact, most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}.
 This was investigated in  \sauliustodo{ref to new section once I create it}.
 
+\contrib{
+The principal contributor for this section is SL.
+More information are available in his individual report.}
+
 \subsection{Moment Expansion and Closure}
 
 In \gls{mea} the time derivative of each central moment (moments of orders higher than one) is expressed in terms of higher order moments.
@@ -232,11 +241,12 @@ The reason for this behaviour is uncertain. It could either be a limitation of t
 It is hard to know which explanation is more likely since we cannot test the two hypotheses separately.
 Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
 
-Note that for even \gls{maxord}s, normal and scalar closure methods return identical result.
+Note that for even \glspl{maxord}, normal and scalar closure methods return identical result.
 It means that when the \gls{maxord} is even,  the parametric expression of an odd (the next) order moment was used for closure.
 Normal distribution is symmetrical. One consequence is that odd central moments are always zero.
 For instance, the skewness (\ie{} third order central moment) of a normal distribution is zero.
 Therefore, this behaviour is perfecty normal.
+
 
 
 \begin{figure}
@@ -268,6 +278,12 @@ Surprisingly, higher order moment closure did not necessarily result in better a
 In addition, our results indicate that there might be a complex interaction between the type of closure and the \gls{maxord}.
 Unfortunately, this makes it difficult to define \emph{a priori} which closure and \gls{maxord} should be used for a given system.
 These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
+
+
+\contrib{
+The principal contributor for this section is QG.
+More information are available in his individual report.}
+
 
 \subsection{Choice of Parameters Affects \acrshort{mea} Accuracy}
 \label{sec:hit-and-miss}
@@ -441,6 +457,9 @@ This lack of stability has an interesting side effect that is most pronounced
 for an order of 7 (\autoref{fig:hit-and-miss:ode15s:7}), where it seems that, within the studied parameter space, approximations of the true behaviour are
  either accurate, or the \glspl{ode} solvers fail.
 
+\contrib{
+The principal contributor for this section is SL.
+More information are available in his individual report.}
 
 \subsubsection{Effect of Log-Normal Closure}
 
@@ -492,6 +511,11 @@ Similarly, the average approximation accuracy increases as the maximal moment or
 Finally, there seems to be some pairing between odd and even \gls{maxord}, 
 that causes scalar closures with odd \gls{maxord} to become very unstable.
 The same observation is valid for log-normal closure methods, but for even maximal moment orders.
+
+\contrib{
+The principal contributor for this section is SL.
+More information are available in his individual report.}
+
 
 \subsection{Parameter Inference using \acrlong{mea}}
 \label{sec:results:inference}
@@ -665,7 +689,10 @@ Generally, inference based on higher order \gls{mea} is able to produce more rea
 \label{fig:inference_phenomenon:higher_order}
 \end{figure}
 
-
 %\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
 
 In conclusion, recovering the correct parameter set remains challenging, even with higher order \gls{mea} approximations. This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
+
+\contrib{
+The principal contributor for this section is SF.
+More information are available in her individual report.}
