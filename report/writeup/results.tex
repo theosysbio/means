@@ -310,7 +310,7 @@ We were interested in how the choice of parameters affect both the ability of th
 the quality of these trajectories.
 
 In order to achieve this, we first fixed all the parameters of \pft{} model but $c_2$ and $c_4$ to the same values as in previous section.
-These two parameters were varied by $0.1$ increments of within the ranges $c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$).
+The remaining two parameters were varied by $0.1$ increments of within the ranges $c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$).
 For ever every combination of these parameters, the average of \gls{gssa} $5000$ trajectories was generated as ground truth data.
 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
@@ -318,21 +318,39 @@ The parameter sets for which the solvers failed to produce a result were also re
 We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{gssa} average, for the same parameter set.
 Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:ode15s}) which we discuss bellow.
 
+\begin{figure}
+    \centering
+    \foreach \order in {1,2,4,7}{
+        \begin{subfigure}[b]{0.25\textwidth}
+            \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_1.6_1.1_2.1_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+            \caption{Max order $= \order$}
+            \label{fig:hit-and-miss:bullet:\order}
+        \end{subfigure}
+        \hspace{-15pt} % compress the whitespace in each figure
+    }
+   \caption{\emph{The trajectories simulated for the parameter set marked by $\bullet$ symbol in \autoref{fig:hit-and-miss:ode15s} stay relatively similar as higher order moments are incorporated to the approximation.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
+   Note how similar are the trajectories pictured, despite the increasing order of the moment expansion.
+   The trajectories for max order parameter that were not shown, are similar
+    to the trajectories 2, 4 and 7 displayed in this figure (subplots\ref{fig:hit-and-miss:bullet:2}, \ref{fig:hit-and-miss:bullet:4}, \ref{fig:hit-and-miss:bullet:7}).}
+   \label{fig:hit-and-miss:bullet}
+\end{figure}
 
 The distance landscape was not uniform. For instance, distance to \gls{gssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
 Some areas of the parameter space seem to be easier to approximate than others.
 Interestingly, in these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately.
-\autoref{fig:hit-and-miss-interesting-points:ode15s:1:bullet} plots a set of first-order trajectories for one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
+\autoref{fig:hit-and-miss:bullet:1} plots the first-order trajectories associated with the one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
 We observe the typical damped oscillatory behaviour of the \gls{gssa} trajectory,
-which results from individual trajectories stochasticaly getting out-of-phase\cite{ale_general_2013}.
-This observation suggests that it was not the dynamics of the actual system that make it easier to approximate the behaviour for these parameters,
-but something intrinsic to the approximation method. \sauliustodo{sentence unclear and convoluted (for me). split to two sentences?}
+which results from individual trajectories stochastically getting out-of-phase with each other\cite{ale_general_2013}.
+This observation rules out the hypothesis that the system behaviour becomes somewhat different in this region of the parameter space. 
+Because of this, we could guess there is something intrinsic to the approximation method, rather than to the system itself, that reduces the need to model the higher-order moments of the system for these parameters.\quentintodo{Any better now?} 
+Interestingly, the approximated trajectories for these regions stay nearly the same regardless of the order of moments simulated, as seen in \autoref{fig:hit-and-miss:bullet}. 
+This strengthens the implication that higher order moments play no role in approximating the behaviour for this system at the particular parameter set.
 
 Conversely, we can also see regions of the parameter space where the approximation seems to perform poorly,
 \ie{} the bottom-right corner of the \autoref{fig:hit-and-miss:ode15s:1}.
-This already hard-to-approximate area seems to have mountains of even higher to approximate values, such as the one indicated by a $\times$ symbol.
+This already hard-to-approximate area seems to have mountains of even harder to approximate values, such as the one indicated by a $\times$ symbol.
 The trajectories at this last parameter set, together with the trajectories for the parameter set marked with a $\blacksquare$, are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:1}.
-We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude.
+We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude -- completely opposite to what we observe in the \gls{gssa} data.
 The amplitude becomes so large that the trajectory takes negative values for the concentrations (which is obviously incorrect).
  
 The simulated trajectory for the $\times$ symbol, on the other hand, just plummets into the large negative values and does not recover.
@@ -341,26 +359,19 @@ Therefore both of these trajectories are not acceptable approximations of the tr
 
 
 \begin{figure}
-    \begin{subfigure}[t]{0.31\textwidth}
-        \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_1.6_1.1_2.1_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-        \caption{Parameters indicated by $\bullet$}
-        \label{fig:hit-and-miss-interesting-points:ode15s:1:bullet}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[t]{0.31\textwidth}
-        \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\blacksquare$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:blacksquare}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.31\textwidth}
-        \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\times$)}
-        \label{fig:hit-and-miss-interesting-points:ode15s:1:bullet}
+        \label{fig:hit-and-miss-interesting-points:ode15s:1:times}
     \end{subfigure}
     \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:1}}.
-    Only one of the three model species is shown.
-    The distance measure in the bottom left corner is only for the species in the plot.
+    Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
     Note the different $y$ axis scale for the plots.}
     \label{fig:hit-and-miss-interesting-points:ode15s:1}     
 \end{figure}
@@ -370,7 +381,6 @@ As a consequence, the $\times$ and $\blacksquare$ parameters are in a lower-dist
 The resulting trajectories for these two parameter sets are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:2}.
 The trajectory for the parameter set $\blacksquare$ is particularly interesting (\autoref{fig:hit-and-miss-interesting-points:ode15s:2:blacksquare}) as it seems to show the oscillations that increase,
 and then decrease in amplitude.
-%This behaviour that is not even close to the actual behaviour seen from the \gls{gssa} simulations, but nevertheless unusual.
 The behaviour for the other parameter set shows damped oscillations.
 However, damping is too slow to match the results from the stochastic simulations.
 
@@ -392,17 +402,72 @@ However, damping is too slow to match the results from the stochastic simulation
     \label{fig:hit-and-miss-interesting-points:ode15s:2}     
 \end{figure}
 
-For third order approximation (\autoref{fig:hit-and-miss:ode15s:3}), the solver (\texttt{ode15s}) fail to simulate trajectories for a parameter set ($\blacksquare$).
-Using alternative \gls{ode} solvers did not allow to simulate these trajectories (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
+For even higher order moment expansions, we can see the solvers starting to struggle. For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$) when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). Other \gls{ode} solvers also struggle to produce any trajectories trajectories in this case (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
-We can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4 (\autoref{fig:hit-and-miss:ode15s:4}),
-and moves back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}).
+As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform a bit better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd). 
 
-\sauliustodo[inline]{See if we can finish generating max order=8 figures overnight. Add trajectory figures for $\bullet$, $\times$ and $\ast$ at the highest order we could generate. Mention that $\bullet$ stays exactly the same regardless of the order, but $\times$ increases progressively till order 4 and then starts to diverge, while $\ast$ seems to just keep getting better and better.}
+From figure  \autoref{fig:hit-and-miss:ode15s:4} we can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4. This point then proceeds to move back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}). 
+The approximations at the parameter set marked with an $\ast$ become better as the low-distance area grows, and the trend continues for all of the maximum order data we have, as illustrated by \autoref{fig:hit-and-miss:ast}.
 
-\sauliustodo[inline]{Show the distance plots for log-normal, talk a wee bit about them, and I think that's us done with this section}
+\begin{figure}
+    \centering
+    \foreach \order in {1,3,5,7}{
+        \begin{subfigure}[b]{0.25\textwidth}
+            \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_2.0_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+            \caption{Max order $= \order$}
+            \label{fig:hit-and-miss:ast:\order}
+        \end{subfigure}
+        \hspace{-15pt} % compress the whitespace in each figure
+    }
+   \caption{\emph{The trajectories simulated for the parameter set marked by $\ast$ symbol in \autoref{fig:hit-and-miss:ode15s} become progressively better as higher order moments are incorporated to the approximation.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
+   Note the decreasing amplitude of solver trajectories that comes closer to the \gls{gssa} solution as more moments are incorporated. 
+   }
+   \label{fig:hit-and-miss:ast}
+\end{figure}
 
-%\sisitodo[inline]{In your section, when we say surprising result that the trajectories are nearly perfect with low orders, you can change it to something like "surprising, but consistent with the results in \autoref{sec:hit-and-miss}"}
+To summarise, the performance of the \gls{mea} approximation using scalar moment closure strongly depends on the parameters being approximated. 
+Areas of the parameter space that are approximated really well regardless of the number of higher-order moments used exist.
+So do the areas where moment-expansion approximation seems to do badly regardless of the number of moments used. 
+In the parameter space in between the two areas, the approximation seems to become more and more accurate as higher order moments are incorporated, as we would expect. 
+Numeric \gls{ode} solvers tend to be more stable when the highest-order moments present in the approximation are even. 
+This lack of stability has an interesting side effect that is most pronounced at closure order 7 (\autoref{fig:hit-and-miss:ode15s:7}), where it seems that approximation of the true behaviour is either fairly good, or the trajectories cannot be generated by the numeric \glspl{ode} solvers.
+
+\subsubsection{Effect of Log-Normal Closure}
+
+
+\begin{figure}
+    \centering
+    \foreach \order in {2,...,7}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-log-normal-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
+            \caption{Max order $= \order$}
+            \label{fig:hit-and-miss:ode15s:log-normal:\order}
+        \end{subfigure}
+        ~
+    }
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{gssa} simulated trajectory for log-normal closure and \texttt{ode15s} solver}.
+    The contour landscape has been computed in exactly the same manner as in \autoref{fig:hit-and-miss:ode15s} and the data interpretation can be performed in the same fashion. 
+    Note that the distance values are much lower than the ones observed for scalar closure in general, directly indicating the log-normal moment closure approach to be promising. Interestingly, the decrease in the distance between \gls{gssa} and the simulated trajectory comes with the price of the system being less stable in general. Contrary to the pattern observed for scalar closure (\autoref{fig:hit-and-miss:ode15s}), even order moment closures seem to be more stable in log-normal scenario.}
+    
+    \label{fig:hit-and-miss:ode15s:log-normal}
+\end{figure}
+
+When we repeated the same procedure for moment closures using log-normal distribution, we were able to observe global decrease in the distances between the trajectories (\autoref{fig:hit-and-miss:ode15s:log-normal}) which is a strong indicator of the potential of distribution closure methods. 
+
+Unfortunately, this decrease in distances does not come without a price. As we can see from the same set of contour plots, the solvers are less stable compared to when the scalar moment closure is used (which was pictured in \autoref{fig:hit-and-miss:ode15s}). 
+For instance, the \verb"ode15s" solver fails to produce a single working trajectory when the maximum order is set to 6. 
+
+Similarly to the scalar closure, the stability seems to be different for even and odd closure orders. 
+Rather surprisingly, this pattern is opposite between the two methods -- scalar closure is more stable when maximum expansion order is set to even numbers, whereas the log-normal closure tends to be more stable for the odd ones.
+
+Due to this inherent instability of the log-normal closure, the paradoxical observation, where the approximation is reasonable, provided that it is computable, as seen in high-order scalar closures (\autoref{fig:hit-and-miss:ode15s:7}) is more pronounced for log-normal closure method and is observable even at low-order moments.
+
+These results are consistent with the preliminary results of log-normal closure investigations\cite{lakatos_preparation_2014}\todo{Can I cite Eszter here?}, and further indicate the promise of this work.
+
+In conclusion, quantitative claims about the performance of \gls{mea} for a single parameter set must be taken with a grain of salt, as such performance depends strongly on the region of the parameter space that is being approximated and cannot be generalised for the whole parameter space.
+However, general patterns can be observed when a large parameter space is considered at once. For instance, we were able to observe that log-normal parameter closure does better than scalar closure for the parameter ranges investigated on average. 
+Similarly, the average approximation accuracy increases as the maximal moment order increases, but this has a negative impact on the solver stability.
+Finally, there seems to be some pairing between odd and even order moments, that causes scalar closures with odd maximal moment orders become very unstable. The same observation is valid for log-normal closure methods, yet for even maximal moment orders.
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
