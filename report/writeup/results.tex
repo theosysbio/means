@@ -324,12 +324,14 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
         \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_1.6_1.1_2.1_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
             \caption{Max order $= \order$}
-            \label{fig:hit-and-miss:bullet:$\order$}
+            \label{fig:hit-and-miss:bullet:\order}
         \end{subfigure}
         \hspace{-15pt} % compress the whitespace in each figure
     }
-   \caption{\emph{The trajectories simulated for the parameter set marked by $\bullet$ symbol in \autoref{fig:hit-and-miss:ode15s} stay relatively similar for all values of max order parameter we have tested.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
-   Note how similar are the trajectories pictured, despite the increasing order of the moment expansion.}
+   \caption{\emph{The trajectories simulated for the parameter set marked by $\bullet$ symbol in \autoref{fig:hit-and-miss:ode15s} stay relatively similar as higher order moments are incorporated to the approximation.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
+   Note how similar are the trajectories pictured, despite the increasing order of the moment expansion.
+   The trajectories for max order parameter that were not shown, are similar
+    to the trajectories 2, 4 and 7 displayed in this figure (subplots\ref{fig:hit-and-miss:bullet:2}, \ref{fig:hit-and-miss:bullet:4}, \ref{fig:hit-and-miss:bullet:7}).}
    \label{fig:hit-and-miss:bullet}
 \end{figure}
 
@@ -402,11 +404,35 @@ However, damping is too slow to match the results from the stochastic simulation
 
 For even higher order moment expansions, we can see the solvers starting to struggle. For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$) when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). Other \gls{ode} solvers also struggle to produce any trajectories trajectories in this case (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
-As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform a bit better when the moment expansion is closed at even numbers. We can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4 (\autoref{fig:hit-and-miss:ode15s:4}),
-and moves back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}). Similarly, the approximations at the parameter set marked with an $\ast$ become better
-and better as the low-distance area grows. 
+As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform a bit better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd). 
 
-\sauliustodo[inline]{See if we can finish generating max order=8 figures overnight. Add trajectory figures for $\bullet$, $\times$ and $\ast$ at the highest order we could generate. Mention that $\bullet$ stays exactly the same regardless of the order, but $\times$ increases progressively till order 4 and then starts to diverge, while $\ast$ seems to just keep getting better and better.}
+From figure  \autoref{fig:hit-and-miss:ode15s:4} we can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4. This point then proceeds to move back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}). 
+The approximations at the parameter set marked with an $\ast$ become better as the low-distance area grows, and the trend continues for all of the maximum order data we have, as illustrated by \autoref{fig:hit-and-miss:ast}.
+
+\begin{figure}
+    \centering
+    \foreach \order in {1,3,5,7}{
+        \begin{subfigure}[b]{0.25\textwidth}
+            \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_2.0_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+            \caption{Max order $= \order$}
+            \label{fig:hit-and-miss:ast:\order}
+        \end{subfigure}
+        \hspace{-15pt} % compress the whitespace in each figure
+    }
+   \caption{\emph{The trajectories simulated for the parameter set marked by $\ast$ symbol in \autoref{fig:hit-and-miss:ode15s} become progressively better as higher order moments are incorporated to the approximation.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
+   Note the decreasing amplitude of solver trajectories that comes closer to the \gls{gssa} solution as more moments are incorporated. 
+   }
+   \label{fig:hit-and-miss:ast}
+\end{figure}
+
+To summarise, the performance of the \gls{mea} approximation using scalar moment closure strongly depends on the parameters being approximated. 
+Areas of the parameter space that are approximated really well regardless of the number of higher-order moments used exist.
+So do the areas where moment-expansion approximation seems to do badly regardless of the number of moments used. 
+In the parameter space in between the two areas, the approximation seems to become more and more accurate as higher order moments are incorporated, as we would expect. 
+Numeric \gls{ode} solvers tend to be more stable when the highest-order moments present in the approximation are even. 
+This lack of stability has an interesting side effect that is most pronounced at closure order 7 (\autoref{fig:hit-and-miss:ode15s:7}), where it seems that approximation of the true behaviour is either fairly good, or the trajectories cannot be generated by the numeric \glspl{ode} solvers.
+
+\subsubsection{Effect of Log-Normal Closure}
 
 \sauliustodo[inline]{Show the distance plots for log-normal, talk a wee bit about them, and I think that's us done with this section}
 
