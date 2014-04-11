@@ -310,7 +310,7 @@ We were interested in how the choice of parameters affect both the ability of th
 the quality of these trajectories.
 
 In order to achieve this, we first fixed all the parameters of \pft{} model but $c_2$ and $c_4$ to the same values as in previous section.
-These two parameters were varied by $0.1$ increments of within the ranges $c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$).
+The remaining two parameters were varied by $0.1$ increments of within the ranges $c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$).
 For ever every combination of these parameters, the average of \gls{gssa} $5000$ trajectories was generated as ground truth data.
 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
@@ -322,17 +322,17 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
 The distance landscape was not uniform. For instance, distance to \gls{gssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
 Some areas of the parameter space seem to be easier to approximate than others.
 Interestingly, in these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately.
-\autoref{fig:hit-and-miss-interesting-points:ode15s:1:bullet} plots a set of first-order trajectories for one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
+\autoref{fig:hit-and-miss-interesting-points:ode15s:1:bullet} plots the first-order trajectories associated with the one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
 We observe the typical damped oscillatory behaviour of the \gls{gssa} trajectory,
-which results from individual trajectories stochasticaly getting out-of-phase\cite{ale_general_2013}.
-This observation suggests that it was not the dynamics of the actual system that make it easier to approximate the behaviour for these parameters,
-but something intrinsic to the approximation method. \sauliustodo{sentence unclear and convoluted (for me). split to two sentences?}
+which results from individual trajectories stochastically getting out-of-phase with each other\cite{ale_general_2013}.
+This observation rules out the hypothesis that the system behaviour becomes somewhat different in this region of the parameter space. 
+Because of this, we could guess there is something intrinsic to the approximation method, rather than to the system itself, that causes this phenomenon.\quentintodo{Any better now?}
 
 Conversely, we can also see regions of the parameter space where the approximation seems to perform poorly,
 \ie{} the bottom-right corner of the \autoref{fig:hit-and-miss:ode15s:1}.
 This already hard-to-approximate area seems to have mountains of even higher to approximate values, such as the one indicated by a $\times$ symbol.
 The trajectories at this last parameter set, together with the trajectories for the parameter set marked with a $\blacksquare$, are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:1}.
-We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude.
+We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude -- completely opposite to what we observe in the \gls{gssa} data.
 The amplitude becomes so large that the trajectory takes negative values for the concentrations (which is obviously incorrect).
  
 The simulated trajectory for the $\times$ symbol, on the other hand, just plummets into the large negative values and does not recover.
@@ -356,7 +356,7 @@ Therefore both of these trajectories are not acceptable approximations of the tr
     \begin{subfigure}[t]{0.31\textwidth}
         \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\times$)}
-        \label{fig:hit-and-miss-interesting-points:ode15s:1:bullet}
+        \label{fig:hit-and-miss-interesting-points:ode15s:1:times}
     \end{subfigure}
     \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:1}}.
     Only one of the three model species is shown.
@@ -393,7 +393,7 @@ However, damping is too slow to match the results from the stochastic simulation
 \end{figure}
 
 For third order approximation (\autoref{fig:hit-and-miss:ode15s:3}), the solver (\texttt{ode15s}) fail to simulate trajectories for a parameter set ($\blacksquare$).
-Using alternative \gls{ode} solvers did not allow to simulate these trajectories (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
+Alternative \gls{ode} solvers did also struggle to simulate these trajectories and did not produce any results (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
 We can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4 (\autoref{fig:hit-and-miss:ode15s:4}),
 and moves back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}).
