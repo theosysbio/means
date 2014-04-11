@@ -231,7 +231,7 @@ This catchy sentence gives a twofold advice: integrate testing as early as possi
 
 Starting testing early is of particular importance because the cost of discovering problems increases exponentially with effort put into the process.  
 For instance, we were quite happy to allow some extra time fixing an unexpected problem with our code early on in the project, but we would be seriously stressed if some riddle popped up as we are writing this report, due to the deadline approaching. 
-Similarly, it some scenarios such problem might just invalidate all the previous hard work done earlier on.
+Similarly, in some scenarios such problem might just invalidate all the previous hard work done earlier on.
 
 In other words, early testing allows to specify the requirements
     \footnote{We use the word \emph{requirements} in a slightly different sense in this section compared to the one in \autoref{sec:requirements-gathering}. 
@@ -245,7 +245,7 @@ We call these tests \emph{regression} tests as they are designed to validate tha
 essentially establishing a baseline performance of it.
 We chose to use all of the examples given in the previous year's group report as a good starting point of our regression tests.
 
-In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and notify us if there are problems with it. 
+In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit to a github repository, and notify us if there are problems with it. 
 This way we can eliminate the human factor and ensure that the tests are really run often and completely and therefore ensure the continuous compliance with the specification.
 
 As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this better, picture a GC content counting algorithm for some DNA sequence. 
