@@ -33,7 +33,7 @@ The number equations in the generated \gls{ode} system, for a model with $s$ spe
     \label{eq:number_of_equations}
 \end{equation}
 As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. 
-For example, in a system with five species,  performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with  20, 55, 125 and 251 equations, respectively. 
+For example, in a system with five species, performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with 20, 55, 125 and 251 equations, respectively. 
 
 %In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
 %the symbolic computation routines.
@@ -104,7 +104,7 @@ This performance improvement is illustrated in the tutorial \autoref{sec:reuse_o
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
 The performance of numerical \gls{ode} solvers themselves also plays a critical role.
 
-These solvers differ in many ways ranging from a set of parameters to different heuristics and even algorithms.
+These solvers differ by their respective options, heuristics or algorithms.
 Choice of the \emph{best} solver for an \acrlongpl{ode} system depends very much on the particular problem to simulate.
 However certain solvers tend to be more generally adopted than others\cite{andersson_workbench_2012}.
 
@@ -112,10 +112,6 @@ CVODE\cite{hindmarsh_sundials_2005} is an example of one of the most widely used
 As described in \autoref{sec:ode_simulations}, we implement two variants of this solver, \verb#ode15s# and \verb#cvode#.
 Both solvers point to the same back-end implementation of CVODE provided by \verb#assimulo# package\cite{andersson_christian_assimulo:_????}.
 The only diference is that \verb#ode15s# solver's default parameters mimics the eponymous \mat{} solver.
-
-Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
-The complete list of available solvers used in available in the documentation\citationneeded{refer to docs}.
-Naturally, it was interesting to compare the respective performance of different solvers on our type of problems.
 
 In order to measure the runtime performance of the solvers, we performed a set of simulations of the \acrlong{mea} of the \pft{} model.
 We deliberately chose two sets of parameters: one that we know is fairly stable and easy to simulate with, so called \emph{safe} parameter set,
@@ -136,7 +132,8 @@ We call the latter parameter set the \emph{unsafe}.
        \label{fig:runtimes-safe-unsafe-euler}
    \end{subfigure}
    
-    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets, one harder to simulate than the other as it makes the problem stiff.
+    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets.
+     The ``safe'' parameter set is very stable, while the ``unsafe'' one leads to stiff problems, which are harder to solve.
     The time axis is in log-scale. Regression lines through the marked points is represented.
     Note that the number of equations increases exponentially with maximum order, essentially making this a log-log plot.}
 \label{fig:runtimes-safe-unsafe}
@@ -146,22 +143,41 @@ We call the latter parameter set the \emph{unsafe}.
 Heuristic solvers tend to automatically adjust the step size depending on the problem in hand, adjusting for the rate of stochastic events being simulated.
 It is therefore expected that they would perform worse for stiff problems, where the timeframes between the events become shorter and shorter, which requires more time steps.
 
-In contrast, Euler solver, uses a constant step size, and therefore the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
+In contrast, Euler solver, uses a constant step size, thus the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
 
 Since \gls{ode} solvers are inherently heuristic, their CPU performance may suffer considerably for unstable systems.
 
-We were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
-\sauliustodo[inline]{Describe these results, after you get some sleep}
+Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
+The complete list of available solvers used is available in the documentation\citationneeded{refer to docs}.
+Naturally, we were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
+This exhaustive analysis reviled that \texttt{ode15s} was the most performant solver for this problem.
+It outperformed other solvers for both safe and unsafe parameter sets.
+Interestingly, \texttt{dopri5} appeared to scale better for unsafe parameter sets, and could be interesting when working with high maximal moment orders.
+Surprisingly, \texttt{rodas}, which has been described as an very competitive solver for stiff \gls{ode}\cite{sandu_benchmarking_1997},
+performed poorly on this case.
+
+Using an appropriate solver can improve numerical performance by an order of magnitude (\autoref{fig:solver-runtimes}).
+Therefore, we advise users to benchmark different solvers on their specific problems if numerical evaluation speed is critical (\ie{} for parameter inference).
+In addition, advanced users can optimise the numerous options of each solvers in order improve performance.
+Although we cannot conclude that \texttt{ode15s} is the fastest solver for all \gls{mea} problems,
+it seems to be a reasonable default solver.
 
 \begin{figure}[bt]
     \centering
     \includegraphics[width=\textwidth]{../pipeline/task-output/solver-runtimes/runtimes-all.pdf}
-    \caption{Comparison of all solver runtimes}
+    \caption{\emph{Comparison of all solver runtimes.}
+    The runtime of nine different solvers were compared for a safe (left side) and an unsafe (right side) parameter set.
+    Regression lines through the marked points is represented in a different colour for each solver.
+    Solvers are sorted, top to bottom, by increasing performance in the legend.
+    \texttt{ode15s} was globally the fastest solver.
+    }
     \label{fig:solver-runtimes}
 \end{figure}
 
+
 In order to improve performance, we have compared solvers on the basis of their speed.
-However, they also differ in their accuracy and stability.
+However, they also differ in their accuracy and stability. 
+In fact, most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}.
 This was investigated in  \sauliustodo{ref to new section once I create it}.
 
 \subsection{Moment Expansion Closure}
@@ -362,13 +378,12 @@ We can see the that the parameter $\times$ gets into a lower distance tier in wh
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
-%In order to study the performance of the parameter inference procedure using \acrlong{mea}, we took the average trajectory obtained from the  $5000$ \gls{gssa} simulations of the \pft{} with a certain parameter set and used it as the observed dataset we want to infer the parameters from. Essentially, the inference procedure is expected to return the said parameter set back to us.
 In order to study the performance of the parameter inference procedure using \acrlong{mea},
-we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. We believe this number of \gls{gssa} simulations to be sufficient to capture the behaviour of this model system in full.
+we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. We believe this number of \gls{gssa} simulations to be sufficient to capture the behaviour of this simple system in full.
 Then, we used the average as an observed dataset from which to infer parameters.
-In this way, we know exactly what are the ``true'' parameters for every inference procedure we perform.
+In this way, we know exactly the values for the true parameters for every inference procedure.
 
-In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments (see \autoref{fig:7_dimensional_parameter_space}).
+In order to determine the base case performance, we performed the parameter inference using the \pft{} model expressed only in terms of the first order moments.%(see \autoref{fig:7_dimensional_parameter_space}).
 This approximation is bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}.
 
 
@@ -382,114 +397,146 @@ This approximation is bound to be very inaccurate for the particular system, as 
 %\end{figure}
 
 
-The starting parameters were the correct ones, so we expected immediate convergence (\ie{} no movement in the parameter space).
-Surprisingly, when parameters are free, inference was able to find a set of parameters, mind very different from the ``correct" ones, for which observed and theoretical trajectories are extremely similar.\sisitodo{Can you add a figure showing how similar they are here?}
+We deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
+Surprisingly, when parameters are free, the inference procedure was able to find a set of parameters, but very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference}).
 This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
+    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
+Each column represents one species in the \pft{} model. 
+The starting trajectories were generated based on the true parameter values, 
+as the inference procedure started from the true values, 
+while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
+Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
+    \label{fig:range-free-parameter-inference}
+\end{figure}
 
 
 %\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
 
 In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves to, easier to comprehend, two-dimensional space.
-To do this, we restricted our parameter inference procedure to only have only a pair of free parameters at a time (all other parameters are fixed to their true values).
-We performed this for all combinations of two parameters and checked if we can reproduce the curious behaviour.
+To do this, we limited our parameter inference procedure to have only a pair of free parameters at a time (all other parameters are fixed to their true values).
+We performed this for all combinations of two parameters and checked if we can reproduce the interesting behaviour.
 
 \begin{figure}[tb]
     \centering
-    \begin{subfigure}[t]{0.9\textwidth}
-    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c2-c6}.pdf}
+    \begin{subfigure}[t]{0.45\textwidth}
+    \includegraphics[width=\textwidth, height=0.35\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c2-c6-y0}.pdf}
     \label{fig:parameter_pair_c2_c6}
     \caption{Parameter pair $c_2$ and $c_6$}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.9\textwidth}
-    \includegraphics[width=\textwidth, height=0.18\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c1}.pdf}
+    \begin{subfigure}[t]{0.45\textwidth}
+    \includegraphics[width=\textwidth, height=0.35\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/Paired-parameters-c0-c1-y0}.pdf}
     \label{fig:parameter_pair_c0_c1}
     \caption{Parameter pair $c_0$ and $c_1$}
     \end{subfigure}
     ~
     \caption{\emph{Two out of four parameter pairs that can produce a perfect match between inferred optimal trajectories and SSA trajectories for all species in \pft{} model.}
+    Trajectories for one out of three species are shown here for clear demonstration.
     The distance from the SSA trajectory for each species is displayed in each subfigure.
     Trajectories are simulated using maximum order 1. The three columns in each row represent the three species in the \pft{} model.}
     \label{fig:parameter_pairs}
 \end{figure}
 
-Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (first two pictured in the\autoref{fig:parameter_pairs}).
+Interestingly, we were able to observe the same behaviour for the parameter pairs $c_2$ and $c_6$, $c_0$ and $c_1$, $c_1$ and $c_6$, and finally $c_0$ and $c_6$ (first two pictured in the \autoref{fig:parameter_pairs}).
 We then have chosen the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the stochastic average -- $c_2$ and $c_6$ for further investigations.
-\sisitodo[inline]{Change the figures to show one of the species for the plots, not all three -- the information is redundant now, and this would allow to make them larger while using the same space on the page}
 
-\sisitodo[inline]{Unify the height of the two figures}
+
 \begin{figure}
     \centering
     \begin{subfigure}[t]{0.3\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{Distance Landscape}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{Contour plot}
     \label{fig:inference_phenomenon:maxorder:1:landscape}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.65\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
     \caption{Trajectories}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
     \end{subfigure}
-    \caption{The distance landscapes and observed trajectories for the parameter inference performed for first order moment expansion approximation}
+    ~
+    \begin{subfigure}[t]{0.3\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{Contour plot}
+    \label{fig:inference_phenomenon:maxorder:1:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.65\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{Trajectories}
+    \label{fig:inference_phenomenon:maxorder:1:trajectories}
+    \end{subfigure} 
+    \caption{\emph{Contour plot of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model show incorrect inference.}
+    Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
+    All the contour plots and the trajectories start with the same parameter values for inference.
+    Each row displays a contour plot and correspondent trajectories using different maximal order in \gls{mea}.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
+    In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom. 
+    Although the optimal trajectories match with the \gls{gssa} trajectories, the correspondent contour plot shows wrong values are inferred.
+    The white space in the contour plots represent the parameter space not explored by the system.}
     \label{fig:inference_phenomenon:maxorder:1}
 \end{figure}
 
+
+Through further investigation in the contour plots and trajectories with different maximal orders, we found that inference based on lower order (especially first order) \gls{mea} is more problematic than inference based on higher order \gls{mea}. 
+For example, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the starting point of parameter inference represents the true values, but is labelled as a high-distance zone. 
+This is because \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments \cite{probably need a ref here}, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
+Surprisingly, based on lower order \gls{mea}, the system is able to explore a larger region and identify a low-distance region that is far away from the expected point.
+%What is surprising to observe, however, is that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
+
+Inference based on higher order \gls{mea} is able to produce slightly more realistic result. As the maximal order increases, the starting trajectories is getting closer to the \gls{gssa} trajectories, and the distance gradients in the contour plots become more and more level for higher order moments. However, the parameter inference process is still not stationary and is able to  drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
+
+
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.6\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \end{subfigure}   
-    ~
-    \begin{subfigure}[b]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.6\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \begin{subfigure}[b]{0.65\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}   
      ~  
-    \begin{subfigure}[b]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.6\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \begin{subfigure}[b]{0.65\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}   
    
-    \begin{subfigure}[b]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.6\textwidth}
-    \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \begin{subfigure}[b]{0.65\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-6-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.65\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
    
-\caption{\emph{Distance landscape and trajectories at different maximal orders for \pft{} model.}  Among seven parameters, only the values for $c_2$ and $c_6$ are inferred, with starting values inferred from inference using the true values.
-The left column displays distance landscapes, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories.
-The numbers in the distance landscape indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
-The \gls{gssa} trajectories are generated using the new parameter values labelled as \emph{start}.
-Three trajectories are shown for each species.
-The starting trajectories are simulated using the starting values are indicated above the trajectories, with $c_2$ and $c_6$ inferred using \emph{sum of squares} distance method.
-Both the optimal and the \gls{gssa} trajectories are generated based on the end point in correspondent distance landscape.
-The distance displayed for each species represent the distance between the optimal and \gls{gssa} trajectories.}
+\caption{\emph{Contour plot of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
+    Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
+    All the contour plots and the trajectories start with the same parameter values for inference.
+    Each row displays a contour plot and correspondent trajectories using different maximal order in \gls{mea}.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
+    The white space in the contour plots represent the parameter space not explored by the system. 
+    In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom.}
 \label{fig:parameter_inference_landscape_trajectories}
 \end{figure}
 
-\sisitodo[inline]{I do not like the way the subsequent paragraphs were worded as they do not tell the reader anything and pretty much are "look at the figure yourself. I rewrote part of the text to try to explain a couple of things we want to explain. Read through it, and see if you can add anything.}
 
-In order to understand this phenomenon, we aimed to explore the distance landscape of the particular problem. As one can see from the distance landscape pictured in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the parameter inference starts in a high-distance zone, which is expected as \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
-What is surprising to observe, however, that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
-
-We then moved on to explore this behaviour for the higher-order \gls{mea} approximations. We were able to observe that the starting trajectory becomes closer to the real trajectory as we increase the maximum order of the moments, with the best results when the moments were closed at the maximum order of three. 
-We can also see that the distance landscapes become more and more level for higher order moments, however, the parameter inference process still not stationary and able to  drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
-
-\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
-\sisitodo[inline]{Didn't we look at log normal closure/even higher order moments, I don't remember that much blue!}
+%\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
 
 In conclusion, we do not seem to be able to recover the correct parameter set even in the best case, when the parameter inference does not need to do any work at all. 
 This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
