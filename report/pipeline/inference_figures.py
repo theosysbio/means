@@ -108,7 +108,7 @@ class MultiDimensionInferenceFigure(FigureTask):
         vmin = self.vmin if self.vmin is not None else min_dist
         vmax = self.vmax if self.vmax is not None else max_dist
 
-        fig = plt.figure(figsize=(20,20), dpi=328)
+        fig = plt.figure(figsize=(5,5), dpi=328)
         fig.subplots_adjust(wspace=0, hspace=0)
 
         parameters = [i for i,j in variable_parameters]
@@ -180,7 +180,8 @@ class MultiDimensionInferenceFigure(FigureTask):
                 ax.set_ylim(self.ylim)
 
 
-            ax.set_title('Max order = {0}'.format(self.max_order))
+            ax.set_title('Max order = {0}'.format(self.max_order),fontsize=14)
+
 
         return fig
 
@@ -193,7 +194,7 @@ class SampleMultidimensionInferenceFigure(MultiDimensionInferenceFigure):
     timepoints_arange = [0.0, 40.0, 0.1]
     starting_initial_conditions = [70.0, 30.0, 60.0]
     n_simulations = IntParameter(default=5000)
-    # Use a pair of parameters chosen based on the result from class FigureTwoParametersForInference
+    # Use a pair of parameters chosen based on the result from class FindTwoParametersForInference
     variable_parameters = [('c_2', None), ('c_6', None)]
 
 
@@ -216,20 +217,22 @@ class SevenDimensionalInferenceFigure(MultiDimensionInferenceFigure):
 
 class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
+
     closure = MEATask.closure
     multivariate = MEATask.multivariate
     label = "MultiDimensional"
     caption = "MultiDimensional"
-    max_order_list = ListParameter(default=[1,2,3,4,5])
+    max_order_list = ListParameter(default=[1,2,3,4,5,6])
     standalone=True
     number_of_columns = 1
 
     interesting_parameters = [
-        [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01],
-         [90.0, 0.002, 1.77, 1.1, 0.93, 0.96, 3.2736],
-         [90.0, 0.002, 1.7040, 1.1, 0.93, 0.96, 0.7822],
-    ]
+        #[90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01],
+         #[90.0, 0.002, 1.77, 1.1, 0.93, 0.96, 3.2736],
+         [90.0, 0.002, 1.7040, 1.1, 0.93, 0.96, 0.7822]]
+
     def requires(self):
+
 
         requirements = []
         for order in self.max_order_list:
@@ -245,7 +248,7 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
                 requirements.append(figure)
 
-                param_str = ', '.join(['{0:.4f}'.format(x) for x in p ])
+                param_str = ', '.join(['{0:.4f}'.format(x) for x in p])
                 label = 'Inference starting at {0}, max order = {1}'.format(param_str, order)
                 trajectory_figure = FigureInferenceStartEndSSA(model=SampleMultidimensionInferenceFigure.model,
                                            max_order=order,
@@ -269,6 +272,43 @@ class MultiOrderMultiDimensionInferenceFigure(TexFigureTask):
 
 
 
+class TrajParameterFree(Task):
+    model = P53Model()
+
+    max_order = MEATask.max_order
+    closure = MEATask.closure
+    multivariate = MEATask.multivariate
+
+    parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    initial_conditions = [70.0, 30.0, 60.0]
+    timepoints_arange = [0.0, 40.0, 0.1]
+
+    solver = luigi.Parameter(default='ode15s')
+    solver_kwargs = ListOfKeyValuePairsParameter(default=[])
+
+    starting_parameters = [90.0, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+    starting_initial_conditions = [70.0, 30.0, 60.0]
+
+    distance_function_type = luigi.Parameter(default='sum_of_squares')
+    n_simulations = IntParameter(default=5000)
+
+
+    def requires(self):
+        variable_parameters = [('c_0', None), ('c_1', None), ('c_2', None), ('c_3', None),
+                           ('c_4', None), ('c_5', None),('c_6', None)]
+        return FigureInferenceStartEndSSA(model=self.model, max_order=self.max_order,closure=self.closure,
+                                  multivariate=self.multivariate, parameters=self.parameters,
+                                  initial_conditions=self.initial_conditions, timepoints_arange=self.timepoints_arange,
+                                  solver=self.solver, solver_kwargs=self.solver_kwargs,
+                                  starting_parameters=self.starting_parameters,
+                                  starting_initial_conditions=self.starting_initial_conditions,
+                                  variable_parameters=variable_parameters,
+                                  distance_function_type=self.distance_function_type,
+                                  n_simulations=self.n_simulations,
+                                )
+
+    def _return_object(self):
+        return 'running'
 
 
 
@@ -322,7 +362,7 @@ class FindTwoParametersForInference(Task):
 
 class FigureInferenceStartEndSSA(FigureTask):
 
-    model = ModelParameter()
+    model = ModelParameter(default=P53Model())
     max_order = MEATask.max_order
     closure = MEATask.closure
     multivariate = MEATask.multivariate
@@ -355,6 +395,23 @@ class FigureInferenceStartEndSSA(FigureTask):
         from matplotlib import pyplot as plt
         result = self.input().load()
         fig = plt.figure(figsize=(15,5),dpi=327)
+
+        # the following code plots trajectories for species y_0
+        #optimal_trajectory = result.optimal_trajectories[0]
+        #observed_trajectory = result.observed_trajectories[0]
+        #starting_trajectory = result.starting_trajectories[0]
+        #sum_of_sqr_distance = np.sum(np.square(observed_trajectory.values - optimal_trajectory.values))
+        #ax = plt.gca()
+        #plt.plot()
+        #ax.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance),xy=(1,0), xycoords='axes fraction', fontsize=16,
+        #        xytext=(-5, 5), textcoords='offset points',
+        #        ha='right', va='bottom')
+        #observed_trajectory.plot(marker='x',color='k', label='SSA', linestyle='None')
+        #optimal_trajectory.plot(color='b', label='Optimal')
+        #starting_trajectory.plot(color='r', label='Starting')
+
+
+        # the following code plots trajectoreis for all the species in the model
         observed_trajectories_lookup = {obs_traj.description: obs_traj for obs_traj in result.observed_trajectories}
         subplot_number = 0
         n_columns = len(result.observed_trajectories)
@@ -366,19 +423,18 @@ class FigureInferenceStartEndSSA(FigureTask):
             except KeyError:
                 continue
             sum_of_sqr_distance = np.sum(np.square(observed_trajectory.values - optimal.values))
-
             subplot_number += 1
             ax = plt.subplot(1, n_columns, subplot_number)
-            ax.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=16,
+            ax.annotate('Distance={0:.2f}'.format(sum_of_sqr_distance), xy=(1, 0), xycoords='axes fraction', fontsize=14,
                 xytext=(-5, 5), textcoords='offset points',
                 ha='right', va='bottom')
-            plt.title(observed_trajectory.description.mathtext())
+            plt.title(observed_trajectory.description.mathtext(),fontsize=14)
             observed_trajectory.plot(marker='x',color='k', label='SSA', linestyle='None')
             optimal.plot(color='b', label='Optimal')
             starting.plot(color='r', label='Starting')
 
         plt.legend()
-        plt.suptitle(self.label)
+        #plt.suptitle(self.label)
         return fig
 
 
