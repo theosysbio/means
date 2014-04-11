@@ -401,17 +401,17 @@ We deliberately started the inference from the correct parameter values, expecti
 Surprisingly, when parameters are free, the inference procedure was able to find a set of parameters, but very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference}).
 This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
-    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
-Each column represents one species in the \pft{} model. 
-The starting trajectories were generated based on the true parameter values, 
-as the inference procedure started from the true values, 
-while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
-Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
-    \label{fig:range-free-parameter-inference}
-\end{figure}
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
+%    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
+%Each column represents one species in the \pft{} model. 
+%The starting trajectories were generated based on the true parameter values, 
+%as the inference procedure started from the true values, 
+%while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
+%Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
+%    \label{fig:range-free-parameter-inference}
+%\end{figure}
 
 
 %\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
