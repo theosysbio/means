@@ -434,9 +434,40 @@ This lack of stability has an interesting side effect that is most pronounced at
 
 \subsubsection{Effect of Log-Normal Closure}
 
-\sauliustodo[inline]{Show the distance plots for log-normal, talk a wee bit about them, and I think that's us done with this section}
 
-%\sisitodo[inline]{In your section, when we say surprising result that the trajectories are nearly perfect with low orders, you can change it to something like "surprising, but consistent with the results in \autoref{sec:hit-and-miss}"}
+\begin{figure}
+    \centering
+    \foreach \order in {2,...,7}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-log-normal-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
+            \caption{Max order $= \order$}
+            \label{fig:hit-and-miss:ode15s:log-normal:\order}
+        \end{subfigure}
+        ~
+    }
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{gssa} simulated trajectory for log-normal closure and \texttt{ode15s} solver}.
+    The contour landscape has been computed in exactly the same manner as in \autoref{fig:hit-and-miss:ode15s} and the data interpretation can be performed in the same fashion. 
+    Note that the distance values are much lower than the ones observed for scalar closure in general, directly indicating the log-normal moment closure approach to be promising. Interestingly, the decrease in the distance between \gls{gssa} and the simulated trajectory comes with the price of the system being less stable in general. Contrary to the pattern observed for scalar closure (\autoref{fig:hit-and-miss:ode15s}), even order moment closures seem to be more stable in log-normal scenario.}
+    
+    \label{fig:hit-and-miss:ode15s:log-normal}
+\end{figure}
+
+When we repeated the same procedure for moment closures using log-normal distribution, we were able to observe global decrease in the distances between the trajectories (\autoref{fig:hit-and-miss:ode15s:log-normal}) which is a strong indicator of the potential of distribution closure methods. 
+
+Unfortunately, this decrease in distances does not come without a price. As we can see from the same set of contour plots, the solvers are less stable compared to when the scalar moment closure is used (which was pictured in \autoref{fig:hit-and-miss:ode15s}). 
+For instance, the \verb"ode15s" solver fails to produce a single working trajectory when the maximum order is set to 6. 
+
+Similarly to the scalar closure, the stability seems to be different for even and odd closure orders. 
+Rather surprisingly, this pattern is opposite between the two methods -- scalar closure is more stable when maximum expansion order is set to even numbers, whereas the log-normal closure tends to be more stable for the odd ones.
+
+Due to this inherent instability of the log-normal closure, the paradoxical observation, where the approximation is reasonable, provided that it is computable, as seen in high-order scalar closures (\autoref{fig:hit-and-miss:ode15s:7}) is more pronounced for log-normal closure method and is observable even at low-order moments.
+
+These results are consistent with the preliminary results of log-normal closure investigations\cite{lakatos_preparation_2014}\todo{Can I cite Eszter here?}, and further indicate the promise of this work.
+
+In conclusion, quantitative claims about the performance of \gls{mea} for a single parameter set must be taken with a grain of salt, as such performance depends strongly on the region of the parameter space that is being approximated and cannot be generalised for the whole parameter space.
+However, general patterns can be observed when a large parameter space is considered at once. For instance, we were able to observe that log-normal parameter closure does better than scalar closure for the parameter ranges investigated on average. 
+Similarly, the average approximation accuracy increases as the maximal moment order increases, but this has a negative impact on the solver stability.
+Finally, there seems to be some pairing between odd and even order moments, that causes scalar closures with odd maximal moment orders become very unstable. The same observation is valid for log-normal closure methods, yet for even maximal moment orders.
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.

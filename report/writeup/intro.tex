@@ -73,3 +73,36 @@ Afterwards, we provide some examples of intended use in the form of tutorials to
 We then demonstrate how we managed to considerably improve the scalability and performance of the system during the development.
 We then go on and use this newly-created package to critically assess \gls{mea}, and address potential limitations.
 Finally, we attach the exhaustive documentation for future maintainers and users to the appendix of this document.
+
+\subsection{Author Contribution}
+In this section, we attempt to list our respective contribution to the project.
+This is a difficult exercise, because we had a very collaborative workflow.
+For instance,  two contributors would often be working together on the same part of the package.
+In some cases, it was advantageous to write code conjointly (\ie{} pair programming).
+In addition, the code written by one author was systematically read, at least, by one peer.
+Furthermore,  all authors used  parts of the package made by others.
+This allowed to report and fix numerous unforeseen issues.
+The same approach was followed for writing the present report and the documentation.
+For this reason, we chose to write an exhaustive group report whilst keeping individual ones reasonably concise.
+
+
+All authors contributed to understanding -- as much as possible -- the underlying mathematical concepts.
+Reforging the package was a collective endeavour which involved considerable input and interaction from all.
+The \texttt{core} functionalities such as \texttt{Moment} and \texttt{ODEProblem} objects were also conceptualised and implemented together.  
+As mentioned above, all users were involved in providing critical assessment of the work produced by there peers.
+Finally, all author took part in writing the documentation of the package.
+
+More specifically, SF and QG worked conjointly on implementing parametric moment closures for \gls{mea}.
+SL and SF worked on  investigating limitations of inference together.
+SL and QG investigated together the impact of closure distribution and maximal moment order on the accuracy and success of the simulation.
+
+
+SF implemented support for \gls{lna} method and \gls{sbml} standard.
+She also wrote most of the large collection of tutorials.
+QG was involved in implementing the core of symbolic calculation for \gls{mea}, as well as optimising its performance.
+In addition, he implemented support for \gls{gssa}.
+SL implemented the core simulation and inference mechanisms and improve their performance.
+He was responsible for setting up and maintaining the continuous integration server.
+Importantly, SL spend a significant amount of time sharing his software project experience with the rest of the group.
+
+
