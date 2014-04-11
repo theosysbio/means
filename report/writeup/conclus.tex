@@ -14,11 +14,11 @@ For completeness, and to allow comparison between different algorithms, \gls{gss
 A considerable effort was made to improve the performance of \gls{mea},  in both symbolic computations and numerical evaluation.
 We also provide a comprehensive tutorial showing detailed steps of executing each function of the package.
 
-These improvements allowed us to investigate the effect of maximal moment order and closure distribution on \gls{mea} accuracy.
+These improvements allowed us to investigate the effect of \gls{maxord} and closure distribution on \gls{mea} accuracy.
 In contrast with the original publication, we find that the approximation does not necessarily improve with maximal moment order.
-In addition, we discovered that according to the region of the parameter space, the best approximation (maximal order and closure distribution) could be very different.
+In addition, we discovered that according to the region of the parameter space, the best approximation (\gls{maxord} and closure distribution) could be very different.
 We also realised that for large regions of the parameter space, all numerical solvers failed to simulate trajectories.
-Finally, we pointed out that parameter inference based on \gls{mea} approximation cannot produce the expected parameter values, even though the inferred species trajectories can be a perfect match to the ``experimental'' data. Using higher order for \gls{mea} may improve the accuracy of parameter inference slightly, however, the true parameter values cannot be recovered even using maximal order of 6.
+Finally, we pointed out that parameter inference based on \gls{mea} approximation cannot produce the expected parameter values, even though the inferred species trajectories can be a perfect match to the empirical data. Using higher order for \gls{mea} may improve the accuracy of parameter inference slightly, however, the true parameter values cannot be recovered even using \gls{maxord} of 6.
 Reporting these unforeseen limitations will hopefully help researchers to improve simulation and inference using \gls{mea}.
 
 Altogether, our implementation should facilitate further research and improve adoption of \acrlong{mea} by the community.

@@ -32,7 +32,7 @@ The number equations in the generated \gls{ode} system, for a model with $s$ spe
     \text{Number of equations} = {{s + o} \choose {s}} - 1
     \label{eq:number_of_equations}
 \end{equation}
-As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. 
+As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the \gls{maxord} of moments. 
 For example, in a system with five species, performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with 20, 55, 125 and 251 equations, respectively. 
 
 %In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
@@ -47,7 +47,7 @@ The performance assessment were realised on algorithm when performing log-normal
 \includegraphics[width=0.95\textwidth{}]{../figure_mea_speed/mea_speed.pdf}
 \caption{\emph{Cumulative performance improvement of symbolic 
 calculations resulting from optimisation}.
-The processing time for computing log-normal closure on \pft{} model with different maximal moment orders were measured for original Matlab implementation (a) and different optimisations (b$-$f).
+The processing time for computing log-normal closure on \pft{} model with different \gls{maxord}s were measured for original Matlab implementation (a) and different optimisations (b$-$f).
 In a first place, the calls to \texttt{sympy.simplify()} where removed (b). 
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
 Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increase speed.
@@ -58,7 +58,7 @@ The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal mome
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
 Nine replicates were performed on the same CPU. 
-For optimisation c$-$f, values corresponding to maximal order moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.
+For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.
 }
 \label{fig:mea_speed}
 \end{figure}
@@ -152,7 +152,7 @@ The complete list of available solvers used is available in the documentation\ci
 Naturally, we were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
 This exhaustive analysis reviled that \texttt{ode15s} was the most performant solver for this problem.
 It outperformed other solvers for both safe and unsafe parameter sets.
-Interestingly, \texttt{dopri5} appeared to scale better for unsafe parameter sets, and could be interesting when working with high maximal moment orders.
+Interestingly, \texttt{dopri5} appeared to scale better for unsafe parameter sets, and could be interesting when working with high \gls{maxord}s.
 Surprisingly, \texttt{rodas}, which has been described as an very competitive solver for stiff \gls{ode}\cite{sandu_benchmarking_1997},
 performed poorly on this case.
 
@@ -199,24 +199,24 @@ Preliminary work \cite{lakatos_preparation_2014} suggests that using a parametri
 In addition, Ale \emph{et al.} predicted that ``including more moments would improve the estimation''\cite{ale_general_2013}.
 
 The dramatic improvement in performance compared to the \mat{} prototype (see \autoref{sec:optimising_mea}) has rendered the exploration of higher-order and parametric moment closures possible.
-Therefore, we were naturaly interested in investigating the effect of maximal moment order and different type of closures on the quality of the approximation.
+Therefore, we were naturaly interested in investigating the effect of \gls{maxord} and different type of closures on the quality of the approximation.
 Figure~\ref{fig:max_order_and_closure_on_distance_summary} summarises our results on the \pft{} model. 
-The detail of generated trajectories for two representative maximal orders and one species are shown in
+The detail of generated trajectories for two representative \gls{maxord}s and one species are shown in
 \autoref{fig:max_order_and_closure_on_distance_trajectories}.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.95\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
-    \caption{\emph{Effect of different closure methods and maximal moment order on simulation accuracy}. The \pft{} system was modelled using \gls{mea} with five types of closure and for maximal moment order up to seven.
+    \caption{\emph{Effect of different closure methods and \gls{maxord} on simulation accuracy}. The \pft{} system was modelled using \gls{mea} with five types of closure and for \gls{maxord} up to seven.
 Resulting trajectories were all compared to an average of 5000 \gls{gssa} simulations using sum of square distance.
 Distance is in log scale. Missing values indicate solver failure for that particular set of parameters.}
     \label{fig:max_order_and_closure_on_distance_summary}
 \end{figure}
 
 The \pft{} system, with parameters from \cite{ale_general_2013}, was investigated.
-As mentioned above approximation accuracy is expected to increase with the maximal moment order, \ie{} distance to \gls{gssa} obtained should decreases
- as maximal moment order increases.
-For normal and scalar closures, we observe this trend up to maximal moment order of six.
+As mentioned above approximation accuracy is expected to increase with the \gls{maxord}, \ie{} distance to \gls{gssa} obtained should decreases
+ as \gls{maxord} increases.
+For normal and scalar closures, we observe this trend up to \gls{maxord} of six.
 However, this does not stand for seventh order moment.
 
 Normal distribution closure, with maximum order of seven, performed worse than the sixth order and fith order for the same closure (fig.~\autoref{fig:max_order_and_closure_on_distance_summary}).
@@ -231,8 +231,8 @@ The reason for this behaviour is uncertain. It could either be a limitation of t
 It is hard to know which explanation is more likely since we cannot test the two hypotheses separately.
 Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
 
-Note that for even maximal moment orders, normal and scalar closure methods return identical result.
-It means that when the maximal moment order is even,  the parametric expression of an odd (the next) order moment was used for closure.
+Note that for even \gls{maxord}s, normal and scalar closure methods return identical result.
+It means that when the \gls{maxord} is even,  the parametric expression of an odd (the next) order moment was used for closure.
 Normal distribution is symmetrical. One consequence is that odd central moments are always zero.
 For instance, the skewness (\ie{} third order central moment) of a normal distribution is zero.
 Therefore, this behaviour is perfecty normal.
@@ -249,13 +249,13 @@ Therefore, this behaviour is perfecty normal.
 \end{figure}
 
  
-For log-normal closure, the ground-truth trajectory seems to be well approximated when the maximal moment order is three.
-However the approximation becomes less and less accurate for higher maximal order moments.
+For log-normal closure, the ground-truth trajectory seems to be well approximated when the \gls{maxord} is three.
+However the approximation becomes less and less accurate for higher \gls{maxord} moments.
 A deeper look at the trajectories indicate that, in this latter case,
 oscillations are damped too quickly. (fig.~\autoref{fig:max_order_and_closure_on_distance_trajectories}, red lines, right panel).
 This contrasts with normal closure, where the oscillation amplitude increases.
 
-Interestingly, for even maximum moment order (\ie{} 2, 4, 6) log-normal closures generated \gls{ode}s which, despite our efforts, could not be numerically solved.
+Interestingly, for even \gls{maxord} (\ie{} 2, 4, 6) log-normal closures generated \gls{ode}s which, despite our efforts, could not be numerically solved.
 
 Finally, it seems that the results obtained from multivariate distribution closures and univariate distribution closures,
  which do not model the covariance terms, are the similar for this particular system.
@@ -264,8 +264,8 @@ For instance, we have observed that in the \emph{hes1}, it is advantageous to mo
 \quentintodo{put hes1 exple if time}
 
 Surprisingly, higher order moment closure did not necessarily result in better approximations.
-In addition, our results indicate that there might be a complex interaction between the type of closure and the maximal moment order.
-Unfortunately, this makes it difficult to define \emph{a priori} which closure and maximal moment order should be used for a given system.
+In addition, our results indicate that there might be a complex interaction between the type of closure and the \gls{maxord}.
+Unfortunately, this makes it difficult to define \emph{a priori} which closure and \gls{maxord} should be used for a given system.
 These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
 
 \subsection{Choice of Parameters Affects \acrshort{mea} Accuracy}
@@ -299,7 +299,7 @@ These unexpected results lead us explores this phenomenon on wider scale of para
     The set of parameters used in \autoref{fig:max_order_and_closure_on_distance_summary} is indicated by a $\star$.
     Note that as the maximum order parameter increases, so does the relatively low-distance area.
     However, the area in which the system is stable shrinks at a similar rate.
-    It also appears that even maximal moment orders are more stable than the odd ones.}
+    It also appears that even \gls{maxord}s are more stable than the odd ones.}
     
     \label{fig:hit-and-miss:ode15s}
 \end{figure}
@@ -466,8 +466,8 @@ These results are consistent with the preliminary results of log-normal closure 
 
 In conclusion, quantitative claims about the performance of \gls{mea} for a single parameter set must be taken with a grain of salt, as such performance depends strongly on the region of the parameter space that is being approximated and cannot be generalised for the whole parameter space.
 However, general patterns can be observed when a large parameter space is considered at once. For instance, we were able to observe that log-normal parameter closure does better than scalar closure for the parameter ranges investigated on average. 
-Similarly, the average approximation accuracy increases as the maximal moment order increases, but this has a negative impact on the solver stability.
-Finally, there seems to be some pairing between odd and even order moments, that causes scalar closures with odd maximal moment orders become very unstable. The same observation is valid for log-normal closure methods, yet for even maximal moment orders.
+Similarly, the average approximation accuracy increases as the \gls{maxord} increases, but this has a negative impact on the solver stability.
+Finally, there seems to be some pairing between odd and even order moments, that causes scalar closures with odd \gls{maxord}s become very unstable. The same observation is valid for log-normal closure methods, yet for even \gls{maxord}s.
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
@@ -499,7 +499,7 @@ This result was unexpected, because, as mentioned previously, higher order momen
 \begin{figure}
     \centering
     \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
-    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the empirical data at maximal order of $1$.}
+    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the empirical data at \gls{maxord} of $1$.}
 Each column represents one species in the \pft{} model. 
 The starting trajectories (red) were generated based on the true parameter values, 
 as the inference procedure started from the true values, 
@@ -568,8 +568,8 @@ We then chose the pair of parameters that allowed the inference procedure to con
     \caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model showing incorrect inference.}
     Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
-    Each row displays a contour plot and corresponding trajectories using different maximal order in \gls{mea}.
-    Note that the scales in the contour plots using different maximal orders are different.
+    Each row displays a contour plot and corresponding trajectories using different \gls{maxord} in \gls{mea}.
+    Note that the scales in the contour plots using different \gls{maxord}s are different.
     In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
     In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom. 
     Although the optimal trajectories (blue) match with the \gls{gssa} trajectories ($\times$), the corresponding contour plot shows wrong values are inferred.
@@ -578,7 +578,7 @@ We then chose the pair of parameters that allowed the inference procedure to con
 \end{figure}
 
 
-Through further investigations in the contour plots and trajectories with different maximal orders, 
+Through further investigations in the contour plots and trajectories with different \gls{maxord}s, 
 we found that inference based on lower order 
 (see \autoref{fig:inference_phenomenon:lower_order}) 
 \gls{mea} is more problematic than inference based on higher order \gls{mea} 
@@ -632,7 +632,7 @@ Generally, inference based on higher order \gls{mea} is able to produce more rea
 \caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
     Among seven parameters, only the values for $c_2$ and $c_6$ were inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
-    Each row displays a contour plot and correspondent trajectories using different maximal order in \gls{mea}.
+    Each row displays a contour plot and correspondent trajectories using different \gls{maxord} in \gls{mea}.
     Note that the scale in the contour plots at different orders can be different.
     In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{gssa} trajectories.
     The white space in the contour plots represent the parameter space not explored by the system. 
