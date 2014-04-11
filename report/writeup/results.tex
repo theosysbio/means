@@ -253,17 +253,9 @@ Unfortunately, this makes it difficult to define \emph{a priori} which closure a
 These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
 
 \subsection{Choice of Parameters Affects \acrshort{mea} Accuracy}
+\label{sec:hit-and-miss}
 
-The previous section has described that it may be hard to predict which maximum order to use in order to get best approximation of the true behaviour of the system \emph{a priori}. 
-In this section we explore this behaviour in a global scale.
-We are explicitly interested to see how the choice of parameters affect both the ability for the \gls{ode} solvers to generate the trajectories and the quality of these trajectories.
-
-In order to achieve this, we first fixed all the parameters of \pft{} model but $c_2$ and $c_4$ to the same values as in previous section. The remaining free parameters were varied at equal increments of $0.1$ within the ranges
-$c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$). By doing this, we generated a grid $5000$-iteration \gls{gssa} trajectories for each of these parameter values, that we took as the ground truth value for that parameter set.
-
-We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets. 
-We have also recorded the parameter sets for which the solvers failed to produce a result. 
-We then computed the sum-of-squares distances between each of the simulated trajectories and their \gls{gssa} equivalents and summarised the data into a set of contour plots, such as the ones in \autoref{fig:hit-and-miss:ode15s}, which we discuss bellow.
+\todo[inline]{New Section: Please review. I particularly struggled with how to refer to the special points in the plot, anyone have any ideas?}
 
 \begin{figure}
     \centering
@@ -293,6 +285,17 @@ We then computed the sum-of-squares distances between each of the simulated traj
     \label{fig:hit-and-miss:ode15s}
 \end{figure}
 
+The previous section has described that it may be hard to predict which maximum order to use in order to get best approximation of the true behaviour of the system \emph{a priori}. 
+In this section we explore this behaviour in a global scale.
+We are explicitly interested to see how the choice of parameters affect both the ability for the \gls{ode} solvers to generate the trajectories and the quality of these trajectories.
+
+In order to achieve this, we first fixed all the parameters of \pft{} model but $c_2$ and $c_4$ to the same values as in previous section. The remaining free parameters were varied at equal increments of $0.1$ within the ranges
+$c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$). By doing this, we generated a grid $5000$-iteration \gls{gssa} trajectories for each of these parameter values, that we took as the ground truth value for that parameter set.
+
+We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets. 
+We have also recorded the parameter sets for which the solvers failed to produce a result. 
+We then computed the sum-of-squares distances between each of the simulated trajectories and their \gls{gssa} equivalents and summarised the data into a set of contour plots, such as the ones in \autoref{fig:hit-and-miss:ode15s}, which we discuss bellow.
+
 We can immediately see from the \autoref{fig:hit-and-miss:ode15s:1} that the distance landscape is anything but uniform. There seem to be areas of the parameter space where the system is easier to approximate than in other areas. In these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately. \autoref{fig:hit-and-miss-interesting-points:ode15s:1:bullet} plots a set of first-order trajectories for one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point). 
 In the said figure we can observe the typical damped oscillatory behaviour of the \gls{gssa} trajectory, that results from out-of-frequency oscillations of individual molecule concentrations in the \pft{} system. 
 This observation suggests that it was not the dynamics of the actual system that make it easier to approximate the behaviour for these parameters, but something intrinsic to the approximation method.
@@ -303,29 +306,58 @@ The simulated trajectory for the $\times$, on the other hand, just plummets into
 Even when forgetting the fact that the concentrations obtained are not realistic for a second, the trajectories generated do not match the true behaviour of the system, and therefore both of these trajectories are not acceptable approximations of the true thing.
 
 
-
 \begin{figure}
     \begin{subfigure}[t]{0.31\textwidth}
         \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_1.6_1.1_2.1_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-        \caption{Point indicated by $\bullet$}
+        \caption{Parameters indicated by $\bullet$}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:bullet}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.31\textwidth}
         \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-        \caption{Point indicated by $\blacksquare$}
+        \caption{Parameters ($\blacksquare$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:blacksquare}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.31\textwidth}
         \includegraphics[scale=0.4]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-        \caption{Point indicated by $\times$}
+        \caption{Parameters ($\times$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:bullet}
     \end{subfigure}
     \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:1}}. Only one of the three model species is shown. The distance measure in the bottom left corner shows the distance only for the species in the plot. Note the different $y$ axis scale for the plots.}
     \label{fig:hit-and-miss-interesting-points:ode15s:1}     
 \end{figure}
 
+Moving onto the next subplot of the contour figure, the subplot where maximum moment expansion order is set to two, \autoref{fig:hit-and-miss:ode15s:2}, we can see that the high-distance area contour seems to shrink, compared to the previous subplot, putting the $\times$ and $\blacksquare$ parameters into a lower-distance zone. The resulting trajectories for these two parameter sets are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:2}. 
+The trajectory for the parameter set $\blacksquare$ is particularly interesting (\autoref{fig:hit-and-miss-interesting-points:ode15s:2:blacksquare}) as it seems to show the oscillations that increase, and then decrease in amplitude: a behaviour that is not even close to the actual behaviour seen from the \gls{gssa} simulations, but nevertheless unusual.
+The behaviour for the other parameter set shows damped oscillations, however, they are not nearly damped enough to be able to match the results from the stochastic simulations.
+
+\begin{figure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \caption{Parameters indicated by $\blacksquare$}
+        \label{fig:hit-and-miss-interesting-points:ode15s:2:blacksquare}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \caption{Parameters ($\times$)}
+        \label{fig:hit-and-miss-interesting-points:ode15s:2:bullet}
+    \end{subfigure}
+    \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:2}}. Only one of the three model species is shown. The distance measure in the bottom left corner shows the distance only for the species in the plot.}
+    \label{fig:hit-and-miss-interesting-points:ode15s:2}     
+\end{figure}
+
+Moving over to the distance landscape generated by the third order approximation, we start to see our first share of parameters that \texttt{ode15s} finds hard to produce any output at all (\autoref{fig:hit-and-miss:ode15s}). 
+In order to test if there was a problem with \texttt{ode15s} solver in the particular, we have attempted other ODE solvers with similar results (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
+
+We can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4 (\autoref{fig:hit-and-miss:ode15s:4}), and moves back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}).
+
+\sauliustodo[inline]{See if we can finish generating max order=8 figures overnight. Add trajectory figures for $\bullet$, $\times$ and $\ast$ at the highest order we could generate. Mention that $\bullet$ stays exactly the same regardless of the order, but $\times$ increases progressively till order 4 and then starts to diverge, while $\ast$ seems to just keep getting better and better.}
+
+\sauliustodo[inline]{Show the distance plots for log-normal, talk a wee bit about them, and I think that's us done with this section}
+
+\sisitodo[inline]{In your section, when we say surprising result that the trajectories are nearly perfect with low orders, you can change it to something like "surprising, but consistent with the results in \autoref{sec:hit-and-miss}"}
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
