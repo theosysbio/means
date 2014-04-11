@@ -272,8 +272,6 @@ These unexpected results lead us explores this phenomenon on wider scale of para
 \subsection{Choice of Parameters Affects \acrshort{mea} Accuracy}
 \label{sec:hit-and-miss}
 
-\todo[inline]{New Section: Please review. I particularly struggled with how to refer to the special points in the plot, anyone have any ideas?}
-
 \begin{figure}
     \centering
     \foreach \order in {1,...,4}{
@@ -305,7 +303,7 @@ These unexpected results lead us explores this phenomenon on wider scale of para
     \label{fig:hit-and-miss:ode15s}
 \end{figure}
 
-In the previous section, we address the difficulty to predict which maximum order to use in order to optain the best approximation of the true behaviour of the system \emph{a priori}.
+In the previous section, we address the difficulty to predict which \gls{maxord} to use in order to optain the best approximation of the true behaviour of the system \emph{a priori}.
 In this section we explore this behaviour in a global scale.
 We were interested in how the choice of parameters affect both the ability of the \gls{ode} solvers to generate the trajectories and
 the quality of these trajectories.
@@ -315,7 +313,7 @@ The remaining two parameters were varied by $0.1$ increments of within the range
 For ever every combination of these parameters, the average of \gls{ssa} $5000$ trajectories was generated as ground truth data.
 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
-The parameter sets for which the solvers failed to produce a result were also recorded.
+Parameter that resulted in solver failures were also recorded.
 We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{ssa} average, for the same parameter set.
 Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:ode15s}) which we discuss bellow.
 
@@ -342,10 +340,10 @@ Interestingly, in these areas, even the first-order moments are sufficient to ca
 \autoref{fig:hit-and-miss:bullet:1} plots the first-order trajectories associated with the one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
 We observe the typical damped oscillatory behaviour of the \gls{ssa} trajectory,
 which results from individual trajectories stochastically getting out-of-phase with each other\cite{ale_general_2013}.
-This observation rules out the hypothesis that the system behaviour becomes somewhat different in this region of the parameter space. 
-Because of this, we could guess there is something intrinsic to the approximation method, rather than to the system itself, that reduces the need to model the higher-order moments of the system for these parameters.\quentintodo{Any better now?} 
-Interestingly, the approximated trajectories for these regions stay nearly the same regardless of the order of moments simulated, as seen in \autoref{fig:hit-and-miss:bullet}. 
-This strengthens the implication that higher order moments play no role in approximating the behaviour for this system at the particular parameter set.
+This observation rules out the hypothesis according to which the system behaviour becomes qualitatively different in this region of the parameter space. 
+For this set of parameter, the approximation method is accurate even when \gls{maxord} is one.  
+Interestingly, the approximated trajectories where almost the same regardless of \gls{maxord} (\autoref{fig:hit-and-miss:bullet}).
+This indicates that, for this parameter set, the value of \gls{maxord} play little, if any, role.
 
 Conversely, we can also see regions of the parameter space where the approximation seems to perform poorly,
 \ie{} the bottom-right corner of the \autoref{fig:hit-and-miss:ode15s:1}.
@@ -377,7 +375,7 @@ Therefore both of these trajectories are not acceptable approximations of the tr
     \label{fig:hit-and-miss-interesting-points:ode15s:1}     
 \end{figure}
 
-When maximum moment expansion order is set to two (\autoref{fig:hit-and-miss:ode15s:2}), the high-distance area contour seems to be smaller.
+When \gls{maxord} order is set to two (\autoref{fig:hit-and-miss:ode15s:2}), the high-distance area contour seems to be smaller.
 As a consequence, the $\times$ and $\blacksquare$ parameters are in a lower-distance zone.
 The resulting trajectories for these two parameter sets are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:2}.
 The trajectory for the parameter set $\blacksquare$ is particularly interesting (\autoref{fig:hit-and-miss-interesting-points:ode15s:2:blacksquare}) as it seems to show the oscillations that increase,
@@ -403,12 +401,20 @@ However, damping is too slow to match the results from the stochastic simulation
     \label{fig:hit-and-miss-interesting-points:ode15s:2}     
 \end{figure}
 
-For even higher order moment expansions, we can see the solvers starting to struggle. For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$) when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). Other \gls{ode} solvers also struggle to produce any trajectories trajectories in this case (data not shown)\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
+For even higher order moment expansions, we can see the solvers starting to produce abnormal results. 
+For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$)
+when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). 
+Other \gls{ode} solvers also struggle to produce any trajectories in this case (data not shown)
+\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
-As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform a bit better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd). 
+As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform slightly better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit
+pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd).
 
-From figure  \autoref{fig:hit-and-miss:ode15s:4} we can see the that the parameter $\times$ gets into a lower distance tier in when the maximum order is set to 4. This point then proceeds to move back to the border between the two tiers when the maximum order is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}). 
-The approximations at the parameter set marked with an $\ast$ become better as the low-distance area grows, and the trend continues for all of the maximum order data we have, as illustrated by \autoref{fig:hit-and-miss:ast}.
+From \autoref{fig:hit-and-miss:ode15s:4} we can see that the parameter $\times$ gets into a lower distance tier in when \gls{maxord} is set to 4.
+ This point then lays at the border
+between the two tiers when \gls{maxord} is set to 6 (\autoref{fig:hit-and-miss:ode15s:6}).
+The approximations at the parameter set marked with an $\ast$ become better as the low-distance area grows,
+and the trend continues for all of the \gls{maxord} data we have, as illustrated by \autoref{fig:hit-and-miss:ast}.
 
 \begin{figure}
     \centering
@@ -426,12 +432,15 @@ The approximations at the parameter set marked with an $\ast$ become better as t
    \label{fig:hit-and-miss:ast}
 \end{figure}
 
-To summarise, the performance of the \gls{mea} approximation using scalar moment closure strongly depends on the parameters being approximated. 
-Areas of the parameter space that are approximated really well regardless of the number of higher-order moments used exist.
-So do the areas where moment-expansion approximation seems to do badly regardless of the number of moments used. 
-In the parameter space in between the two areas, the approximation seems to become more and more accurate as higher order moments are incorporated, as we would expect. 
-Numeric \gls{ode} solvers tend to be more stable when the highest-order moments present in the approximation are even. 
-This lack of stability has an interesting side effect that is most pronounced at closure order 7 (\autoref{fig:hit-and-miss:ode15s:7}), where it seems that approximation of the true behaviour is either fairly good, or the trajectories cannot be generated by the numeric \glspl{ode} solvers.
+To summarise, the performance of the \gls{mea} approximation using scalar moment closure strongly depends on the parameters being approximated.
+Some areas of the parameter space are well approximated regardless of \gls{maxord}.
+In contrast, some regions are poorly approximated for any value of \gls{maxord}.
+Between these two extreme cases, the approximation tends to become more and more accurate as higher order moments are included, as expected\cite{ale_general_2013}.
+Numeric \gls{ode} solvers tend to be more stable for even values of \gls{maxord}.
+This lack of stability has an interesting side effect that is most pronounced
+for an order of 7 (\autoref{fig:hit-and-miss:ode15s:7}), where it seems that, within the studied parameter space, approximations of the true behaviour are
+ either accurate, or the \glspl{ode} solvers fail.
+
 
 \subsubsection{Effect of Log-Normal Closure}
 
@@ -453,22 +462,36 @@ This lack of stability has an interesting side effect that is most pronounced at
     \label{fig:hit-and-miss:ode15s:log-normal}
 \end{figure}
 
-When we repeated the same procedure for moment closures using log-normal distribution, we were able to observe global decrease in the distances between the trajectories (\autoref{fig:hit-and-miss:ode15s:log-normal}) which is a strong indicator of the potential of distribution closure methods. 
+We were interested to generalise our findings for other closure methods.
+ 
+Therefore, we repeated the same procedure log-normal distribution closure.
+Globally, the distances between the approximated and the empirical trajectories
+(\autoref{fig:hit-and-miss:ode15s:log-normal}) was much smaller than for scalar closure (\autoref{fig:hit-and-miss:ode15s}).
+Unfortunately, this decrease in distances was corelated with an increase of the unstable area (\ie{} where the solver fails).
 
-Unfortunately, this decrease in distances does not come without a price. As we can see from the same set of contour plots, the solvers are less stable compared to when the scalar moment closure is used (which was pictured in \autoref{fig:hit-and-miss:ode15s}). 
-For instance, the \verb"ode15s" solver fails to produce a single working trajectory when the maximum order is set to 6. 
+For instance, the \verb"ode15s" solver fails to produce a single trajectory for \gls{maxord} of 6. 
 
 Similarly to the scalar closure, the stability seems to be different for even and odd closure orders. 
-Rather surprisingly, this pattern is opposite between the two methods -- scalar closure is more stable when maximum expansion order is set to even numbers, whereas the log-normal closure tends to be more stable for the odd ones.
+Rather surprisingly, this pattern is opposite between the two methods: scalar closure is more stable when \gls{maxord} is even,
+whereas log-normal closure tends to be more stable for the odd \glspl{maxord}.
+%
+%Due to this inherent instability of the log-normal closure, the paradoxical observation, where the approximation is reasonable,
+% provided that it is computable, as seen in high-order scalar closures (\autoref{fig:hit-and-miss:ode15s:7}) is more pronounced for log-normal closure method and is observable even at low-order
+% moments.
 
-Due to this inherent instability of the log-normal closure, the paradoxical observation, where the approximation is reasonable, provided that it is computable, as seen in high-order scalar closures (\autoref{fig:hit-and-miss:ode15s:7}) is more pronounced for log-normal closure method and is observable even at low-order moments.
+For this system, log-normal closure seem to provide either a reasonably accurate approximation or result in numerical solver failure
+This is consistent with the preliminary results of log-normal closure investigations\cite{lakatos_preparation_2014}.
+These result indicate that using parametric closure can improve approximation.
 
-These results are consistent with the preliminary results of log-normal closure investigations\cite{lakatos_preparation_2014}\todo{Can I cite Eszter here?}, and further indicate the promise of this work.
+In conclusion, quantitative claims about the accuracy of \gls{mea} for a single parameter set must be taken with a caution.
+Our result suggest that accuracy depends strongly on the region of the parameter space and cannot be generalise from a single point to the entire space.
 
-In conclusion, quantitative claims about the performance of \gls{mea} for a single parameter set must be taken with a grain of salt, as such performance depends strongly on the region of the parameter space that is being approximated and cannot be generalised for the whole parameter space.
-However, general patterns can be observed when a large parameter space is considered at once. For instance, we were able to observe that log-normal parameter closure does better than scalar closure for the parameter ranges investigated on average. 
-Similarly, the average approximation accuracy increases as the \gls{maxord} increases, but this has a negative impact on the solver stability.
-Finally, there seems to be some pairing between odd and even order moments, that causes scalar closures with odd \gls{maxord}s become very unstable. The same observation is valid for log-normal closure methods, yet for even \gls{maxord}s.
+However, general patterns can be observed when a large parameter space is considered at once. 
+For instance, we were able to observe that log-normal parameter closure does better, on average, than scalar closure for the parameter ranges investigated. 
+Similarly, the average approximation accuracy increases as the maximal moment order increases, but this has a negative impact on the solver stability.
+Finally, there seems to be some pairing between odd and even \gls{maxord}, 
+that causes scalar closures with odd \gls{maxord} to become very unstable.
+The same observation is valid for log-normal closure methods, but for even maximal moment orders.
 
 \subsection{Parameter Inference using \acrlong{mea}}
 \label{sec:results:inference}
