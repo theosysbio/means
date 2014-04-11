@@ -468,6 +468,7 @@ class FigureHitAndMissInterestingCases(TexFigureTask):
 
 class HitAndMissAll(Task):
     interesting_kwargs = [dict(solver='ode15s', max_orders=range(1, 8)),
+                          dict(solver='ode15s', closure='log-normal', max_orders=range(2,8)),
                           dict(solver='dopri5'),
                           dict(solver='rodas', max_orders=range(1, 7), point_sparsity=0.2),
                           dict(solver='euler', solver_kwargs=[('h', 0.01)])
