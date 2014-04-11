@@ -373,7 +373,7 @@ We can see the that the parameter $\times$ gets into a lower distance tier in wh
 
 \sauliustodo[inline]{Show the distance plots for log-normal, talk a wee bit about them, and I think that's us done with this section}
 
-\sisitodo[inline]{In your section, when we say surprising result that the trajectories are nearly perfect with low orders, you can change it to something like "surprising, but consistent with the results in \autoref{sec:hit-and-miss}"}
+%\sisitodo[inline]{In your section, when we say surprising result that the trajectories are nearly perfect with low orders, you can change it to something like "surprising, but consistent with the results in \autoref{sec:hit-and-miss}"}
 
 \subsection{Parameter Inference using \acrlong{mea}}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
@@ -401,17 +401,17 @@ We deliberately started the inference from the correct parameter values, expecti
 Surprisingly, when parameters are free, the inference procedure was able to find a set of parameters, but very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference}).
 This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
 
-%\begin{figure}
-%    \centering
-%    \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
-%    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
-%Each column represents one species in the \pft{} model. 
-%The starting trajectories were generated based on the true parameter values, 
-%as the inference procedure started from the true values, 
-%while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
-%Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
-%    \label{fig:range-free-parameter-inference}
-%\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{{../pipeline/task-output/FigureInferenceStartEndSSA/Range-free-parameter-inference}.pdf}
+    \caption{\emph{Incorrectly inferred parameter values can generate trajectories matching the ``experimental'' data at maximal order $1$.}
+Each column represents one species in the \pft{} model. 
+The starting trajectories were generated based on the true parameter values, 
+as the inference procedure started from the true values, 
+while the optimal trajectories were generated based on the inferred parameters, where all seven parameters were free.
+Averaged trajectories from $5000$ \gls{gssa} simulations were regarded as experimental data to compare with the starting and optimal trajectories.}
+    \label{fig:range-free-parameter-inference}
+\end{figure}
 
 
 %\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
@@ -447,25 +447,25 @@ We then have chosen the pair of parameters that allowed the inference procedure 
 
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{0.3\textwidth}
+    \begin{subfigure}[t]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \caption{Contour plot}
     \label{fig:inference_phenomenon:maxorder:1:landscape}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.65\textwidth}
+    \begin{subfigure}[t]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
     \caption{Trajectories}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.3\textwidth}
+    \begin{subfigure}[t]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \caption{Contour plot}
     \label{fig:inference_phenomenon:maxorder:1:landscape}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.65\textwidth}
+    \begin{subfigure}[b]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
     \caption{Trajectories}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
@@ -482,46 +482,48 @@ We then have chosen the pair of parameters that allowed the inference procedure 
 \end{figure}
 
 
-Through further investigation in the contour plots and trajectories with different maximal orders, we found that inference based on lower order (especially first order) \gls{mea} is more problematic than inference based on higher order \gls{mea}. 
-For example, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the starting point of parameter inference represents the true values, but is labelled as a high-distance zone. 
-This is because \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments \cite{probably need a ref here}, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
-Surprisingly, based on lower order \gls{mea}, the system is able to explore a larger region and identify a low-distance region that is far away from the expected point.
+Through further investigation in the contour plots and trajectories with different maximal orders, we found that inference based on lower order (especially maximal order 1) \gls{mea} is more problematic than inference based on higher order \gls{mea}. 
+This might because based on lower order \gls{mea}, the system is able to explore a larger region and identify a low-distance region with parameters that are easier to approximate with, and leads to incorrect results.
+For example, optimal trajectories simulated at lower order can match with the \gls{gssa} trajectories completely, which is also consistent with the result in \autoref{sec:hit-and-miss}. 
+Moreover, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, the starting point of parameter inference represents the true values, but is labelled as a high-distance zone, 
+because \gls{mea} cannot capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
+ 
 %What is surprising to observe, however, is that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
 
-Inference based on higher order \gls{mea} is able to produce slightly more realistic result. As the maximal order increases, the starting trajectories is getting closer to the \gls{gssa} trajectories, and the distance gradients in the contour plots become more and more level for higher order moments. However, the parameter inference process is still not stationary and is able to  drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
+Generally, inference based on higher order \gls{mea} is able to produce more realistic results, as reflected by less distance between the starting trajectories and the \gls{gssa} trajectories, and shallower distance gradients in the contour plots. The slightly more correct inference may be a result of more accurate \gls{mea} approximation. However, the parameter inference process is still not stationary and is able to drift away from the correct set of parameters. The complete set of observations is provided in \autoref{fig:parameter_inference_landscape_trajectories}.
 
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.65\textwidth}
+    \begin{subfigure}[b]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}   
      ~  
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.65\textwidth}
+    \begin{subfigure}[b]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}   
    
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.65\textwidth}
+    \begin{subfigure}[b]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
     
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-6-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.65\textwidth}
+    \begin{subfigure}[b]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
    
@@ -538,5 +540,4 @@ Inference based on higher order \gls{mea} is able to produce slightly more reali
 
 %\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
 
-In conclusion, we do not seem to be able to recover the correct parameter set even in the best case, when the parameter inference does not need to do any work at all. 
-This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
+In conclusion, parameter inference does not work well in general. Recovering the correct parameter set remains challenging, even with higher order \gls{mea} approximations. This observation raises concerns about the validity of parameter inference approaches using \gls{mea} approximation. 
