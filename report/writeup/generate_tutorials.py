@@ -64,7 +64,6 @@ def process_file(filename, resulting_filename):
     os.system(cmd)
 
 
-
     with open(resulting_filename, 'r') as f:
         contents = f.read()
 
@@ -94,15 +93,8 @@ def process_file(filename, resulting_filename):
 
     contents = contents.replace(r"$\LaTeX$", "\LaTeX")
 
-    # Remove In [123]: blocks
+    # Change verbatims appropriately
     contents = re.sub(r"\\begin{Verbatim}(.|\n)*?\\end{Verbatim}", remove_in_tags, contents, flags=re.MULTILINE)
-
-
-    # Change verbatims to use the version with background fill
-    #contents = contents.replace(r"\begin{Verbatim}", r"\begin{BGVerbatim}")
-    #contents = contents.replace(r"\end{Verbatim}", r"\end{BGVerbatim}")
-    # Remove In [number]:
-    #contents = re.sub(r"\{\\color\{incolor\}In \[\{\\color\{incolor\}\d+\}\]:\}", "", contents)
 
     # Remove standalone Out[]'s as well
     contents = re.sub(r"\\texttt\{\\color\{outcolor\}Out\[\{\\color\{outcolor\}\d+\}\]:\}",
