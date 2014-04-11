@@ -24,7 +24,7 @@ The key principles of this methodology have been neatly summarised by Kelly Wate
     \end{enumerate}
 }
 
-While these may sound very vague requirements, they capture the recommendations based on years of trial-and-error on software development in the industry, and generally act as good guidelines to follow for projects with short deadlines.
+While these principles may sound very vague, they capture the recommendations based on years of trial-and-error on software development in the industry, and generally act as good guidelines to follow for projects with short deadlines.
 
 \subsection{Requirements Gathering}
 \label{sec:requirements-gathering}
@@ -36,9 +36,9 @@ These discussions are often constraining the requirements with the implementatio
 
 The easiest way to keep the requirements in a high level was to limit the discussion to a set of scenarios of usage.
 These scenarios are commonly referred to \emph{user stories} and usually follow the template: ``As (some user type, \eg{} \emph{a scientist)} I would like to (some action, \eg{} \emph{perform these calculations}) because (optionally, the reason for this use case)".
-The first part of this relatively free-form gives a view of the potential user base of the software.
+The first part of this relatively free-form story gives a view of the potential user base of the software.
 For instance researchers and undergraduate students may have different requirements.
-The second part, provides a set of important use cases for the problem.
+The second part provides a set of important use cases for the problem.
 Finally, the third part assesses the relative importance of each of the use cases.
 
 We were able to write down four representative user stories, listed below:
@@ -59,7 +59,7 @@ For instance, the \emph{comparison} process in the first two user stories could 
 Similarly, the fourth user story indicates that the origin of the input data and its format are undefined.
 Therefore the software needed be general enough to support multiple input formats, or have a simple enough format allowing researchers to convert their data to.
 
-This observation encouraged us to move away from the traditional command-line application model for this software\cite{babtie_moment_2013}.
+This observation encouraged us to move away from the traditional command-line application model for this software, which was assumed for the previous implementation\cite{babtie_moment_2013}.
 In our opinion, flexibility of command-line applications comes at the expense of simplicity -- we have all seen really flexible applications that have a list of parameters that is too long for a newcomer to comprehend.
 Similarly, command-line applications create an artificial gap between the data processing and data analysis step, \ie{} writing and reading file output, which can be reduced if the application was returning the data in the format that can readily be used to investigate the data.
 
@@ -105,11 +105,13 @@ Similarly, both the \verb"StochasticProblem" and
 
 Finally, the \verb"Model" class, which provides a standard interface to describe a biological model, and can be thought to be the center of the whole package, is also implemented here.
 
+The tutorial \autoref{sec:modelling_using_means} provides a comprehensive review on how these objects could be used in combination to model biological systems in \means{}.
+
 \subsubsection{{\tt means.approximation} -- approximation methods for biological models}
 
-The approximation submodule implements \gls{lna} and \gls{mea} methods for biological systems encoded by the previously mentioned \verb"Model" objects (see \autoref{sec:Model-definition} \sauliustodo{not sure how to fix this} for a detailed description on how this encoding is done).
+The approximation submodule implements \gls{lna} and \gls{mea} methods for biological systems encoded in \means{} format.
 
-The approximation package is itself split into two sub-packages, one for each of the approximation methods mentioned.
+The approximation package is itself split into two sub-packages, one for each of the two approximation methods.
 This keeps specific routines in separate modules, thus avoiding \gls{lna} and \gls{mea} implementations namespace polluting each other.
 This also provides a clear path for future developers to implement new approximation methods -- simply creating another sub-package.
 
@@ -117,11 +119,11 @@ Despite being in different packages, both approximation methods inherit from the
 This base class defines the common interface all approximation methods; namely, the dependency on \verb"Model" and public \verb"run()" method that implements the mathematics and returns a \verb"ODEProblem" object that can be simulated.
 This common interface is required for any pipeline using the approximation methods to be method-agnostic.
 In other words, we want the pipeline to be able to perform the approximation in exactly the same way, regardless of whether \gls{lna} or \gls{mea} was used. 
-It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing an approximation method, but it will also be immediately compatible with all the packages using the approximations.
+It is easy to see how this design pattern increases the code maintainability and compatibility as well: not only the future maintainer will have a clear template to follow for implementing an approximation method, but it will also be immediately compatible with all the code using the approximations already.
 
-The advantages described above apply mostly to software using all or part of the \means{} package to perform designated tasks\sauliustodo{QG: not v clear}.
-The necessity of creating approximation objects and running their \verb"run()" function in order obtain the \gls{ode}s soon becomes a burden in the interactive environments.
-In order to overcome this, we also provide shorthand functions \verb"mea_approximation" and \verb"lna_approximation", the use of which is demonstrated in \autoref{sec:approximation-example} \sauliustodo{autoref problem}.
+In order to keep the usage of the \means{} convenient in interactive environments, we also provide shorthand methods \verb"mea_approximation" and \verb"lna_approximation", that perform the instantiation of the approximation object and the generation of expressions using it in one step.
+
+The usage of these approximation methods is described in exhaustive detail in the tutorial \autoref{sec:modelling_stochastic_dynamics}.
 
 \subsubsection{{\tt means.simulation} -- stochastic and deterministic simulation routines}
 
@@ -134,10 +136,11 @@ Nevertheless, the classes still share the same interface, providing a \verb"simu
 Also unlike the approximation submodule, we deliberately do not provide the convenience methods for performing simulations and force the user to create the \verb"Simulation" objects herself. 
 Firstly, the convenience functions for simulations would have to have a lot of parameters, in order to be as flexible as the explicit creation of the simulator objects. 
 This is a non-issue for the approximation objects, whose heavy-lifting function takes zero parameters, so all of the complexity is in the constructor parameters only.
-Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines. 
-Shorthand function would not provide a way to exploit this caching of computation, as it would force to create a new simulation object, even if it could be reused, therefore we did not code that workflow.
+Secondly, due to the way we perform numerical evaluations, subsequent uses of the same \verb"Simulation" object are much cheaper than the very first use of it which has to precompile the numeric routines.
+This point is further discussed in \autoref{sec:evaluating_expressions_efficiently} as well as illustrated in the tutorial \autoref{sec:reuse_of_simulation_objects}. 
+Providing a shorthand for these functions would encourage the users to use the non-efficient path, as reuse of simulation objects would not be possible, and therefore we chose not to do this.
 
-Examples on how to use both classes are provided in \autoref{sec:example-simulation}\sauliustodo{another autoref}.
+The tutorial chapter \autoref{sec:simulation} provides a complete guide of this submodule.
 
 \subsubsection{{\tt means.inference} -- parameter inference methods}
 % Change src/means/inference/__init__.py if you are modifying this
@@ -151,8 +154,9 @@ or functions based on parametric likelihood), but it is also possible to use cus
 The package provides support for both inference from a single starting point (\verb"Inference")
 or inference from random starting points (\verb"InferenceWithRestarts").
 
-Some basic inference result plotting functionality is also provided by the package, see the documentation for
-\verb"InferenceResult" class for more information on this. \todo{Link to documentation/provide it in examples section}
+Advance plotting functionality for inference results and the parameter space is also provided by the package, which is used extensively in the sections of the report covering the parameter inference (\eg{} \autoref{sec:results:inference}). 
+
+A full user guide for using this submodule is provided in the tutorial \autoref{sec:parameter_inference}.
 
 \subsubsection{{\tt means.io} -- reading and writing of \means-specific objects}
 % change src/means/io/__init__.py if you are changing this
@@ -163,7 +167,7 @@ These serialised representations can be written to or read from files with the h
 \verb`means.io.to_file` and \verb`means.io.from_file` functions.
 % this is not in __init__.py, but is required for report
 The YAML format has been chosen due to it's ability to balance human and machine readability. 
-Some examples of the YAML serialised objects can be seen in the \todo{write IO tutorial and link here}.
+Some examples of the YAML serialised objects can be seen in the tutorial section covering this package, i.e. \autoref{sec:input_output}, particularly \autoref{sec:human_readable_serialisation}.
 
 %this is in __init__.py again
 For the user's convenience, the said methods are also attached to all serialisable objects,
@@ -178,7 +182,7 @@ readability.
 % still in __init__.py
 Finally, this module also provides support for the input from SBML files\cite{hucka_systems_2003}.
 If the \verb`libsbml` is installed in the user's system and has the appropriate python bindings, the function \verb`means.io.read_sbml` can be used to parse the files in SBML format
-to \verb`means.core.Model` objects. See example usage in \todo{Link to some tutorial}.
+to \verb`means.core.Model` objects. See example usage in \autoref{sec:reading_models_from_files}.
 
 \subsubsection{{\tt means.util} -- utility functions used within the package}
 % change src/means/util/__init__.py if you're changing this
@@ -199,7 +203,7 @@ The models included with the package are:
 \begin{itemize}
     \item a sample Michaelis-Menten kinetics model as in \cite{ale_general_2013};
     \item Dimerisation model, also in \cite{ale_general_2013};
-    \item P53 model, described in \cite{ale_general_2013} and in \autoref{fig:p53} of this document;
+    \item P53 model, described in \cite{ale_general_2013} and in tutorial \autoref{sec:modelling_using_means} of this document;
     \item HES1 model, based on the description in \cite{ale_general_2013};
     \item A textbook example of Lotka-Volterra dynamics \cite{billard_lotka-volterra_1977}.
 \end{itemize}
@@ -208,9 +212,16 @@ These example models are designed to help us to illustrate important concepts of
 The user of the software is nevertheless encouraged to experiment with these toy models.
 
 \subsubsection{{\tt means.pipes} -- convenience functions for data pipelines}
-The \emph{pipes} submodel provides the convenience functions for pipeline tasks using \verb"luigi" package\cite{_luigi_????}.
+The \emph{pipes} submodule provides convenience wrappers around the main functionalities in \means{} that allow seamless integration with \verb"luigi" package for pipeline support\cite{_luigi_????}.
 
-The pipeline support is covered in detail in \autoref{sec:pipelines}.
+This submodule has allowed us to break down the figures needed for our report into a set of smaller tasks. 
+Once the dependancies of each of these tasks were encoded, \verb"luigi" package could then ensure these tasks are performed in the correct order, parallelise the tasks that are mutually exclusive, even among multiple computers, and not run the tasks that have already been finished twice.
+
+This essentially allowed us to specify the figures needed for report in a very high level fashion, in turn allowing us to be more flexible with them, as well as to be certain that we do not have to do the same work twice.
+
+More about this can be found in SL's individual report and the documentation available in the appendix \autoref{sec:documentation}.
+
+\sauliustodo[inline]{Write about this for personal report, see if I could summarise it in a couple of more words here as well.}
 
 \subsection{Testing}
 \label{sec:testing}
@@ -234,18 +245,13 @@ We call these tests \emph{regression} tests as they are designed to validate tha
 essentially establishing a baseline performance of it.
 We chose to use all of the examples given in the previous year's group report as a good starting point of our regression tests.
 
-In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and ensure to notify us if there are problems with it. 
+In order to \emph{test often}, as suggested by the same slogan mentioned earlier, we fired up an continuous integration server using Jenkins platform\cite{_jenkins_????}. The main purpose of this continuous integration server was to run our whole test suite after each commit, and notify us if there are problems with it. 
 This way we can eliminate the human factor and ensure that the tests are really run often and completely and therefore ensure the continuous compliance with the specification.
 
 As the software evolved, the regression tests were slowly phased out into unit tests for particular parts of the software. The main difference between the two types of the tests is that the regression tests test a large part of the system for preservation of a certain function, while unit tests focus on some small part of the system and explicitly tests it's behaviour independently. Given a large enough coverage of unit tests, we can be reasonably certain that the overall system also works fine, and thus eliminate the regression tests (which are often very slow to run). To illustrate this better, picture a GC content counting algorithm for some DNA sequence. 
 A regression test (sometimes also called functional test) would run the algorithm on whole DNA sequence and check that the overall output is, say, 60\%. 
 Unit tests would only test a small subset of the system, for instance, it could check that given a particular window of DNA, the overall GC count is correctly computed in that window. Similarly, it could check that given a couple of counts obtained from such windows, they are averaged correctly and so on. 
 
-It is possible to imagine that if combination of these unit tests are all fine, the functional test result should also be fine, so we are not losing any information by replacing these bulky tests with more fine-grained ones. It is also not hard to picture how this fine-graining could help spot problems with code faster, which is the main reason of these transitions.
+It is possible to imagine that if combination of these unit tests are all fine, the functional test result should also be fine, so we are not losing any information by replacing these bulky tests with more fine-grained ones. It is also not hard to picture how this fine-graining could help spot problems with code faster, which is the main reason of these transitions. 
 
-\todo{Pick out the \% test coverage in jenkins and write about this}
-
-\subsection{Pipelines}
-\label{sec:pipelines}
-\todo{Let's use this section to explain how we generated this report.}
-
+In the end, of the project, 66\% of the lines of our code had at least some test associated with it, with most of the tests lacking from the methods associated with plotting and reporting the results back to the user, that have been tested by other means. Namely by automatically re-compiling the tutorials you in the \autoref{examples} and checking if there were any problems or inconsistencies.
