@@ -4,7 +4,7 @@
 
 \subsection{Performance}\label{performance}
 The temporal dynamics of a molecular system can be described by the \acrfull{cme}\cite{kampen_stochastic_2011}.
-\acrfull{gssa}\cite{gillespie_general_1976} simulates these stochastic dynamics directly returning a set of individual trajectories for a list of particles observed.
+\acrfull{ssa}\cite{gillespie_general_1976} simulates these stochastic dynamics directly returning a set of individual trajectories for a list of particles observed.
 In order to obtain accurate estimates of the average dynamic within a population of cell (\ie{} the mean dynamics), it is however necessary to perform multiple (often more than $10^4$) simulations.
 Despite recent efforts \cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012} to provide fast implementation of this algorithm, computation remains extremely expensive. 
 This time-complexity is a limiting factor in downstream analysis techniques, for
@@ -208,13 +208,13 @@ The detail of generated trajectories for two representative \gls{maxord}s and on
     \centering
     \includegraphics[width=0.95\textwidth]{../pipeline/task-output/FigureP53Summary/FigureP53Summary-pdf-7.pdf}
     \caption{\emph{Effect of different closure methods and \gls{maxord} on simulation accuracy}. The \pft{} system was modelled using \gls{mea} with five types of closure and for \gls{maxord} up to seven.
-Resulting trajectories were all compared to an average of 5000 \gls{gssa} simulations using sum of square distance.
+Resulting trajectories were all compared to an average of 5000 \gls{ssa} simulations using sum of square distance.
 Distance is in log scale. Missing values indicate solver failure for that particular set of parameters.}
     \label{fig:max_order_and_closure_on_distance_summary}
 \end{figure}
 
 The \pft{} system, with parameters from \cite{ale_general_2013}, was investigated.
-As mentioned above approximation accuracy is expected to increase with the \gls{maxord}, \ie{} distance to \gls{gssa} obtained should decreases
+As mentioned above approximation accuracy is expected to increase with the \gls{maxord}, \ie{} distance to \gls{ssa} obtained should decreases
  as \gls{maxord} increases.
 For normal and scalar closures, we observe this trend up to \gls{maxord} of six.
 However, this does not stand for seventh order moment.
@@ -223,7 +223,7 @@ Normal distribution closure, with maximum order of seven, performed worse than t
 We could not obtain the result for the seventh order closure using the standard scalar and univariate normal closure
 because the ODE solver failed to simulate the problem.
 This usually indicates a ``stiff'' \gls{ode} problem\citationneeded{stiff odes}.
-In this case, the trajectories generated seem to `mismatch' the trajectory obtained from the \gls{gssa} simulations by
+In this case, the trajectories generated seem to `mismatch' the trajectory obtained from the \gls{ssa} simulations by
 large a margin (fig.~\autoref{fig:max_order_and_closure_on_distance_trajectories}, right panel).
 % (\emph{purple line, subplot on the right-hand-side}).
 
@@ -243,7 +243,7 @@ Therefore, this behaviour is perfecty normal.
     \includegraphics[width=0.95\textwidth]{../pipeline/task-output/FigureP53Simple/FigureP53Simple-pdf-7.pdf}
 %~
     \caption{\emph{Complete trajectories of a single species (\pft) for max order three and seven are shown} 
-    Black lines indicate the average of \gls{gssa} simulations. 
+    Black lines indicate the average of \gls{ssa} simulations. 
     Missing lines, compared to the legend in \autoref{fig:max_order_and_closure_on_distance_summary} indicate solver failure.}
     \label{fig:max_order_and_closure_on_distance_trajectories}
 \end{figure}
@@ -292,8 +292,8 @@ These unexpected results lead us explores this phenomenon on wider scale of para
         \end{subfigure}
         ~
     }
-    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{gssa} simulated trajectory for scalar closure and \texttt{ode15s} solver}.
-    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{gssa} trajectory.
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for scalar closure and \texttt{ode15s} solver}.
+    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{ssa} trajectory.
     Areas where \gls{ode} solver has failed are marked by black-and-white stripes.
     The four points indicated with $\bullet$, $\ast$, $\times$ and $\blacksquare$ represent sets of interests studied in other figures.
     The set of parameters used in \autoref{fig:max_order_and_closure_on_distance_summary} is indicated by a $\star$.
@@ -311,11 +311,11 @@ the quality of these trajectories.
 
 In order to achieve this, we first fixed all the parameters of \pft{} model but $c_2$ and $c_4$ to the same values as in previous section.
 The remaining two parameters were varied by $0.1$ increments of within the ranges $c_2 \in [1.5, 2.7)$ and $c_4 \in [0.6, 2.7)$ (where previously $c_2=1.7$ and $c_4=0.93$).
-For ever every combination of these parameters, the average of \gls{gssa} $5000$ trajectories was generated as ground truth data.
+For ever every combination of these parameters, the average of \gls{ssa} $5000$ trajectories was generated as ground truth data.
 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
 The parameter sets for which the solvers failed to produce a result were also recorded.
-We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{gssa} average, for the same parameter set.
+We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{ssa} average, for the same parameter set.
 Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:ode15s}) which we discuss bellow.
 
 \begin{figure}
@@ -335,11 +335,11 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
    \label{fig:hit-and-miss:bullet}
 \end{figure}
 
-The distance landscape was not uniform. For instance, distance to \gls{gssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
+The distance landscape was not uniform. For instance, distance to \gls{ssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
 Some areas of the parameter space seem to be easier to approximate than others.
 Interestingly, in these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately.
 \autoref{fig:hit-and-miss:bullet:1} plots the first-order trajectories associated with the one of the easy-to-approximate parameters (indicated by $\bullet$ in the contour point).
-We observe the typical damped oscillatory behaviour of the \gls{gssa} trajectory,
+We observe the typical damped oscillatory behaviour of the \gls{ssa} trajectory,
 which results from individual trajectories stochastically getting out-of-phase with each other\cite{ale_general_2013}.
 This observation rules out the hypothesis that the system behaviour becomes somewhat different in this region of the parameter space. 
 Because of this, we could guess there is something intrinsic to the approximation method, rather than to the system itself, that reduces the need to model the higher-order moments of the system for these parameters.\quentintodo{Any better now?} 
@@ -350,7 +350,7 @@ Conversely, we can also see regions of the parameter space where the approximati
 \ie{} the bottom-right corner of the \autoref{fig:hit-and-miss:ode15s:1}.
 This already hard-to-approximate area seems to have mountains of even harder to approximate values, such as the one indicated by a $\times$ symbol.
 The trajectories at this last parameter set, together with the trajectories for the parameter set marked with a $\blacksquare$, are shown in \autoref{fig:hit-and-miss-interesting-points:ode15s:1}.
-We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude -- completely opposite to what we observe in the \gls{gssa} data.
+We can see that the oscillations for the $\blacksquare$ parameters are increasing, and not reducing, in amplitude -- completely opposite to what we observe in the \gls{ssa} data.
 The amplitude becomes so large that the trajectory takes negative values for the concentrations (which is obviously incorrect).
  
 The simulated trajectory for the $\times$ symbol, on the other hand, just plummets into the large negative values and does not recover.
@@ -370,7 +370,7 @@ Therefore both of these trajectories are not acceptable approximations of the tr
         \caption{Parameters ($\times$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:times}
     \end{subfigure}
-    \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:1}}.
+    \caption{\emph{The \gls{mea} approximated and \gls{ssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:1}}.
     Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
     Note the different $y$ axis scale for the plots.}
     \label{fig:hit-and-miss-interesting-points:ode15s:1}     
@@ -396,7 +396,7 @@ However, damping is too slow to match the results from the stochastic simulation
         \caption{Parameters ($\times$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:2:bullet}
     \end{subfigure}
-    \caption{\emph{The \gls{mea} approximated and \gls{gssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:2}}.
+    \caption{\emph{The \gls{mea} approximated and \gls{ssa} simulated trajectories for the indicator points in the \autoref{fig:hit-and-miss:ode15s:2}}.
     Only one of the three model species is shown.
     The distance measure in the bottom left corner is only for the species in the plot.}
     \label{fig:hit-and-miss-interesting-points:ode15s:2}     
@@ -420,7 +420,7 @@ The approximations at the parameter set marked with an $\ast$ become better as t
         \hspace{-15pt} % compress the whitespace in each figure
     }
    \caption{\emph{The trajectories simulated for the parameter set marked by $\ast$ symbol in \autoref{fig:hit-and-miss:ode15s} become progressively better as higher order moments are incorporated to the approximation.} Only one of the three species in the model is shown. The distance measure in the bottom right corner shows the distance computed for only these species.
-   Note the decreasing amplitude of solver trajectories that comes closer to the \gls{gssa} solution as more moments are incorporated. 
+   Note the decreasing amplitude of solver trajectories that comes closer to the \gls{ssa} solution as more moments are incorporated. 
    }
    \label{fig:hit-and-miss:ast}
 \end{figure}
@@ -445,9 +445,9 @@ This lack of stability has an interesting side effect that is most pronounced at
         \end{subfigure}
         ~
     }
-    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{gssa} simulated trajectory for log-normal closure and \texttt{ode15s} solver}.
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for log-normal closure and \texttt{ode15s} solver}.
     The contour landscape has been computed in exactly the same manner as in \autoref{fig:hit-and-miss:ode15s} and the data interpretation can be performed in the same fashion. 
-    Note that the distance values are much lower than the ones observed for scalar closure in general, directly indicating the log-normal moment closure approach to be promising. Interestingly, the decrease in the distance between \gls{gssa} and the simulated trajectory comes with the price of the system being less stable in general. Contrary to the pattern observed for scalar closure (\autoref{fig:hit-and-miss:ode15s}), even order moment closures seem to be more stable in log-normal scenario.}
+    Note that the distance values are much lower than the ones observed for scalar closure in general, directly indicating the log-normal moment closure approach to be promising. Interestingly, the decrease in the distance between \gls{ssa} and the simulated trajectory comes with the price of the system being less stable in general. Contrary to the pattern observed for scalar closure (\autoref{fig:hit-and-miss:ode15s}), even order moment closures seem to be more stable in log-normal scenario.}
     
     \label{fig:hit-and-miss:ode15s:log-normal}
 \end{figure}
@@ -473,13 +473,13 @@ Finally, there seems to be some pairing between odd and even order moments, that
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
 To study the performance of the parameter inference procedure using \acrlong{mea},
-we generated $5000$ \acrfull{gssa} simulations of the \pft{} with a certain parameter set. 
-We believe this number of \gls{gssa} simulations is sufficient to capture the behaviour of this simple system in full.
+we generated $5000$ \acrfull{ssa} simulations of the \pft{} with a certain parameter set. 
+We believe this number of \gls{ssa} simulations is sufficient to capture the behaviour of this simple system in full.
 Then, we used the average as an observed dataset from which to infer parameters.
 In this way, we know exactly the values for the true parameters for every inference procedure.
 
 In order to determine the accuracy of inference, we used the \pft{} model expressed only in terms of the first order moments.
-This approximation was bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{gssa} simulations\cite{ale_general_2013}.
+This approximation was bound to be very inaccurate for the particular system, as higher order moments are necessary to capture the damped oscillations present in the means of \gls{ssa} simulations\cite{ale_general_2013}.
 
 
 %\begin{figure}parameter pairs are pictured
@@ -487,7 +487,7 @@ This approximation was bound to be very inaccurate for the particular system, as
 %\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
 %\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
 %In the parameter inference procedure, all seven parameters were free and started from the correct values.
-%The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{gssa} trajectories.}
+%The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{ssa} trajectories.}
 %\label{fig:7_dimensional_parameter_space}
 %\end{figure}
 
@@ -504,7 +504,7 @@ Each column represents one species in the \pft{} model.
 The starting trajectories (red) were generated based on the true parameter values, 
 as the inference procedure started from the true values, 
 while the optimal trajectories (blue) were generated based on the inferred parameters, where all seven parameters were free.
-Averaged trajectories from $5000$ \gls{gssa} simulations ($\times$) were regarded as experimental data to compare with the starting and optimal trajectories.}
+Averaged trajectories from $5000$ \gls{ssa} simulations ($\times$) were regarded as experimental data to compare with the starting and optimal trajectories.}
     \label{fig:range-free-parameter-inference}
 \end{figure}
 
@@ -565,14 +565,14 @@ We then chose the pair of parameters that allowed the inference procedure to con
     \caption{Trajectories}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
     \end{subfigure} 
-    \caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model showing incorrect inference.}
+    \caption{\emph{Contour plots of distance to \gls{ssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model showing incorrect inference.}
     Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
     Each row displays a contour plot and corresponding trajectories using different \gls{maxord} in \gls{mea}.
     Note that the scales in the contour plots using different \gls{maxord}s are different.
-    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{gssa} trajectories.
-    In the trajectory plots, the distance between the optimal and \gls{gssa} trajectories are indicated at the bottom. 
-    Although the optimal trajectories (blue) match with the \gls{gssa} trajectories ($\times$), the corresponding contour plot shows wrong values are inferred.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{ssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{ssa} trajectories.
+    In the trajectory plots, the distance between the optimal and \gls{ssa} trajectories are indicated at the bottom. 
+    Although the optimal trajectories (blue) match with the \gls{ssa} trajectories ($\times$), the corresponding contour plot shows wrong values are inferred.
     The white space in the contour plots represent the unexplored parameter space.}
     \label{fig:inference_phenomenon:lower_order}
 \end{figure}
@@ -585,14 +585,14 @@ we found that inference based on lower order
 (see \autoref{fig:inference_phenomenon:higher_order}). 
 This might because inference using lower order \gls{mea} approximations allows the \pft{} model to explore a region large enough that a low-distance area can be identified.
 Yet the low-distance area  implies that the parameters values are easier to approximate with, but not necessarily the true parameter values.
-For example, optimal trajectories simulated at lower order can mabut not necessarily the true parameter valuestch with the \gls{gssa} trajectories completely, which is also consistent with the result in \autoref{sec:hit-and-miss}. 
+For example, optimal trajectories simulated at lower order can mabut not necessarily the true parameter valuestch with the \gls{ssa} trajectories completely, which is also consistent with the result in \autoref{sec:hit-and-miss}. 
 Moreover, in \autoref{fig:inference_phenomenon:maxorder:1:landscape}, 
 the starting point of parameter inference, \ie{} true values, is labelled as a high-distance zone. 
 This unexpected high-distance can be explained by \gls{mea} unable to capture the damped oscillatory behaviour of the system for this set of parameters without higher order moments, as illustrated by the starting trajectories in \autoref{fig:inference_phenomenon:maxorder:1:trajectories}. 
  
 %What is surprising to observe, however, is that the landscape is not relatively level \ie{} the approximation is not equally bad for all parameter sets. There is a clear pool of parameters, where no high-order information is needed to approximate this oscillatory behaviour.
 
-Generally, inference based on higher order \gls{mea} is able to produce more realistic results, as reflected by less distance between the starting trajectories and the \gls{gssa} trajectories, and shallower distance gradients in the contour plots (see \autoref{fig:inference_phenomenon:higher_order}). The slightly more correct inference may be a result of more accurate \gls{mea} approximation. However, the parameter inference process is still not stationary and is able to drift away from the correct set of parameters.
+Generally, inference based on higher order \gls{mea} is able to produce more realistic results, as reflected by less distance between the starting trajectories and the \gls{ssa} trajectories, and shallower distance gradients in the contour plots (see \autoref{fig:inference_phenomenon:higher_order}). The slightly more correct inference may be a result of more accurate \gls{mea} approximation. However, the parameter inference process is still not stationary and is able to drift away from the correct set of parameters.
 
 
 \begin{figure}
@@ -629,14 +629,14 @@ Generally, inference based on higher order \gls{mea} is able to produce more rea
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
     \end{subfigure}
    
-\caption{\emph{Contour plots of distance to \gls{gssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
+\caption{\emph{Contour plots of distance to \gls{ssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
     Among seven parameters, only the values for $c_2$ and $c_6$ were inferred. The starting values were obtained from previous inference using the true parameter values.
     All the contour plots and the trajectories start with the same parameter values for inference.
     Each row displays a contour plot and correspondent trajectories using different \gls{maxord} in \gls{mea}.
     Note that the scale in the contour plots at different orders can be different.
-    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{gssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{gssa} trajectories.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{ssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{ssa} trajectories.
     The white space in the contour plots represent the parameter space not explored by the system. 
-    In the trajectory plots, the distance between the optimal (blue) and \gls{gssa} trajectories ($\times$) are indicated at the bottom.}
+    In the trajectory plots, the distance between the optimal (blue) and \gls{ssa} trajectories ($\times$) are indicated at the bottom.}
 \label{fig:inference_phenomenon:higher_order}
 \end{figure}
 
