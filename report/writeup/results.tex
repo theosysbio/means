@@ -33,7 +33,7 @@ The number equations in the generated \gls{ode} system, for a model with $s$ spe
     \label{eq:number_of_equations}
 \end{equation}
 As a consequence, the complexity of the calculation is predicted to increase exponentially with the number of species in the system and the maximal order of moments. 
-For example, in a system with five species,  performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with  20, 55, 125 and 251 equations, respectively. 
+For example, in a system with five species, performing \gls{mea} up to moments of order 2, 3, 4 and 5, results in an \gls{ode} system with 20, 55, 125 and 251 equations, respectively. 
 
 %In order to perform symbolic computations, we have used \sympy{} \cite{sympy_development_team_sympy:_2014}; a \py{} implementation of
 %the symbolic computation routines.
@@ -104,7 +104,7 @@ This performance improvement is illustrated in the tutorial \autoref{sec:reuse_o
 The symbolic expression evaluation speed, whilst incredibly important, contributes only partially to the scalability of the simulation procedures.
 The performance of numerical \gls{ode} solvers themselves also plays a critical role.
 
-These solvers differ in many ways ranging from a set of parameters to different heuristics and even algorithms.
+These solvers differ by their respective options, heuristics or algorithms.
 Choice of the \emph{best} solver for an \acrlongpl{ode} system depends very much on the particular problem to simulate.
 However certain solvers tend to be more generally adopted than others\cite{andersson_workbench_2012}.
 
@@ -112,10 +112,6 @@ CVODE\cite{hindmarsh_sundials_2005} is an example of one of the most widely used
 As described in \autoref{sec:ode_simulations}, we implement two variants of this solver, \verb#ode15s# and \verb#cvode#.
 Both solvers point to the same back-end implementation of CVODE provided by \verb#assimulo# package\cite{andersson_christian_assimulo:_????}.
 The only diference is that \verb#ode15s# solver's default parameters mimics the eponymous \mat{} solver.
-
-Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
-The complete list of available solvers used in available in the documentation\citationneeded{refer to docs}.
-Naturally, it was interesting to compare the respective performance of different solvers on our type of problems.
 
 In order to measure the runtime performance of the solvers, we performed a set of simulations of the \acrlong{mea} of the \pft{} model.
 We deliberately chose two sets of parameters: one that we know is fairly stable and easy to simulate with, so called \emph{safe} parameter set,
@@ -136,7 +132,8 @@ We call the latter parameter set the \emph{unsafe}.
        \label{fig:runtimes-safe-unsafe-euler}
    \end{subfigure}
    
-    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets, one harder to simulate than the other as it makes the problem stiff.
+    \caption{Comparison of the time taken for the {\tt ode15s} and Euler solvers to simulate a system, with respect to two parameter sets.
+     The ``safe'' parameter set is very stable, while the ``unsafe'' one leads to stiff problems, which are harder to solve.
     The time axis is in log-scale. Regression lines through the marked points is represented.
     Note that the number of equations increases exponentially with maximum order, essentially making this a log-log plot.}
 \label{fig:runtimes-safe-unsafe}
@@ -146,22 +143,41 @@ We call the latter parameter set the \emph{unsafe}.
 Heuristic solvers tend to automatically adjust the step size depending on the problem in hand, adjusting for the rate of stochastic events being simulated.
 It is therefore expected that they would perform worse for stiff problems, where the timeframes between the events become shorter and shorter, which requires more time steps.
 
-In contrast, Euler solver, uses a constant step size, and therefore the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
+In contrast, Euler solver, uses a constant step size, thus the runtimes for the two parameter sets are equal (\autoref{fig:runtimes-safe-unsafe-euler}).
 
 Since \gls{ode} solvers are inherently heuristic, their CPU performance may suffer considerably for unstable systems.
 
-We were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
-\sauliustodo[inline]{Describe these results, after you get some sleep}
+Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
+The complete list of available solvers used is available in the documentation\citationneeded{refer to docs}.
+Naturally, we were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
+This exhaustive analysis reviled that \texttt{ode15s} was the most performant solver for this problem.
+It outperformed other solvers for both safe and unsafe parameter sets.
+Interestingly, \texttt{dopri5} appeared to scale better for unsafe parameter sets, and could be interesting when working with high maximal moment orders.
+Surprisingly, \texttt{rodas}, which has been described as an very competitive solver for stiff \gls{ode}\cite{sandu_benchmarking_1997},
+performed poorly on this case.
+
+Using an appropriate solver can improve numerical performance by an order of magnitude (\autoref{fig:solver-runtimes}).
+Therefore, we advise users to benchmark different solvers on their specific problems if numerical evaluation speed is critical (\ie{} for parameter inference).
+In addition, advanced users can optimise the numerous options of each solvers in order improve performance.
+Although we cannot conclude that \texttt{ode15s} is the fastest solver for all \gls{mea} problems,
+it seems to be a reasonable default solver.
 
 \begin{figure}[bt]
     \centering
     \includegraphics[width=\textwidth]{../pipeline/task-output/solver-runtimes/runtimes-all.pdf}
-    \caption{Comparison of all solver runtimes}
+    \caption{\emph{Comparison of all solver runtimes.}
+    The runtime of nine different solvers were compared for a safe (left side) and an unsafe (right side) parameter set.
+    Regression lines through the marked points is represented in a different colour for each solver.
+    Solvers are sorted, top to bottom, by increasing performance in the legend.
+    \texttt{ode15s} was globally the fastest solver.
+    }
     \label{fig:solver-runtimes}
 \end{figure}
 
+
 In order to improve performance, we have compared solvers on the basis of their speed.
-However, they also differ in their accuracy and stability.
+However, they also differ in their accuracy and stability. 
+In fact, most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}.
 This was investigated in  \sauliustodo{ref to new section once I create it}.
 
 \subsection{Moment Expansion Closure}
