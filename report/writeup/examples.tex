@@ -2,10 +2,24 @@
 In this section, we illustrate the main functionality of \means{} by in a short tutorial.
 Please, note that the tutorial instructions below are auto-generated from the interactive tutorial in the IPython notebook format. 
 While the information is identical between both media forms, it may be more convenient to read the tutorial in the interactive form. 
-The tutorial in IPython notebook format can be found in \means in prototypes/examples/Tutorial/, and can be accessed by executing \emph{ipython notebook} in command line.
-\sauliustodo{Describe how to access interactive form of tutorial}
+The tutorial in  IPython notebook format can be found in \means{} source code in the directory  \verb"prototypes/examples/Tutorial/", and can be accessed by executing \texttt{ipython notebook} in command line.
+\sauliustodo{Put the tutorial on msc server and just give a link to it}.
 
 \subsection{Installation}
+
+In order to install \means{} package, one must first make sure all external dependancies such as \verb"sundials" libraries \citationneeded{sundials} are installed. Our \verb"README.txt" file located in the \verb"src" directory of the codebase provides detailed instructions how to do that on Mac OS X.
+
+Once the dependancies are all accounted for, the development version of the \means{} package can be installed by navigating to the \verb"src" directory of the codebase, and issuing the install command via a standard \py{} package installation tool \verb"pip":
+
+\begin{InputVerbatim}
+pip install -e .
+\end{InputVerbatim}
+
+This command should fetch and install all the dependancies of \means{} as well as the package in the development mode (\verb"-e" flag). Troubleshooting information is provided in the same \verb"README.txt" file.
+
+Note that it is also encouraged to install the latest version of  IPython notebook\cite{perez_ipython:_2007}, together with \means{} as this would allow to use the package to its full potential.
+
+Note that once the code is released to public, the installation procedure could be shortened to \verb"pip install means" command that would not require checking the code out from the repository.
 
 \sauliustodo[inline]{Installation instructions go here}
 

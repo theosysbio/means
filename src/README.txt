@@ -33,25 +33,6 @@ Once the libraries are installed, make sure they are in your `LD_LIBRARY_PATH`, 
 .. HomeBrew_: http://brew.sh/
 .. `sundials`_: https://computation.llnl.gov/casc/sundials/main.html
 
-Assimulo
------------
-This package relies on development version of `assimulo` package.
-This version must be installed from source as `pip` will not be able to handle this.
-To install the development version of this package, make sure your sundials library installation succeeded, then
-checkout the development version of the code::
-
-    svn checkout --trust-server-cert https://svn.jmodelica.org/assimulo/trunk assimulo-trunk
-
-Navigate to recently checked out directory `assimulo-trunk` and install the package::
-
-    cd assimulo-trunk
-    python setup.py install --sundials-home=/usr/local
-
-Verify whether the installation succeeded by trying out one of the examples in the package, i.e.::
-
-    $ python -i
-    >>> from assimulo.examples.cvode_basic import run_example
-    >>> run_example()
 
 Installation (Development version)
 ============
@@ -61,11 +42,18 @@ directory and typing::
 
     pip install -e .
 
+Due to the way ``pip`` handles dependencies, you might need to install ``cython``, ``numpy``, ``scipy`` and ``matplotlib``
+separately before installing ``means``::
+
+    pip install cython
+    pip install numpy
+    pip install scipy
+    pip install matplotlib
+
 Running tests
 ==============
 All tests for the package are available in `means.tests` package that is installed together with the rest.
-In order to run regression tests type::
+In order to run these tests, one could just use `nose` package and type the following to the command line::
 
-    python -m means.tests.regression_tests
+    nosetests src/tests
 
-From `src` directory (or any other directory with access to `InOutput` dir)
