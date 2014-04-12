@@ -3,7 +3,7 @@ import tornado.web
 
 docs_path = '_build/html/'
 settings = {'debug': True}
-port = 2711
+port = 2709
 
 handlers = [(r'/(.*)', tornado.web.StaticFileHandler, {'path': docs_path}),
             ]
