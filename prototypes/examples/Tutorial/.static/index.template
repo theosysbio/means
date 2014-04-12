@@ -35,7 +35,7 @@
                 <li class="dropdown-header">Tutorials</li>
                 {tutorial_files_list}
                 <li class="dropdown-header">Other</li>
-                <li><a href="http://msc.bc.ic.ac.uk:2709">Online documentation</a></li>
+                <li><a href="http://msc.bc.ic.ac.uk:2709/index.html">Online documentation</a></li>
 
             <ul>
         </div>
