@@ -1,5 +1,5 @@
 #!/bin/bash
-EXAMPLES_DIR=$WORKSPACE/prototypes/examples
+EXAMPLES_DIR=$WORKSPACE/examples
 
 pip install --quiet nosexcover
 pip install --quiet pylint
