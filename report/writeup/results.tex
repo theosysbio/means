@@ -159,7 +159,8 @@ In contrast, Euler solver, uses a constant step size, thus the runtimes for the 
 Since \gls{ode} solvers are inherently heuristic, their CPU performance may suffer considerably for unstable systems.
 
 Besides CVODE solvers, our package is able to perform simulations with seven other solvers, using completely different algorithms.
-The complete list of available solvers used is available in the documentation\citationneeded{refer to docs}.
+The complete list of available solvers used is available in the \href{http://msc.bc.ic.ac.uk:2709/means.simulation.html?means.simulation.simulate.Simulation#means.simulation.simulate.Simulation}{documentation}\footnote{See {\tt http://msc.bc.ic.ac.uk:2709/means.simulation.html?means.simulation.simulate.Simulation\\
+\#means.simulation.simulate.Simulation}, as described in the appendix \ref{sec:documentation}}.
 Naturally, we were then interested in assessing, in the same fashion, all nine available solvers for these two parameter sets (\autoref{fig:solver-runtimes}).
 This exhaustive analysis reviled that \texttt{ode15s} was the most performant solver for this problem.
 It outperformed other solvers for both safe and unsafe parameter sets.
