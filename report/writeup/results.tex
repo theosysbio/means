@@ -189,8 +189,7 @@ it seems to be a reasonable default solver.
 
 In order to improve performance, we have compared solvers on the basis of their speed.
 However, they also differ in their accuracy and stability. 
-In fact, most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}.
-This was investigated in  \sauliustodo{ref to new section once I create it}.
+In fact, it is known that most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}. We have investigated the stability of the ODE solvers in \autoref{sec:hit-and-miss}.
 
 \contrib{
 The principal contributor for this section is SL.
@@ -245,7 +244,7 @@ large a margin (fig.~\autoref{fig:max_order_and_closure_on_distance_trajectories
 
 The reason for this behaviour is uncertain. It could either be a limitation of the approximation method, or a numerical limitation of the available \gls{ode} solver.
 It is hard to know which explanation is more likely since we cannot test the two hypotheses separately.
-Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
+Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \autoref{sec:hit-and-miss}.
 
 Note that for even \glspl{maxord}, normal and scalar closure methods return identical result.
 It means that when the \gls{maxord} is even,  the parametric expression of an odd (the next) order moment was used for closure.
@@ -283,7 +282,7 @@ For instance, we have observed that in the \emph{hes1}, it is advantageous to mo
 Surprisingly, higher order moment closure did not necessarily result in better approximations.
 In addition, our results indicate that there might be a complex interaction between the type of closure and the \gls{maxord}.
 Unfortunately, this makes it difficult to define \emph{a priori} which closure and \gls{maxord} should be used for a given system.
-These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
+These unexpected results lead us to explore this phenomenon on wider scale in \autoref{sec:hit-and-miss}.
 
 
 \contrib{
