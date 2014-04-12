@@ -1,0 +1,120 @@
+\documentclass[11pt,a4paper]{article}
+\setcounter{secnumdepth}{6}
+
+\usepackage{standalone}
+\usepackage{geometry} % Used to adjust the document margins
+\usepackage{graphicx}
+\usepackage[font=footnotesize]{caption}
+\usepackage[noadjust]{cite}
+\usepackage[toc,page]{appendix}
+\usepackage{hyperref}
+\usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{sidecap}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{minted}
+\usepackage{framed}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{csquotes}
+\usepackage{parskip} % Spaces between paragraphs
+
+\usepackage{pgffor} % foreach loops!
+
+\usepackage[acronym]{glossaries}
+
+% refering back to group report
+\usepackage{xr}
+\externaldocument[GR:]{../../report}
+
+% add binding margins
+\geometry{bindingoffset=1cm}
+
+\makeglossaries
+\renewcommand*\abstractname{Summary}
+
+% OUR COMMANDS
+%~ 
+%~ \newenvironment{pythoncode}%
+%~ {\begin{framed}
+%~ \begin{minted}{python}}%
+%~ {\end{minted}
+%~ \end{framed}}%
+
+% http://www.tex.ac.uk/cgi-bin/texfaq2html?label=altabcr
+\setcounter{MaxMatrixCols}{50}
+
+% package name:
+\newcommand{\means}{\texttt{MEANS}}
+\newcommand{\pft}{\textit{p53}}
+\newcommand{\py}{\texttt{python}}
+\newcommand{\sympy}{\texttt{sympy}}
+\newcommand{\plt}{\texttt{matplotlib}}
+\newcommand{\mat}{\texttt{MATLAB}}
+\newcommand{\eg}{\emph{e.g.}}
+\newcommand{\ie}{\emph{i.e.}}
+
+\newcommand{\sauliustodo}[2][]{\todo[color=cyan, #1]{\textbf{SL:} #2}}
+\newcommand{\sisitodo}[2][]{\todo[color=yellow, #1]{\textbf{SF:} #2}}
+\newcommand{\quentintodo}[2][]{\todo[color=red, #1]{\textbf{QG:} #2}}
+\newcommand{\citationneeded}[2][]{\todo[color=brown, fancyline, #1]{\textbf{Citation Needed:} #2}}
+\newcommand{\contrib}{\emph}
+\begin{document}
+
+\listoftodos
+\newpage
+
+\title{MEANS: a new python package for Moment Expansion Approximation, Inference and Simulation}
+\author{Individual report: Saulius Lukauskas \\
+\\	
+\\
+\\
+\\
+Supervised by Ann Babtie, Paul Kirk, Eszter Lakatos and Michael Stumpf\\
+\\
+\\
+Theoretical Systems Biology Group,\\
+Imperial College London
+}
+\date{\today}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+\newpage{}
+
+\pagenumbering{roman}
+
+\pagebreak % move TOC to a different page from abstract
+\tableofcontents
+
+% our acronyms
+\newacronym{ode}{ODE}{Ordinary Differential Equation}
+\newacronym{mea}{MEA}{Moment Expansion Approximation}
+\newacronym{lna}{LNA}{Linear Noise Approximation}
+\newacronym{ssa}{SSA}{Gillespie Stochastic Simulation Algorithm}
+\newacronym{cme}{CME}{Chemical Master Equation}
+\newacronym{abc}{ABC}{Approximate Bayesian Computation}
+\newacronym{sbml}{SBML}{Systems Biology Markup Language}
+\newacronym{pypi}{PyPI}{the Python Package Index}
+
+\newglossaryentry{maxord}
+{
+  name=maximal order,
+  description={Maximal moment expansion order. Max order always (regardless to the closure method) refers to the highest order of 
+  moments present in an ODE system resulting from Moment Expansion Approximation. In other words, moment expansion is closed at the moment whose order is one higher than the max order value.
+   },
+  sort=maximal order
+}
+\newpage{}
+\printglossaries
+
+\input{content}
+
+\newpage{}
+\bibliography{../../report.bib}{}
+\bibliographystyle{ieeetr}
+\newpage{}
+\begin{appendices}
+\end{appendices}
+   
+\end{document}
