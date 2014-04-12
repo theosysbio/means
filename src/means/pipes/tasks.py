@@ -331,7 +331,7 @@ class TexFigureTask(Task):
         ...         return [MyFigure(name='foo'), MyFigure(name='bar')]
 
 
-    .. `LaTeX subfloats`: https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions#Subfloats
+    .. _`LaTeX subfloats`: https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions#Subfloats
     """
 
     label = luigi.Parameter()
