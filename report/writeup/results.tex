@@ -528,28 +528,18 @@ More information are available in his individual report.}
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
 To study the performance of the parameter inference procedure using \acrlong{mea},
-we used ode15s solver as suggested in \autoref{sec:compare-performance-of-ode-solvers}. We also generated $5000$ \acrfull{ssa} simulations of the \pft{} model with a certain parameter set. 
-We believe this number of \gls{ssa} simulations is sufficient to capture the behaviour of this simple system in full.
+we used ode15s solver as suggested in \autoref{sec:compare-performance-of-ode-solvers}. 
+We also generated $5000$ \acrfull{ssa} simulations of the \pft{} model with a certain parameter set, as we believe this number of \gls{ssa} simulations is sufficient to capture the behaviour of this simple system in full.
 Then, we used the average as an observed dataset, so that we could compare the starting and optimal trajectories with the ``experimental'' data.
 
-We first used the \pft{} model expressed only in terms of first, third and fifth order moments\sisitodo[inline]{Misleading: we performed three inferences with three different max-orders, your sentence leads to believe we performed one with max ord=5, but removed equations for 2nd and fourth orders}, as approximation based on first order may be inaccurate for the particular system, and higher order moments might be necessary to capture the damped oscillations present in the means of \gls{ssa} simulations\cite{ale_general_2013}. 
+%as approximation based on first order may be inaccurate for the particular system, and higher order moments might be necessary to capture the damped oscillations present in the means of \gls{ssa} simulations\cite{ale_general_2013}. 
 
-%\begin{figure}parameter pairs are pictured
-%\centering
-%\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
-%\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
-%In the parameter inference procedure, all seven parameters were free and started from the correct values.
-%The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{ssa} trajectories.}
-%\label{fig:7_dimensional_parameter_space}
-%\end{figure}
-
-
-We deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
-We were only able to compare the results using \gls{maxord} of one and three, because inference failed at \gls{maxord} of five. 
-Surprisingly, when all parameters were free to be explored, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar even for maximal expansion order 1 (see \autoref{fig:range-free-parameter-inference-max-order-1} for result based on \gls{maxord}). 
-The observation is consistent with inference using  \gls{maxord} of three (data not shown). \sisitodo[inline]{I do not see any reason to talk about the inference of order three and five for 7 free parameters for just the sake of mentioning it. We do not show any data for it, and it only adds confusion for the reader. 
-Remove mentions for free inference of orders 3-5 from group report (including the mention one todo above), and add it to your individual one if you feel it relevant.}
-This result was \sisitodo{expected? for maximum order=1? am I missing smth here?}expected, because, as mentioned previously, higher order moments are believed to be necessary to capture the system behaviour.
+We first used the \pft{} model expressed only in terms of first order moments, 
+and deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
+%We were only able to compare the results using \gls{maxord} of one and three, because inference failed at \gls{maxord} of five. 
+Surprisingly, when all parameters were free to be explored, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar even for maximal expansion order 1 (see \autoref{fig:range-free-parameter-inference-max-order-1}). 
+%The observation is consistent with inference using  \gls{maxord} of three (data not shown). 
+%This result was unexpected because, as mentioned previously, higher order moments are believed to be necessary to capture the system behaviour.
 
 \begin{figure}
     \centering
@@ -566,7 +556,7 @@ Averaged trajectories from 5000 \gls{ssa} simulations (marked with black $\times
 
 %\sisitodo[inline]{Why don't we compare the SSA trajectories with these parameters somewhere as well, if there is time?}
 
-In order to gain some insight into these \sisitodo{now it is unexpected, make up your mind :) }unexpected inference results, we first attempted to restrict ourselves within a two-dimensional space, which is easier to work with.
+In order to gain some insight into these unexpected inference results, we first attempted to restrict ourselves within a two-dimensional space, which is easier to work with.
 To do this, we limited our parameter inference procedure to have only one pair of free parameters at a time (all other parameters were fixed to their true values).
 We performed these experiments for all 21 combinations of two parameter pairs.
 
