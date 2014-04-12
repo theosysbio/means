@@ -20,8 +20,8 @@ The result is an :class:`means.core.problems.ODEProblem`. Typically, it would be
 perform simulations (see :mod:`~means.simulation`) and inference (see :mod:`~means.inference`).
 
 .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
-"A general moment expansion method for stochastic kinetic models,"\
-The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
+   "A general moment expansion method for stochastic kinetic models,"\
+   The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
 
 ------------
 """

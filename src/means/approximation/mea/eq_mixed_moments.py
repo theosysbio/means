@@ -7,12 +7,12 @@ from means.util.decorators import cache
 
 class DBetaOverDtCalculator(object):
     """
-    A class providing a efficient way to recursively calculate :math:`\frac{d\beta}{dt}` (eq. 11 in  [Ale2013]_).
+    A class providing a efficient way to recursively calculate :math:`\\frac{d\\beta}{dt}` (eq. 11 in  [Ale2013]_).
     A class was used here merely for optimisation reasons.
 
     .. [Ale2013] A. Ale, P. Kirk, and M. P. H. Stumpf,\
-    "A general moment expansion method for stochastic kinetic models,"\
-     The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
+       "A general moment expansion method for stochastic kinetic models,"\
+       The Journal of Chemical Physics, vol. 138, no. 17, p. 174101, 2013.
     """
     def __init__(self, propensities, n_counter, stoichoimetry_matrix, species):
         """

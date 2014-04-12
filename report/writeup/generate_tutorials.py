@@ -99,6 +99,14 @@ def process_file(filename, resulting_filename):
     # Remove standalone Out[]'s as well
     contents = re.sub(r"\\texttt\{\\color\{outcolor\}Out\[\{\\color\{outcolor\}\d+\}\]:\}",
                       r"{\\color{outcolor}Output:}", contents)
+
+    # Replace the figure in the notebook with something for the pdf
+    contents = re.sub(r"\\begin\{figure\}(.|\n)*?\includegraphics\{images/p53\.svg\}(.|\n)*?\end\{figure\}",
+                      r"\\begin{figure}[h!]\n\centering\n\includegraphics{handmade_figures/p53.eps}\n\end{figure}",
+                      contents, flags=re.MULTILINE)
+
+    # Change the figure in the tutorial
+
     # Remove the offset padding resulting from the removal of In
     #contents = re.sub(r"^\s+\\PY", r"\\PY", contents, flags=re.MULTILINE)
 
