@@ -586,7 +586,7 @@ We performed these experiments for all 21 combinations of two parameter pairs.
     \caption{\emph{Two out of four parameter pairs that can produce a perfect match between inferred optimal trajectories and SSA trajectories for one species in \pft{} model.}
     Trajectories for one out of three species are shown here for clear demonstration.
     The distance from the SSA trajectory for each species is displayed in each subfigure.
-    Trajectories are simulated using \gls{maxord} of 1.}
+    Trajectories are simulated using \gls{maxord} of one.}
     \label{fig:parameter_pairs}
 \end{figure}
 
@@ -594,34 +594,37 @@ Interestingly, we were able to observe the same behaviour for the parameter pair
 We then chose the pair of parameters that allowed the inference procedure to converge to a trajectory with minimal distance to the \gls{ssa} average: $c_2$ and $c_6$.
 
 
+
+
+
 \begin{figure}
     \centering
     \begin{subfigure}[t]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-1-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{Contour plot}
+    \caption{}
     \label{fig:inference_phenomenon:maxorder:1:landscape}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-1-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{Trajectories}
+    \caption{}
     \label{fig:inference_phenomenon:maxorder:1:trajectories}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.25\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-2-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{Contour plot}
+    \caption{}
     \label{fig:inference_phenomenon:maxorder:2:landscape}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.7\textwidth}
+    \begin{subfigure}[t]{0.7\textwidth}
     \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-2-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{Trajectories}
+    \caption{}
     \label{fig:inference_phenomenon:maxorder:2:trajectories}
     \end{subfigure} 
     \caption{\emph{Contour plots of distance to \gls{ssa} trajectory and trajectories for parameter inference performed with lower order \gls{mea} using \pft{} model showing incorrect inference.}
     Among seven parameters, only the values for $c_2$ and $c_6$ are inferred. The starting values were obtained from previous inference using the true parameter values.
-    All the contour plots and the trajectories start with the same parameter values for inference.
+    All the contour plots (subplots a and c) and the trajectories (subplots b and d) start with the same parameter values for inference.
     Each row displays a contour plot and corresponding trajectories using different \gls{maxord} in \gls{mea}.
     Note that the scales in the contour plots using different \gls{maxord}s are different.
     In the contour plots, the warmer the colour, the more distant the inferred trajectories are from the \gls{ssa} trajectories, and the numbers indicate the distance between optimal trajectories obtained from inference and the \gls{ssa} trajectories.
@@ -630,6 +633,83 @@ We then chose the pair of parameters that allowed the inference procedure to con
     The white space in the contour plots represent the unexplored parameter space.}
     \label{fig:inference_phenomenon:lower_order}
 \end{figure}
+
+
+
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.25\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:3:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.7\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:3:trajectories}
+    \end{subfigure}   
+     ~  
+    \begin{subfigure}[t]{0.25\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:4:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.7\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:4:trajectories}
+    \end{subfigure}   
+   
+    \begin{subfigure}[t]{0.25\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:5:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.7\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:5:trajectories}
+    \end{subfigure}
+    
+    \caption{Figures continued on the next page}
+    \label{}
+\end{figure}
+
+
+\begin{figure}
+    \ContinuedFloat
+    \centering    
+    \begin{subfigure}[t]{0.25\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-6-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:6:landscape}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.7\textwidth}
+    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
+    \caption{}
+    \label{fig:incerence_phenomenon:maxorder:6:trajectories}
+    \end{subfigure}
+   
+\caption{\emph{Contour plots of distance to \gls{ssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
+    Among seven parameters, only the values for $c_2$ and $c_6$ were inferred. The starting values were obtained from previous inference using the true parameter values.
+    All the contour plots and the trajectories start with the same parameter values for inference.
+    Each row displays a contour plot and correspondent trajectories using different \gls{maxord} in \gls{mea}.
+    Note that the scale in the contour plots at different orders can be different.
+    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{ssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{ssa} trajectories.
+    The white space in the contour plots represent the parameter space not explored by the system. 
+    In the trajectory plots, the distance between the optimal (blue) and \gls{ssa} trajectories ($\times$) are indicated at the bottom.}
+\label{fig:inference_phenomenon:higher_order}
+\end{figure}
+
+
+
+
 
 
 Through further investigations in the contour plots and trajectories with different \glspl{maxord}, 
@@ -659,66 +739,7 @@ In conclusion, the results in this section raise the concerns of validity of sin
 Nevertheless, interesting patterns can still be extracted from the data if whole distance distribution is considered at once. 
 These results seem to hint a bayesian approach to parameter inference might be more appropriate when \acrlong{mea} is used.
 
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.25\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-3-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:3:landscape}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.7\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-3-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:3:trajectories}
-    \end{subfigure}   
-     ~  
-    \begin{subfigure}[b]{0.25\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-4-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:4:landscape}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.7\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-4-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:4:trajectories}
-    \end{subfigure}   
-   
-    \begin{subfigure}[b]{0.25\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-5-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:5:landscape}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.7\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-5-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:5:trajectories}
-    \end{subfigure}
-    
-    \begin{subfigure}[b]{0.25\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/SampleMultidimensionInferenceFigure/SampleMultidimensionInferenceFigure-pdf-6-scalar-True-90.0_0.002_1.704_1.1_0.93_0.96_0.7822-ode15s--90.0_0.002_1.704_1.1_0.93_0.96_0.7822-sum_of_squares-5000}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:6:landscape}
-    \end{subfigure}
-    ~
-    \begin{subfigure}[b]{0.7\textwidth}
-    \includegraphics[width=\textwidth,height=0.2\textheight]{{../pipeline/task-output/FigureInferenceStartEndSSA/FigureInferenceStartEndSSA-6-scalar-c2-1.7040-c6-0.7822}.pdf}
-    \caption{}
-    \label{fig:incerence_phenomenon:maxorder:6:trajectories}
-    \end{subfigure}
-   
-\caption{\emph{Contour plots of distance to \gls{ssa} trajectory and trajectories for parameter inference performed with higher order \gls{mea} using \pft{} model.}  
-    Among seven parameters, only the values for $c_2$ and $c_6$ were inferred. The starting values were obtained from previous inference using the true parameter values.
-    All the contour plots and the trajectories start with the same parameter values for inference.
-    Each row displays a contour plot and correspondent trajectories using different \gls{maxord} in \gls{mea}.
-    Note that the scale in the contour plots at different orders can be different.
-    In the contour plots, the warmer the colour, the more distant the inferred trajectories are from \gls{ssa} trajectories, and the numbers indicate the distance between optimal trajectories and \gls{ssa} trajectories.
-    The white space in the contour plots represent the parameter space not explored by the system. 
-    In the trajectory plots, the distance between the optimal (blue) and \gls{ssa} trajectories ($\times$) are indicated at the bottom.}
-\label{fig:inference_phenomenon:higher_order}
-\end{figure}
+
 
 %\sisitodo[inline]{Fix the big figure so you can refer to individual parts from text}
 
