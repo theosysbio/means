@@ -50,25 +50,29 @@ calculations resulting from optimisation}.
 The processing time for computing log-normal closure on \pft{} model with different \gls{maxord}s were measured for original Matlab implementation (a) and different optimisations (b$-$f).
 In a first place, the calls to \texttt{sympy.simplify()} were removed (b). 
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
-Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increases speed.
+Computing a rectangular matrix containing expressions for all moment was more efficient than generating a square matrix to later remove unneeded expressions (d).
 Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). 
 Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
+The time complexity appears exponential ($O(2^k)$, where $k$ is the maximal moments order) in every case, 
+Nine replicates were performed on the same CPU. 
+For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of
+the inherent inaccuracy in measuring very short durations.}
+\label{fig:mea_speed}
+\end{figure}
+
 %Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
-Nine replicates were performed on the same CPU. 
-For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.}
-\label{fig:mea_speed}
-\end{figure}
-\quentintodo{in the caption, what do you mean by $n_2$? }
-\quentintodo{might be a stupid question, but what's $O$?}
-\quentintodo{move the stats here}
 
 Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
 For instance, with the same \pft{} system and closure method, 
 we predict that computation up to \gls{ode}s up $8^{th}$ order will take 46 minutes with \means{}, 5 hours after the first optimisation (fig.~\autoref{fig:mea_speed}b) and as much as 148 days with the original implementation.
 These improvement have allowed us to explore the performance of MEA in higher depth, and will hopefully contribute to make \gls{mea} realistically usable for systems with more species and reactions.
+
+\contrib{
+The principal contributor for this section is QG.
+More information are available in his individual report.}
+
 
 \subsubsection{Evaluating Expressions Efficiently}
 \label{sec:evaluating_expressions_efficiently}
@@ -101,7 +105,7 @@ As a consequence, the overhead is present only in the first evaluation of expres
 This performance improvement is illustrated in the tutorial \autoref{sec:reuse_of_simulation_objects}.
 
 \contrib{
-The principal contributor for this section is QG.
+The principal contributor for this section is SL.
 More information are available in his individual report.}
 
 
@@ -233,7 +237,7 @@ However, this does not stand for seventh order moment.
 Normal distribution closure, with \gls{maxord} of seven, performed worse than the sixth order and fith order for the same closure (\autoref{fig:max_order_and_closure_on_distance_summary}).
 We could not obtain the result for the seventh order closure using the standard scalar and univariate normal closure
 because the ODE solver failed to simulate the problem.
-This usually indicates a ``stiff'' \gls{ode} problem\citationneeded{stiff odes}.
+This usually indicates a ``stiff'' \gls{ode} problem\cite{hairer_solving_1996}.
 In this case, the trajectories generated seem to `mismatch' the trajectory obtained from the \gls{ssa} simulations by
 large a margin (fig.~\autoref{fig:max_order_and_closure_on_distance_trajectories}, right panel).
 % (\emph{purple line, subplot on the right-hand-side}).
@@ -273,7 +277,7 @@ Finally, it seems that the results obtained from multivariate distribution closu
  which do not model the covariance terms, are the similar for this particular system.
 This is not true for all of the systems.
 For instance, we have observed that in the \emph{hes1}, it is advantageous to model covariance (data not show).
-\quentintodo{put hes1 exple if time}
+
 
 Surprisingly, higher order moment closure did not necessarily result in better approximations.
 In addition, our results indicate that there might be a complex interaction between the type of closure and the \gls{maxord}.
