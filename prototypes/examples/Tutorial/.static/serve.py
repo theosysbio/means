@@ -16,7 +16,8 @@ class MainHandler(tornado.web.RequestHandler):
     def get(self):
         template = INDEX_TEMPLATE
         tutorial_list = []
-        for filename in os.listdir(static_path):
+        files = sorted(os.listdir(static_path))
+        for filename in files:
             if filename.endswith('.html'):
                 # Remove the .html in the ned
                 name_of_tutorial = filename[:-5]
