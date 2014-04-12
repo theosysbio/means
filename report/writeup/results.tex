@@ -48,12 +48,12 @@ The performance assessment were realised on algorithm when performing log-normal
 \caption{\emph{Cumulative performance improvement of symbolic 
 calculations resulting from optimisation}.
 The processing time for computing log-normal closure on \pft{} model with different \gls{maxord}s were measured for original Matlab implementation (a) and different optimisations (b$-$f).
-In a first place, the calls to \texttt{sympy.simplify()} where \quentintodo{do you mean "were removed"?} removed (b). 
+In a first place, the calls to \texttt{sympy.simplify()} were removed (b). 
 Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
-Generating an $(n-s) \times (n_2-s + 1)$ \quentintodo{what do you mean by $n_2$? } matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increases speed.
+Generating an $(n-s) \times (n_2-s + 1)$ matrix (d), as opposed to an $(n-s) \times (n-s + 1)$ one, also increases speed.
 Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). 
 Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-The time complexity appears exponential ($O(2^n)$, \quentintodo{might be a stupid question, but what's $O$?} where $n$ is the maximal moments order) in every case, 
+The time complexity appears exponential ($O(2^n)$, where $n$ is the maximal moments order) in every case, 
 %Interestingly, the slopes between, a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively; t-test on the slopes of the linear regression). 
 %No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
 %However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
@@ -61,7 +61,8 @@ Nine replicates were performed on the same CPU.
 For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of the inherent inaccuracy in measuring very short durations.}
 \label{fig:mea_speed}
 \end{figure}
-
+\quentintodo{in the caption, what do you mean by $n_2$? }
+\quentintodo{might be a stupid question, but what's $O$?}
 \quentintodo{move the stats here}
 
 Reorganising, profiling and rewriting the code resulted in incremental significant performance improvements of symbolic computations in \means{} compared to the original \mat{} code.
@@ -541,7 +542,7 @@ We first used the \pft{} model expressed only in terms of first, third and fifth
 
 We deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
 We were only able to compare the results using \gls{maxord} of one and three, because inference failed at \gls{maxord} of five. 
-Surprisingly, when parameters were free, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference-max-order-1}} for result based on \gls{maxord} of one). 
+Surprisingly, when parameters were free, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference-max-order-1} for result based on \gls{maxord} of one). 
 The observation is consistent with inference using  \gls{maxord} of three (data not shown).
 This result was unexpected, because, as mentioned previously, higher order moments are believed to be necessary to capture the complex behaviour of the system.
 
