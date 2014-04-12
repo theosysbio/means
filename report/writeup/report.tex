@@ -2,6 +2,7 @@
 \setcounter{secnumdepth}{6}
 
 \usepackage{standalone}
+\usepackage{geometry} % Used to adjust the document margins
 \usepackage{graphicx}
 \usepackage[font=footnotesize]{caption}
 \usepackage[noadjust]{cite}
@@ -21,7 +22,8 @@
 \usepackage{pgffor} % foreach loops!
 
 \usepackage[acronym]{glossaries}
-
+% add binding margins
+\geometry{twoside,bindingoffset=1cm}
 
 \input{ipynbsupportdefinitions.tex}
 
