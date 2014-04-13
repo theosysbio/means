@@ -8,48 +8,52 @@ This document has been written as a succinct supplement to the group report, and
 \subsection{Software Development Process}
 \todo{Quote science code manifesto}
 In the modern day where computers are becoming the driving force of innovation and progress the whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
-Naturally, the need to use and computer software is becoming increasingly important for scientific communities in every major field of science. The extent of this has already made some knowledge of computer programming a requirement skill to succeed.
+Naturally, scientific software is becoming critically important for scientific communities in every major field of science. This importance raises the demand for scientists who are also proficient in computer programming. However, while knowledge of computer programming is deemed critical, the necessity to study software engineering is still being debated. 
 
-While knowledge of computer programming is deemed critical, the necessity to study software-engineering is still being debated. 
-The common argument for the lack of need to study software engineering, claims that people often care only about the end result, and not how it was obtained or how easy-to-read code is. 
-I find this claim ironic as the same argument is actually the main reason why the software-engineering methodologies emerged in the first place. 
-For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} claim treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}, clearly in par with the same argument described earlier. 
-In fact \emph{agile} methodology is viewed as an alternative to the approaches that aim to create this idealistic, properly structured and well-documented software, such as the traditional \emph{waterfall} model.
+The common argument for the lack of need to study software engineering, claims that people often care only about the end result, and not how it was obtained or how easy-to-read code is.
+To me this claim seems to be ironic as the same argument can be used to describe the main reason why the software-engineering methodologies emerged in the first place. 
+For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} claim treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}. 
+In fact \emph{agile} methodology is often viewed as an alternative to the approaches that aim to create this idealistic, properly structured and well-documented software, such as the traditional \emph{waterfall} model.
 
 It was my personal goal, and I believe my biggest contribution, to share my experience in software engineering in order to incorporate the \emph{agile} methodology into our development cycle. 
-In this project I aimed to not only introduce my peers to concepts that might have not been known to them previously, but to also push these concepts to the full potential and immediately validate their usefulness by showing how they allow reaching the desired goals faster. 
+In this project I aimed to introduce my peers to concepts that might have not been known to them previously as well as to try to validate their value by showing the value they bring. 
+This section lists a couple of the modern software development practices we aimed to employ, and provides a short description of how they contributed to the success of \means{} project.
 
+Whenever I introduced a concept to the peers, regardless if they have heard it before or not, I also tried to push it to further to the limits, so the biggest advantage can be seen. 
 For instance, not only we were using \verb"git"\cite{git} for our version control, but we were also using appropriate branching workflow. 
-This allowed us to ensure our work that is still relatively experimental does not impact other people working on different things. 
-In turn, it had immediate result of providing the courage to experiment with the code, courage without which the performance improvements described in the group report's section \autoref*{GR:performance} may have never been made.
+This allowed each one of us to work on separate things in isolation, and ensured one's changes will not break the other's work. 
+In turn this provided the courage for us to be able to experiment with the code more, knowing these experiments will not impact others.
+Without this courage, performance improvements described in the group report's section \autoref*{GR:performance} may have never been made.
 
 Another factor that contributed to the ability to change the key parts of the system without the fear of breaking something was the early incorporation of automated tests to the system. 
-This created a way to validate the correctness of our software, and have a way to pinpoint a failure, minutes after the change that introduced it. 
-In turn, it allowed us to spend less time testing our software, but trust it to be correct more.
-In turn, this increases our confidence in the validity of the observations made (as described in the \autoref*{GR:results} of group report). Our approach to software testing is summarised in the main report's \autoref*{GR:sec:testing}.
+This created a way to validate the correctness of our software quickly.
+Similarly, it allowed us to pin-point the location of a failure quickly, minutes after it occurred.
+These automated tests allowed us to spend less time testing our software, but trust it more.
+In turn, this had a positive effect on our confidence in the validity of the observations made (as described in the \autoref*{GR:results} of group report). Our approach to software testing is summarised in the main report's \autoref*{GR:sec:testing}.
 
-To help ourselves \emph{increase the amount of work not done}, we set up a continuous integration server. 
+To help ourselves \emph{increase the amount of work not done}, we set up a continuous integration server.
 This server, implemented by the \emph{Jenkins CI} platform\cite{_jenkins_????}, has responsibly been running every single test we have after every single push to the central code repository we made. At the moment of writing, the server has run 507 of these tests.
-We assumed that if the code does not work on \emph{Jenkins}, as we called it, it does not work at all, regardless of whether the code works on the author's machine. 
-Such code could then be retracted, fixed and pushed again to the main repository, at which point it may or may not pass the tests. 
-This allowed us to reduce the number of times we have to deal with files forgotten to be added to the central repository, or tests forgotten to be run before committing due to human error.
+We assumed that if the code does not work on \emph{Jenkins}, as we called it, it does not work at all, regardless of whether the code works on the author's machine or not. 
+Such code could then be retracted, fixed and pushed again to the main repository, at which point it will be tested again. 
+This central server allowed us to reduce the number of times we have to deal with issues occurring due to simple human error, such as files forgotten to be added to the central repository, or tests not run before a commit to the code repository.
 
-Similarly, \emph{Jenkins} enabled us to run code in different environments. For instance, we had one environment where where we always kept the libraries updated to the latest version. 
+Similarly, \emph{Jenkins} enabled us to run code in different environments. For instance, we kept all the libraries updated to the latest version in one of the environments we ran the code on. 
 It was because of this special environment that we spotted an incompatibility with the latest version of \verb"Assimulo"\cite{andersson_christian_assimulo:_????} -- the package providing ODE solver implementations in \py{} -- minutes after that version became public. We were then able to prove that this incompatibility was a problem with the \verb"Assimulo" package, not ours. 
-We then worked together with Cristian Andersson (one of the developers of \verb"Assimulo") to it get fixed. 
+We then worked together with Cristian Andersson (one of the developers of \verb"Assimulo") to it get fixed and new version of the package released.
 In the sense, this continuous integration environment has contributed to two projects -- \verb"Assimulo" and \means{} -- as if not for it, said bug in the library might still be present today.
 
 Finally, I explained in detail the advanced concepts of Object-Oriented Programming, such as inheritance, encapsulation, static methods to my peers so they could be applied in our project.
 I attempted to show how these concepts make the code both easier to maintain, and easier to write in the first place, hopefully allowing the peers to transfer these skills to their other projects as well.
-In the end we have succeeded at creating a highly modular codebase, which we believe should be easy to maintain for the next person lucky enough to work on this project. The full summary of our code base is available in the \autoref*{GR:sec:package} of the group report.
+In the end, I believe we have succeeded at creating a highly modular codebase, which should be easy to maintain in the future. The summary of our code base is available in the \autoref*{GR:sec:package} of the group report, as well as in the documentation, described in the appendix \autoref*{GR:sec:documentation} of group report.
 
 Besides the programming-related best practices of software engineering, we also implemented certain project management aspects suggested by \emph{agile} methodologies. 
 For instance, we structured our work into weekly iterations. We were planning the things we need to do for the week, and reviewing the things we done at the end of it. 
 We have structured our iterations to end just before the weekly meetings with supervisors, so we could also immediately get the feedback.
-This allowed to keep the project on a clear track and going the right way.
+This allowed to keep the project on a clear track, going the right way and within the scope required.
 
-
-In the end, I believe that the software-engineering approaches I tried to introduce to the team were good both as an educational exercise and a way to be more efficient, when it comes to software development.
+In the end, I believe that the software-engineering approaches I described above acted both as an educational exercise and a way to be more efficient, when it comes to software development.
+I strongly believe that without them, we would not have been able to progress as much with the project as we did.
+I also hope that the anecdotal evidence listed above may serve as a proof of utility of software engineering approaches, however small, and maybe act as an argument in favour of it as well.
 
 \subsection{Significant Code Contributions}
 
