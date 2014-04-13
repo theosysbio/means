@@ -68,9 +68,9 @@ Imperial College London
 
 \pagenumbering{roman}
 
-\begin{abstract}
-todo 
-\end{abstract}
+% \begin{abstract}
+% todo 
+% \end{abstract}
 
 \tableofcontents
 
@@ -98,10 +98,20 @@ todo
 
 \section{Introduction}
 
+For our group project, we wrote a \py{} package for Moment Expansion Approximation, Inference and Simulation (\means).
+Our group report explains our motivations, results and findings. 
+Breifly, we provided a tool to model dynamic systems based on \acrlong{mea}\cite{ale_general_2013}.
+Our implementation is very well documented, maintainable, extensible and user friendly.
+It also performs considerably faster than alternative implementations.
 
-My
+In the report herein, I describe some of my major contributions to the project. 
+First of all, I explain \emph{why} and \emph{how} the implementation of \acrlong{mea} was completely rewritten.
+Then, I describe how parametric moment closure was translated from \mat{} prototype to be included in a unified framework in \means.
+As explained in the group report, a considerable part of my work was also to improve the performance of \gls{mea}.
+Here, I provide more details about the how this was realised.  
+Finally, I explain the rationale for integrating \acrlong{ssa} simulations in the package. 
 
-\section{Restructuration of \acrlong{mea} implementation}
+\section{Restructuration of \acrlong{mea} Implementation}
 As we attempted to read the \py{} implementation of \acrshort{mea} written by last year students\cite{babtie_moment_2013},
 we were deterred by several points.
 First of all, the code was often unnecessarily intricate and hard to read.
@@ -115,7 +125,7 @@ My main individual contribution was to reforge the core implementation of \acrsh
 In the original code, symbolic computation relied on \sympy{}\citationneeded{}.
 This library was efficient and well documented, thus we decided to also relie on \sympy{} for symbolic computations.
  
-\subsection{Simplifying the code}
+\subsection{Simplifying the Code}
 We started by generating results from the original implementation and wrote ``regression tests''.
 In this way, every time the code was ammended, tests were run to ensure validity of mathematical results.
 
@@ -175,7 +185,7 @@ converted to \verb"yxN" (where \verb"N"  is a positive integer),
 and $0^{th}$ order raw moments had to be converted to $1$.
 Our approach allows to allocate the final symbol (or value) once for all at the start, which greatly simplifies the code.
 
-\subsection{Using modularity}
+\subsection{Using Modularity}
 
 The original implementation had very little modularity.
 There were a few functions, which were essentially executed once.
@@ -192,7 +202,7 @@ Therefore, it was very advantageous to make a base class for all approximation m
 In addition, object oriented programming allowed us to define custom data structures with their own methods.
 For instance custom \texttt{ODEProblems} and \texttt{Moments} objects were very helpful to represent mathematical concepts.
 
-\subsection{Using python standards}
+\subsection{Using \py{} Standards}
 The original code uses indexed for loops (like in \texttt{C}).
 However, in \py, ``foreach'' loops are  standard and are much more efficient and readable.
 In addition, advanced syntactic feature of \py{} such as ``list comprehensions''  and mapping,
@@ -240,7 +250,7 @@ Table~\ref{tab:varnames} represents a few examples of how we chose variable name
 \section{Parametric Moment Closure Implementation}
 Implementation of moment closures using parametric distibutions was done in colaboration 
 with Sisi Fan because prototypes were available in \mat{}\cite{lakatos_preparation_2014}, and she had experience using \mat{}, 
-whilst I was more advanced in \py{}. Here, I will only describe how my decisions about the implementations in \py{}.
+whilst I was more advanced in \py{}. Here, I will only describe my decisions about the implementations in \py{}.
 
 All closure methods essentially replace higher order ($=$\gls{maxord}+1) raw moment symbols with and expression depending on lower order moments (or constants).
 For parametric closure, raw moments are expressed in terms of lower order moments.
@@ -254,7 +264,7 @@ Then, only the method to compute raw moments has to be specialised in subclasses
 This general framework will greatly simplify the task of reseachers willing
 to implement closure methods for new distributions.
 
-\section{Optimisation of symbolic computations}
+\section{Optimisation of Symbolic Computations}
 
 \label{sec:optimisation}
 
@@ -297,7 +307,7 @@ Note that this specific profile has been pruned to facilitate representation.
 \end{figure}
 
  
-\subsection{Iterative improvements}
+\subsection{Iterative Improvements}
 In this section, I detail the nature of the optimisations performed in section\citationneeded{} of the group report.
 The relevant figure is reproduced as figure ~\ref{fig:mea_speed}.
 
