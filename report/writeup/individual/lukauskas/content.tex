@@ -1,12 +1,17 @@
-This document summarises the major contributions of Saulius Lukauskas
-to the development of \means{} package.
-This document has been written as a succinct supplement to the group report, and therefore it contains numerous back-references to sections of the larger document.
-
 \section{Introduction}
 
-\section{Contributions}
-\subsection{Software Development Process}
-\todo{Quote science code manifesto}
+During this group computing project, our team has implemented a \py{} package for Moment Expansion Approximation iNference and Simulation, \means{} for short. 
+The development process and the results have been described in detail in the main group report, which I am not going to reiterate here.
+
+In this document, however, I attempt to summarise my major contributions to the success of this project, as well as explain the reasoning of certain decisions we made and share my views on issues relating to \means{} project.
+
+I start by providing some anecdotal evidence we gathered on how advanced software engineering techniques helped us to succeed in this project. 
+I then list the contributions to the source code I felt were noteworthy, and aim to explain the reasoning behind certain design decisions that I made when designing the major interfaces of the package. In this report, I briefly cover the pipeline functionality implemented in \means{} that was excluded from the group report.
+After that, I briefly reiterate the results described in the main group report, and provide the supplementary data that we thought was not necessary to be included into the main document. 
+Finally, I conclude the report with providing a retrospect and listing the directions for future work.
+
+\section{Software Development Process}
+
 In the modern day where computers are becoming the driving force of innovation and progress the whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
 Naturally, scientific software is becoming critically important for scientific communities in every major field of science. This importance raises the demand for scientists who are also proficient in computer programming. However, while knowledge of computer programming is deemed critical, the necessity to study software engineering is still being debated. 
 
@@ -55,12 +60,13 @@ In the end, I believe that the software-engineering approaches I described above
 I strongly believe that without them, we would not have been able to progress as much with the project as we did.
 I also hope that the anecdotal evidence listed above may serve as a proof of utility of software engineering approaches, however small, and maybe act as an argument in favour of it as well.
 
-\subsection{Significant Code Contributions}
+\section{Significant Code Contributions}
 
 In the previous section I have talked about the software development process in general and my contributions to it. 
 Below I list my most noteworthy contributions to the source code of \means{} as well as justify some of the design decisions we made.
 
-\subsubsection{Design of Simulation Interface}
+\subsection{Design of Simulation Interface}
+\label{sec:simulation}
 
 It is no secret, that we did not start this project from scratch.
 The previous year's MSc students have already contributed a large quantity of \py{} code that provided some basic functionality of \means{}. In this project, we aimed to attempt to simplify the said functionality and therefore it easier to use and maintain (see \autoref*{GR:sec:aims_of_the_project} in the group report).
@@ -109,7 +115,7 @@ This has proven to be an efficient-enough solution for most of the day-to-day ne
 In the future, however, it would be interesting to benchmark the Theano performance, whose inhering GPU support could speed up the evaluations even more.
 In particularly, I believe it would help to reduce the exponential slope of runtime arising from the exponential increase of the number of equations as the maximal moment order is increased (see \autoref{GR:fig:solver-runtimes} in the group report) to make the simulations feasible for even higher orders. 
 
-\subsubsection{Design of Parameter Inference Interface}
+\subsection{Design of Parameter Inference Interface}
 
 Besides refactoring the simulation mechanisms from the previous year's code, I have also worked on restructuring the parameter inference interface. 
 The original interface, while fully working, was split into two different parts: sum-of-square distance based inference, and parametric distance based inference. Similarly, we found the specification of inference parameters to be slightly convoluted and not suitable to be used from an interactive interface. 
@@ -120,7 +126,7 @@ Additionally, the unification of the parameter inference interfaces enabled our 
 Finally, by the end of the project, SF and I have added additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, as illustrated in 
 \autoref*{GR:sec:investigating_distance_landscape} of the group report, which we believe will aid the future users in exploring their data.
 
-\subsubsection{Pipeline Support}
+\subsection{Pipeline Support}
 
 During the final days of this project, when we were generating the figures for the results section in the group report (\autoref{GR:results}), we realised that the scale of these figures was quickly becoming troublesome hard to manage. 
 At this point each one of us has had already written a couple of lines of boilerplate code that performs the \acrlong{mea}, stores the result, maybe has a loop of some sort that would run simulation or parameter inference procedures on this result, and store these results to different file.
@@ -173,7 +179,7 @@ Using {\tt luigi} package not only allowed us to skip the implementation step fo
     \label{fig:pipes_example}
 \end{figure}
 
-\subsection{Investigation of MEA and Solver Performance}
+\section{Investigation of \acrshort{mea} Accuracy and Solver Performance}
 
 The pipelines described above were most useful in writing the \emph{results} section of the group report. In my section of this report, section \autoref{GR:sec:hit-and-miss}, I worked on generalising the results obtained by QG that he describes in \autoref{GR:sec:results:mea_performance} of the group report. 
 Here I was interested to see how the results change depending on the region of parameter space are we considering, as well as the impact different \gls{ode} solving heuristics have on these results and how stable they are at obtaining them.
@@ -187,5 +193,20 @@ The full set of results for all solvers were not included to the main report, bu
 
 In conclusion, these results show that the accuracy of \gls{mea} for a single parameter set must be taken with a caution. These results suggest that accuracy depends strongly on the region of the parameter space and cannot be generalised from a single point to the entire space, however some general patterns described in \autoref*{GR:sec:hit-and-miss} of the main resort can still be observed.
 
-\section{Conclusions}
+\section{Conclusion}
 
+In this report I aimed to summarise the value I brought to the team during the course of this project.
+Such contributions included the push towards using advanced software-engineering techniques as well as direct contributions to the codebase such as the design of simulation and inference interfaces.
+I have also proposed the use of \verb"luigi" framework to deal with the figures based on data in a pragmatic manner and used the said framework to analyse \gls{mea} performance for a large parameter space and reported the results.
+
+Looking back to the project, I believe that we did a great job as a team, and achieved impressive results.
+Having said that, due to the fixed timescale of the project, we did not explore the full extent of things we would like to as we had to stop somewhere. In the subsequent paragraph I list the things that I believe to be important to consider in the future.
+
+As described in \autoref{sec:simulation}, it would be interesting to attempt using Theano for numeric evaluations of symbolic expressions.
+If this library is able to give a significant boost to the runtime of the simulations, it might be possible to explore the performance of \gls{mea} for even higher order moments. 
+
+Similarly, it would be interesting to explore the performance of \gls{mea} on a larger parameter space compared to the one we explored.
+It would be interesting to find out why certain regions of this parameter space are easier to model, and why others are showing the opposite behaviour. Also, we are not sure how common these regions are, or what their distributions among the said parameter space are.
+
+In my opinion, these questions are the biggest indicator of the success of this project. 
+With the previous tools we would not have been able to ask these questions as they would have been either too tedious or to slow to answer. We are able to ask these questions now because we were able to produce a layer of software easy enough to use to not limit our imagination. And I am proud to be a part of it.
