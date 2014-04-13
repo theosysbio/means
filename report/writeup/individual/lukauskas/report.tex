@@ -48,6 +48,7 @@
 \newcommand{\means}{\texttt{MEANS}}
 \newcommand{\pft}{\textit{p53}}
 \newcommand{\py}{\texttt{python}}
+\newcommand{\python}{\py}
 \newcommand{\sympy}{\texttt{sympy}}
 \newcommand{\plt}{\texttt{matplotlib}}
 \newcommand{\mat}{\texttt{MATLAB}}
@@ -101,20 +102,24 @@ Imperial College London
 {
   name=maximal order,
   description={Maximal moment expansion order. Max order always (regardless to the closure method) refers to the highest order of 
-  moments present in an ODE system resulting from Moment Expansion Approximation. In other words, moment expansion is closed at the moment whose order is one higher than the max order value.
+  moments present in an ODE system resulting from Moment Expansion Approximation. 
+  In other words, moment expansion is closed with moments of maximal order plus one.
    },
   sort=maximal order
 }
 \newpage{}
 \printglossaries
+\newpage{}
 
+\pagenumbering{arabic}
 \input{content}
 
 \newpage{}
-\bibliography{../../report.bib}{}
+\bibliography{../../report.bib,individual.bib}{}
 \bibliographystyle{ieeetr}
 \newpage{}
 \begin{appendices}
+\input{appendix}
 \end{appendices}
    
 \end{document}
