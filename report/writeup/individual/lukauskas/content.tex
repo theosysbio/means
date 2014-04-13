@@ -16,13 +16,42 @@ I find this claim ironic as the same argument is actually the main reason why th
 For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} claim treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}, clearly in par with the same argument described earlier. 
 In fact \emph{agile} methodology is viewed as an alternative to the approaches that aim to create this idealistic, properly structured and well-documented software, such as the traditional \emph{waterfall} model.
 
-It was my personal goal in this project to share my experience in software engineering in order to incorporate the \emph{agile} methodology into our development cycle. 
-I aimed to both introduce my peers to the best practices from the industry and to immediately validate them by showing how these practices allow reaching the desired goal faster.
+It was my personal goal, and I believe my biggest contribution, to share my experience in software engineering in order to incorporate the \emph{agile} methodology into our development cycle. 
+In this project I aimed to not only introduce my peers to concepts that might have been known to them, but to also push these concepts to the full potential and immediately validate their usefulness by showing how they allow reaching the desired goals faster. 
 
-\subsection{Automated Testing}
+For instance, not only we were using \verb"git"\cite{git} for our version control, but we were also using appropriate branching workflow. 
+This allowed us to ensure our work that is still relatively experimental does not impact other people working on different things. 
+In turn, it had immediate result of providing the courage to experiment with the code, courage without which the performance improvements described in the group report's section \autoref*{GR:performance} may have never been made.
 
-\subsection{Code Structure}
-\subsection{Continuous Integration}
+Another factor that contributed to the ability to change the key parts of the system without the fear of breaking something was the early incorporation of automated tests to the system. 
+This has allowed us ways to quickly check whether our software is still working as expected and pinpoint the failure within minutes of the broken commit. 
+This have allowed us to spend less time testing our software, but trust it to be correct more.
+In turn, this increases our confidence in the validity of the observations made (as described in the \autoref*{GR:results} of group report). Our approach to software testing is summarised in the main report's \autoref*{GR:sec:testing}.
+
+To help ourselves \emph{increase the amount of work not done}, we set up a continuous integration server. 
+This server, implemented by the \emph{Jenkins CI} platform\cite{_jenkins_????}, has responsibly been running every single test we have after every single push to the central code repository we made. At the moment of writing, the server claims to have made 507 runs of these tests.
+We assumed that if the code does not work on \emph{Jenkins}, as we called it, it does not work at all, regardless of whether the code works on the author's machine. 
+Such code could then be retracted, fixed and pushed again to the main repository, at which point it may or may not pass the tests. 
+This allowed us to reduce the number of times we have to deal with files forgotten to be added to the central repository, or tests forgotten to be run before committing due to human error.
+
+Similarly, we were able to create different environments for the code to run in, using \emph{Jenkins}. 
+This allowed us to have our code tested in an environment, where we always kept the libraries updated to the latest version. 
+It was because of this special environment that we spotted an incompatibility with the latest version of \verb"Assimulo"\cite{andersson_christian_assimulo:_????} -- the package providing ODE solver implementations in \py{} -- minutes after that version became public. We were then able to prove that this incompatibility was a problem with the \verb"Assimulo" package, not ours. 
+We then worked together with Cristian Andersson (one of the developers of \verb"Assimulo") to it get fixed. 
+In the sense, this continuous integration environment has contributed to two projects -- \verb"Assimulo" and \means{} -- as if not for it, said bug in the library might still be present today.
+
+Finally, I attempted to take a good care in explaining the advanced concepts of Object-Oriented Programming, such as inheritance, encapsulation, static methods to the peers in exhaustive detail, so they could be applied when writing our code. 
+I attempted to show how these concepts make the code both easier to maintain, and easier to write in the first place, hopefully allowing the peers to transfer these skills to their other projects as well.
+In the end we have succeeded at creating a highly modular codebase, which we believe should be easy to maintain for the next person lucky enough to work on this project. The full summary of our code base is available in the \autoref*{GR:sec:package} of the group report.
+
+Besides the programming-related best practices of software engineering, we also implemented certain project management aspects suggested by \emph{agile} methodologies. 
+For instance, we structured our work into weekly iterations. We were planning the things we need to do for the week, and reviewing the things we done at the end of it. 
+We have structured our iterations to end just before the weekly meetings with supervisors, so we could also immediately get the feedback.
+This allowed to keep the project on a clear track and going the right way.
+
+
+In the end, I believe that the software-engineering approaches I tried to introduce to the team were good both as an educational exercise and a way to be more efficient, when it comes to software development.
+
 \subsection{Implementation of Simulation and Inference Routines}
 \section{Investigation of MEA and Solver Performance}
 \section{Pipeline Support}
