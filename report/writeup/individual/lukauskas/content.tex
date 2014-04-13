@@ -108,6 +108,62 @@ Finally, I have worked with SF on the additional plotting functionality for the 
 
 \subsubsection{Pipeline Support}
 
+In the final days of this project, when we were generating the figures for the results section in the group report (\autoref{GR:results}), we realised that the scale of these figures was becoming hard to manage. 
+At this point each one of us has had already written a couple of lines of code to perform the \acrlong{mea}, and store a result, a loop of some sort that would run simulation or parameter inference procedures on this result, and a way to store these results to a file. 
+Errors with these methods were starting to crop up, for instance maybe somebody forgot to handle the solver errors appropriately and the task was supposed to run overnight failed, or maybe the task succeeded to run, but results were not stored in the correct format, rendering them unreadable, etc.
+Similarly, we were unlikely to be able to share the results with each other and reuse, as they were all stored in different formats.
+Something had to be done to reduce the number of these issues.
+
+I proposed to use \verb"luigi"\cite{_luigi_????} -- a \python{} library developed by the engineers in \emph{Spotify} -- to provide an unified framework for the common tasks we had to do. 
+The \verb"luigi" allows to break down complicated tasks into a set of smaller ones and specify the interdependencies between them.
+The system could then find the most efficient way to perform these  tasks, often in parallel, so all of the tasks are executed before their parents in the dependancy tree. 
+This is exactly the same concept as the one implemented by \emph{GNU Make}\cite{gnumake}, for those who are familiar with it. Unlike \emph{Make}, however, \verb"luigi" package is able to handle parametric tasks better, and is written in \py{}, therefore able to integrate with our codebase seamlessly.
+
+I have particularly worked on writing the general wrappers around the means code in the \verb"luigi" framework. 
+For instance, I implemented the \verb"MEATask" objects that would take a model, \gls{maxord}, closure method as a parameter and return the resulting set of equations corresponding to \gls{mea} approximation requested. 
+This task was then the only dependancy of the \verb"TrajectoryTask", which used the set of equations generated earlier to simulate the behaviour of the system. 
+In order to generate figures such as the contour plots shown in \todo{link here to next section}, a new task for the figure would be created, that would require a set of these \verb"TrajectoryTask"s to be performed. 
+
+In turn, this allowed us to specify each figure in the report in a very high level language specifying only the dependancies of the task and the ways to combine them to get the result, without worrying on how to obtain these dependencies in the first place.
+
+\begin{figure}
+    \centering
+     \begin{subfigure}[t]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{images/TrajectoryTask.png}
+        \caption{Dependancies of {\tt TrajectoryTask}}
+        \label{fig:pipes_example:TrajectoryTask}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{\textwidth}
+        \includegraphics[width=\textwidth]{images/FigureHitAndMissData}
+        \caption{Partial dependancies of {\tt FigureHitAndMissData}}
+        \label{fig:pipes_example:FigureHitAndMissData}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{\textwidth}
+        \includegraphics[width=\textwidth]{images/FigureHitAndMissTex.png}
+        \caption{Compilation of the {\tt FigureHitAndMissData} tasks into sets of contour plots to be directly embedded to the report.}
+        \label{fig:pipes_example:FigureHitAndMissTex}
+    \end{subfigure}
+    \caption{\emph{Graphical way of describing the dependancies between the tasks used to generate the contour plots of solver performance.} 
+    Each  \texttt{TrajectoryTask} depends on \texttt{MEATask} (\ref{fig:pipes_example:TrajectoryTask}).
+    A number of these tasks, one for each point of the parameter space, is required to compile the grid of we want to plot as a contour plot.
+    Besides the regular trajectories, one trajectory per parameter space obtained using \acrlong{ssa} is also needed (\ref{fig:pipes_example:FigureHitAndMissData}).
+    The obtained trajectories can then be used to compute the distance grid, and these grids could be drawn as contour plots and compiled together into \LaTeX{} figures (\ref{fig:pipes_example:FigureHitAndMissTex}).
+    Dependancy graphs were drawn by the {\tt luigi} package. }
+    \label{fig:pipes_example}
+\end{figure}
+
+\autoref{fig:pipes_example} illustrates these concepts by a set of the dependency graphs used to generate the contour plots in \todo{link}.
+As mentioned previously, \verb"TrajectoryTask" directly depends on the \verb"MEATask" to provide a set of \glspl{ode} approximating the behaviour of the system. 
+This dependancy, is directly pictured in \autoref{fig:pipes_example:TrajectoryTask}. 
+We can then use a set of these \verb"TrajectoryTask"s, one for each point on the grid, along with a set of the \verb"SSATrajectoryTask"s, for the same points to compute the numeric grid required to plot the contour. We call this task \verb"FigureHitAndMissData"\footnote{The name \emph{hit-and-miss} comes from the early version of the figure that had only the areas where the solvers failed marked and resembled a dartboard with a couple of darts on it.}, and picture a part of it in \autoref{fig:pipes_example:FigureHitAndMissData}. 
+Finally, this data task could be used to produce a contour plot, as ensured by the so-called \verb"FigureHitAndMissTask". 
+A set of the contour plots are then fed int o the \verb"FigureHitAndMissTex" task to create a \LaTeX{} figure, much resembling the ones in \todo{cite} (\autoref{fig:pipes_example:FigureHitAndMissTex}).
+
+As one can see from the \autoref{fig:pipes_example}, the hierarchical nature of these dependancies is hard to visualise, let alone to implement efficiently.
+Using {\tt luigi} package not only allowed us to skip the implementation step for dependancy management, but also allowed to be more flexible with the figures we are trying to draw -- enabling us to perform large changes to their structure, as we knew that only a small part of the whole system had to be changed at a time.
+
 \subsection{Investigation of MEA and Solver Performance}
 
 \section{Conclusions}
