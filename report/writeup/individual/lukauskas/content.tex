@@ -6,42 +6,40 @@ This document has been written as a succinct supplement to the group report, and
 
 \section{Contributions}
 \subsection{Software Development Process}
+\todo{Quote science code manifesto}
+In the modern day where computers are becoming the driving force of innovation and progress the whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
+Naturally, the need to use and computer software is becoming increasingly important for scientific communities in every major field of science. The extent of this has already made some knowledge of computer programming a requirement skill to succeed.
 
-In the modern day, the computers are becoming the driving force of innovation and progress. 
-The whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
-Naturally, the need to use and computer software is becoming increasingly important for scientific communities in every major field of science and has already reached the extent that some knowledge of computer programming is becoming a necessary skill.
-
-While it has been accepted that knowledge of computer programming is necessary, the need to study software-engineering is still being debated. 
+While knowledge of computer programming is deemed critical, the necessity to study software-engineering is still being debated. 
 The common argument for the lack of need to study software engineering, claims that people often care only about the end result, and not how it was obtained or how easy-to-read code is. 
 I find this claim ironic as the same argument is actually the main reason why the software-engineering methodologies emerged in the first place. 
 For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} claim treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}, clearly in par with the same argument described earlier. 
 In fact \emph{agile} methodology is viewed as an alternative to the approaches that aim to create this idealistic, properly structured and well-documented software, such as the traditional \emph{waterfall} model.
 
 It was my personal goal, and I believe my biggest contribution, to share my experience in software engineering in order to incorporate the \emph{agile} methodology into our development cycle. 
-In this project I aimed to not only introduce my peers to concepts that might have been known to them, but to also push these concepts to the full potential and immediately validate their usefulness by showing how they allow reaching the desired goals faster. 
+In this project I aimed to not only introduce my peers to concepts that might have not been known to them previously, but to also push these concepts to the full potential and immediately validate their usefulness by showing how they allow reaching the desired goals faster. 
 
 For instance, not only we were using \verb"git"\cite{git} for our version control, but we were also using appropriate branching workflow. 
 This allowed us to ensure our work that is still relatively experimental does not impact other people working on different things. 
 In turn, it had immediate result of providing the courage to experiment with the code, courage without which the performance improvements described in the group report's section \autoref*{GR:performance} may have never been made.
 
 Another factor that contributed to the ability to change the key parts of the system without the fear of breaking something was the early incorporation of automated tests to the system. 
-This has allowed us ways to quickly check whether our software is still working as expected and pinpoint the failure within minutes of the broken commit. 
-This have allowed us to spend less time testing our software, but trust it to be correct more.
+This created a way to validate the correctness of our software, and have a way to pinpoint a failure, minutes after the change that introduced it. 
+In turn, it allowed us to spend less time testing our software, but trust it to be correct more.
 In turn, this increases our confidence in the validity of the observations made (as described in the \autoref*{GR:results} of group report). Our approach to software testing is summarised in the main report's \autoref*{GR:sec:testing}.
 
 To help ourselves \emph{increase the amount of work not done}, we set up a continuous integration server. 
-This server, implemented by the \emph{Jenkins CI} platform\cite{_jenkins_????}, has responsibly been running every single test we have after every single push to the central code repository we made. At the moment of writing, the server claims to have made 507 runs of these tests.
+This server, implemented by the \emph{Jenkins CI} platform\cite{_jenkins_????}, has responsibly been running every single test we have after every single push to the central code repository we made. At the moment of writing, the server has run 507 of these tests.
 We assumed that if the code does not work on \emph{Jenkins}, as we called it, it does not work at all, regardless of whether the code works on the author's machine. 
 Such code could then be retracted, fixed and pushed again to the main repository, at which point it may or may not pass the tests. 
 This allowed us to reduce the number of times we have to deal with files forgotten to be added to the central repository, or tests forgotten to be run before committing due to human error.
 
-Similarly, we were able to create different environments for the code to run in, using \emph{Jenkins}. 
-This allowed us to have our code tested in an environment, where we always kept the libraries updated to the latest version. 
+Similarly, \emph{Jenkins} enabled us to run code in different environments. For instance, we had one environment where where we always kept the libraries updated to the latest version. 
 It was because of this special environment that we spotted an incompatibility with the latest version of \verb"Assimulo"\cite{andersson_christian_assimulo:_????} -- the package providing ODE solver implementations in \py{} -- minutes after that version became public. We were then able to prove that this incompatibility was a problem with the \verb"Assimulo" package, not ours. 
 We then worked together with Cristian Andersson (one of the developers of \verb"Assimulo") to it get fixed. 
 In the sense, this continuous integration environment has contributed to two projects -- \verb"Assimulo" and \means{} -- as if not for it, said bug in the library might still be present today.
 
-Finally, I attempted to take a good care in explaining the advanced concepts of Object-Oriented Programming, such as inheritance, encapsulation, static methods to the peers in exhaustive detail, so they could be applied when writing our code. 
+Finally, I explained in detail the advanced concepts of Object-Oriented Programming, such as inheritance, encapsulation, static methods to my peers so they could be applied in our project.
 I attempted to show how these concepts make the code both easier to maintain, and easier to write in the first place, hopefully allowing the peers to transfer these skills to their other projects as well.
 In the end we have succeeded at creating a highly modular codebase, which we believe should be easy to maintain for the next person lucky enough to work on this project. The full summary of our code base is available in the \autoref*{GR:sec:package} of the group report.
 
@@ -55,33 +53,22 @@ In the end, I believe that the software-engineering approaches I tried to introd
 
 \subsection{Significant Code Contributions}
 
-Besides the more general contributions to shaping the software development process to be more efficient, 
-I have implemented a number of classes that now serve specific functionality in the package.
-
-The contributions worth mentioning are listed below.
+The previous section covered my contributions to the software engineering in general.
+In this section I list my most significant contributions to the codebase.
 
 \subsubsection{Implementation of Simulation Routines}
 
-One of the first things I worked on in this projection was an attempt to simplify a rather convoluted mechanism of running ODE equations from the previous year's version of the package. 
-The previous package used to split the process into three parts: transcription of python code into C, compilation of the C code into a library that wraps around \verb"CVODE" solver\cite{hindmarsh_sundials_2005}, which then can be run directly from python. 
-We understood that the compilation to C was necessary to speed up the computations, but we were particularly unhappy about the transcription into C step, as this \emph{ad-hoc} process seemed to be error prone and unnatural in general.  
+One of the first things I worked on in this projection was an attempt to simplify the mechanism for solving ODE equations implemented the previous year's version of the code. 
+The original mechanism would split the process into three parts: the \python{} code would be transcribed of into C, which would then be compiled to a library interacting with the \verb"CVODE" solver\cite{hindmarsh_sundials_2005}, which then would be run directly from python.
+We understood that the compilation to C was necessary to speed up the computations, but this rather \emph{ad-hoc} process of transcribing \py{} to C seemed to be error prone and unnatural in general.  
 
-There is more than one approach that would have allowed us to reduce this step. For instance, we could have used \verb"CYTHON"\cite{behnel2010cython} to interact with the C library directly from \python{}. 
-However, instead of doing that, we searched for existing \python{} packages that would already provide nice \python{} wrappers around the said \verb"CVODE" library. We were able to find \verb"Assimulo" -- a package already mentioned once before in this report -- that not only implements pythonic wrappers around \verb"CVODE" solver, but also provides support for other solvers.
+We found \verb"Assimulo" -- a package already mentioned once before in this report -- to be a suitable replacement for the wrappers around \verb"CVODE" that would allow us to easily extend the functionality as well. 
+I have implemented the change to use this package, attempting it to be a transparent one, that would not change anything in other areas of code. Similarly, I have I made \means{} exploit the full functionality provided by the said package, adding interfaces to perform sensitivity analysis and ability to choose a different solver. 
+This new interface is illustrated in detail in the \autoref*{GR:sec:simulation} of the main report.
 
-I have modified our package to use the interface to \verb"CVODE" provided by \verb"Assimulo" instead of the process described above. 
-Similarly, ability to perform simulations using a different solver, has been incorporated to our package, as well as the added support for sensitivity analysis, that has also been incorporated from the \verb"Assimulo" interface to \verb"CVODE". 
-
-While most of the weight-lifting is done by the external package, I have taken a particular care to provide an easy to-use interface for the Simulation functionality, which is described in more detail in the tutorial \autoref*{GR:sec:simulation} of the group report.
-
-Finally, in order to keep the performance of the simulation as fast as the original implementation, we had to find a way to evaluate numeric expressions efficiently, as this has proven to be the bottleneck. 
-In order to do this, QG and I have investigated the performance of the default way of expression evaluation; \verb"sympy"'s \verb"lambdify" method, that turns the numeric expression into a \verb"lambda" function; or the use of \verb"sympy"'s \verb"autowrap" module which compiles the numeric expressions to C. 
-We did not test the Theano\cite{bergstra_theano:_2010} system because it required a newer version of \verb"sympy" that is supported in the college environments\footnote{We eventually updated the college environment to run the latest version of the package, however did not get back to re-run these tests} and an additional dependancy on the Theano library. 
-
-The runtimes were recorded using IPython's\cite{perez_ipython:_2007} magic \verb"%timeit" 
-function, that performs multiple executions of a short code snippet (usually as many as it can fit in two seconds of runtime) and returns the best observed runtime from all of the repetitions.
-The results from the experiment are summarised in \autoref{tab:numeric-runtimes}. 
-We can see that \verb"autowrap" is a clear winner here, and therefore has been implemented.
+In order to keep the performance of the simulation as fast as the original implementation, we had to find a way to evaluate numeric expressions efficiently, as this has proven to be the bottleneck. 
+QG and I have investigated alternative ways of performing numeric evaluations in \verb"sympy" -- the python package for symbolic mathematics. We benchmarked the \verb"lambdify" method, that turns the numeric expression into a \verb"lambda" function and the use of  \verb"autowrap" module which compiles the numeric expressions to C.
+We did not test the third option -- Theano\cite{bergstra_theano:_2010} -- available in the latest version of \verb"sympy", because the college environment did not support it yet\footnote{We eventually updated the college environment to run the latest version of the package, however we did not get back to this benchmark due to the time constraints.}.
 
 \begin{table}
     \centering
@@ -94,25 +81,30 @@ We can see that \verb"autowrap" is a clear winner here, and therefore has been i
     Theano & not measured \\
     \end{tabular}
     \caption{Results of the three out of four numeric evaluation methods available in {\tt sympy}. 
-    The results were recorded using the magic {\tt \%timeit} 
-    function provided by IPython interactive environment.
-    Theano performance was not tested as it was not supported in all of the environments we wanted our code to be able to run.}
+    The results were recorded using the {\tt \%timeit} 
+    function provided by IPython\cite{perez_ipython:_2007} interactive environment. 
+    This function performs as many evaluations of the code it can fit in 2 seconds and returns the best runtime of all the repetitions.
+    The evaluations were performed on the two right-hand-side equations resulting from approximating the dimerisation model up to the moment order of two.
+    It is clear from the data that{\tt autowrap} method is a clear winner. 
+    Theano performance was not tested as it was not supported in the college environment at the time we performed this test.}
     \label{tab:numeric-runtimes}
 \end{table}
 
-This implementation of the simulation routines is sufficiently fast for most of the every day needs. 
-However, because the number of equations increases exponentially as the \gls{maxord} of \gls{mea} increases (see, so does the runtime of the simulation (see \autoref{GR:fig:solver-runtimes} in the group report) and they quickly become unfeasible for higher order moments (i.e. when \gls{maxord} is greater than 7). 
-The GPU support built into Theano could help make these equations feasible again, and therefore would be interesting to explore further.
+The benchmarking results from the experiment are summarised in \autoref{tab:numeric-runtimes}. 
+We can see that \verb"autowrap" is clear winner in the benchmark and therefore was chosen to be implemented in our package.
+This has proven to be an efficient-enough solution for most of the day-to-day needs. 
+In the future, however, it would be interesting to benchmark the Theano performance, whose inhering GPU support could speed up the evaluations even more.
+In particularly, I believe it would help to reduce the exponential slope of runtime arising from the exponential increase of the number of equations as the maximal moment order is increased (see \autoref{GR:fig:solver-runtimes} in the group report) to make the simulations feasible for even higher orders. 
 
 \subsubsection{Implementation of Inference Routines}
 
-Besides the implementation of the Simulation routines, I have also worked on restructuring the code for parameter inference methods to make it easier to use. 
-The parameter inference interface you can see in the \autoref*{GR:sec:parameter_inference} of the group report, has been designed by me. 
-It captures exactly the same functionality as previously implemented by last-year's MSc students, however, we believe it is a bit easier to use.
+Similarly to the simulation methods described above, I have also worked on restructuring the parameter inference to make it easier to use from interactive environment. 
+Namely we aimed to unify the interfaces to parameter distance methods regardless of the distance function used, and allow the user to specify the requirements succinctly.
+I believe that both of these requirements were met, and the new interface for parameter inference is demonstrated in \autoref*{GR:sec:parameter_inference} of the group report.
 
-Besides the new interface, I have also implemented support for custom distance measures, which is demonstrated in \autoref*{GR:sec:distance_measures} of the group report. 
-
-Finally, I have worked with SF on the additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, illustrated in \autoref*{GR:sec:investigating_distance_landscape} of the group report.
+Additionally, the unification of the parameter inference interfaces enabled our users to design their own distance functions, as demonstrated in \autoref*{GR:sec:distance_measures} of the group report.
+Finally, I have worked with SF on the additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, illustrated in 
+\autoref*{GR:sec:investigating_distance_landscape} of the group report.
 
 \subsubsection{Pipeline Support}
 
