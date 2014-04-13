@@ -22,10 +22,13 @@
 \usepackage{pgffor} % foreach loops!
 
 \usepackage[acronym]{glossaries}
-% add binding margins
-\geometry{twoside,bindingoffset=1cm}
 
-\input{ipynbsupportdefinitions.tex}
+% refering back to group report
+\usepackage{xr}
+\externaldocument[GR:]{../../report}
+
+% add binding margins
+\geometry{bindingoffset=1cm}
 
 \makeglossaries
 \renewcommand*\abstractname{Summary}
@@ -62,7 +65,7 @@
 \newpage
 
 \title{MEANS: a new python package for Moment Expansion Approximation, Inference and Simulation}
-\author{Sisi Fan, Quentin Geissmann, Saulius Lukauskas.\\
+\author{Individual report: Saulius Lukauskas \\
 \\	
 \\
 \\
@@ -80,23 +83,6 @@ Imperial College London
 \newpage{}
 
 \pagenumbering{roman}
-
-\begin{abstract}
-We present \means, a python package that provides stochastic modelling based on Moment Expansion Approximation (MEA),
-Linear Noise Approximation and Gillespie Stochastic Simulation Algorithm in an efficient and user-friendly way.
-Specifically for MEA, we have deployed scalar and three parametric moment closure methods in both univariate and multivariate forms.
-We also significantly improved MEA performance, which was a limiting factor in stochastic modelling.
-In addition, the package supports a collection of solvers and distance-based inference.
-To enhance usability and maintainability, we implemented modular design in the package with detailed documentation,
-as well as a series of interactive tutorials in IPython notebook format.
-Our package also supports SBML (Systems Biology Markup Language) standard for studying available biological systems.
-Apart from package development, we have conducted further analysis on MEA, and
-found that using a higher maximal moment order did not necessarily improve MEA accuracy.
-Moreover, we discovered that MEA was more accurate in certain regions of the parameter space than others.
-Some parameter sets also resulted in systematic failure of the numerical solvers.
-These limitations may provide insight into improvements of simulation and inference using MEA.
-We believe \means{} will a valuable package to study MEA and for researchers to model non-linear kinetic systems.
-\end{abstract}
 
 \pagebreak % move TOC to a different page from abstract
 \tableofcontents
@@ -122,35 +108,13 @@ We believe \means{} will a valuable package to study MEA and for researchers to 
 \newpage{}
 \printglossaries
 
-\newpage{}
-\pagenumbering{arabic}
-\input{intro}
-\newpage
-\input{design_considerations}
-\newpage{}
-\input{examples}
-\newpage{}
-\input{results}
-\newpage{}
-\input{conclus}
-\newpage{}
-\bibliography{report.bib}{}
-\bibliographystyle{ieeetr}
+\input{content}
 
+\newpage{}
+\bibliography{../../report.bib}{}
+\bibliographystyle{ieeetr}
 \newpage{}
 \begin{appendices}
-\section{Documentation}
-\label{sec:documentation}
-
-Due to the large size of the documentation we decided not to attach it to the appendix of this already lengthy report.
-
-We made the complete means documentation available to view online instead. The fully-searchable form of the documentation can be accessed at \\
-\url{http://msc.bc.ic.ac.uk:2709/index.html}.
-
 \end{appendices}
    
 \end{document}
-
-
- 
-a

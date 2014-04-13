@@ -189,8 +189,7 @@ it seems to be a reasonable default solver.
 
 In order to improve performance, we have compared solvers on the basis of their speed.
 However, they also differ in their accuracy and stability. 
-In fact, most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}.
-This was investigated in  \sauliustodo{ref to new section once I create it}.
+In fact, it is known that most solvers trade-off accuracy and speed\cite{sandu_benchmarking_1997}. We have investigated the stability of the ODE solvers in \autoref{sec:hit-and-miss}.
 
 \contrib{
 The principal contributor for this section is SL.
@@ -245,7 +244,7 @@ large a margin (fig.~\autoref{fig:max_order_and_closure_on_distance_trajectories
 
 The reason for this behaviour is uncertain. It could either be a limitation of the approximation method, or a numerical limitation of the available \gls{ode} solver.
 It is hard to know which explanation is more likely since we cannot test the two hypotheses separately.
-Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \sauliustodo{link to my section where we study the phenomenon on larger scale with different solvers}.
+Interestingly, we observed a similar behaviour with all of the solvers tested, which is further explored in \autoref{sec:hit-and-miss}.
 
 Note that for even \glspl{maxord}, normal and scalar closure methods return identical result.
 It means that when the \gls{maxord} is even,  the parametric expression of an odd (the next) order moment was used for closure.
@@ -283,7 +282,7 @@ For instance, we have observed that in the \emph{hes1}, it is advantageous to mo
 Surprisingly, higher order moment closure did not necessarily result in better approximations.
 In addition, our results indicate that there might be a complex interaction between the type of closure and the \gls{maxord}.
 Unfortunately, this makes it difficult to define \emph{a priori} which closure and \gls{maxord} should be used for a given system.
-These unexpected results lead us explores this phenomenon on wider scale of parameters\sauliustodo{link to the section}.
+These unexpected results lead us to explore this phenomenon on wider scale in \autoref{sec:hit-and-miss}.
 
 
 \contrib{
@@ -299,7 +298,7 @@ More information are available in his individual report.}
     \foreach \order in {1,...,4}{
         \begin{subfigure}[t]{0.45\textwidth}
             \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
-            \caption{Max order $= \order$}
+            \caption{\Gls{maxord} $= \order$}
             \label{fig:hit-and-miss:ode15s:\order}
         \end{subfigure}
         ~
@@ -308,7 +307,7 @@ More information are available in his individual report.}
     \foreach \order in {5,...,7}{
         \begin{subfigure}[t]{0.31\textwidth}
             \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
-            \caption{Max order $= \order$}
+            \caption{\Gls{maxord} $= \order$}
             \label{fig:hit-and-miss:ode15s:\order}
         \end{subfigure}
         ~
@@ -344,7 +343,7 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
     \foreach \order in {1,2,4,7}{
         \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_1.6_1.1_2.1_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-            \caption{Max order $= \order$}
+            \caption{{\tiny \Gls{maxord} $= \order$ }}
             \label{fig:hit-and-miss:bullet:\order}
         \end{subfigure}
         \hspace{-15pt} % compress the whitespace in each figure
@@ -443,7 +442,7 @@ and the trend continues for all of the \gls{maxord} data we have, as illustrated
     \foreach \order in {1,3,5,7}{
         \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-\order-scalar-True-p53-90.0_0.002_2.0_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
-            \caption{Max order $= \order$}
+            \caption{{\tiny \Gls{maxord} $= \order$}}
             \label{fig:hit-and-miss:ast:\order}
         \end{subfigure}
         \hspace{-15pt} % compress the whitespace in each figure
@@ -523,33 +522,24 @@ The principal contributor for this section is SL.
 More information are available in his individual report.}
 
 
-\subsection{Point estimates from resulting inference procedures raise concerns}
+\subsection{Point Estimates Resulting From Inference Procedures Raise Concerns}
 \label{sec:results:inference}
 
 Parameter inference procedure aims to obtain the correct parameter values for the system by exploring the parameter space and comparing the simulation trajectories with the experimental data.
 
 To study the performance of the parameter inference procedure using \acrlong{mea},
-we used ode15s solver as suggested in \autoref{sec:compare-performance-of-ode-solvers}. We also generated $5000$ \acrfull{ssa} simulations of the \pft{} model with a certain parameter set. 
-We believe this number of \gls{ssa} simulations is sufficient to capture the behaviour of this simple system in full.
+we used ode15s solver as suggested in \autoref{sec:compare-performance-of-ode-solvers}. 
+We also generated $5000$ \acrfull{ssa} simulations of the \pft{} model with a certain parameter set, as we believe this number of \gls{ssa} simulations is sufficient to capture the behaviour of this simple system in full.
 Then, we used the average as an observed dataset, so that we could compare the starting and optimal trajectories with the ``experimental'' data.
 
-We first used the \pft{} model expressed only in terms of first, third and fifth order moments, as approximation based on first order may be inaccurate for the particular system, and higher order moments might be necessary to capture the damped oscillations present in the means of \gls{ssa} simulations\cite{ale_general_2013}. 
+%as approximation based on first order may be inaccurate for the particular system, and higher order moments might be necessary to capture the damped oscillations present in the means of \gls{ssa} simulations\cite{ale_general_2013}. 
 
-%\begin{figure}parameter pairs are pictured
-%\centering
-%\includegraphics[width=0.9\textwidth]{{../pipeline/task-output/SevenDimensionalInferenceFigure/SevenDimensionalInferenceFigure-pdf-ode15s--sum_of_squares-5000}.pdf}
-%\caption{\emph{Distance landscape based on inference using all the parameters in \pft{} model.}
-%In the parameter inference procedure, all seven parameters were free and started from the correct values.
-%The parameters are aligned both horizontally and vertically to display the distance landscape obtained by comparing inferred trajectories with \gls{ssa} trajectories.}
-%\label{fig:7_dimensional_parameter_space}
-%\end{figure}
-
-
-We deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
-We were only able to compare the results using \gls{maxord} of one and three, because inference failed at \gls{maxord} of five. 
-Surprisingly, when parameters were free, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar (see \autoref{fig:range-free-parameter-inference-max-order-1} for result based on \gls{maxord} of one). 
-The observation is consistent with inference using  \gls{maxord} of three (data not shown).
-This result was expected, because, as mentioned previously, higher order moments are believed to be necessary to capture the system behaviour.
+We first used the \pft{} model expressed only in terms of first order moments, 
+and deliberately started the inference from the correct parameter values, expecting an immediate convergence (\ie{} no movement in the parameter space).
+%We were only able to compare the results using \gls{maxord} of one and three, because inference failed at \gls{maxord} of five. 
+Surprisingly, when all parameters were free to be explored, the inference procedure was able to find a set of parameters that are very different from the correct ones, for which observed and theoretical trajectories are extremely similar even for maximal expansion order 1 (see \autoref{fig:range-free-parameter-inference-max-order-1}). 
+%The observation is consistent with inference using  \gls{maxord} of three (data not shown). 
+%This result was unexpected because, as mentioned previously, higher order moments are believed to be necessary to capture the system behaviour.
 
 \begin{figure}
     \centering
@@ -716,17 +706,19 @@ We then chose the pair of parameters that allowed the inference procedure to con
 Through further investigations in the contour plots and trajectories with different \glspl{maxord}, 
 we found that inference based on lower order 
 \acrlong{mea} (\autoref{fig:inference_phenomenon:lower_order})  is able to converge to an area of lower distance than the inference based on higher order \gls{mea}
-(\autoref{fig:inference_phenomenon:higher_order}). This is completely unexpected, as we are inclined to believe that higher-order moments are necessary in order to capture the he damped oscillatory behaviour of the system. 
-The existence of such lower-distance areas show that minima points exist, where the parameter values are easy enough to approximate that higher order information is not required. In addition, the trajectories simulated from the incorrect parameter values are very close to the observed data (see \autoref{fig:inference_phenomenon:maxorder:1:trajectories} and \autoref{fig:inference_phenomenon:maxorder:2:trajectories}.
+(\autoref{fig:inference_phenomenon:higher_order}). This is an unexpected result as we are inclined to believe that higher-order moments should be able to capture the system dynamics better.
+ 
+The existence of such lower-distance areas show that there exist minima  points, whose the parameter values are easy enough to approximate that higher order information is not required. In addition, the trajectories simulated from the incorrect parameter values are very close to the observed data (see \autoref{fig:inference_phenomenon:maxorder:1:trajectories} and \autoref{fig:inference_phenomenon:maxorder:2:trajectories}).
 
 We have already seen similar easy-to-approximate areas in \autoref{sec:hit-and-miss}. 
 The results observed there seem to imply that these sections are stable for all of the considered maximal closure orders. 
-This does not seem to be the case with parameter inference, as we can see the distance in the contour plots completely changed between the figures \autoref{fig:inference_phenomenon:maxorder:2:landscape} and \autoref{fig:incerence_phenomenon:maxorder:5:landscape}.
+This does not seem to be the case with parameter inference, as we can see the distance in the contour plots completely changed between the figures \ref{fig:inference_phenomenon:maxorder:2:landscape} and \ref{fig:incerence_phenomenon:maxorder:5:landscape}.
 This is quite expected as, unlike in the previous section, the \gls{ssa} result is fixed to the same value, regardless of the parameter set.
 
-From the data in hand, we cannot say anything about the low-distance area using \gls{maxord} of one 
-(\autoref{fig:inference_phenomenon:maxorder:1:landscape}), 
-as the range of $c_6$ is unusually large that it has not been explored by higher-order inference procedures. We believe that it was the large starting distance from the observed trajectories when lower order \gls{mea} approximations are used  (see the red line in \autoref{fig:parameter_pair_c2_c6} marking the starting trajectory), that created a large distance gradient allowing the inference procedure to explore a larger parameter space. The slope for higher order moment approximations has been considerably lower, and therefore less parameter space has been explored.
+From the data in hand, we cannot say anything about the low-distance area observed when performing inference with \gls{maxord} of one 
+(\autoref{fig:inference_phenomenon:maxorder:1:landscape}). 
+The range of $c_6$ is unusually large and that part parameter space has not been explored by higher-order inference procedures. 
+We believe that it was the large starting distance from the observed trajectories when lower order \gls{mea} approximations are used  (see the red line in \autoref{fig:parameter_pair_c2_c6} marking the starting trajectory), that created a large distance gradient allowing the inference procedure to explore a larger parameter space. The slope for higher order moment approximations has been considerably lower, and therefore less parameter space has been explored.
 
 Generally, the results described in this section seem to point that one must be very careful when relying on \gls{mea} approximations to infer parameters. Of course, the approximations and by extension parameter inference become slightly better as maximal order increases, and at least some of the low-distance easy-to-simulate islands disappear as higher order moment expressions are incorporated. Nevertheless, we were not able to recover the original parameter set in any of the experiments attempted. This raises a question: if we were not able to recover the starting set of parameters in this simple-example, how can we use this inference procedure to infer unknown parameter values? 
 
