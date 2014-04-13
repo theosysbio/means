@@ -166,7 +166,16 @@ Using {\tt luigi} package not only allowed us to skip the implementation step fo
 
 \subsection{Investigation of MEA and Solver Performance}
 
-Finally, I have worked on attempt to generalise the results obtained by QG in \autoref{GR:sec:.
+Finally, I worked on generalisation of the results obtained by QG in \autoref{GR:sec:results:mea_performance} of the group report. 
+I have investigated how the results change depending on the region of parameter space we are, as well as the impact different \gls{ode} solving heuristics have on these results.
+
+Due to the time constraints I have only considered \pft{} model, and \texttt{ode15s}, \texttt{euler}, \texttt{dopri5} and \texttt{rodas} solvers. 
+I have found that certain regions of the parameter space are easier to approximate than others, and there exist regions of parameter space that solvers struggle to approximate. These results are discussed in \autoref*{GR:sec:hit-and-miss} of the main report, and I will not reiterate them here to keep this report succinct.
+
+While there were variations in the stability and runtime of the solvers, I have found all of the solvers tested to handle the easy-to-simulate regions well, but fail to produce anything meaningful for the hard ones.
+The specific contour plots for the solvers were not included to the main report, but are included in the appendix of this document instead. \todo{link}.
+
+
 
 \section{Conclusions}
 
