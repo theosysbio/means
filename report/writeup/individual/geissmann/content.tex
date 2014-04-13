@@ -1,3 +1,4 @@
+\newpage{}
 \pagenumbering{arabic}
 
 \section{Introduction}
@@ -213,7 +214,7 @@ the interpreter spent ``in'' this function (which is yet another reason use modu
 Figure~\ref{fig:profiled} represents the result of such a profile obtained during development.
 
 \begin{figure}[tbh]
-\label{fig:profiled}
+\begin{centering}
 \includegraphics[width=0.83\textwidth{}]{profile.pdf}
 \caption{\emph{Simplified profile of MEA using means.}
  Each box indicates a function.
@@ -229,7 +230,8 @@ Figure~\ref{fig:profiled} represents the result of such a profile obtained durin
  of the runtime in these three functions.
  Note that this specific profile has been pruned to facilitate representation.
 }
-
+\label{fig:profiled}
+\end{centering}
 \end{figure}
 
 
@@ -238,6 +240,7 @@ In this section, I detail the nature of the optimisations performed in section~\
 The relevant figure is reproduced as figure ~\ref{fig:mea_speed} of the document herein.
 
 \begin{figure}[tbh]
+\begin{centering}
 \includegraphics[width=0.95\textwidth{}]{mea_speed.pdf}
 \caption{\emph{Cumulative performance improvement of symbolic
 calculations resulting from optimisation}.
@@ -252,6 +255,7 @@ Nine replicates were performed on the same CPU.
 For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of
 the inherent inaccuracy in measuring very short durations.}
 \label{fig:mea_speed}
+\end{centering}
 \end{figure}
 
 
@@ -301,7 +305,7 @@ No significant difference was found between the slopes of the subsequent optimis
 However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
 
 Compared to the original \mat{} implementation, these improvement are very significant. We estimate than, for computing \gls{mea} with log-normal closure up to \gls{maxord}
-of 8 in the \pft{} system, our implementation is approximately 5000 faster.
+of 8 in the \pft{} system, our implementation is approximately 5000 times faster.
 
 \section{Implementation of \acrlong{ssa}}
 Finally, when we started to investigate the accuracy of \gls{mea}, we realised that it was necessary to compare simulation results to \gls{ssa} average\cite{gillespie_general_1976}.
@@ -322,6 +326,7 @@ For this reason, we also performed preliminary work on the \emph{Hes1} model\cit
 Figure~\ref{fig:hes1} shows the effect of different closure methods and \gls{maxord} on the accuracy of the approximation.
 This is similar to figure~\ref*{GR:fig:max_order_and_closure_on_distance_summary} in the group report (which was made for \pft).
 \begin{figure}[tbh]
+\begin{centering}
 \includegraphics[width=0.95\textwidth{}]{FigureHes1Summary-pdf-7.pdf}
 \caption{\emph{Effect of different closure methods and \gls{maxord} on simulation accuracy}.
 The \emph{Hes1} system was modelled using \gls{mea} with five types of closure and for \gls{maxord} up to seven.
@@ -330,6 +335,7 @@ Distance is in log scale.
 Log-normal closures are not represented, because they generated  unstable trajectories with very large distances.
 }
 \label{fig:hes1}
+\end{centering}
 \end{figure}
 
 Interestingly, log-normal closure was not capable of generating stable trajectories (most distances were higher than $10^{10}$, or the solver failed).  
@@ -346,4 +352,4 @@ Here, I have described which part of the projects I have lead.
 It was therefore paramount for us to implement it as well as possible.
 It was also our goal to provide a package that allowed alternative simulation and approximations methods such as \gls{ssa}.
 Although these two points had immediate benefits for us, our implementation has been driven by the needs of the community in a first instance.
-At this stage, we believe \means{} is ready for public availability and use by the scientific public. 
+At this stage, we believe \means{} is ready for public availability and use by the scientific public.
