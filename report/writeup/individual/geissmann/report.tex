@@ -19,6 +19,14 @@
 \usepackage{pgffor} % foreach loops!
 
 \usepackage[acronym]{glossaries}
+\usepackage{geometry} % Used to adjust the document margins
+
+% add binding margins
+\geometry{bindingoffset=1cm}
+
+\usepackage{xr}
+\externaldocument[GR:]{../../report}
+
 
 
 \makeglossaries
@@ -48,10 +56,9 @@
 \newpage
 
 \title{MEANS: a new python package for Moment Expansion Approximation, Inference and Simulation.\\
-Individual Report\\
 }
-\author{Quentin Geissmann\\
-\\	
+\author{Individual Report: Quentin Geissmann\\
+\\    
 \\
 \\
 \\
@@ -70,7 +77,7 @@ Imperial College London
 \pagenumbering{roman}
 
 % \begin{abstract}
-% todo 
+% todo
 % \end{abstract}
 
 \tableofcontents
@@ -88,31 +95,33 @@ Imperial College London
 \newglossaryentry{maxord}
 {
   name=max order,
-  description={Maximal moment order. Max order always (regardless to the closure method) refers to the highest order of 
+  description={Maximal moment order. Max order always (regardless to the closure method) refers to the highest order of
   moments present in an ODE system resulting from Moment Expansion Approximation. In other words, moment expansion is closed at Max order $\mathbf{+1}$
    },
   sort=max order
 }
 
 \newpage{}
+\printglossaries
+\newpage{}
 \pagenumbering{arabic}
 
 \section{Introduction}
 
 For our group project, we wrote a \py{} package for Moment Expansion Approximation, Inference and Simulation (\means).
-Our group report explains our motivations, results and findings in detail. 
-Breifly, we provided a tool to model dynamic systems based on \acrlong{mea}\cite{ale_general_2013}.
+Our group report explains our motivations, results and findings in detail.
+Briefly, we provided a tool to model dynamic systems based on \acrlong{mea}\cite{ale_general_2013}.
 Our implementation is very well documented, maintainable, extensible and user friendly.
 It also performs considerably faster than previous implementations.
 
-In the report herein, I describe some of my major contributions to the project. 
+In the report herein, I describe some of my major contributions to the project.
 First of all, I explain \emph{why} and \emph{how} the implementation of \acrlong{mea} was completely rewritten.
 Then, I describe how parametric moment closure was translated from \mat{} prototype to be included in a unified framework in \means.
 As explained in the group report, a considerable part of my work was also to improve the performance of \gls{mea}.
 Here, I provide more details about the how this was realised.  
-Finally, I explain the rationale behind integrating \acrlong{ssa} simulations in the package. 
+Finally, I explain the rationale behind integrating \acrlong{ssa} simulations in the package.
 
-\section{Restructuration of \acrlong{mea} Implementation}
+\section{Restructuring \acrlong{mea} Implementation}
 As we attempted to read the \py{} implementation of \acrshort{mea} written by last year students\cite{babtie_moment_2013},
 we were deterred by several points.
 First of all, the code was often unnecessarily intricate and hard to understand.
@@ -123,12 +132,12 @@ We believe it would not have been possible, for us, to implement new features, s
 without having largely restructured the code in a first place.
 
 My main individual contribution was to reforge the core implementation of \acrshort{mea} (as opposed to working on simulation and inference).
-In the original code, symbolic computation relied on \sympy{}\citationneeded{}.
-This library was efficient and well documented, thus we decided to also relie on \sympy{} for symbolic computations.
+In the original code, symbolic computation relied on \sympy{}\cite{sympy_development_team_sympy:_2014}.
+This library was efficient and well documented, thus we decided to also rely on \sympy{} for symbolic computations.
  
 \subsection{Simplifying the Code}
 We started by generating results from the original implementation and wrote ``regression tests''.
-In this way, every time the code was ammended, tests were run to ensure validity of mathematical results.
+In this way, every time the code was amended, tests were run to ensure validity of mathematical results.
 
 A major issue with the code was readability; in many cases, it was necessary to run the code in order to understand its role.
 In this section, I illustrate, by three representative examples, how the original code was rewritten.
@@ -146,7 +155,7 @@ to generate all $o^d$ combinations of $c$ vectors of length  $d$, in one single 
 It was then trivial to filter the resulting list in order to keep only vectors with a sum lower or equal to the highest order of moments $o$.
 
 Another striking example of complexity of the original code what the calculation of partial derivatives.
-In order to compute the result of eq. ??\cite{ale_general_2013} it is necessary to calculate\\
+In order to compute the result of eq.~7 of \gls{mea}\cite{ale_general_2013} it is necessary to calculate\\
 \[\frac{\partial{}^\mathbf{n} a_l(x)}{\partial{}\mathbf{x^n}}\]
 where,\\
 \[\partial{}^\mathbf{n} = \partial{}^\mathbf{n_1+\dots{}+n_d}\]
@@ -174,7 +183,7 @@ A last example is the use of symbols describing moments (raw and central) in the
 Everywhere a symbol describing a moment was needed, it was necessary to create a string from a vector of orders with the correct naming convention.
 For example, a raw mixed moment could be described by a string such as \verb"x_123".
 ``Hard-coding'' the names and naming conventions rendered it very difficult and error-prone to change the notations for symbols.
-For instance, jugded better to use \verb"x_a_b" instead of \verb"x_ab" as symbol for a raw moment of order ($a$ and $b$)
+For instance, judged better to use \verb"x_a_b" instead of \verb"x_ab" as symbol for a raw moment of order ($a$ and $b$)
 because the latter notation would be ambiguous if ever moments were computed for orders higher than ten (\eg{} \verb"x_111" could mean either \verb"x_11_1"  or \verb"x_1_11").
 Instead, in \means, two lists of `Moments' objects are created instead of two list of vectors of orders (one for raw moments and one for central moments).
 Each `Moment` contains a variable for `symbol` and a vector of orders.
@@ -191,7 +200,7 @@ Our approach allows to allocate the final symbol (or value) once for all at the 
 The original implementation had very little modularity.
 There were a few functions, which were essentially executed once.
 However, there were many repeated processes in the code.
-For instance, two Taylor expansions used the same principles, 
+For instance, two Taylor expansions used the same principles,
 so it was often possible to write functions that several parts of the code could use.
 This obviously shortened and organised the code, but also made it much simpler to profile and improve the it.
  
@@ -208,7 +217,8 @@ The original code uses indexed for loops (like in \texttt{C}).
 However, in \py, ``foreach'' loops are  standard and are much more efficient and readable.
 In addition, advanced syntactic feature of \py{} such as ``list comprehensions''  and mapping,
 which are very concise and efficient, where not used.
-For instance, in the orginial code, filtering a vector for values higher then six was done like:
+For instance, in the original code, filtering a vector for values higher then six was done like:
+
 \begin{verbatim}
 vector = [1, 5, 7, 8, 3]
 
@@ -217,16 +227,18 @@ for i in range(0, len(vector)):
     if vector[i] > 6:
         filtered_vector.append(vector[i])
 \end{verbatim}
+
 In \py{} standards, the can be in one line:
+
 \begin{verbatim}
 filtered_vector = [v for v in vector if v > 6]
 \end{verbatim}
 
-This may look unsignificant for a simplistic example, but it becomes very hard to manage nested loops (which were numerous) with the former version. 
+This may look insignificant for a simplistic example, but it becomes very hard to manage nested loops (which were numerous) with the former version.
 Moreover, it is more efficient to use iterators rather than indexing.
 
 In \means, we took advantage of these features to improve the code.
-In addition, the entiere code was documented following established standards.
+In addition, the entire code was documented following established standards.
 This allows, for instance, to automatically generate online documentation for developers and users.
 
 
@@ -238,36 +250,36 @@ Comparison of some  variable names between original \py{} code, our package(\mea
 }
 
 \begin{center}   
-	\begin{tabular}{ | l | l | r|}
-	\hline
-	\bf{Publication\cite{ale_general_2013}} & \bf{Original} & \bf{\means}\\
-	\hline
-	\hline
-	$\frac{d_{\mu}}{dt}$ & \verb"M" & \verb"dmu_over_dt"\\
-	\hline
-	$\mathbf{n\choose{k}}$ & \verb"f2" & \verb"n_choose_k"\\
-	\hline
-	$ (-1)^\mathbf{{n-k}}$ & \verb"f3" & \verb"minus_one_pow_n_minus_k"\\
-	\hline
-	$\mathbf{n_1    , n_2, ..., n_d}$ & \verb"counter" & \verb"n_counter"\\
-	\hline
-	$\mathbf{k_1, k_2, ..., k_d}$ & \verb"mcounter" & \verb"k_counter"\\
-	\hline
-	\end{tabular}
+    \begin{tabular}{ | l | l | r|}
+    \hline
+    \bf{Publication\cite{ale_general_2013}} & \bf{Original} & \bf{\means}\\
+    \hline
+    \hline
+    $\frac{d_{\mu}}{dt}$ & \verb"M" & \verb"dmu_over_dt"\\
+    \hline
+    $\mathbf{n\choose{k}}$ & \verb"f2" & \verb"n_choose_k"\\
+    \hline
+    $ (-1)^\mathbf{{n-k}}$ & \verb"f3" & \verb"minus_one_pow_n_minus_k"\\
+    \hline
+    $\mathbf{n_1    , n_2, ..., n_d}$ & \verb"counter" & \verb"n_counter"\\
+    \hline
+    $\mathbf{k_1, k_2, ..., k_d}$ & \verb"mcounter" & \verb"k_counter"\\
+    \hline
+    \end{tabular}
 \end{center}
 \label{tab:varnames}
 \end{table}
 
 Another important, but often neglected, aspect of readability is the choice of variable names.
-Having explict self explanatory variable names often reduces cognitive load.
-Modern code editor allow completion of variable name, so it is not constraining to use long names.
+Having explicit self explanatory variable names often reduces cognitive load.
+Modern code editor allow completion of variable name, so it is not limiting to use long names.
 We aimed to name variables according to the symbols in the original publication\cite{ale_general_2013}.
 Table~\ref{tab:varnames} represents a few examples of how we chose variable names.
 
 
 \section{Parametric Moment Closure Implementation}
-Implementation of moment closures using parametric distibutions was done in colaboration 
-with Sisi Fan because prototypes were available in \mat{}\cite{lakatos_preparation_2014}. She had experience using \mat{}, 
+Implementation of moment closures using parametric distributions was done in collaboration
+with Sisi Fan because prototypes were available in \mat{}\cite{lakatos_preparation_2014}. She had experience using \mat{},
 whilst I had more practice with \py{}.
 Here, I only describe my decisions about the implementations in \py{}.
 
@@ -280,7 +292,7 @@ In addition, the default (scalar) closure was implicit and had a singular behavi
 In \means, we have unified all closure methods in a common base class (\texttt{ClosureBase}).
 The base class implements all methods that all closures will use (\ie{} substitutions, setting cross terms to $0$).
 Then, only the method to compute raw moments has to be specialised in subclasses.
-This general framework facilitated optimisation and will greatly simplify the task of reseachers willing
+This general framework facilitated optimisation and will greatly simplify the task of researchers willing
 to implement closure methods for new distributions.
 
 \section{Optimisation of Symbolic Computations}
@@ -306,42 +318,43 @@ Figure~\ref{fig:profile} represents the result of such a profile obtained during
 
 
 \begin{figure}[tbh]
-\includegraphics[width=0.95\textwidth{}]{profile.pdf}
+\begin{center}
+\includegraphics[width=0.83\textwidth{}]{profile.pdf}
 \caption{\emph{Simplified profile of \gls{mea} using means.}
-Each box indicates a function. 
+Each box indicates a function.
 Colour arrows indicate a ``caller $ \rightarrow $ callee'' relation.
 The first row in each box is the name of the function (prefixed with the module name and the line number).
 The second row indicates the total time spend calling this function (directly or indirectly).
 The last row is the total number of time a function has been called.
 Black arrows indicate \sympy{} functions with large footprints which are explicitly called by our package.
-This example profile suggests that symbol substitution could be an issues (a). 
+This example profile suggests that symbol substitution could be an issues (a).
 The function \texttt{sympy.solve()} also seems to have a large footprint (b).
 Finally differentiation (\texttt{diff}) is coslty (c).
-Altogether, the interpreter spent approximatively $60\%$ 
-of the runtime in these three functions. 
-Note that this specific profile has been pruned to facilitate representation. 
+Altogether, the interpreter spent approximatively $60\%$
+of the runtime in these three functions.
+Note that this specific profile has been pruned to facilitate representation.
 }
-
+\end{center}
 \label{fig:profile}
 \end{figure}
 
  
-\subsection{Iterative Improvements}
+\subsection{Improving Performance Iteratively}
 In this section, I detail the nature of the optimisations performed in section\citationneeded{} of the group report.
 The relevant figure is reproduced as figure ~\ref{fig:mea_speed} of the document herein.
 
 \begin{figure}[tbh]
 \includegraphics[width=0.95\textwidth{}]{mea_speed.pdf}
-\caption{\emph{Cumulative performance improvement of symbolic 
+\caption{\emph{Cumulative performance improvement of symbolic
 calculations resulting from optimisation}.
 The processing time for computing log-normal closure on \pft{} model with different \gls{maxord}s were measured for original Matlab implementation (a) and different optimisations (b$-$f).
-In a first place, the calls to \texttt{sympy.simplify()} were removed (b). 
-Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c). 
+In a first place, the calls to \texttt{sympy.simplify()} were removed (b).
+Then, \texttt{sympy.xreplace()} was used instead of \texttt{sympy.substitute()} (c).
 Computing a rectangular matrix containing expressions for all moment was more efficient than generating a square matrix to later remove unneeded expressions (d).
-Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e). 
+Implementing a simplified equation solver instead of using \texttt{sympy.solve()} also resulted in a significant speed-up (e).
 Finally, caching (memorisation) \texttt{sympy.diff()} allowed even better performance.
-The time complexity appears exponential ($O(2^k)$, where $k$ is the maximal moments order) in every case, 
-Nine replicates were performed on the same CPU. 
+The time complexity appears exponential ($O(2^k)$, where $k$ is the maximal moments order) in every case,
+Nine replicates were performed on the same CPU.
 For optimisation c$-$f, values corresponding to \gls{maxord} moments lower than two were removed because of
 the inherent inaccuracy in measuring very short durations.}
 \label{fig:mea_speed}
@@ -349,7 +362,7 @@ the inherent inaccuracy in measuring very short durations.}
 
 
 The first optimisation step involved removing the ``expression simplification'' heuristic.
-In the original code (from both publication\cite{ale_general_2013} and last year's MSc project\cite{babtie_moment_2013}), 
+In the original code (from both publication\cite{ale_general_2013} and last year's MSc project\cite{babtie_moment_2013}),
 the right-hand-side equations were simplified in order to produce shorter text file results.
 However, this was slow and did not benefit subsequent simulations and inference.
 For large expressions, simplification also had an large memory footprint and was likely to fail.
@@ -373,7 +386,7 @@ where,
 was generated.
 The $n_2 - n$ rows corresponding to higher-order moments were unused and eventually deleted.
 In contrast, our implementation generates a $(n-s) \times (n_2-s + 1)$ matrix regardless of the closure method.
-In addition to making the code more readable, consistent and flexible, this improved overall performance (fig.~\ref{fig:mea_speed}d) 
+In addition to making the code more readable, consistent and flexible, this improved overall performance (fig.~\ref{fig:mea_speed}d)
 for cases where closure is applied whilst keeping the default closure computation fast.
 
 Another simple way to improve computation time was to remove calls to the function \texttt{solve()} which was only used in straightforward cases
@@ -386,11 +399,11 @@ One advantage, is that, when needing to calculate two derivatives such as: $\fra
 one can precompute $\frac{\partial{} f(x,y)}{\partial{} x}$ and use it for both calculation.
 In our implementation, we have use a procedure known as \emph{memoization} that, briefly, permits to store the results of a function call in an associative array.
 Then, the next time this function is called with the same arguments, it will return the stored results instead of recomputing it.
-This also resulted in an overall perfomance improvement (fig.~\ref{fig:mea_speed}f).
+This also resulted in an overall performance improvement (fig.~\ref{fig:mea_speed}f).
 
 Interestingly, the slopes between, optimisations a ($0.95$) and c ($0.58$), and b ($0.62$) and c were significantly different ($p-value <10^{-15}$ and $p-value = 3 \times 10^{-4}$, respectively;
 t-test on the slopes of the linear regression). This indicates that optimisation c ``scales'' better that b and a.
-No significant difference was found between the slopes of the subsequent optimisations (c$-$f). 
+No significant difference was found between the slopes of the subsequent optimisations (c$-$f).
 However, the intercepts were significantly smaller between each consecutive optimisations after c) ($p-value < 10^{-6}$ for all; t-test on the intercepts of the linear regression).
 
 Compared to the original \mat{} implementation, these improvement are very significant. We estimate than, for computing \gls{mea} with log-normal closure up to \gls{maxord}
@@ -398,13 +411,13 @@ of 8 in the \pft{} system, our implementation is approximately 5000 faster.
 
 \section{Implementation of \acrlong{ssa}}
 Finally, when we started to evaluate the accuracy of \gls{mea}, we realised that it was necessary to compare simulation results to \gls{ssa} average\cite{gillespie_general_19706}.
-Considering the number of parameter sets we needed, it was not practical to generate average trajectories using an exteranal programs.
+Considering the number of parameter sets we needed, it was not practical to generate average trajectories using an external programs.
 We therefore implemented our own version of the exact, direct algorithm.
-The algorithm is quite simple, so it was quick to provide a basic implementation. 
-The most important for our research was to integrate stochastic simulations consistantly with the rest of the package.
-For instance, it needed to return the same type of objects as simulation based on approximation. 
+The algorithm is quite simple, so it was quick to provide a basic implementation.
+The most important for our research was to integrate stochastic simulations consistently with the rest of the package.
+For instance, it needed to return the same type of objects as simulation based on approximation.
 In addition, it was necessary that \gls{ssa} simulations could return empirical moments on collections trajectories, which allows to compare mean, variance, covariance, and so on, between simulations.
-If, in the future, a faster implementation of \gls{ssa} is needed, it should be straightforward to optimise this code. 
+If, in the future, a faster implementation of \gls{ssa} is needed, it should be straightforward to optimise this code.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 A CONCLUDING REMARK PLEASE (I ENJOYED THE PROJECT, TNAK YOU THE MASTERSSSSSS :p)
@@ -413,8 +426,4 @@ A CONCLUDING REMARK PLEASE (I ENJOYED THE PROJECT, TNAK YOU THE MASTERSSSSSS :p)
 \bibliography{report.bib}{}
 \bibliographystyle{ieeetr}
 
-
 \end{document}
-
-
- 
