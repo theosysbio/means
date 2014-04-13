@@ -15,7 +15,8 @@
 \usepackage{subcaption}
 \usepackage{minted}
 \usepackage{framed}
-\usepackage[colorinlistoftodos]{todonotes}
+% \usepackage[colorinlistoftodos]{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage{csquotes}
 \usepackage{parskip} % Spaces between paragraphs
 
@@ -85,6 +86,23 @@ Imperial College London
 \pagenumbering{roman}
 
 \pagebreak % move TOC to a different page from abstract
+\begin{table}
+\begin{center}   
+    \begin{tabular}{ | l  | r|}
+    \hline
+     \multicolumn{2}{|c|}{\bf{Word count}}\\
+    \hline
+    \hline
+    Main text & 2550\\
+    \hline
+    Figures & 361\\
+    \hline
+    Headers & 32\\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
+
 \tableofcontents
 
 % our acronyms
@@ -109,13 +127,11 @@ Imperial College London
 \newpage{}
 \printglossaries
 
+
 \input{content}
 
 \newpage{}
 \bibliography{../../report.bib}{}
 \bibliographystyle{ieeetr}
-\newpage{}
-\begin{appendices}
-\end{appendices}
-   
+
 \end{document}

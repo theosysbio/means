@@ -2,7 +2,7 @@ import luigi
 from means.pipes import *
 from means.inference.distances import sum_of_squares
 import itertools
-
+from means.core import Model
 
 N_SSA = 5000
 
@@ -10,8 +10,8 @@ CLOSURE_DICTS = [
         {"closure": "scalar",        "multivariate": True, "col": "b", "sty": "-", "alpha": 0.3},
         {"closure": "normal",        "multivariate": True, "col": "m", "sty": "-", "alpha": 0.3},
         {"closure": "normal",        "multivariate": False, "col": "m", "sty": "--", "alpha": 0.5},
-        {"closure": "log-normal",    "multivariate": True, "col": "r", "sty": "-", "alpha": 0.3},
-        {"closure": "log-normal",    "multivariate": False, "col": "r", "sty": "--", "alpha": 0.5}
+        # {"closure": "log-normal",    "multivariate": True, "col": "r", "sty": "-", "alpha": 0.3},
+        # {"closure": "log-normal",    "multivariate": False, "col": "r", "sty": "--", "alpha": 0.5}
         ]
 
 def get_traject(tasks, trajectory_buffers, max_order, sp, closure, multiv, ssa=False):
@@ -40,6 +40,25 @@ class P53Model(means.Model):
         from means.examples import MODEL_P53
         super(P53Model, self).__init__(MODEL_P53.species, MODEL_P53.parameters, MODEL_P53.propensities,
                                        MODEL_P53.stoichiometry_matrix)
+    def __str__(self):
+        return 'p53'
+
+MODEL_HES1 = Model(parameters=['c_0', 'c_1', 'c_2', 'c_3', 'c_4'],
+                   species=['y_0', 'y_1', 'y_2'],
+                   propensities=['c_4*y_0',
+                                 'c_4*y_1',
+                                 'c_4*y_2',
+                                 'c_3*y_1',
+                                 'c_2*y_0',
+                                 '1.0/(1+(y_2/c_0)**2)'],
+                   stoichiometry_matrix=[[-1, 0, 0, 0, 0, 1],
+                                         [0, -1, 0, -1, 1, 0],
+                                         [0, 0, -1, 1, 0, 0]])
+class Hes1Model(means.Model):
+    def __init__(self):
+        from means.examples import MODEL_HES1
+        super(Hes1Model, self).__init__(MODEL_HES1.species, MODEL_HES1.parameters, MODEL_HES1.propensities,
+                                       MODEL_HES1.stoichiometry_matrix)
     def __str__(self):
         return 'p53'
 
@@ -292,8 +311,26 @@ class AllFigures(Task):
 #         out = FigureHes1Data(max_max_order=self.max_max_order)
 #         return out
 
+
+
+
+class DataHes1(DataClosureAndMaxOrder):
+    timepoints_arange = [0, 240, 1]
+    initial_conditions = [4, 20, 20]
+    simul_params = [5, 10, 1, 1, 0.03]
+
+    model = Hes1Model()
+
+class FigureHes1Summary(FigureSummaryDistanceBase):
+    max_max_order = IntParameter(default=7)
+    def requires(self):
+        out = DataHes1(max_max_order = self.max_max_order)
+        return out
+
+
 if __name__ == '__main__':
     # run(main_task_cls=FigureHes1)
-    run(main_task_cls=FigureP53Summary)
-    run(main_task_cls=FigureP53Simple)
     # run(main_task_cls=FigureP53Summary)
+    run(main_task_cls=FigureP53Simple)
+    run(main_task_cls=FigureP53Summary)
+    run(main_task_cls=FigureHes1Summary)
