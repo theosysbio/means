@@ -1,0 +1,102 @@
+\section{Supplementary Figures}
+This section lists additional contour plots of the sum-of-squares distances between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory. 
+These plots for \verb"ode15s" solver are already included in the main report (\autoref*{GR:sec:hit-and-miss}). 
+The figures for three other solvers are included in this appendix.
+Figures for log-normal closure using different solvers were not generated, and therefore not included to this report. 
+
+\begin{figure}
+    \centering
+    \foreach \order in {1,...,4}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:ode15s:\order}
+        \end{subfigure}
+        ~
+    }
+    
+    \foreach \order in {5,...,7}{
+        \begin{subfigure}[t]{0.31\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-ode15s--5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:ode15s:\order}
+        \end{subfigure}
+        ~
+    }
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for scalar closure and \texttt{ode15s} solver}.
+    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{ssa} trajectory.
+    This figure has also been included to the main report.
+    }
+    
+    \label{fig:hit-and-miss:ode15s}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \foreach \order in {1,...,4}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-dopri5--5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:dopri5:\order}
+        \end{subfigure}
+        ~
+    }
+    
+    \foreach \order in {5,...,7}{
+        \begin{subfigure}[t]{0.31\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-dopri5--5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:dopri5:\order}
+        \end{subfigure}
+        ~
+    }
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for scalar closure and \texttt{dopri5} solver}.
+    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{ssa} trajectory.
+    Note the similarity to the \autoref{fig:hit-and-miss:ode15s}.
+    }
+    \label{fig:hit-and-miss:dopri5}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \foreach \order in {1,...,6}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-rodas--5000-0.2}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:rodas:\order}
+        \end{subfigure}
+        ~
+    }
+     \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for scalar closure and \texttt{rodas} solver}.
+    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{ssa} trajectory.
+    Note that the solver is considerably less stable for higher \glspl{maxord} than the solvers described in previous figures. 
+    The figure for \gls{maxord} 7 was not generated due to runtime constraints.
+    }
+    \label{fig:hit-and-miss:rodas}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \foreach \order in {1,...,4}{
+        \begin{subfigure}[t]{0.45\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-euler-h_0.01-5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:euler:\order}
+        \end{subfigure}
+        ~
+    }
+    
+    \foreach \order in {5,...,7}{
+        \begin{subfigure}[t]{0.31\textwidth}
+            \includegraphics[width=\textwidth]{{../../../pipeline/task-output/FigureHitAndMiss/FigureHitAndMiss-pdf-\order-scalar-True-0.0_40.0_0.1-euler-h_0.01-5000-0.1}.pdf}
+            \caption{\Gls{maxord} $= \order$}
+            \label{fig:hit-and-miss:euler:\order}
+        \end{subfigure}
+        ~
+    }
+    \caption{\emph{Contour plots of the sum-of-squares distance between the \gls{mea} approximated trajectory and the \gls{ssa} simulated trajectory for scalar closure and \texttt{euler} solver with step size of 0.01}.
+    The grid of distances was calculated by sampling each of the two parameters $c_2$ and $c_4$ at $0.1$ intervals and comparing the simulated trajectories to the \gls{ssa} trajectory.
+    Note that \texttt{euler} solver is simpler than other solvers, it
+    does not have a failsafe that stops it generating trajectories when they stop making sense. Due to this, we see no failures in the plots as the solver always returns something. The trajectories returned are, however, incredibly inaccurate, as indicated by the red colour zones.}
+    \label{fig:hit-and-miss:euler}
+\end{figure}
