@@ -13,7 +13,8 @@ First of all, I explain \emph{why} and \emph{how} the implementation of \acrlong
 Then, I describe how parametric moment closure was translated from \mat{} prototype to be included in a unified framework in \means.
 As explained in the group report, a considerable part of my work was also to improve the performance of \gls{mea}.
 Here, I provide more details about the how this was realised.  
-Finally, I explain the rationale behind integrating \acrlong{ssa} simulations in the package.
+I then briefly explain the rationale behind integrating \acrlong{ssa} simulations in the package.
+Finally, I start investigating whether our conclusions apply to other systems such as \emph{Hes1}.
 
 \section{Restructuring \acrlong{mea} Implementation}
 As we attempted to read the \py{} implementation of \acrshort{mea} written by last year students\cite{babtie_moment_2013},
@@ -313,5 +314,36 @@ In addition, it was necessary that \gls{ssa} simulations could return empirical 
 which allows to compare mean, variance, covariance, and so on, between simulations.
 If, in the future, a faster implementation of \gls{ssa} is needed, it should be straightforward to optimise this code.
 
+
+
+\section{Multivariate Closure and Hes1 System}
+The \pft{} model was very interesting to study. However, we could not draw general conclusions on \gls{mea} from this model only.
+For this reason, we also performed preliminary work on the \emph{Hes1} model\cite{ale_general_2013}.
+Figure~\ref{fig:hes1} shows the effect of different closure methods and \gls{maxord} on the accuracy of the approximation.
+This is similar to figure~\ref*{GR:fig:max_order_and_closure_on_distance_summary} in the group report (which was made for \pft).
+\begin{figure}[tbh]
+\includegraphics[width=0.95\textwidth{}]{FigureHes1Summary-pdf-7.pdf}
+\caption{\emph{Effect of different closure methods and \gls{maxord} on simulation accuracy}.
+The \emph{Hes1} system was modelled using \gls{mea} with five types of closure and for \gls{maxord} up to seven.
+Resulting trajectories were all compared to an average of 5000 \gls{ssa} simulations using sum of square distance.
+Distance is in log scale.
+Log-normal closures are not represented, because they generated  unstable trajectories with very large distances.
+}
+\label{fig:hes1}
+\end{figure}
+
+Interestingly, log-normal closure was not capable of generating stable trajectories (most distances were higher than $10^{10}$, or the solver failed).  
+In contrast with \pft{} model, multivariate normal closure performed systematically better than the univariate counterpart.
+Also, scalar is generally better than univariate normal closure.
+Finally, as for \pft, it is not obvious, with this set of parameter, that higher \gls{maxord} results in more accurate approximation.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-A CONCLUDING REMARK PLEASE (I ENJOYED THE PROJECT, TNAK YOU THE MASTERSSSSSS :p)
+
+\section{Conclusion}
+This project was extremely collaborative, and many aspect of our research were carried conjointly with my two peers.
+Here, I have described which part of the projects I have lead.
+\gls{mea} with parametric moment closures was the novelty and the originality of this research.
+It was therefore paramount for us to implement it as well as possible.
+It was also our goal to provide a package that allowed alternative simulation and approximations methods such as \gls{ssa}.
+Although these two points had immediate benefits for us, our implementation has been driven by the needs of the community in a first instance.
+At this stage, we believe \means{} is ready for public availability and use by the scientific public. 
