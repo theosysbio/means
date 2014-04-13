@@ -60,7 +60,7 @@ I also hope that the anecdotal evidence listed above may serve as a proof of uti
 In the previous section I have talked about the software development process in general and my contributions to it. 
 Below I list my most noteworthy contributions to the source code of \means{} as well as justify some of the design decisions we made.
 
-\subsubsection{Implementation of Simulation Routines}
+\subsubsection{Design of Simulation Interface}
 
 It is no secret, that we did not start this project from scratch.
 The previous year's MSc students have already contributed a large quantity of \py{} code that provided some basic functionality of \means{}. In this project, we aimed to attempt to simplify the said functionality and therefore it easier to use and maintain (see \autoref*{GR:sec:aims_of_the_project} in the group report).
@@ -109,86 +109,83 @@ This has proven to be an efficient-enough solution for most of the day-to-day ne
 In the future, however, it would be interesting to benchmark the Theano performance, whose inhering GPU support could speed up the evaluations even more.
 In particularly, I believe it would help to reduce the exponential slope of runtime arising from the exponential increase of the number of equations as the maximal moment order is increased (see \autoref{GR:fig:solver-runtimes} in the group report) to make the simulations feasible for even higher orders. 
 
-\subsubsection{Implementation of Inference Routines}
+\subsubsection{Design of Parameter Inference Interface}
 
-Similarly to the simulation methods described above, I have also worked on restructuring the parameter inference to make it easier to use from interactive environment. 
-Namely we aimed to unify the interfaces to parameter distance methods regardless of the distance function used, and allow the user to specify the requirements succinctly.
-I believe that both of these requirements were met, and the new interface for parameter inference is demonstrated in \autoref*{GR:sec:parameter_inference} of the group report.
+Besides refactoring the simulation mechanisms from the previous year's code, I have also worked on restructuring the parameter inference interface. 
+The original interface, while fully working, was split into two different parts: sum-of-square distance based inference, and parametric distance based inference. Similarly, we found the specification of inference parameters to be slightly convoluted and not suitable to be used from an interactive interface. 
+I believe that during the iterations of this project both of these requirements were met, and the new interface for parameter inference is
+both unified and more succinct as the previous one. This new interface is demonstrated in \autoref*{GR:sec:parameter_inference} of the group report.
 
 Additionally, the unification of the parameter inference interfaces enabled our users to design their own distance functions, as demonstrated in \autoref*{GR:sec:distance_measures} of the group report.
-Finally, I have worked with SF on the additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, illustrated in 
-\autoref*{GR:sec:investigating_distance_landscape} of the group report.
+Finally, by the end of the project, SF and I have added additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, as illustrated in 
+\autoref*{GR:sec:investigating_distance_landscape} of the group report, which we believe will aid the future users in exploring their data.
 
 \subsubsection{Pipeline Support}
 
-In the final days of this project, when we were generating the figures for the results section in the group report (\autoref{GR:results}), we realised that the scale of these figures was becoming hard to manage. 
-At this point each one of us has had already written a couple of lines of code to perform the \acrlong{mea}, and store a result, a loop of some sort that would run simulation or parameter inference procedures on this result, and a way to store these results to a file. 
-Errors with these methods were starting to crop up, for instance maybe somebody forgot to handle the solver errors appropriately and the task was supposed to run overnight failed, or maybe the task succeeded to run, but results were not stored in the correct format, rendering them unreadable, etc.
-Similarly, we were unlikely to be able to share the results with each other and reuse, as they were all stored in different formats.
-Something had to be done to reduce the number of these issues.
+During the final days of this project, when we were generating the figures for the results section in the group report (\autoref{GR:results}), we realised that the scale of these figures was quickly becoming troublesome hard to manage. 
+At this point each one of us has had already written a couple of lines of boilerplate code that performs the \acrlong{mea}, stores the result, maybe has a loop of some sort that would run simulation or parameter inference procedures on this result, and store these results to different file.
+
+Since each one of us had their own version of the same thing, we were deemed to repeat the mistakes of each other. And these mistakes started to crop up. 
+Tasks that were supposed to be running overnight, failed early, because the solver exceptions were not handled properly. 
+Or due to something unexpected, the resulting data was not saved correctly, rendering it unreadable.
+Similarly, we were unlikely to collaborate and share the results with each other, as they were all stored in different formats.
+Something had to be done to tackle these issues.
 
 I proposed to use \verb"luigi"\cite{_luigi_????} -- a \python{} library developed by the engineers in \emph{Spotify} -- to provide an unified framework for the common tasks we had to do. 
-The \verb"luigi" allows to break down complicated tasks into a set of smaller ones and specify the interdependencies between them.
+This package allows to break down complicated tasks into a set of smaller ones and specify the interdependencies between them.
 The system could then find the most efficient way to perform these  tasks, often in parallel, so all of the tasks are executed before their parents in the dependancy tree. 
-This is exactly the same concept as the one implemented by \emph{GNU Make}\cite{gnumake}, for those who are familiar with it. Unlike \emph{Make}, however, \verb"luigi" package is able to handle parametric tasks better, and is written in \py{}, therefore able to integrate with our codebase seamlessly.
+This is exactly the same concept as the one implemented by \emph{GNU Make}\cite{gnumake}, for those who are familiar with it. Unlike \emph{Make}, however, \verb"luigi" package is able to handle parametric tasks better. \verb"Luigi" is also written in \py{} making integration of it trivial.
 
-I have particularly worked on writing the general wrappers around the means code in the \verb"luigi" framework. 
+I have spent some time writing the general wrappers around the means code in the \verb"luigi" framework. 
 For instance, I implemented the \verb"MEATask" objects that would take a model, \gls{maxord}, closure method as a parameter and return the resulting set of equations corresponding to \gls{mea} approximation requested. 
-This task was then the only dependancy of the \verb"TrajectoryTask", which used the set of equations generated earlier to simulate the behaviour of the system. 
-In order to generate figures such as the contour plots shown in \todo{link here to next section}, a new task for the figure would be created, that would require a set of these \verb"TrajectoryTask"s to be performed. 
+Another task, \verb"TrajectoryTask", would then treat this task as a dependency and use the set of equations generated to simulate the behaviour of the system. 
+A set of such tasks could then be compiled into figures, and figures into documents, the process which is illustrated in \autoref{fig:pipes_example}.
 
-In turn, this allowed us to specify each figure in the report in a very high level language specifying only the dependancies of the task and the ways to combine them to get the result, without worrying on how to obtain these dependencies in the first place.
+As one can see from the \autoref{fig:pipes_example}, the hierarchical nature of these dependancies is hard to visualise, let alone to implement efficiently.
+Using {\tt luigi} package not only allowed us to skip the implementation step for dependancy management, but also allowed to be more flexible. In essence, we were only specifying how to draw the plots, and not how to obtain the data for them.
 
 \begin{figure}
     \centering
      \begin{subfigure}[t]{0.3\textwidth}
-        \includegraphics[width=\textwidth]{images/TrajectoryTask.png}
+        \includegraphics[scale=0.7]{images/TrajectoryTask.png}
         \caption{Dependancies of {\tt TrajectoryTask}}
         \label{fig:pipes_example:TrajectoryTask}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{\textwidth}
         \includegraphics[width=\textwidth]{images/FigureHitAndMissData}
-        \caption{Partial dependancies of {\tt FigureHitAndMissData}}
+        \caption{Partial dependancies of the data preprocessing step.}
         \label{fig:pipes_example:FigureHitAndMissData}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{\textwidth}
         \includegraphics[width=\textwidth]{images/FigureHitAndMissTex.png}
-        \caption{Compilation of the {\tt FigureHitAndMissData} tasks into sets of contour plots to be directly embedded to the report.}
+        \caption{Compilation of the data preprocessing tasks into sets of contour plots to be directly embedded to the report.}
         \label{fig:pipes_example:FigureHitAndMissTex}
     \end{subfigure}
-    \caption{\emph{Graphical way of describing the dependancies between the tasks used to generate the contour plots of solver performance.} 
+    \caption{\emph{Graphical way of describing the dependancies between the tasks used to generate the contour plots of solver performance, i.e. the figures in the appendix \autoref{sec:supplementary_figures}.}\\ 
     Each  \texttt{TrajectoryTask} depends on \texttt{MEATask} (\ref{fig:pipes_example:TrajectoryTask}).
     A number of these tasks, one for each point of the parameter space, is required to compile the grid of we want to plot as a contour plot.
-    Besides the regular trajectories, one trajectory per parameter space obtained using \acrlong{ssa} is also needed (\ref{fig:pipes_example:FigureHitAndMissData}).
-    The obtained trajectories can then be used to compute the distance grid, and these grids could be drawn as contour plots and compiled together into \LaTeX{} figures (\ref{fig:pipes_example:FigureHitAndMissTex}).
-    Dependancy graphs were drawn by the {\tt luigi} package. }
+    Besides the regular trajectories, one trajectory per parameter space obtained using \acrlong{ssa} was also needed (\ref{fig:pipes_example:FigureHitAndMissData}).
+    The obtained trajectories can then be used to compute the distance grid, and these grids could be drawn as contour plots and compiled together into \LaTeX{} figures (\ref{fig:pipes_example:FigureHitAndMissTex}), resulting into figures similar to the ones in the appendix \autoref{sec:supplementary_figures}.\\
+    Dependancy graphs are pictured as drawn by the {\tt luigi} package, with a large part of them cropped, for convenience of visualisation.\\
+    NB: The name {\tt FigureHitAndMiss} comes from the earlier iteration of this figure that only marked the points for which the solver has failed, somewhat resembling a target with bullet holes.}
     \label{fig:pipes_example}
 \end{figure}
 
-\autoref{fig:pipes_example} illustrates these concepts by a set of the dependency graphs used to generate the contour plots in \todo{link}.
-As mentioned previously, \verb"TrajectoryTask" directly depends on the \verb"MEATask" to provide a set of \glspl{ode} approximating the behaviour of the system. 
-This dependancy, is directly pictured in \autoref{fig:pipes_example:TrajectoryTask}. 
-We can then use a set of these \verb"TrajectoryTask"s, one for each point on the grid, along with a set of the \verb"SSATrajectoryTask"s, for the same points to compute the numeric grid required to plot the contour. We call this task \verb"FigureHitAndMissData"\footnote{The name \emph{hit-and-miss} comes from the early version of the figure that had only the areas where the solvers failed marked and resembled a dartboard with a couple of darts on it.}, and picture a part of it in \autoref{fig:pipes_example:FigureHitAndMissData}. 
-Finally, this data task could be used to produce a contour plot, as ensured by the so-called \verb"FigureHitAndMissTask". 
-A set of the contour plots are then fed int o the \verb"FigureHitAndMissTex" task to create a \LaTeX{} figure, much resembling the ones in \todo{cite} (\autoref{fig:pipes_example:FigureHitAndMissTex}).
-
-As one can see from the \autoref{fig:pipes_example}, the hierarchical nature of these dependancies is hard to visualise, let alone to implement efficiently.
-Using {\tt luigi} package not only allowed us to skip the implementation step for dependancy management, but also allowed to be more flexible with the figures we are trying to draw -- enabling us to perform large changes to their structure, as we knew that only a small part of the whole system had to be changed at a time.
-
 \subsection{Investigation of MEA and Solver Performance}
 
-Finally, I worked on generalisation of the results obtained by QG in \autoref{GR:sec:results:mea_performance} of the group report. 
-I have investigated how the results change depending on the region of parameter space we are, as well as the impact different \gls{ode} solving heuristics have on these results.
+The pipelines described above were most useful in writing the \emph{results} section of the group report. In my section of this report, section \autoref{GR:sec:hit-and-miss}, I worked on generalising the results obtained by QG that he describes in \autoref{GR:sec:results:mea_performance} of the group report. 
+Here I was interested to see how the results change depending on the region of parameter space are we considering, as well as the impact different \gls{ode} solving heuristics have on these results and how stable they are at obtaining them.
 
-Due to the time constraints I have only considered \pft{} model, and \texttt{ode15s}, \texttt{euler}, \texttt{dopri5} and \texttt{rodas} solvers. 
-I have found that certain regions of the parameter space are easier to approximate than others, and there exist regions of parameter space that solvers struggle to approximate. These results are discussed in \autoref*{GR:sec:hit-and-miss} of the main report, and I will not reiterate them here to keep this report succinct.
+Due to the short time constraints we had and potentially long runtimes of needed to generate that much data, I have only considered \pft{} model, and \texttt{ode15s}, \texttt{euler}, \texttt{dopri5} and \texttt{rodas} solvers. 
+I have found that certain regions of the parameter space were easier to approximate than others, while other regions of parameter space seemed to be particularly troublesome for the solvers. 
+These results are discussed in full in the section \autoref*{GR:sec:hit-and-miss} of the main report.
 
-While there were variations in the stability and runtime of the solvers, I have found all of the solvers tested to handle the easy-to-simulate regions well, but fail to produce anything meaningful for the hard ones.
-The specific contour plots for the solvers were not included to the main report, but are included in the appendix of this document instead. \todo{link}.
+I also found that there was little difference between the performance of different solvers. They all were handling the easy-to-simulate regions well, but failing to produce anything meaningful for the hard regions.
+The full set of results for all solvers were not included to the main report, but are attached to the appendix \autoref{sec:supplementary_figures} of this document.
 
-
+In conclusion, these results show that the accuracy of \gls{mea} for a single parameter set must be taken with a caution. These results suggest that accuracy depends strongly on the region of the parameter space and cannot be generalised from a single point to the entire space, however some general patterns described in \autoref*{GR:sec:hit-and-miss} of the main resort can still be observed.
 
 \section{Conclusions}
 
