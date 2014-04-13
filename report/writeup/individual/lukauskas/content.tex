@@ -4,7 +4,8 @@ This document has been written as a succinct supplement to the group report, and
 
 \section{Introduction}
 
-\section{Contributions to Software Development Process}
+\section{Contributions}
+\subsection{Software Development Process}
 
 In the modern day, the computers are becoming the driving force of innovation and progress. 
 The whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
@@ -52,8 +53,70 @@ This allowed to keep the project on a clear track and going the right way.
 
 In the end, I believe that the software-engineering approaches I tried to introduce to the team were good both as an educational exercise and a way to be more efficient, when it comes to software development.
 
-\subsection{Implementation of Simulation and Inference Routines}
-\section{Investigation of MEA and Solver Performance}
-\section{Pipeline Support}
+\subsection{Significant Code Contributions}
+
+Besides the more general contributions to shaping the software development process to be more efficient, 
+I have implemented a number of classes that now serve specific functionality in the package.
+
+The contributions worth mentioning are listed below.
+
+\subsubsection{Implementation of Simulation Routines}
+
+One of the first things I worked on in this projection was an attempt to simplify a rather convoluted mechanism of running ODE equations from the previous year's version of the package. 
+The previous package used to split the process into three parts: transcription of python code into C, compilation of the C code into a library that wraps around \verb"CVODE" solver\cite{hindmarsh_sundials_2005}, which then can be run directly from python. 
+We understood that the compilation to C was necessary to speed up the computations, but we were particularly unhappy about the transcription into C step, as this \emph{ad-hoc} process seemed to be error prone and unnatural in general.  
+
+There is more than one approach that would have allowed us to reduce this step. For instance, we could have used \verb"CYTHON"\cite{behnel2010cython} to interact with the C library directly from \python{}. 
+However, instead of doing that, we searched for existing \python{} packages that would already provide nice \python{} wrappers around the said \verb"CVODE" library. We were able to find \verb"Assimulo" -- a package already mentioned once before in this report -- that not only implements pythonic wrappers around \verb"CVODE" solver, but also provides support for other solvers.
+
+I have modified our package to use the interface to \verb"CVODE" provided by \verb"Assimulo" instead of the process described above. 
+Similarly, ability to perform simulations using a different solver, has been incorporated to our package, as well as the added support for sensitivity analysis, that has also been incorporated from the \verb"Assimulo" interface to \verb"CVODE". 
+
+While most of the weight-lifting is done by the external package, I have taken a particular care to provide an easy to-use interface for the Simulation functionality, which is described in more detail in the tutorial \autoref*{GR:sec:simulation} of the group report.
+
+Finally, in order to keep the performance of the simulation as fast as the original implementation, we had to find a way to evaluate numeric expressions efficiently, as this has proven to be the bottleneck. 
+In order to do this, QG and I have investigated the performance of the default way of expression evaluation; \verb"sympy"'s \verb"lambdify" method, that turns the numeric expression into a \verb"lambda" function; or the use of \verb"sympy"'s \verb"autowrap" module which compiles the numeric expressions to C. 
+We did not test the Theano\cite{bergstra_theano:_2010} system because it required a newer version of \verb"sympy" that is supported in the college environments\footnote{We eventually updated the college environment to run the latest version of the package, however did not get back to re-run these tests} and an additional dependancy on the Theano library. 
+
+The runtimes were recorded using IPython's\cite{perez_ipython:_2007} magic \verb"%timeit" 
+function, that performs multiple executions of a short code snippet (usually as many as it can fit in two seconds of runtime) and returns the best observed runtime from all of the repetitions.
+The results from the experiment are summarised in \autoref{tab:numeric-runtimes}. 
+We can see that \verb"autowrap" is a clear winner here, and therefore has been implemented.
+
+\begin{table}
+    \centering
+    \begin{tabular}{l|l}
+    Method & Runtime \\
+    \hline
+    Default & 628 microseconds \\
+    \verb"lambdify" & 10.7 microseconds \\
+    \verb"autowrap" & 2.89 microseconds \\
+    Theano & not measured \\
+    \end{tabular}
+    \caption{Results of the three out of four numeric evaluation methods available in {\tt sympy}. 
+    The results were recorded using the magic {\tt \%timeit} 
+    function provided by IPython interactive environment.
+    Theano performance was not tested as it was not supported in all of the environments we wanted our code to be able to run.}
+    \label{tab:numeric-runtimes}
+\end{table}
+
+This implementation of the simulation routines is sufficiently fast for most of the every day needs. 
+However, because the number of equations increases exponentially as the \gls{maxord} of \gls{mea} increases (see, so does the runtime of the simulation (see \autoref{GR:fig:solver-runtimes} in the group report) and they quickly become unfeasible for higher order moments (i.e. when \gls{maxord} is greater than 7). 
+The GPU support built into Theano could help make these equations feasible again, and therefore would be interesting to explore further.
+
+\subsubsection{Implementation of Inference Routines}
+
+Besides the implementation of the Simulation routines, I have also worked on restructuring the code for parameter inference methods to make it easier to use. 
+The parameter inference interface you can see in the \autoref*{GR:sec:parameter_inference} of the group report, has been designed by me. 
+It captures exactly the same functionality as previously implemented by last-year's MSc students, however, we believe it is a bit easier to use.
+
+Besides the new interface, I have also implemented support for custom distance measures, which is demonstrated in \autoref*{GR:sec:distance_measures} of the group report. 
+
+Finally, I have worked with SF on the additional plotting functionality for the parameter inference results, such as the contour plot of the distance landscape, illustrated in \autoref*{GR:sec:investigating_distance_landscape} of the group report.
+
+\subsubsection{Pipeline Support}
+
+\subsection{Investigation of MEA and Solver Performance}
+
 \section{Conclusions}
 
