@@ -6,22 +6,22 @@ The development process and the results have been described in detail in the mai
 Instead, in this document, I attempt to summarise my major contributions to \means{}, and justify certain decisions as well as share my views on the software engineering process.
 
 I start by providing some anecdotal evidence on how advanced software engineering techniques helped us to succeed in this project. 
-I then list the contributions to the source code I felt were noteworthy. Then I briefly cover the pipeline functionality implemented in \means{} that deliberately omitted from the group report.
+I then list the contributions to the source code I felt were noteworthy. Then I briefly cover the pipeline functionality implemented in \means{} that we deliberately omitted from the group report.
 After that, I briefly reiterate the results described in the main report and provide the additional data.
-Finally, I conclude the report with providing a retrospect and considering directions for future work.
+Finally, I conclude the report by providing a retrospect and considering directions for future work.
 
 \section{Software Development Process}
 
-In the modern day where computers are becoming the driving force of innovation and progress the whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
+In the modern day, when computers are becoming the driving force of innovation and progress, the whole world is facing the need to either adjust to this computerisation or risk to be left behind by others.
 Naturally, software is becoming critically important for scientific communities. This importance raises the demand for scientists who are also proficient in computer programming. Unfortunately, while knowledge of computer programming is deemed critical, the necessity to study software engineering is still being debated. 
 
-The common argument against the need to study software engineering claims that people often care only about the end result, and not how it was obtained or how easy-to-read code is.
-To me this claim seems to be ironic as the same argument can be used to describe the main reason why the software-engineering methodologies emerged in the first place. 
-For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} claim treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}. 
+The common argument against the need to study software engineering states that people often care only about the end result, and not how it was obtained or how easy-to-read code is.
+This reasoning seems to be ironic to me as the same argument can be used to describe why the software-engineering methodologies emerged in the first place. 
+For instance, two of the main principles of the \emph{agile} methodology\cite{_manifesto_????} treat the ``working software as the primary measure of success" and claim that ``simplicity -- the art of maximising of work \emph{not} done -- is essential"\cite{paulk_agile_2002}. 
 In fact \emph{agile} methodology is often viewed as an alternative to the approaches that aim to create this idealistic, properly structured and well-documented software, such as the traditional \emph{waterfall} model.
 
 It was my personal goal, and I believe my biggest contribution, to share my experience in software engineering in order to incorporate the \emph{agile} methodology into our development cycle. 
-In this project I aimed to introduce my peers to concepts that might have not been known to them previously as well as to try to validate their value. 
+In this project I aimed to introduce my peers to concepts that might have not been known to them previously as well as to try to promote them. 
 This section lists a couple of the modern software development practices we aimed to employ, and provides a short description of how they contributed to the success of \means{}.
 
 Whenever I introduced a concept to the peers, regardless if they have heard it before or not, I also tried to push it to further to the limits, so the biggest advantage can be seen. 
@@ -112,7 +112,7 @@ The benchmarking results from the experiment are summarised in \autoref{tab:nume
 We can see that \verb"autowrap" is clear winner in the benchmark and therefore was chosen to be implemented in our package.
 This has proven to be an efficient-enough solution for most of the day-to-day needs, becoming an issue only for high-maximal order moment closures, where the number of expressions to evaluate is large.
 
-In the future, however, it would be interesting to benchmark the Theano performance, whose inhering GPU support could speed up the evaluations even more.
+In the future, however, it would be interesting to benchmark the Theano performance, whose inherent GPU support could speed up the evaluations even more.
 Particularly, I believe it would help to reduce the exponential slope of runtime arising from the exponential increase of the number of equations as the maximal moment order is increased (see \autoref{GR:fig:solver-runtimes} in the group report) to make the simulations feasible for even more complicated systems.
 
 \subsection{Design of Interface for Parameter Inference}
@@ -132,7 +132,7 @@ Finally, by the end of the project, SF and I have added additional plotting func
 During the final days of this project, when we were generating the figures for the results section in the group report (\autoref{GR:results}), we realised that the scale of these figures was quickly becoming hard to manage. 
 At this point each one of us has had already written a couple of lines of boilerplate code that performs the \acrlong{mea}, stores the result,  has a loop through simulation or parameter inference procedures on this result, and stores the final results to different file.
 
-Since each one of us had their own version of the same thing, we were deemed to repeat the mistakes of each other. 
+Since each one of us had their own version of the same code, we were deemed to repeat the mistakes of each other. 
 Tasks that were supposed to be running overnight, failed early. Resulting data was not saved correctly, rendering it unreadable.
 Similarly, we were unlikely to collaborate and share the results with each other, as they were all stored in different formats.
 We needed something to manage these processes better and prevent the issues from reoccurring.
@@ -147,7 +147,7 @@ For instance, I implemented the \verb"MEATask" objects that would take a model, 
 Another task, \verb"TrajectoryTask", would then treat this task as a dependency and use the set of equations generated to simulate the behaviour of the system. 
 A set of such tasks could then be compiled into figures, and figures into documents, the process which is illustrated in \autoref{fig:pipes_example}.
 
-As one can see from the \autoref{fig:pipes_example}, the hierarchical nature of these dependancies is hard to visualise, let alone to implement efficiently.
+The hierarchical nature of these dependancies is hard to visualise (\autoref{fig:pipes_example}), let alone to implement efficiently.
 Using {\tt luigi} package not only allowed us to skip the implementation step for dependancy management, but also allowed to be more flexible in terms of our data. In essence, we were only specifying how to draw the plots, and not how to obtain the data for them.
 
 \begin{figure}
@@ -182,7 +182,7 @@ Using {\tt luigi} package not only allowed us to skip the implementation step fo
 \section{Investigation of \acrshort{mea} Accuracy and Solver Performance}
 
 The pipelines described above were most useful in writing the \emph{results} section of the group report. In my section of this report, \autoref{GR:sec:hit-and-miss}, I worked on generalising the results obtained by QG that he describes in the preceding section of the group report. 
-Here I was interested to see how the results change depending on the region of parameter space we are considering, as well as the impact different \gls{ode} solvers make on these results.
+Here I was interested to see how the results change depending on the region of parameter space, as well as the impact different \gls{ode} solvers make on these results.
 
 Due to the short time constraints we had and potentially long runtimes of needed to generate that much data, I have limited myself to only studying a small region of parameter space of the \pft{} model, and the behaviour of only four solvers: \texttt{ode15s}, \texttt{euler}, \texttt{dopri5} and \texttt{rodas}.
 
