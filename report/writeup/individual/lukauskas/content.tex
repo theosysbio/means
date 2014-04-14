@@ -169,12 +169,12 @@ Using {\tt luigi} package not only allowed us to skip the implementation step fo
         \caption{Compilation of the data preprocessing tasks into sets of contour plots to be directly embedded to the report.}
         \label{fig:pipes_example:FigureHitAndMissTex}
     \end{subfigure}
-    \caption{\emph{Graphical way of describing the dependancies between the tasks used to generate the contour plots of solver performance, i.e. the figures in the appendix \autoref{sec:supplementary_figures}.}\\ 
+    \caption{\emph{Graphical representation of the dependancies between the tasks used to generate the contour plots of solver performance, i.e. the figures in the appendix \autoref{sec:supplementary_figures}.}\\ 
     Each  \texttt{TrajectoryTask} depends on \texttt{MEATask} (\ref{fig:pipes_example:TrajectoryTask}).
     A number of these tasks, one for each point of the parameter space, is required to compile the grid of we want to plot as a contour plot.
     Besides the regular trajectories, one trajectory per parameter space obtained using \acrlong{ssa} was also needed (\ref{fig:pipes_example:FigureHitAndMissData}).
     The obtained trajectories can then be used to compute the distance grid, and these grids could be drawn as contour plots and compiled together into \LaTeX{} figures (\ref{fig:pipes_example:FigureHitAndMissTex}), resulting into figures similar to the ones in the appendix \autoref{sec:supplementary_figures}.\\
-    Dependancy graphs are pictured as drawn by the {\tt luigi} package, with a large part of them cropped, for convenience of visualisation.\\
+    For simplicity of visualisation, only the partial picture has been drawn.\\
     NB: The name {\tt FigureHitAndMiss} comes from the earlier iteration of this figure that only marked the points for which the solver has failed, somewhat resembling a target with bullet holes.}
     \label{fig:pipes_example}
 \end{figure}
@@ -189,7 +189,7 @@ Due to the short time constraints we had and potentially long runtimes of needed
 Data has shown that certain regions of the parameter space were easier to approximate than others, while other regions of parameter space seemed to be particularly troublesome for the solvers. 
 These results are discussed in full in the section \autoref*{GR:sec:hit-and-miss} of the main report.
 
-I also found that there was little difference between the performance of different solvers as they all were handling the easy-to-simulate regions well, but failed to produce anything meaningful for the hard regions.
+I also found that there was little difference between the behaviour of different solvers as they all were handling the easy-to-simulate regions well, but failed for the hard ones.
 The full set of results for all solvers was not included to the main report, but are attached to the appendix \autoref{sec:supplementary_figures} of this document.
 
 In conclusion, these results show that the accuracy of \gls{mea} for a single parameter set must be taken with a caution. These results suggest that accuracy depends strongly on the region of the parameter space and cannot be generalised from a single point to the entire space, however some general patterns described in \autoref*{GR:sec:hit-and-miss} of the main report can still be observed.
@@ -210,6 +210,6 @@ If this library is able to give a significant boost to the runtime of the simula
 Similarly, it would be interesting to explore the performance of \gls{mea} on a larger parameter space. Why certain regions of this parameter space are easier to model, whilst others show opposite behaviour remains an open question.
 Also, we do not how common these regions are, or what their distributions in parameter space are.
 
-In my opinion, answer to these question will determine the future of \gls{mea}, and, by extension, the adoption of \means.
+In my opinion, answers to these questions will determine the future of \gls{mea}, and, by extension, the adoption of \means.
 With the previous tools, we would not have been able to ask these questions as they would have been either too tedious or to slow to answer.
 The layer of software we have produced made it simple to address all questions our imagination could raise, making me proud to have taken part in its development.
