@@ -427,7 +427,6 @@ For even higher order moment expansions, we can see the solvers starting to prod
 For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$)
 when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). 
 Other \gls{ode} solvers also struggle to produce any trajectories in this case (data not shown)
-\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
 As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform slightly better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit
 pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd).

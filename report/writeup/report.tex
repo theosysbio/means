@@ -15,7 +15,7 @@
 \usepackage{subcaption}
 \usepackage{minted}
 \usepackage{framed}
-\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorinlistoftodos,disable]{todonotes}
 \usepackage{csquotes}
 \usepackage{parskip} % Spaces between paragraphs
 
@@ -82,20 +82,19 @@ Imperial College London
 \pagenumbering{roman}
 
 \begin{abstract}
-We present \means, a python package that provides stochastic modelling based on Moment Expansion Approximation (MEA),
-Linear Noise Approximation and Gillespie Stochastic Simulation Algorithm in an efficient and user-friendly way.
-Specifically for MEA, we have deployed scalar and three parametric moment closure methods in both univariate and multivariate forms.
-We also significantly improved MEA performance, which was a limiting factor in stochastic modelling.
-In addition, the package supports a collection of solvers and distance-based inference.
-To enhance usability and maintainability, we implemented modular design in the package with detailed documentation,
-as well as a series of interactive tutorials in IPython notebook format.
-Our package also supports SBML (Systems Biology Markup Language) standard for studying available biological systems.
-Apart from package development, we have conducted further analysis on MEA, and
-found that using a higher maximal moment order did not necessarily improve MEA accuracy.
-Moreover, we discovered that MEA was more accurate in certain regions of the parameter space than others.
+We present \emph{Moment Expansion Approximation for iNference and Simulation} (\means) -- a python package for stochastic modelling based on \acrfull{mea},
+\acrfull{lna} and \acrfull{ssa}. 
+We aimed to provide a performant and user-friendly tool that integrates well with IPython interactive environment.
+We implemented novel developments to \gls{mea}, such as parametric moment closure methods.
+In addition, our package provides a straightforward way to apply these approximations for parameter inference.
+We took great care of documenting this package clearly as well as provided a complete user tutorial.
+We also included support for \gls{sbml} standard for studying available biological systems.
+We later used this package to conduct further analysis of \gls{mea}, and
+found that using a higher maximal moment order did not necessarily improve accuracy.
+Moreover, we discovered that \acrlong{mea} was better in certain regions of the parameter space than others.
 Some parameter sets also resulted in systematic failure of the numerical solvers.
-These limitations may provide insight into improvements of simulation and inference using MEA.
-We believe \means{} will a valuable package to study MEA and for researchers to model non-linear kinetic systems.
+These limitations may provide direction for improvements of simulation and inference using \gls{mea}.
+We believe \means{} will a valuable package for researchers to studying non-linear kinetic systems.
 \end{abstract}
 
 \pagebreak % move TOC to a different page from abstract
