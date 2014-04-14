@@ -81,6 +81,27 @@ Imperial College London
 
 \pagenumbering{roman}
 
+
+% our acronyms
+\newacronym{ode}{ODE}{Ordinary Differential Equation}
+\newacronym{mea}{MEA}{Moment Expansion Approximation}
+\newacronym{lna}{LNA}{Linear Noise Approximation}
+\newacronym{ssa}{SSA}{Gillespie Stochastic Simulation Algorithm}
+\newacronym{cme}{CME}{Chemical Master Equation}
+\newacronym{abc}{ABC}{Approximate Bayesian Computation}
+\newacronym{sbml}{SBML}{Systems Biology Markup Language}
+\newacronym{pypi}{PyPI}{the Python Package Index}
+
+\newglossaryentry{maxord}
+{
+  name=maximal order,
+  description={Maximal moment expansion order. Max order always (regardless to the closure method) refers to the highest order of 
+  moments present in an ODE system resulting from Moment Expansion Approximation. 
+  In other words, moment expansion is closed with moments of maximal order plus one
+   },
+  sort=maximal order
+}
+
 \begin{abstract}
 We present \emph{Moment Expansion Approximation for iNference and Simulation} (\means) -- a python package for stochastic modelling based on \acrfull{mea},
 \acrfull{lna} and \acrfull{ssa}. 
@@ -100,25 +121,6 @@ We believe \means{} will a valuable package for researchers to studying non-line
 \pagebreak % move TOC to a different page from abstract
 \tableofcontents
 
-% our acronyms
-\newacronym{ode}{ODE}{Ordinary Differential Equation}
-\newacronym{mea}{MEA}{Moment Expansion Approximation}
-\newacronym{lna}{LNA}{Linear Noise Approximation}
-\newacronym{ssa}{SSA}{Gillespie Stochastic Simulation Algorithm}
-\newacronym{cme}{CME}{Chemical Master Equation}
-\newacronym{abc}{ABC}{Approximate Bayesian Computation}
-\newacronym{sbml}{SBML}{Systems Biology Markup Language}
-\newacronym{pypi}{PyPI}{the Python Package Index}
-
-\newglossaryentry{maxord}
-{
-  name=maximal order,
-  description={Maximal moment expansion order. Max order always (regardless to the closure method) refers to the highest order of 
-  moments present in an ODE system resulting from Moment Expansion Approximation. 
-  In other words, moment expansion is closed with moments of maximal order plus one.
-   },
-  sort=maximal order
-}
 \newpage{}
 \printglossaries
 

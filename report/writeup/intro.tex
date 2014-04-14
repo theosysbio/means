@@ -22,7 +22,7 @@ It relies on \gls{cme}, which is a set of differential (or difference) equations
 Except for very simple systems, the \gls{cme} cannot be solved analytically.
 However, it is possible to simulate single realisation of the \gls{cme} using \gls{ssa}.
 If enough (generally several thousands), simulations are performed, very accurate estimations of the system can be obtained.
-Despite extensive effort on increasing the efficiency of such simulations, either by describing new algorithms, or by improving implementations,
+Despite extensive effort on increasing the efficiency of such simulations, either by describing new algorithms, or by improving implementations\cite{niemi_efficient_2011,dittamo_optimized_2009,komarov_accelerating_2012},
 they remain too slow for certain problems.
 In particular, when trying to infer biological parameters from experimental data, according to an explicit model,
 it is necessary to perform many simulations.
@@ -95,7 +95,7 @@ All authors contributed to understanding -- as much as possible -- the underlyin
 Reforging the package was a collective endeavour which involved considerable input and interaction from all.
 The \texttt{core} functionalities such as \texttt{Moment} and \texttt{ODEProblem} objects were also conceptualised and implemented together.  
 As mentioned above, all users were involved in providing critical assessment of the work produced by their peers.
-Finally, all author took part in writing the documentation of the package.
+Finally, all three authors took part in writing the documentation of the package.
 
 More specifically, SF and QG worked conjointly on implementing parametric moment closures for \gls{mea}.
 SL and SF worked on  investigating limitations of inference together.
