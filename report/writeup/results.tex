@@ -337,7 +337,7 @@ For ever every combination of these parameters, the average of \gls{ssa} $5000$ 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
 Parameter that resulted in solver failures were also recorded.
 We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{ssa} average, for the same parameter set.
-Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:ode15s}) which we discuss bellow.
+Results are summarised by sets of contour plots (Figures~\ref{fig:hit-and-miss:ode15s}~and~\ref{fig:hit-and-miss:ode15s:log-normal}) which we discuss bellow.
 
 \begin{figure}
     \centering
@@ -356,6 +356,7 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
    \label{fig:hit-and-miss:bullet}
 \end{figure}
 
+\subsubsection{Accuracy of Scalar Closure}
 The distance landscape was not uniform. For instance, distance to \gls{ssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
 Some areas of the parameter space seem to be easier to approximate than others.
 Interestingly, in these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately.
