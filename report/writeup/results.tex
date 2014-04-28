@@ -337,7 +337,7 @@ For ever every combination of these parameters, the average of \gls{ssa} $5000$ 
 We then used the simulation routines in the \means{} package in order to generate a similar collection of approximated trajectories for each of these parameter sets.
 Parameter that resulted in solver failures were also recorded.
 We then computed the sum-of-squares distances between each of the simulated trajectories and the \gls{ssa} average, for the same parameter set.
-Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:ode15s}) which we discuss bellow.
+Results are summarised by sets of contour plots (Figures~\ref{fig:hit-and-miss:ode15s}~and~\ref{fig:hit-and-miss:ode15s:log-normal}) which we discuss bellow.
 
 \begin{figure}
     \centering
@@ -356,6 +356,7 @@ Results are summarised by sets of contour plots (see \autoref{fig:hit-and-miss:o
    \label{fig:hit-and-miss:bullet}
 \end{figure}
 
+\subsubsection{Accuracy of Scalar Closure}
 The distance landscape was not uniform. For instance, distance to \gls{ssa} could range from $100$ to $10^9$ (\autoref{fig:hit-and-miss:ode15s:1}).
 Some areas of the parameter space seem to be easier to approximate than others.
 Interestingly, in these areas, even the first-order moments are sufficient to capture the overall behaviour of the system accurately.
@@ -381,13 +382,13 @@ Therefore both of these trajectories are not acceptable approximations of the tr
 
 \begin{figure}
     \begin{subfigure}[t]{0.45\textwidth}
-        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \includegraphics[scale=0.55]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\blacksquare$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:blacksquare}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.45\textwidth}
-        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \includegraphics[scale=0.55]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-1-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\times$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:1:times}
     \end{subfigure}
@@ -407,13 +408,13 @@ However, damping is too slow to match the results from the stochastic simulation
 
 \begin{figure}
     \begin{subfigure}[t]{0.45\textwidth}
-        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \includegraphics[scale=0.55]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.4_1.1_0.7_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters indicated by $\blacksquare$}
         \label{fig:hit-and-miss-interesting-points:ode15s:2:blacksquare}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.45\textwidth}
-        \includegraphics[scale=0.6]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
+        \includegraphics[scale=0.55]{{../pipeline/task-output/FigureSSAvMEATrajectory/FigureSSAvMEATrajectory-pdf-2-scalar-True-p53-90.0_0.002_2.5_1.1_1.8_0.96_0.01-70.0_30.0_60.0-0.0_40.0_0.1-ode15s--5000}.pdf}
         \caption{Parameters ($\times$)}
         \label{fig:hit-and-miss-interesting-points:ode15s:2:bullet}
     \end{subfigure}
@@ -427,7 +428,6 @@ For even higher order moment expansions, we can see the solvers starting to prod
 For instance, the solver (\texttt{ode15s}) fails to simulate trajectories for a parameter set ($\blacksquare$)
 when the moment expansion is performed up to three moments (\autoref{fig:hit-and-miss:ode15s:3}). 
 Other \gls{ode} solvers also struggle to produce any trajectories in this case (data not shown)
-\sauliustodo{This is individual-report material -- let's make it a "supplementary figures" alternative}.
 
 As seen in the \autoref{fig:hit-and-miss:ode15s}, solvers tend to perform slightly better when the moment expansion is closed at even numbers. We can hypothesise that this indicates some implicit
 pairing between odd and even moment orders. This pairing would makes the systems unstable when the higher order moments to be set set to zero are even (what happens when max order is odd).

@@ -22,7 +22,7 @@ df$tag <- as.factor(df$tag)
 df <- subset(df, max_order > 1 | tag == "matlab" | tag == "no_simplify")
 
 pdf("mea_speed.pdf", w=9,h=6)
-plot(dt ~ max_order, df, col=as.numeric(tag),pch=as.numeric(tag) + 15, ylab=expression(log[10](dt) (s)), xlab="Maximal moment order", cex=1)
+plot(dt ~ max_order, df, col=as.numeric(tag),pch=as.numeric(tag) + 15, ylab="Runtime, log(seconds)", xlab="Maximal moment order", cex=1)
 
 print(summary(lm(dt ~ max_order * tag, df)))
 

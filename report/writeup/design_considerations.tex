@@ -88,7 +88,7 @@ The nine submodules in \means{} and their respective role are listed below:
     \item \verb"means.pipes" -- optional module providing wrappers for pipeline support
 \end{enumerate}
 
-Each submodule is described in detail below.\todo{Draw a schematic}
+Each submodule is described in detail below.
 
 \subsubsection{{\tt means.core} -- core classes used within all other packages}
 % If you are editing this, please also edit src/means/core/__init__.py docstring
@@ -176,7 +176,7 @@ e.g. \verb`means.core.Model.from_file()` method would allow the user to read a \
 
 %also in __init__.py
 We do not provide any convenience functions for binary serialisation of the object, because \verb`pickle` package,
-which is in the default distribution of Python, has no problems of performing these tasks on \means objects. 
+which is in the default distribution of Python, has no problems of performing these tasks on \means{} objects. 
 We recommend using \verb`pickle`, rather than \verb`means.io` whenever fast serialisation is preferred to human
 readability.
 
@@ -221,8 +221,6 @@ Once the dependancies of each of these tasks were encoded, \verb"luigi" package 
 This essentially allowed us to specify the figures needed for report in a very high level fashion, in turn allowing us to be more flexible with them, as well as to be certain that we do not have to do the same work twice.
 
 More about this can be found in SL's individual report and the documentation available in the appendix \autoref{sec:documentation}.
-
-\sauliustodo[inline]{Write about this for personal report, see if I could summarise it in a couple of more words here as well.}
 
 \subsection{Testing}
 \label{sec:testing}
