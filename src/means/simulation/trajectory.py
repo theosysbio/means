@@ -399,7 +399,7 @@ class TrajectoryCollection(SerialisableObject):
         else:
             return answer
 
-    def _create_figure(self, open_new_figure=False):
+    def _create_figure(self, open_new_figure=False, legend=True):
 
         def _key_and_title(description):
             if isinstance(description, Moment):
@@ -444,15 +444,16 @@ class TrajectoryCollection(SerialisableObject):
             plt.subplot(total_subplots, 1, subplot_number)
             plt.title(title)
             trajectory.plot()
-            plt.legend(bbox_to_anchor=(1, 1), loc=2, ncol=2)
+            if(legend):
+                plt.legend(bbox_to_anchor=(1, 1), loc=2, ncol=2)
 
             if i == len(self.trajectories) - 1:
                 plt.xlabel('time')
 
         return fig
 
-    def plot(self):
-        self._create_figure()
+    def plot(self, legend=True):
+        self._create_figure(legend=legend)
 
     def _repr_png_(self):
         from IPython.core.pylabtools import print_figure
