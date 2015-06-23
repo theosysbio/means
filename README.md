@@ -72,7 +72,8 @@ it is likely that the installation of `sundials` libraries failed.
 Please repeat the `sundials` installation steps described above, and reinstall `assimulo` package afterwards:
 
 ```
-pip reinstall assimullo
+pip uninstall assimulo
+pip install assimulo
 ```
 
 Once this is done try running tests again.
