@@ -31,7 +31,7 @@ setup(
     classifiers=[],  # TODO: classifiers
     keywords='',  # TODO: keywords
 
-    packages=find_packages(),
+    packages=find_packages(exclude=['pipes']),  # TODO: what are we doing with pipes?
 
     extras_require={
         'pipes': ['luigi>=1.0.13'],
@@ -47,4 +47,6 @@ setup(
         "PyYAML>=3.10",
         "Assimulo>=2.5.1",
     ],
+    test_requires=['nose'],
+    test_suite='nose.collector'
 )
