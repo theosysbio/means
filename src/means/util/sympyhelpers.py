@@ -53,9 +53,10 @@ def quick_solve(expr, var):
         :return: the solution for `var`
         """
         res = -(expr - var)
+
         # This may not work every time,
         # so we fallback on the --slow-- `solve()` if we failed
-        if var in res:
+        if var in res.args:
             return sympy.solve(expr, var)
         return res
 
