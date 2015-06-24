@@ -68,9 +68,9 @@ class LogNormalClosure(ClosureBase):
         pm_n_vecs = [sp.Matrix(pm.n_vector) for pm in n_counter if pm.order > 1]
 
 
-        out_mat = sp.Matrix([n * (log_covariance_matrix * n.T) / sp.Integer(2) + n * log_expectation_symbols for n in pm_n_vecs])
-
+        out_mat = sp.Matrix([n.T * (log_covariance_matrix * n) / sp.Integer(2) + n.T * log_expectation_symbols for n in pm_n_vecs])
         # return the exponential of all values
+
         out_mat = out_mat.applyfunc(lambda x: sp.exp(x))
         return out_mat
 
