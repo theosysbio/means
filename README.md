@@ -100,7 +100,7 @@ If you installed the `sundials` libraries to prefix other than `/usr/local` (for
 ArchLinux installs the library to `/usr` by default), install assimulo as follows:
 
 ```
-pip install assimulo -install-option="--sundials-home=/your/sundials/installation/prefix"
+pip install assimulo --install-option="--sundials-home=/your/sundials/installation/prefix"
 ```
 Replacing the `/your/sundials/installation/prefix` with the appropriate prefix.
 
