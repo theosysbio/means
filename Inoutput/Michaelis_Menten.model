@@ -1,8 +1,0 @@
-!model
-species: [y_0, y_1]
-constants: [c_0, c_1, c_2]
-stoichiometry_matrix:
-- [-1, 1, 0]
-- [0, 0, 1]
-propensities: [c_0*y_0*(y_0 + y_1 - 181), c_1*(-y_0 - y_1 + 301), c_2*(-y_0 - y_1
-    + 301)]

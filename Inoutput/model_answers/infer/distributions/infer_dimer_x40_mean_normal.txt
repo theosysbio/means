@@ -1,9 +1,0 @@
-Starting parameters:	[0.001, 0.5, 330.0]
-Optimised parameters:	[0.001, 0.5, 330.0]
-Starting initial conditions:	[320.0, 0]
-Optimised initial conditions:	[319.99999999999989, 0]
-Optimisation successful:
-	Number of iterations: 52
-	Number of function evaluations: 292
-	Distance at minimum: 324.979891078
-
