@@ -79,12 +79,6 @@ No tests should fail if installation was successful.
 Troubleshooting
 ===================
 
-Symptom: Assimulo installation fails when using latest `sundials` library
----------------------------------
-Particularly, `error: ‘struct KINMemRec’ has no member named ‘kin_sfdotJp’` might be hiding somewhere in the output.
-
-TODO: not sure how to solve this yet, give up for now.
-
 Symptom: Tests fail with `No module named sundials`
 ---------------------------------------------
 This error indicates that `assimulo` installation failed to find the sundials in the system path.
@@ -105,7 +99,3 @@ pip install assimulo --install-option="--sundials-home=/your/sundials/installati
 Replacing the `/your/sundials/installation/prefix` with the appropriate prefix.
 
 Once this is done try running tests again.
-
-Symptom: Tests fail with `ImportError: /usr/lib/libsundials_idas.so.0: undefined symbol: dscal_`
-------------------------------------------------------------------------------------------------
-TODO: this is probably caused by incorrect linking with lapack library. Cannot debug it now as I need to do something else.
