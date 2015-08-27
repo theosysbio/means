@@ -2,7 +2,7 @@ language: python
 python:
   - "2.6"
   - "2.7"
-# command to install dependencies
+sudo: required
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq sundials
@@ -11,7 +11,6 @@ install:
   - "pip install cython"
   - "pip install numpy"
   - "pip install -e ."
-# command to run tests
 script:
   - "cd src/"
   - "python setup.py test"
