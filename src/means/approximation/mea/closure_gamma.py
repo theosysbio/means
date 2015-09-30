@@ -27,7 +27,7 @@ class GammaClosure(ClosureBase):
         :type max_order: `int`
         :param type: 0 for univariate (ignore covariances), 1 and 2 for
         the two types of multivariate gamma distributions.
-        :type max_order: `int`
+        :type type: `int`
         :return:
         """
         self._min_order = 2
@@ -55,30 +55,53 @@ class GammaClosure(ClosureBase):
 
         expectation_symbols = sp.Matrix([n.symbol for n in k_counter if n.order == 1])
 
+
         n_species = len(expectation_symbols)
 
         # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
         symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
+
+        # Create auxiliary symbolic species Y_{ij}, for i,j = 0 ... (n-1) and mirror, so that Y_{ij}=Y_{ji}
+        if gamma_type == 3:
+            symbolic_species=sp.Matrix([[sp.Symbol(('Y_{0}'.format(str(j)))+'{0}'.format(str(i))) for i in range(n_species)]for j in range(n_species)])
+            for i in range(n_species):
+                for j in range(i+1,n_species):
+                    symbolic_species[j,i]=symbolic_species[i,j]
 
 
         # Obtain beta terms in multivariate Gamma matrix. See Eq. 1a & 1b in Lakatos 2014 unpublished
         if gamma_type == 1:
             beta_in_matrix = sp.Matrix([Y + symbolic_species[0] for Y in symbolic_species[1:]])
         elif gamma_type == 2:
-            beta_in_matrix = sp.Matrix([sum(symbolic_species[0:i+1]) for i in range(n_species + 1)])
-        else:
+            #beta_in_matrix = sp.Matrix([sum(symbolic_species[0:i+1]) for i in range(n_species + 1)])
+            beta_in_matrix = sp.Matrix([sum(symbolic_species[0:i+2]) for i in range(n_species)])
+        elif gamma_type == 3:
+            # Obtain beta terms explaining how original variables are derived from auxiliary ones
+            beta_in_matrix = sp.Matrix([sum(symbolic_species[i,:]) for i in range(n_species)])
+        else :
             beta_in_matrix = sp.Matrix(symbolic_species[1:])
 
         # E() and Var() symbols for each species have already been made in prob_moments matrix
 
         variance_symbols = []
+        covariance_all = []
         for sp_idx in range(n_species):
             variance_symbols += [p.symbol for p in n_counter if p.n_vector[sp_idx] == 2 and p.order == 2]
         variance_symbols = sp.Matrix(variance_symbols)
+        # Covariance matrix for nondiagonal elements in A parameter matrix
+        covariance_matrix = sp.Matrix(n_species,n_species, lambda x,y: self._get_covariance_symbol(n_counter,x,y))
+
 
         # Compute :math:  `\beta_i = Var(X_i)/\mathbb{E}(X_i) \bar\alpha_i = \mathbb{E}(X_i)^2/Var(X_i)`
         beta_exprs = sp.Matrix([v / e for e,v in zip(expectation_symbols,variance_symbols)])
         alpha_bar_exprs = sp.Matrix([(e ** 2) / v for e,v in zip(expectation_symbols,variance_symbols)])
+
+        if gamma_type == 3:
+        # Calculate nondiagonal elements from covariances and diagonal elements as alpha_{ii} = alpha_bar_{i} - sum(alpha_{ij})
+            alpha_exprs = sp.Matrix(n_species,n_species, lambda i,j: covariance_matrix[i,j]/(beta_exprs[i]*beta_exprs[j]))
+            for sp_idx in range(n_species):
+                alpha_exprs[sp_idx,sp_idx]=0
+                alpha_exprs[sp_idx,sp_idx]=alpha_bar_exprs[sp_idx]-sum(alpha_exprs[sp_idx,:])
 
         # Gamma type 1 :math: `\bar\alpha_i = \alpha_0 + \alpha_i`
         # Gamma type 1: covariance is :math: `\alpha_0 * \beta_i * \beta_j`, so :math: `\alpha_0` should be calculated
@@ -87,14 +110,14 @@ class GammaClosure(ClosureBase):
         # Arbitrary value 1 here is adopted from MATLAB code.
         # Gamma type 0 (univariate case): :math: `alpha_0 =0`
         # Thus :math: `alpha_0` for Gamma type 0 and 1 happen to be the same as the gamma_type
-        if gamma_type != 2:
+        if gamma_type == 1 or gamma_type == 0:
             first = sp.Matrix([gamma_type])
             alpha_exprs = alpha_bar_exprs - sp.Matrix([gamma_type]*n_species)
             alpha_exprs = first.col_join(alpha_exprs)
 
         # Gamma type 2 has arbitrary alpha0
         # Gamma type 2 :math: `\bar\alpha_i = \sum \limits_{i}  \alpha_i`
-        else: # if gamma_type == 2:
+        if gamma_type == 2:
             first = sp.Matrix([1] + [alpha_bar_exprs[0] - 1])
             alpha_exprs = sp.Matrix(alpha_bar_exprs[1:]) - sp.Matrix(alpha_bar_exprs[0:len(alpha_bar_exprs)-1])
             alpha_exprs = first.col_join(alpha_exprs)
@@ -110,7 +133,6 @@ class GammaClosure(ClosureBase):
             Y_exprs.append(product([(b ** s).expand() for b, s in zip(beta_in_matrix, mom.n_vector)]))
             beta_multipliers.append(product([(b ** s).expand() for b, s in zip(beta_exprs, mom.n_vector)]))
 
-
         Y_exprs = sp.Matrix(Y_exprs).applyfunc(sp.expand)
         beta_multipliers = sp.Matrix(beta_multipliers)
 
@@ -118,14 +140,14 @@ class GammaClosure(ClosureBase):
         # by going through all powers up to the moment order for closure
         subs_pairs = []
         for i,a in enumerate(alpha_exprs):
-            Y_to_substitute = [sp.Symbol("Y_{0}".format(i))**n for n in range(2, n_moment+1)]
+            Y_to_substitute = [symbolic_species[i]**n for n in range(2, n_moment+1)]
 
-            # Obtain alpha term for higher older moments :math: `\mathbb{E}(X_i^m) = (\bar\alpha_i)_m\beta_i^m`
+            # Obtain alpha term for higher order moments :math: `\mathbb{E}(X_i^m) = (\bar\alpha_i)_m\beta_i^m`
             alpha_m = [self._gamma_factorial(a,n) for n in range(2, n_moment+1)]
 
             # Substitute alpha term for symbolic species
             subs_pairs += zip(Y_to_substitute, alpha_m)
-            subs_pairs.append((sp.Symbol("Y_{0}".format(i)), a))
+            subs_pairs.append((symbolic_species[i], a)) # Add first order expression to the end
         Y_exprs = substitute_all(Y_exprs, subs_pairs)
 
         return Y_exprs, beta_multipliers
@@ -165,3 +187,19 @@ class GammaClosure(ClosureBase):
         if n == 0:
             return 1
         return product([expr+i for i in range(n)])
+
+    def _get_covariance_symbol(self, q_counter, sp1_idx, sp2_idx):
+        r"""
+        Compute second order moments i.e. variances and covariances
+        Covariances equal to 0 in univariate case
+
+        :param q_counter: moment matrix
+        :param sp1_idx: index of one species
+        :param sp2_idx: index of another species
+        :return: second order moments matrix of size n_species by n_species
+        """
+        # The diagonal positions in the matrix are the variances
+        if sp1_idx == sp2_idx:
+            return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 2 and q.order == 2][0]
+        # Covariances are found if the moment order is 2 and the moment vector contains double 1
+        return [q.symbol for q in q_counter if q.n_vector[sp1_idx] == 1 and q.n_vector[sp2_idx] == 1 and q.order == 2][0]
