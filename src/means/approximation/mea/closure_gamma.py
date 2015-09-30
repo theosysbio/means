@@ -21,7 +21,7 @@ class GammaClosure(ClosureBase):
     As a result, any higher order moments will be replaced by a symbolic expression
     depending on mean and variance only.
     """
-    def __init__(self, max_order, type=1):
+    def __init__(self, max_order, multivariate=True):
         """
         :param max_order: the maximal order of moments to be modelled.
         :type max_order: `int`
@@ -31,12 +31,7 @@ class GammaClosure(ClosureBase):
         :return:
         """
         self._min_order = 2
-        super(GammaClosure, self).__init__(max_order, multivariate=(type > 0))
-        self.__type = type
-
-    @property
-    def type(self):
-        return self.__type
+        super(GammaClosure, self).__init__(max_order, multivariate)
 
     def _get_parameter_symbols(self, n_counter, k_counter):
         r"""
@@ -49,8 +44,11 @@ class GammaClosure(ClosureBase):
         :type k_counter: list[:class:`~means.core.descriptors.Moment`]
         :return: two column matrices Y expressions and beta multipliers
         """
+        if self.is_multivariate:
+            gamma_type = 3
+        else:
+            gamma_type = 0
 
-        gamma_type = self.type
         n_moment = self.max_order + 1
 
         expectation_symbols = sp.Matrix([n.symbol for n in k_counter if n.order == 1])
@@ -169,6 +167,7 @@ class GammaClosure(ClosureBase):
 
         out_mat = sp.Matrix([a * b for a,b in zip(alpha_multipliers, beta_multipliers)])
         out_mat = out_mat.applyfunc(sp.expand)
+        print out_mat
         return out_mat
 
 
