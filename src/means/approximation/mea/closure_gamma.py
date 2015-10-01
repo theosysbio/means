@@ -56,28 +56,22 @@ class GammaClosure(ClosureBase):
 
         n_species = len(expectation_symbols)
 
-        # Create symbolic species :math: `Y_0 \sim {Y_n}`, where n is n_species
-        symbolic_species = sp.Matrix([sp.Symbol('Y_{0}'.format(str(i))) for i in range(n_species + 1)])
-
         # Create auxiliary symbolic species Y_{ij}, for i,j = 0 ... (n-1) and mirror, so that Y_{ij}=Y_{ji}
-        if gamma_type == 3:
-            symbolic_species=sp.Matrix([[sp.Symbol(('Y_{0}'.format(str(j)))+'{0}'.format(str(i))) for i in range(n_species)]for j in range(n_species)])
-            for i in range(n_species):
-                for j in range(i+1,n_species):
-                    symbolic_species[j,i]=symbolic_species[i,j]
+        symbolic_species=sp.Matrix([[sp.Symbol(('Y_{0}'.format(str(j)))+'{0}'.format(str(i))) for i in range(n_species)]for j in range(n_species)])
+        for i in range(n_species):
+            for j in range(i+1,n_species):
+                symbolic_species[j,i]=symbolic_species[i,j]
 
 
         # Obtain beta terms in multivariate Gamma matrix. See Eq. 1a & 1b in Lakatos 2014 unpublished
-        if gamma_type == 1:
-            beta_in_matrix = sp.Matrix([Y + symbolic_species[0] for Y in symbolic_species[1:]])
-        elif gamma_type == 2:
-            #beta_in_matrix = sp.Matrix([sum(symbolic_species[0:i+1]) for i in range(n_species + 1)])
-            beta_in_matrix = sp.Matrix([sum(symbolic_species[0:i+2]) for i in range(n_species)])
-        elif gamma_type == 3:
+        if self.is_multivariate:
             # Obtain beta terms explaining how original variables are derived from auxiliary ones
             beta_in_matrix = sp.Matrix([sum(symbolic_species[i,:]) for i in range(n_species)])
         else :
-            beta_in_matrix = sp.Matrix(symbolic_species[1:])
+            beta_in_matrix = sp.Matrix([symbolic_species[i,i] for i in range(n_species)])
+        print 
+
+        print beta_in_matrix
 
         # E() and Var() symbols for each species have already been made in prob_moments matrix
 
@@ -94,31 +88,15 @@ class GammaClosure(ClosureBase):
         beta_exprs = sp.Matrix([v / e for e,v in zip(expectation_symbols,variance_symbols)])
         alpha_bar_exprs = sp.Matrix([(e ** 2) / v for e,v in zip(expectation_symbols,variance_symbols)])
 
-        if gamma_type == 3:
+        if self.is_multivariate:
         # Calculate nondiagonal elements from covariances and diagonal elements as alpha_{ii} = alpha_bar_{i} - sum(alpha_{ij})
             alpha_exprs = sp.Matrix(n_species,n_species, lambda i,j: covariance_matrix[i,j]/(beta_exprs[i]*beta_exprs[j]))
-            for sp_idx in range(n_species):
-                alpha_exprs[sp_idx,sp_idx]=0
-                alpha_exprs[sp_idx,sp_idx]=alpha_bar_exprs[sp_idx]-sum(alpha_exprs[sp_idx,:])
+        else:
+            alpha_exprs = sp.Matrix(n_species,n_species, lambda i,j: 0)
+        for sp_idx in range(n_species):
+            alpha_exprs[sp_idx,sp_idx]=0
+            alpha_exprs[sp_idx,sp_idx]=alpha_bar_exprs[sp_idx]-sum(alpha_exprs[sp_idx,:])
 
-        # Gamma type 1 :math: `\bar\alpha_i = \alpha_0 + \alpha_i`
-        # Gamma type 1: covariance is :math: `\alpha_0 * \beta_i * \beta_j`, so :math: `\alpha_0` should be calculated
-        # but as it will force :math: `\alpha_0` to be negative
-        # resulting ODEs are not solvable, so set arbitrary :math: `\alpha_0`
-        # Arbitrary value 1 here is adopted from MATLAB code.
-        # Gamma type 0 (univariate case): :math: `alpha_0 =0`
-        # Thus :math: `alpha_0` for Gamma type 0 and 1 happen to be the same as the gamma_type
-        if gamma_type == 1 or gamma_type == 0:
-            first = sp.Matrix([gamma_type])
-            alpha_exprs = alpha_bar_exprs - sp.Matrix([gamma_type]*n_species)
-            alpha_exprs = first.col_join(alpha_exprs)
-
-        # Gamma type 2 has arbitrary alpha0
-        # Gamma type 2 :math: `\bar\alpha_i = \sum \limits_{i}  \alpha_i`
-        if gamma_type == 2:
-            first = sp.Matrix([1] + [alpha_bar_exprs[0] - 1])
-            alpha_exprs = sp.Matrix(alpha_bar_exprs[1:]) - sp.Matrix(alpha_bar_exprs[0:len(alpha_bar_exprs)-1])
-            alpha_exprs = first.col_join(alpha_exprs)
 
         # Each row in moment matrix contains the exponents of Xs for a given moment
         # Each row in Y_exprs and beta_multipliers has elements on the appropriate power
