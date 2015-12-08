@@ -66,7 +66,7 @@ class Trajectory(SerialisableObject):
         :return:
         """
 
-        file.write("time, value\n")
+        file.write("time,value\n")
         for t,v in self:
             file.write("%f,%f\n"% (t, v))
 
@@ -401,7 +401,7 @@ class TrajectoryCollection(SerialisableObject):
         :type file: :class:`file`
         :return:
         """
-        file.write("description, time, value\n")
+        file.write("description,time,value\n")
         for traj in self:
             for t,v in traj:
                 file.write("%s,%f,%f\n"% (traj.description.symbol, t, v))
