@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
-from means.simulation import Trajectory, TrajectoryWithSensitivityData
+from means.simulation import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
 from means.core import Moment
+import os
+import tempfile
 
 class TestTrajectory(unittest.TestCase):
 
@@ -74,3 +76,32 @@ class TestTrajectoryWithSensitivityData(unittest.TestCase):
         t2 = TrajectoryWithSensitivityData([1, 2, 3], [3, 2, 1], Moment([1], symbol='description'), [t_sensitivity_1, t_sensitivity_3])
 
         self.assertNotEqual(t1, t2)
+
+
+class TestTrajectoriesToCSV(unittest.TestCase):
+
+    def test_single_traj_to_file(self):
+
+        trajectory = Trajectory([1, 2, 3, 4, 5, 6], [3, 2, 1,5, 2, 4], Moment([1], symbol='description'))
+        file = tempfile.mktemp(suffix=".csv")
+        try:
+            with open(file,"w") as out:
+                trajectory.to_csv(out)
+        finally:
+            os.unlink(file)
+
+    def test_traj_collection_to_file(self):
+
+        tr2 = Trajectory([1, 2, 3, 4, 5, 6], [3, 2, 1, 5, 2, 4], Moment([1], symbol='y_1'))
+        tr1 = Trajectory([1, 2, 3, 4, 5, 6], [3, 2, 1, 5, 2, 4], Moment([1], symbol='y_2'))
+        tc = TrajectoryCollection([tr1,tr2])
+
+        file = tempfile.mktemp(suffix=".csv")
+        try:
+            with open(file,"w") as out:
+                tc.to_csv(out)
+        finally:
+            os.unlink(file)
+
+
+

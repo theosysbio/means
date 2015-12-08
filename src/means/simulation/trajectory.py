@@ -53,6 +53,22 @@ class Trajectory(SerialisableObject):
 
         assert(isinstance(description, Descriptor))
         assert(self._timepoints.shape == self._values.shape)
+    def __iter__(self):
+        for t,v in zip(self._timepoints, self.values):
+            yield t,v
+
+    def to_csv(self, file):
+        """
+        Write this trajectory to a csv file with the headers 'time' and 'value'.
+
+        :param file: a file object to write to
+        :type file: :class:`file`
+        :return:
+        """
+
+        file.write("time, value\n")
+        for t,v in self:
+            file.write("%f,%f\n"% (t, v))
 
     @property
     def timepoints(self):
@@ -376,6 +392,20 @@ class TrajectoryCollection(SerialisableObject):
         if isinstance(trajectories, self.__class__):
             trajectories = trajectories.trajectories
         self._trajectories = trajectories
+
+    def to_csv(self, file):
+        """
+        Write all the trajectories of a collection to a csv file with the headers 'description', 'time' and 'value'.
+
+        :param file: a file object to write to
+        :type file: :class:`file`
+        :return:
+        """
+        file.write("description, time, value\n")
+        for traj in self:
+            for t,v in traj:
+                file.write("%s,%f,%f\n"% (traj.description.symbol, t, v))
+
 
     @property
     def trajectories(self):
