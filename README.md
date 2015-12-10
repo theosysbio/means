@@ -1,5 +1,5 @@
 MEANS
-=========
+==========
 Moment Expansion Approximation method implementation with simulation and inference packages.
 
 Dependencies
