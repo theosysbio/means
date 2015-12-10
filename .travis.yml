@@ -1,11 +1,7 @@
 language: python
 python:
   - "2.7"
-env:
-    - FORTRAN_COMPILER=/usr/bin/gfortran
 apt:
-  sources:
-    - ubuntu-toolchain-r-test
   packages:
     - gfortran
 
