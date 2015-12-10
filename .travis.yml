@@ -5,6 +5,8 @@ addons:
   apt:
     packages:
       - gfortran
+      - libblas-dev
+      - liblapack-dev
       # - libsundials-cvode1
       # - libsundials-cvodes2
       # - libsundials-ida2
