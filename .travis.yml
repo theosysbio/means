@@ -7,6 +7,8 @@ addons:
       - gfortran
       - libblas-dev
       - liblapack-dev
+      - libblas3gf
+      - liblapack3gf
       # - libsundials-cvode1
       # - libsundials-cvodes2
       # - libsundials-ida2
