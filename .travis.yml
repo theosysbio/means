@@ -5,6 +5,7 @@ addons:
   apt:
     packages:
       - gfortran
+      - sundials
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -19,7 +20,7 @@ install:
   - "cd src/"
   # "pip install cython"
   #- "pip install numpy"
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy cython sundials scipy matplotlib sympy
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy cython scipy matplotlib sympy
   - source activate test-environment
   - pip install -e .
 script:
