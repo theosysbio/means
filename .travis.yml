@@ -38,5 +38,4 @@ install:
   - pip install assimulo --install-option="--sundials-home=$HOME/miniconda"
   - pip install -e .
 script:
-  - "cd src/"
   - "python setup.py test"
