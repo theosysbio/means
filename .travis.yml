@@ -1,18 +1,46 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
-sudo: required
+env:
+  - SUNDIALS=ubuntu-precise
+  - SUNDIALS=anaconda
+addons:
+  apt:
+    packages:
+      - gfortran
+      - libblas-dev
+      - liblapack-dev
+      - libblas3gf
+      - liblapack3gf
+      - libsundials-cvode1
+      - libsundials-cvodes2
+      - libsundials-ida2
+      - libsundials-idas0
+      - libsundials-kinsol1
+      - libsundials-nvecserial0
+      - libsundials-serial
+      - libsundials-serial-dev
 before_install:
-  # Sundials is in universe repo, add it first:
-  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq sundials
+  - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda config --add channels https://conda.anaconda.org/chemreac
+  - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
+  - if [ "$SUNDIALS" == "anaconda" ]; then conda install python=$TRAVIS_PYTHON_VERSION sundials; fi
+  # Useful for debugging any issues with conda
+  - conda info -a
 install:
   - "cd src/"
-  - "pip install cython"
-  - "pip install numpy"
-  - "pip install -e ."
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy cython scipy matplotlib sympy
+  - source activate test-environment
+  - if [ "$SUNDIALS" == "anaconda" ]; then export SUNDIALS_HOME=$HOME/miniconda; fi
+  - if [ "$SUNDIALS" == "ubuntu-precise" ]; then export SUNDIALS_HOME=/usr; fi
+  - echo $SUNDIALS_HOME
+  - pip install assimulo -v --install-option="--sundials-home=$SUNDIALS_HOME"
+  - pip install -e .
 script:
-  - "cd src/"
-  - "python setup.py test"
+  # Preloading trick from: http://www.jmodelica.org/5433
+  - LD_PRELOAD="libblas.so liblapack.so" python setup.py test

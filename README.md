@@ -1,5 +1,5 @@
 MEANS
-=========
+==========
 Moment Expansion Approximation method implementation with simulation and inference packages.
 
 Dependencies
@@ -99,3 +99,15 @@ pip install assimulo --install-option="--sundials-home=/your/sundials/installati
 Replacing the `/your/sundials/installation/prefix` with the appropriate prefix.
 
 Once this is done try running tests again.
+
+Symptom: Tests fail with `ImportError: /usr/lib/libsundials_idas.so.0: undefined symbol: dscal_`
+------------------------------------------------------------------------------------------------
+The symptom above indicates incorrect linkage between `libsundials_idas.so` and BLAS/LAPACK libraries.
+A workaround for this issue is to add `libblas.so liblapack.so` to `LD_PRELOAD` environment variable.
+To do this, make sure to set this environment variable first:
+
+```
+export LD_PRELOAD='libblas.so liblapack.so'
+```
+
+And then run everything else `python setup.py test` as usual.
