@@ -2,16 +2,18 @@ language: python
 python:
   - "2.6"
   - "2.7"
-sudo: required
 before_install:
-  - sudo add-apt-repository universe
-  # Sundials is in universe repo, add it first:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y sundials
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
 install:
   - "cd src/"
-  - "pip install cython"
-  - "pip install numpy"
+  # "pip install cython"
+  #- "pip install numpy"
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy cython
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION -c https://conda.anaconda.org/chemreac sundials
   - "pip install -e ."
 script:
   - "cd src/"
