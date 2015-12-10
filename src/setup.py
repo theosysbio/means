@@ -17,13 +17,14 @@ except ImportError:
 # ---------------------------------------------------------------------------------------------------------
 setup(
     name='means',
-    version='0.0.1',
+    version='1.0.0',
 
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
     long_description=open('README.txt').read(),
 
-    author='Sisi Fan, Quentin Geissmann, Saulius Lukauskas',
-    author_email='sisi.fan10@imperial.ac.uk, quentin.geissmann13@imperial.ac.uk, saulius.lukauskas13@imperial.ac.uk',
+    author='Sisi Fan, Quentin Geissmann, Eszter Lakatos, Saulius Lukauskas, '
+           'Angelique Ale, Ann C. Babtie, Paul D.W. Kirk, Michael P.H. Stumpf',
+    author_email='m.stumpf@imperial.ac.uk,e.lakatos13@imperial.ac.uk',
 
     url=None,  # TODO: url
     license=None,  # TODO: license
