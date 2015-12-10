@@ -7,7 +7,7 @@ before_install:
   # Sundials is in universe repo, add it first:
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
   - sudo apt-get update -qq
-  - sudo apt-get install -qq sundials
+  - sudo apt-get install -y -qq sundials
 install:
   - "cd src/"
   - "pip install cython"
