@@ -1,6 +1,5 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -18,8 +17,6 @@ install:
   #- "pip install numpy"
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy cython sundials
   - source activate test-environment
-  # Install argparse for py2.6 because assimulo does not know how.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.6" ]]; then pip install argparse; fi
   - "pip install -e ."
 script:
   - "cd src/"
