@@ -32,11 +32,8 @@ setup(
     classifiers=[],  # TODO: classifiers
     keywords='',  # TODO: keywords
 
-    packages=find_packages(exclude=['pipes']),  # TODO: what are we doing with pipes?
+    packages=find_packages(),
 
-    extras_require={
-        'pipes': ['luigi>=1.0.13'],
-    },
     setup_requires=[
         'numpy>=1.6.1',  # Numpy has to be installed before others
     ],
