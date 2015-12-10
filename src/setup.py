@@ -45,6 +45,6 @@ setup(
         "PyYAML>=3.10",
         "Assimulo>=2.5.1",
     ],
-    tests_requires=['nose'],
+    tests_require=['nose'],
     test_suite='nose.collector'
 )
