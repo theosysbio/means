@@ -27,6 +27,7 @@ before_install:
   - conda config --add channels https://conda.anaconda.org/chemreac
   - conda install python=$TRAVIS_PYTHON_VERSION sundials
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
+  - export LDFLAGS="-lblas -llapack -lm -lgfortran $LDFLAGS"
   # Useful for debugging any issues with conda
   - conda info -a
 install:
