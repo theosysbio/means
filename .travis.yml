@@ -19,7 +19,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy cython sundials
   - source activate test-environment
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.6" ]]; then
-      pip install argparse # assimulo crashes otherwise
+      pip install argparse; # assimulo crashes otherwise
     fi
   - "pip install -e ."
 script:
