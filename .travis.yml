@@ -5,14 +5,14 @@ addons:
   apt:
     packages:
       - gfortran
-      - libsundials-cvode1
-      - libsundials-cvodes2
-      - libsundials-ida2
-      - libsundials-idas0
-      - libsundials-kinsol1
-      - libsundials-nvecserial0
-      - libsundials-serial
-      - libsundials-serial-dev
+      # - libsundials-cvode1
+      # - libsundials-cvodes2
+      # - libsundials-ida2
+      # - libsundials-idas0
+      # - libsundials-kinsol1
+      # - libsundials-nvecserial0
+      # - libsundials-serial
+      # - libsundials-serial-dev
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -21,6 +21,7 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda config --add channels https://conda.anaconda.org/chemreac
+  - conda install python=$TRAVIS_PYTHON_VERSION sundials
   # Useful for debugging any issues with conda
   - conda info -a
 install:
