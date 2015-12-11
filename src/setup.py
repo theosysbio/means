@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+import os
 
 # -- Assimulo dependency checks ---------------------------------------------------------------------
 # numpy and cython are required for assimulo installation, yet their setup.py is badly done
@@ -20,7 +20,7 @@ setup(
     version='1.0.0',
 
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
-    long_description=open('README.txt').read(),
+    long_description=open(os.path.join('..', 'README.md').read()),
 
     author='Sisi Fan, Quentin Geissmann, Eszter Lakatos, Saulius Lukauskas, '
            'Angelique Ale, Ann C. Babtie, Paul D.W. Kirk, Michael P.H. Stumpf',
