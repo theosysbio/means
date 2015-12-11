@@ -17,7 +17,8 @@ import os
 import shlex
 
 # Make sure sphinx finds the packages
-sys.path.insert(0, os.path.abspath('../'))
+code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, code_dir)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
