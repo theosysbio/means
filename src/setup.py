@@ -54,7 +54,7 @@ setup(
     ],
     install_requires=[
         "numpy>=1.6.1",
-        "sympy>=0.7.4.1",
+        "sympy>=0.7.5",
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
         "PyYAML>=3.10",
