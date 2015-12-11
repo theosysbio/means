@@ -8,7 +8,8 @@ We present a free, user-friendly tool implementing an efficient [moment expansio
 A tutorial on getting started with MEANS can be found in the [directory tutorial](tutorial/README.md) in this repository.
 
 ### API Reference
-TODO
+
+API reference can be found on [Read the Docs](https://means.readthedocs.org/en/latest/).
 
 ## Installation
 
