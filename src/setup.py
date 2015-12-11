@@ -1,6 +1,17 @@
 from setuptools import setup, find_packages
 import os
 
+DESCRIPTION = """
+MEANS: python package for Moment Expansion Approximation, iNference and Simulation
+
+A free, user-friendly tool implementing an efficient moment expansion approximation with parametric closures
+that integrates well with the IPython interactive environment.
+Our package enables the analysis of complex stochastic systems without any constraints
+on the number of species and moments studied and the type of rate laws in the system.
+In addition to the approximation method our package provides numerous tools to help
+non-expert users in stochastic analysis.
+"""
+
 # -- Assimulo dependency checks ---------------------------------------------------------------------
 # numpy and cython are required for assimulo installation, yet their setup.py is badly done
 # so the setup fails. Add these checks so our error message is displayed instead
@@ -20,7 +31,7 @@ setup(
     version='1.0.0',
 
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
-    long_description=open(os.path.join('..', 'README.md')).read(),
+    long_description=DESCRIPTION,
 
     author='Sisi Fan, Quentin Geissmann, Eszter Lakatos, Saulius Lukauskas, '
            'Angelique Ale, Ann C. Babtie, Paul D.W. Kirk, Michael P.H. Stumpf',
