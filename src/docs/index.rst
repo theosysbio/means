@@ -21,6 +21,12 @@ Please follow detailed instructions in Github_.
 
 .. _Github: https://github.com/theosysbio/means
 
+Tutorial
+===============
+
+An interactive tutorial on getting started with MEANS can be found on `our Github page`_
+
+.. _`our Github page`: https://github.com/theosysbio/means/tree/master/tutorial
 
 API Reference
 ==================
