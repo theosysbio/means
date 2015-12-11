@@ -336,7 +336,10 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['numpy', 'cython', 'matplotlib', 'assimulo', 'sbml',
+MOCK_MODULES = ['numpy', 'cython', 'matplotlib',  'sbml',
+                
+                'assimulo',
+                'assimulo.problem',
                 
                 'sympy',
                 'sympy.utilities.autowrap', 'sympy.utilities',
