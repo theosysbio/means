@@ -15,8 +15,9 @@ import sys
 import os
 import shlex
 # Make sure sphinx finds the packages
-code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, code_dir)
+sys.path.insert(0, os.path.abspath('../'))
+print(sys.path)
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
