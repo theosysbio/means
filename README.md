@@ -5,7 +5,7 @@ We present a free, user-friendly tool implementing an efficient [moment expansio
 ## Documentation
 
 ### Tutorial
-A tutorial on getting started with MEANS can be found in the [tutorials directory](tutorials/README.md) in this repository.
+A tutorial on getting started with MEANS can be found in the [directory tutorial](tutorial/README.md) in this repository.
 
 ### API Reference
 TODO
