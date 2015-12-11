@@ -24,12 +24,16 @@ Please follow detailed instructions in Github_.
 Tutorial
 ===============
 
-An interactive tutorial on getting started with MEANS can be found on `our Github page`_
+An interactive tutorial on getting started with MEANS can be found on `our Github page`_.
+We recommend trying it out directly using Jupyter_ interactive environment.
 
 .. _`our Github page`: https://github.com/theosysbio/means/tree/master/tutorial
+.. _Jupyter: http://jupyter.org/
 
 API Reference
 ==================
 
-See :ref:`modindex` or use the :ref:`search` .
+The detailed API reference is available in the :ref:`modindex`.
+
+:ref:`search`  can be used to search it quickly.
 
