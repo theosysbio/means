@@ -1,13 +1,11 @@
-MEANS: python package for Moment Expansion Approximation, iNference and Simulation
-==========
+# MEANS: python package for Moment Expansion Approximation, iNference and Simulation
 
 We present a free, user-friendly tool implementing an efficient [moment expansion approximation with parametric closures](http://scitation.aip.org/content/aip/journal/jcp/138/17/10.1063/1.4802475) that integrates well with the IPython interactive environment. Our package enables the analysis of complex stochastic systems without any constraints on the number of species and moments studied and the type of rate laws in the system. In addition to the approximation method our package provides numerous tools to help non-expert users in stochastic analysis.
 
-Dependencies
-==============
+## Installation
 
-Sundials
---------------
+### Dependancy: Sundials
+
 Prior to installation of this package ensure [`sundials`](https://computation.llnl.gov/casc/sundials/main.html)
 libraries are installed on your system.
 
@@ -47,12 +45,13 @@ and `--with-cflags=-fPIC` flags are set.
  
 Similarly, ensure that the `--prefix` is set to `/usr/local`, or alternatively see [troubleshooting section below](#symptom-tests-fail-with-no-module-named-sundials).
 
-Installation (Development version)
-============
+### MEANS: Stable Release
 
-Once sundials libraries are installed correctly.
+TODO
 
-The development version of this package can be installed by downloading the code, navigating to `src`
+### MEANS: Development Version
+
+Once `sundials `libraries are installed correctly, the development version of this package can be installed by downloading the code, navigating to `src`
 directory and typing::
 ```
     pip install -e .
@@ -65,8 +64,7 @@ Due to the way ``pip`` handles dependencies, you might need to install ``cython`
     pip install numpy
 ```
 
-Verifying Installation and Running Tests
-==============
+### Verifying Installation
 
 Since a lot of things can go wrong during the installation, it is important to verify everything by running the test suite.
 This can be done by running the test command in the setup suite:
@@ -77,11 +75,10 @@ This can be done by running the test command in the setup suite:
 
 No tests should fail if installation was successful. And one can proceed to the tutorial.
 
-Troubleshooting
-===================
+## Troubleshooting
 
-Symptom: Tests fail with `No module named sundials`
----------------------------------------------
+### Symptom: Tests fail with `No module named sundials`
+
 This error indicates that `assimulo` installation failed to find the sundials in the system path.
 Please ensure that you set appropriate flags in `sundials` installation, as described in previous section and attempt
 to reinstall assimulo as follows:
@@ -101,8 +98,8 @@ Replacing the `/your/sundials/installation/prefix` with the appropriate prefix.
 
 Once this is done try running tests again.
 
-Symptom: Tests fail with `ImportError: /usr/lib/libsundials_idas.so.0: undefined symbol: dscal_`
-------------------------------------------------------------------------------------------------
+### Symptom: Tests fail with `ImportError: /usr/lib/libsundials_idas.so.0: undefined symbol: dscal_`
+
 The symptom above indicates incorrect linkage between `libsundials_idas.so` and BLAS/LAPACK libraries.
 A workaround for this issue is to add `libblas.so liblapack.so` to `LD_PRELOAD` environment variable.
 To do this, make sure to set this environment variable first:
