@@ -364,3 +364,19 @@ MOCK_MODULES = [ 'cython',
                 'scipy.optimize',
                 'scipy.special']  
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+# Document __init__ methods
+autoclass_content = 'both'
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    exclusions = ('__weakref__',  # special-members
+                  '__doc__', '__module__', '__dict__',  # undoc-members
+                  )
+    exclude = name in exclusions
+
+    # Ignore all the _abc private methods if private methods are set to be documented
+    if name.startswith('_abc_'):
+        exclude = True
+
+    # Disable the private methods
+    return skip or exclude
