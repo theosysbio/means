@@ -20,7 +20,7 @@ setup(
     version='1.0.0',
 
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
-    long_description=open(os.path.join('..', 'README.md').read()),
+    long_description=open(os.path.join('..', 'README.md')).read(),
 
     author='Sisi Fan, Quentin Geissmann, Eszter Lakatos, Saulius Lukauskas, '
            'Angelique Ale, Ann C. Babtie, Paul D.W. Kirk, Michael P.H. Stumpf',
