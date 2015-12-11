@@ -10,48 +10,48 @@ Sundials
 Prior to installation of this package ensure [`sundials`](https://computation.llnl.gov/casc/sundials/main.html)
 libraries are installed on your system.
 
-On Mac OS X these libraries can be installed via [HomeBrew](http://brew.sh/):
+The exact steps to install them will depend on your system and configuration.
+
+Generally, the easiest way to install these packages is via the system's package manager.
+For instance, on Mac OS X these libraries can be installed via [HomeBrew](http://brew.sh/):
 
     brew install sundials
+
+If you are using ubuntu, you can use `apt-get` to install the packages:
+
+    apt-get install libsundials-cvode1 libsundials-cvodes2 libsundials-ida2 libsundials-idas0 libsundials-kinsol1 libsundials-nvecserial0 libsundials-serial libsundials-serial-dev
+
+Users of `anaconda` python distribution, could use the [recipe provided by `chemreac`](https://anaconda.org/chemreac/sundials) to install it:
+
+    conda install -c https://conda.anaconda.org/chemreac sundials
+
+At this point, make sure to note the path where the package manager installs the libraries to.
+For instance, `apt-get` is likely to put the libraries to `/usr/lib` whereas anaconda is likely to put it in `/home/username/anaconda/lib`. Ensure this lib directory is in `LD_LIBRARY_PATH` variable.
+
+    export LD_LIBRARY_PATH="/your/sundials/home/lib:$LD_LIBRARY_PATH"
+
+Also note the directory prefix without the `lib` as you might need to specify this path as `--sundials-home`` when istalling `assimulo` (see the [troubleshooting section below](#symptom-tests-fail-with-no-module-named-sundials)).
 
 On other linux systems one might need to compile the sundials libraries from source.
 Visit [`sundials` homepage](https://computation.llnl.gov/casc/sundials/download/download.php) for 
 instructions on how to obtain the latest release of the library.
 
-Follow instructions in the pdf distributed with the `sundials` source.
+For the newest release of `sundials`, follow instructions in the pdf distributed with the `sundials` source.
 Ensure that `-DCMAKE_C_FLAGS=-fPIC` is set when installing.
-Pay a particular attention to the installation prefix `-DCMAKE_INSTALL_PREFIX` parameter, which needs
- to be set to `/usr/local` for installation of `assimulo` package, or, alternatively, follow the troubleshooting steps
- at the end of this README file.
- 
-TODO: these are incomplete, but I give up for now.
 
-If you are installing an older version of the library, ensure that
+If you are installing an older version of the library, then make sure that
 
 `--enable-shared`, `--enable-static`, `--with-gnu-ld` 
 and `--with-cflags=-fPIC` flags are set.
  
-Similarly, ensure that the `--prefix` is set to `/usr/local`, or alternatively see troubleshooting section below.
-An example `configure` command that sets the appropriate parameters:
-```
-    ./configure --prefix=/usr/local --enable-shared --enable-static --with-gnu-ld --with-cflags=-fPIC
-```
-Then run (as root):
-```
-    make && make install
-```
-
-Once the libraries are installed, make sure they are in your `LD_LIBRARY_PATH` as otherwise
- the software will fail to link properly. For instance, add the following to your `.bashrc`
-```
-    export LD_LIBRARY_PATH=/usr/local/lib:LD_LIBRARY_PATH
-```
-Note how `/usr/local/lib` matches `--prefix` parameter above. 
+Similarly, ensure that the `--prefix` is set to `/usr/local`, or alternatively see [troubleshooting section below](#symptom-tests-fail-with-no-module-named-sundials).
 
 Installation (Development version)
 ============
 
-The development version of this package can be installed by checking out the code, navigating to `src`
+Once sundials libraries are installed correctly.
+
+The development version of this package can be installed by downloading the code, navigating to `src`
 directory and typing::
 ```
     pip install -e .
@@ -74,7 +74,7 @@ This can be done by running the test command in the setup suite:
     python setup.py test
 ```
 
-No tests should fail if installation was successful.
+No tests should fail if installation was successful. And one can proceed to the tutorial.
 
 Troubleshooting
 ===================
