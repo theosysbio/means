@@ -111,4 +111,4 @@ To do this, make sure to set this environment variable first:
 export LD_PRELOAD='libblas.so liblapack.so'
 ```
 
-And then run everything else `python setup.py test` as usual.
+And then run everything else as usual.
