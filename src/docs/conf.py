@@ -300,9 +300,16 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+        'python':('http://docs.python.org/2.7',None),
+        'matplotlib':('http://matplotlib.sourceforge.net', None),
+         'numpy':('http://docs.scipy.org/doc/numpy',None),
+         'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+         'assimulo': ('http://www.jmodelica.org/assimulo_home/', None),
+         'luigi': ('http://luigi.readthedocs.org/en/latest/', None)
+}
 
-from unittest.mock import MagicMock
+from mock import Mock as MagicMock
 
 class Mock(MagicMock):
     @classmethod
