@@ -338,5 +338,6 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['numpy', 'cython', 'sympy', 'matplotlib', 'assimulo', 'sbml',
                 'sympy.utilities.autowrap', 'sympy.utilities',
-                'sympy.core.sympify', 'sympy.core'] 
+                'sympy.core.sympify', 'sympy.core',
+                 'sympy.utilities.iterables']  
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
