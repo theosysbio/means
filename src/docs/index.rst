@@ -27,7 +27,7 @@ Tutorial
 An interactive tutorial on getting started with MEANS can be found on `our Github page`_.
 We recommend trying it out directly using Jupyter_ interactive environment.
 
-.. _`our Github page`: https://github.com/theosysbio/means/tree/master/tutorial
+.. _`our Github page`: https://github.com/theosysbio/means/tree/master/tutorial/README.md
 .. _Jupyter: http://jupyter.org/
 
 API Reference
