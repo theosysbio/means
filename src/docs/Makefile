@@ -19,7 +19,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest coverage gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -30,6 +30,7 @@ help:
 	@echo "  json       to make JSON files"
 	@echo "  htmlhelp   to make HTML files and a HTML help project"
 	@echo "  qthelp     to make HTML files and a qthelp project"
+	@echo "  applehelp  to make an Apple Help Book"
 	@echo "  devhelp    to make HTML files and a Devhelp project"
 	@echo "  epub       to make an epub"
 	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
@@ -45,15 +46,14 @@ help:
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
 clean:
 	rm -rf $(BUILDDIR)/*
 
 apidocs:
-	sphinx-apidoc -E -H means -A "Sisi Fan, Quentin Geissmann, Saulius Lukauskas" -V trunk -R trunk -o . -f ../ ../setup.py ../means/tests/
-    # Add private methods to means.pipes.tasks documentation
-	@echo "Adding private methods to the documentation"
-	python -c "import re; f = open('means.pipes.rst', 'r'); contents=f.read(); f.close(); fw = open('means.pipes.rst', 'w'); contents = re.sub(r'.. automodule:: means.pipes.tasks\n    :members:', '\g<0>\n    :private-members:', contents, re.MULTILINE); fw.write(contents); fw.close()"
+	sphinx-apidoc -E -o . -f ../ ../setup.py ../means/tests/
+
 html: apidocs
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
@@ -90,17 +90,25 @@ qthelp: apidocs
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/means.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/MEANS.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/means.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/MEANS.qhc"
+
+applehelp: apidocs
+	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
+	@echo
+	@echo "Build finished. The help book is in $(BUILDDIR)/applehelp."
+	@echo "N.B. You won't be able to view it unless you put it in" \
+	      "~/Library/Documentation/Help or install it in your application" \
+	      "bundle."
 
 devhelp: apidocs
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/means"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/means"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/MEANS"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/MEANS"
 	@echo "# devhelp"
 
 epub: apidocs
@@ -170,6 +178,11 @@ doctest: apidocs
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+coverage: apidocs
+	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(BUILDDIR)/coverage
+	@echo "Testing of coverage in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/coverage/python.txt."
 
 xml: apidocs
 	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
