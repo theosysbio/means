@@ -4,42 +4,6 @@
 # sphinx-quickstart on Fri Dec 11 13:57:44 2015.
 #
 # This file is execfile()d with the current directory set to its
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-# -*- coding: utf-8 -*-
-#
-# MEANS documentation build configuration file, created by
-# sphinx-quickstart on Fri Dec 11 13:57:44 2015.
-#
-# This file is execfile()d with the current directory set to its
 # containing dir.
 #
 # Note that not all possible configuration values are present in this
