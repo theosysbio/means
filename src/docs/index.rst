@@ -33,7 +33,13 @@ We recommend trying it out directly using Jupyter_ interactive environment.
 API Reference
 ==================
 
-The detailed API reference is available in the :ref:`modindex`.
+.. toctree::
 
-:ref:`search`  can be used to search it quickly.
+    means.approximation
+    means.core
+    means.examples
+    means.inference
+    means.io
+    means.simulation
+    means.util
 
