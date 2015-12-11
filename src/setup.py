@@ -26,11 +26,15 @@ setup(
            'Angelique Ale, Ann C. Babtie, Paul D.W. Kirk, Michael P.H. Stumpf',
     author_email='m.stumpf@imperial.ac.uk,e.lakatos13@imperial.ac.uk',
 
-    url=None,  # TODO: url
-    license=None,  # TODO: license
+    url='https://github.com/theosysbio/means',
+    license='MIT',
 
-    classifiers=[],  # TODO: classifiers
-    keywords='',  # TODO: keywords
+    classifiers=[
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'Topic :: Scientific/Engineering'
+    ],
+    keywords=['moment expansion', 'approximation', 'simulation', 'inference'],
 
     packages=find_packages(),
 
