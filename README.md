@@ -54,18 +54,13 @@ and `--with-cflags=-fPIC` flags are set.
 Similarly, ensure that the `--prefix` is set to `/usr/local`, or alternatively see [troubleshooting section below](#symptom-tests-fail-with-no-module-named-sundials).
 
 ### MEANS: Stable Release
+Once `sundials `libraries are installed correctly, MEANS can be installed through `pip`, just like any other python package:
 
-TODO
-
-### MEANS: Development Version
-
-Once `sundials `libraries are installed correctly, the development version of this package can be installed by downloading the code, navigating to `src`
-directory and typing::
 ```
-    pip install -e .
+pip install means
 ```
 
-Due to the way ``pip`` handles dependencies, you might need to install ``cython``, ``numpy`` prior to `means`:
+Note that due to the way ``pip`` handles dependencies, you might need to install ``cython``, ``numpy`` prior to `means`:
 
 ```
     pip install cython
@@ -74,14 +69,32 @@ Due to the way ``pip`` handles dependencies, you might need to install ``cython`
 
 ### Verifying Installation
 
-Since a lot of things can go wrong during the installation, it is important to verify everything by running the test suite.
-This can be done by running the test command in the setup suite:
+Since a lot of things can go wrong during the installation, it is important to verify the installation before proceeding
+with the package.
+
+Particularly, please run the tests and ensure they pass.
+To run the tests, install `nose` package first:
 
 ```
-    python setup.py test
+pip install nose
 ```
 
-No tests should fail if installation was successful. And one can proceed to the tutorial.
+Then run the following command:
+```
+nosetests means.tests
+```
+If no tests failed, [proceed straight to the tutorial](tutorial/README.md).
+Otherwise, consult the [troubleshooting section](#troubleshooting).
+
+### MEANS: Development Version
+
+The development version of this package can be installed by downloading the code, navigating to `src`
+directory and typing
+```
+pip install -e .
+```
+
+You may similarly need to install `numpy` and `cython` for this command to work, as in the section above.
 
 ## Troubleshooting
 
