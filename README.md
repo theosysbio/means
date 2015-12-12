@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/theosysbio/means.svg?branch=master)](https://travis-ci.org/theosysbio/means) [![Documentation Status](https://readthedocs.org/projects/means/badge/?version=latest)](http://means.readthedocs.org/en/latest/?badge=latest)
+
 # MEANS: python package for Moment Expansion Approximation, iNference and Simulation
 
 We present a free, user-friendly tool implementing an efficient [moment expansion approximation with parametric closures](http://scitation.aip.org/content/aip/journal/jcp/138/17/10.1063/1.4802475) that integrates well with the IPython interactive environment. Our package enables the analysis of complex stochastic systems without any constraints on the number of species and moments studied and the type of rate laws in the system. In addition to the approximation method our package provides numerous tools to help non-expert users in stochastic analysis.
@@ -10,6 +12,7 @@ A tutorial on getting started with MEANS can be found in the [directory tutorial
 ### API Reference
 
 API reference can be found on [Read the Docs](https://means.readthedocs.org/en/latest/).
+Read the Docs also autogenerates a PDF file for every build, which can be downloaded from [here](https://media.readthedocs.org/pdf/means/latest/means.pdf).
 
 ## Installation
 
