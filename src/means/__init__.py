@@ -1,11 +1,14 @@
-import io
-import core
-import approximation
-import inference
-import simulation
-import util
+from __future__ import absolute_import, print_function
 
-from core import *
-from simulation import *
-from inference import *
-from approximation import *
+import io
+
+from means import core
+from means import approximation
+from means import inference
+from means import simulation
+from means import util
+
+from .core import *
+from .simulation import *
+from .inference import *
+from .approximation import *

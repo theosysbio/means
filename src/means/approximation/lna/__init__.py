@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Linear Noise Approximation
 -----
@@ -9,7 +10,7 @@ Example:
 >>> from means.approximation.lna.lna import lna_approximation
 >>> from means.examples.sample_models import MODEL_P53
 >>> ode_problem = lna_approximation(MODEL_P53)
->>> print ode_problem
+>>> print(ode_problem)
 
 The result is an :class:`means.core.problems.ODEProblem`. Typically, it would be further used to
 perform simulations (see :mod:`~means.simulation`) and inference (see :mod:`~means.inference`).
@@ -20,4 +21,4 @@ BMC Bioinformatics, vol. 10, no. 1, p. 343, Oct. 2009.
 
 ------------
 """
-from lna import LinearNoiseApproximation, lna_approximation
+from .lna import LinearNoiseApproximation, lna_approximation

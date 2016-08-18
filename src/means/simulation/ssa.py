@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Gillespie Stochastic Simulation Algorithm
 ----
@@ -9,7 +10,9 @@ number of species, there are many superior implementations available.
 """
 
 import multiprocessing
+
 import numpy as np
+
 from means.simulation.trajectory import Trajectory, TrajectoryCollection
 from means.io.serialise import SerialisableObject
 from means.util.moment_counters import generate_n_and_k_counters
@@ -268,6 +271,3 @@ class _SSAGenerator(object):
                         spot, desc in zip(species_over_time, descriptors)]
 
         return trajectories
-
-
-

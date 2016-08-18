@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 MEA helper functions.
 -------
@@ -7,7 +8,9 @@ functions for the rest :mod:`~means.approximation.mea`.
 """
 
 import operator
+
 import sympy as sp
+
 from means.util.decorators import cache
 from means.util.sympyhelpers import product
 

@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy
+
 from means.approximation.mea.closure_normal import NormalClosure
 from means.core import Moment
 from means.util.sympyhelpers import sympy_expressions_equal
@@ -295,4 +299,3 @@ class TestNormalCloser(unittest.TestCase):
         closer = NormalClosure(3, multivariate=True)
         answer = [p for p in closer._generate_partitions(test_list_for_partition)]
         self.assertEqual(answer, expected)
-

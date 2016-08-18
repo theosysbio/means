@@ -1,5 +1,7 @@
-import lna
-import mea
+from __future__ import absolute_import, print_function
 
-from lna import *
-from mea import *
+from . import lna
+from . import mea
+
+from .lna import *
+from .mea import *

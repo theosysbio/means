@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Trajectories
 --------
@@ -18,7 +19,9 @@ method to help representation.
 
 import operator
 import numbers
+
 import numpy as np
+
 from means.core.descriptors import Descriptor, Moment
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
@@ -531,4 +534,3 @@ class TrajectoryCollection(SerialisableObject):
 
     def __ne__(self, other):
         return not self == other
-

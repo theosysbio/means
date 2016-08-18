@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 import unittest
 
 import sympy
@@ -54,4 +56,3 @@ class TestEqMixedMoments(unittest.TestCase):
         answer = dbdt_calc.get(k_vec,ek_counter).T
         result = to_sympy_matrix(["c_0 - c_1*y_0 - c_2*y_0*y_2/(c_6 + y_0)"," 0"," 0"," 0"," c_2*y_0/(c_6 + y_0)**2 - c_2/(c_6 + y_0)"," 0"," -c_2*y_0*y_2/(c_6 + y_0)**3 + c_2*y_2/(c_6 + y_0)**2"])
         assert_sympy_expressions_equal(answer, result)
-

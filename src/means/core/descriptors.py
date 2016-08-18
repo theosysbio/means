@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Descriptors
 -----------
@@ -13,6 +14,7 @@ defined below.
 """
 import numpy as np
 import sympy
+
 from means.io.serialise import SerialisableObject
 
 

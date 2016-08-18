@@ -1,6 +1,10 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy
 from numpy import array
+
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation
 from means.core import Moment, ODEProblem, Model
 from means.util.sympyhelpers import sympy_expressions_equal

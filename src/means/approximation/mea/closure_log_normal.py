@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Log-normal moment closure
 ------
@@ -5,8 +6,8 @@ Log-normal moment closure
 This part of the package provides the original the Log-normal closure.
 """
 
-
 import sympy as sp
+
 from closure_scalar import ClosureBase
 
 class LogNormalClosure(ClosureBase):
@@ -115,6 +116,3 @@ class LogNormalClosure(ClosureBase):
         # univariate case: log covariances are 0s.
         else:
             return sp.Integer(0)
-
-
-

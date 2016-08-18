@@ -1,5 +1,4 @@
-
-
+from __future__ import absolute_import, print_function
 
 import sympy as sp
 
@@ -7,16 +6,15 @@ from means.core import ODEProblem
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.util.moment_counters import generate_n_and_k_counters
 
-from dmu_over_dt import generate_dmu_over_dt
-from eq_central_moments import eq_central_moments
-from raw_to_central import raw_to_central
-from means.util.sympyhelpers import substitute_all, quick_solve
+from .dmu_over_dt import generate_dmu_over_dt
+from .eq_central_moments import eq_central_moments
+from .raw_to_central import raw_to_central
+from .means.util.sympyhelpers import substitute_all, quick_solve
 
-
-from closure_gamma import GammaClosure
-from closure_log_normal import LogNormalClosure
-from closure_normal import NormalClosure
-from closure_scalar import ScalarClosure
+from .closure_gamma import GammaClosure
+from .closure_log_normal import LogNormalClosure
+from .closure_normal import NormalClosure
+from .closure_scalar import ScalarClosure
 
 
 def mea_approximation(model, max_order, closure='scalar', *closure_args, **closure_kwargs):
@@ -218,4 +216,3 @@ class MomentExpansionApproximation(ApproximationBaseClass):
         out_exprs = substitute_all(central_moments_exprs, substitution_pairs)
 
         return out_exprs
-

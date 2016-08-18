@@ -1,9 +1,13 @@
-import unittest
-import numpy as np
-from means.simulation import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
-from means.core import Moment
+from __future__ import absolute_import, print_function
+
 import os
 import tempfile
+import unittest
+
+import numpy as np
+
+from means.simulation import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection
+from means.core import Moment
 
 class TestTrajectory(unittest.TestCase):
 
@@ -102,6 +106,3 @@ class TestTrajectoriesToCSV(unittest.TestCase):
                 tc.to_csv(out)
         finally:
             os.unlink(file)
-
-
-

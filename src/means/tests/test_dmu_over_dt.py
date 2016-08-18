@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy as sp
+
 from means.approximation.mea.dmu_over_dt import generate_dmu_over_dt
 from means.core import Moment
 from means.approximation.mea.moment_expansion_approximation import MomentExpansionApproximation

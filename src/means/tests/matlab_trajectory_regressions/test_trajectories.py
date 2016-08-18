@@ -1,10 +1,14 @@
+from __future__ import absolute_import, print_function
+
 import os
 import unittest
+
+import numpy as np
 from numpy.testing import assert_array_almost_equal
 import scipy.io.matlab
+
 import means
 import means.examples
-import numpy as np
 from means.simulation import SolverException
 
 MODELS = {'p53': means.examples.MODEL_P53}
@@ -101,5 +105,3 @@ class TestODE15SFailsWhereMatlabDoes(unittest.TestCase):
             self.assertAlmostEqual(base_exception.t, 17.35795, places=1)
         else:
             self.fail('ode15s was able to reach output without throwing and exception')
-
-

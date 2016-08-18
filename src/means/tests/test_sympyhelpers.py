@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy
+
 from means.util.sympyhelpers import to_sympy_matrix, assert_sympy_expressions_equal, sympy_expressions_equal
 from means.util.sympyhelpers import substitute_all
 

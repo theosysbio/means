@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Moment Expansion Approximation
 -----
@@ -14,7 +15,7 @@ The function :func:`mea_approximation` should provide all the necessary options.
 >>> ode_problem = mea_approximation(MODEL_P53,max_order=2)
 >>> # equivalent to
 >>> # ode_problem = mea_approximation(MODEL_P53, max_order=2, closure="scalar", value=0)
->>> print ode_problem
+>>> print(ode_problem)
 
 The result is an :class:`means.core.problems.ODEProblem`. Typically, it would be further used to
 perform simulations (see :mod:`~means.simulation`) and inference (see :mod:`~means.inference`).
@@ -25,4 +26,4 @@ perform simulations (see :mod:`~means.simulation`) and inference (see :mod:`~mea
 
 ------------
 """
-from moment_expansion_approximation import MomentExpansionApproximation, mea_approximation
+from .moment_expansion_approximation import MomentExpansionApproximation, mea_approximation

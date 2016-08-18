@@ -13,6 +13,6 @@ are exposed by this module.
 Finally, the :class:`Model` class, which provides a standard interface to describe a biological model,
 and can be thought to be the center of the whole package, is also implemented here.
 """
-from descriptors import Descriptor, VarianceTerm, Moment, ODETermBase
-from problems import StochasticProblem, ODEProblem
-from model import Model
+from .descriptors import Descriptor, VarianceTerm, Moment, ODETermBase
+from .problems import StochasticProblem, ODEProblem
+from .model import Model

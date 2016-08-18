@@ -1,9 +1,13 @@
+from __future__ import absolute_import, print_function
+
 import random
 import unittest
+
+import numpy as np
 from numpy.testing import assert_array_almost_equal
 from sympy import Symbol, Float, MutableDenseMatrix
+
 from means.core import Moment, ODEProblem
-import numpy as np
 from means.inference import Inference, InferenceWithRestarts
 # We need renaming as otherwise nose picks it up as a test
 from means.simulation import Trajectory
@@ -449,7 +453,3 @@ class TestInferenceWithRestarts(unittest.TestCase):
 
 class TestInferenceWithRestartsMultiProcessing(TestInferenceWithRestarts):
     number_of_processes = 2
-
-
-
-

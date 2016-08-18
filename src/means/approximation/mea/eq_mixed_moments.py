@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import itertools
+
 import sympy as sp
+
 from means.approximation.mea.mea_helpers import get_one_over_n_factorial, derive_expr_from_counter_entry, make_k_chose_e
 from means.util.sympyhelpers import sum_of_cols, product
 from means.util.decorators import cache
@@ -103,8 +107,6 @@ class DBetaOverDtCalculator(object):
 
         derives = sp.Matrix([derive_expr_from_counter_entry(expr, self.__species, tuple(c.n_vector))
                              for c in self.__n_counter])
-
-
 
         # Computes the factorial terms for EACH entry in COUNTER
         factorial_terms = sp.Matrix([get_one_over_n_factorial(tuple(c.n_vector)) for c in self.__n_counter])

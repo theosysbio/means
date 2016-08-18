@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Module for Input/Output operations.
 -----------------------------------
@@ -30,5 +31,5 @@ If the :mod:`libsbml` is installed in the user's system and has the appropriate 
 the function :func:`means.io.read_sbml` can be used to parse the files in SBML format
 to :class:`means.core.Model` objects.
 """
-from serialise import dump, load, to_file, from_file
-from sbml import read_sbml
+from .serialise import dump, load, to_file, from_file
+from .sbml import read_sbml

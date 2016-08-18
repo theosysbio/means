@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import operator
+
 import sympy as sp
+
 from means.approximation.mea.mea_helpers import make_k_chose_e
 
 

@@ -1,6 +1,10 @@
+from __future__ import absolute_import, print_function
+
 import unittest
-from means.core import Moment
+
 import sympy
+
+from means.core import Moment
 from means.approximation.mea.closure_log_normal import LogNormalClosure
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
@@ -185,7 +189,7 @@ class TestLogNormalCloser(unittest.TestCase):
         answer = closer.close(self.__mfk, central_from_raw_exprs, self.__n_counter, self.__k_counter)
 
 
-        #print (answer -expected).applyfunc(sympy.simplify)
+        #print((answer - expected).applyfunc(sympy.simplify))
         self.assertTrue(sympy_expressions_equal(answer, expected))
 
 

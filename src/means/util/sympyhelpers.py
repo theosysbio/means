@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Sympy Helpers
 ----
@@ -5,6 +6,7 @@ Sympy Helpers
 This part of the package provides functions to extend the functionality of sympy,
 or to make MEANS compatible with different versions of sympy.
 """
+import operator
 
 import sympy
 from sympy.core.sympify import SympifyError
@@ -232,8 +234,6 @@ def sum_of_rows(mat):
 def sum_of_cols(mat):
     out = sympy.Matrix([sum(r)for r in (mat.T).tolist()]).T
     return out
-
-import operator
 
 def product(list):
     return reduce(operator.mul, list)

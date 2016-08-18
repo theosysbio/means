@@ -1,7 +1,11 @@
+from __future__ import absolute_import, print_function
+
 import unittest
 import random
+
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+
 from means.inference.hypercube import hypercube
 
 

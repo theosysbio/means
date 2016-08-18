@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 # -*- coding: utf-8 -*-
 #
 # MEANS documentation build configuration file, created by
@@ -31,10 +32,6 @@ print(sys.path)
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
-import sys
-import os
-import shlex
 
 # Make sure sphinx finds the packages
 code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -336,33 +333,33 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = [ 'cython', 
+MOCK_MODULES = [ 'cython',
 
-                'matplotlib',  
+                'matplotlib',
                 'matplotlib.artist',
-                
+
                 'sbml',
-                
+
                 'numpy',
                 'numpy.testing',
-                
+
                 'assimulo',
                 'assimulo.problem',
                 'assimulo.solvers',
                 'assimulo.solvers.sundials',
                 'assimulo.solvers.runge_kutta',
                 'assimulo.exception',
-                
+
                 'sympy',
-                'sympy.utilities.autowrap', 
+                'sympy.utilities.autowrap',
                 'sympy.utilities',
-                'sympy.core.sympify', 
+                'sympy.core.sympify',
                 'sympy.core',
                 'sympy.utilities.iterables',
-                
+
                 'scipy',
                 'scipy.optimize',
-                'scipy.special']  
+                'scipy.special']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # Document __init__ methods

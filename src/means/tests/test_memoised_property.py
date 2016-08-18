@@ -1,4 +1,7 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 from means.util.memoisation import memoised_property, MemoisableObject
 
 

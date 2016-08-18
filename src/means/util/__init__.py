@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Utilities
 ---------
@@ -10,8 +11,8 @@ These functions are designed to be package-specific.
 The users of the software are generally discouraged to use any of these functions.
 """
 
-import sympyhelpers
-from memoisation import MemoisableObject, memoised_property
-import memoisation
-import decorators
-from decorators import cache
+from . import sympyhelpers
+from .memoisation import MemoisableObject, memoised_property
+from . import memoisation
+from . import decorators
+from .decorators import cache

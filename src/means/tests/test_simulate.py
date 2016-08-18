@@ -1,12 +1,16 @@
+from __future__ import absolute_import, print_function
+
+import random
 import unittest
+
+import numpy as np
+from numpy.testing import assert_array_almost_equal
+from sympy import Symbol, MutableDenseMatrix, symbols, Float
+
 import means
 from means.util.sympyhelpers import to_sympy_matrix
 from means.core import ODEProblem, ODETermBase, Moment, VarianceTerm
 from means.simulation import Simulation
-from numpy.testing import assert_array_almost_equal
-import numpy as np
-import random
-from sympy import Symbol, MutableDenseMatrix, symbols, Float
 
 
 class ConstantDerivativesProblem(ODEProblem):
@@ -27,16 +31,16 @@ class TestSimulate(unittest.TestCase):
         y_1_trajectory = trajectories_dict[Symbol('y_1')]
         y_2_trajectory = trajectories_dict[Symbol('y_2')]
 
-        print 'Kwargs: {0!r} ... '.format(solver_kwargs),
+        print('Kwargs: {0!r} ... '.format(solver_kwargs), end=' ')
         try:
             assert_array_almost_equal(y_1_trajectory.values, [3, 3, 3, 3])
             assert_array_almost_equal(y_2_trajectory.values, [2, 3, 4, 5])
             assert_array_almost_equal(y_1_trajectory.timepoints, [0, 1, 2, 3])
             assert_array_almost_equal(y_2_trajectory.timepoints, [0, 1, 2, 3])
         except AssertionError:
-            print 'FAILED'
+            print('FAILED')
             raise
-        print 'OK'
+        print('OK')
 
     def test_simple_problem_for_all_solvers(self):
         for solver in Simulation.supported_solvers():
@@ -337,7 +341,7 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         results = simulation.simulate_system(parameters, initial_conditions, timepoints)
         results_dict = {t.description: t.values for t in results}
-        
+
         answers = np.array([
             [301. ,  256.51498358,  229.8950497 ,  211.52095108, 197.42292629,  185.71844205,  175.44199006,  166.06812179, 157.29396586,  148.94973631,  140.94453324,  133.21443813, 125.71851091,  118.44071938,  111.37876063,  104.52885369, 97.88778992,   91.45881189,   85.24893775,   79.26303981, 73.50431791,   67.97791546,   62.69000734,   57.64518316, 52.84648676,   48.29649121,   43.99713149,   39.9492471 , 36.15253692,   32.60546311,   29.30505184,   26.24697504, 23.42559667,   20.83400181,   18.46410003,   16.30672602,14.35177251,   12.58834607,   11.00490033,    9.58948675,8.32991558,    7.21394911,    6.22942185,    5.36444895,4.60756355,    3.94781273,    3.3748562 ,    2.8789987 ,2.45128862,    2.08350738,    1.76816461],
             [0. ,    2.36069281,    7.74736822,   14.71042241, 22.53210817,   30.82468744,   39.36702926,   48.02796564, 56.72586425,   65.40844338,   74.04167272,   82.60194102, 91.07219255,   99.43927128,  107.69231586,  115.82183747,123.81951774,  131.67785512,  139.3896348 ,  146.94773612,154.34527892,  161.5756526 ,  168.63237519,  175.50906398,182.19957199,  188.69804269,  194.99897458,  201.09726961,206.98828324,  212.6679015 ,  218.132621  ,  223.37961716,228.40681457,  233.21291588,  237.79747755,  242.16092232,246.3045504 ,  250.23053657,  253.94192056,  257.44257357,260.73714751,  263.83100992,  266.73019086,  269.44129181,271.97139158,  274.32796251,  276.51876968,  278.5518216 ,280.43523052,  282.17715464,  283.78572641]
@@ -346,4 +350,3 @@ class TestSimulateRegressionForPopularModels(unittest.TestCase):
 
         assert_array_almost_equal(results_dict[Moment(np.array([1, 0]), symbol=y_0)], answers[0])
         assert_array_almost_equal(results_dict[Moment(np.array([0, 1]), symbol=y_1)], answers[1])
-

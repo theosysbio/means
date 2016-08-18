@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 class ApproximationBaseClass(object):
     """
     A class of explicit generators for ordinary differential equations required to simulate the model provided.

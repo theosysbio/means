@@ -1,6 +1,10 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import numpy as np
 import sympy
+
 from means.core import ODETermBase
 from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm
 from means.simulation.solvers import _wrap_results_to_trajectories, _add_sensitivity_data_to_trajectories
@@ -56,4 +60,3 @@ class TestSensitivitySolverBase(unittest.TestCase):
 
         self.assertEqual(actual_t1, expected_t1)
         self.assertEqual(actual_t2, expected_t2)
-

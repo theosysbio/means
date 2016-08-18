@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy
+
 from means.simulation import Trajectory
 from means import  Moment
 from means import SSASimulation

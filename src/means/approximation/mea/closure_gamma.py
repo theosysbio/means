@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Gamma moment closure
 ------
@@ -6,7 +7,8 @@ This part of the package provides the original the Gamma closure.
 """
 
 import sympy as sp
-from closure_scalar import ClosureBase
+
+from .closure_scalar import ClosureBase
 from means.util.sympyhelpers import substitute_all, product
 
 class GammaClosure(ClosureBase):

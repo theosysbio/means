@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Distances
 -----
@@ -7,10 +8,12 @@ Distance functions are typically required for parameter inference (see :mod:`mea
 """
 
 from collections import namedtuple
+
 import numpy as np
+from scipy.special import gammaln
+
 from means.core import Moment
 from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
-from scipy.special import gammaln
 
 def _supported_distances_lookup():
     return {'sum_of_squares': sum_of_squares,

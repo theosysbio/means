@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Model
 -----
@@ -31,7 +32,7 @@ An example showing the p53 model could be encoded:
 
 Printing the model to ensure everything is all right:
 
->>> print my_model
+>>> print(my_model)
 
 Typically, a model would be used for approximation (e.g.
 :mod:`~means.approximation.mea.moment_expansion_approximation`, or
@@ -42,6 +43,7 @@ and stochastic simulations (e.g. :mod:`~means.simulation.ssa`).
 """
 
 import sympy
+
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal

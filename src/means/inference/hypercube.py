@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import random
+
 import numpy as np
+
 def hypercube(number_of_samples, variables):
     """
     This implements Latin Hypercube Sampling.

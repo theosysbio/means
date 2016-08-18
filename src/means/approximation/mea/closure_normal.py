@@ -1,15 +1,17 @@
+from __future__ import absolute_import, print_function
 """
 Normal moment closure
 ------
 
 This part of the package provides the original the Normal (Gaussian) closure.
 """
+import operator
 
 import sympy as sp
 from sympy.utilities.iterables import multiset_partitions
-import operator
+
 from means.util.sympyhelpers import product
-from closure_scalar import ClosureBase
+from .closure_scalar import ClosureBase
 
 
 class NormalClosure(ClosureBase):
@@ -123,4 +125,3 @@ class NormalClosure(ClosureBase):
             if all([(len(k) == 2) for k in p]):
                 # retrieve index in original list
                 yield [[list_for_par[i] for i in k] for k in p]
-

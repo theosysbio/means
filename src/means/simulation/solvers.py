@@ -1,15 +1,18 @@
+from __future__ import absolute_import, print_function
 """
 Solvers
 -------
 
 This part of the package provides wrappers around Assimulo solvers.
 """
+import sys
+import inspect
+
 from assimulo.problem import Explicit_Problem
 import numpy as np
-import sys
+
 from means.simulation import SensitivityTerm
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
-import inspect
 from means.util.memoisation import memoised_property, MemoisableObject
 from means.util.sympyhelpers import to_one_dim_array
 
@@ -575,8 +578,3 @@ class ODE15sSolverWithSensitivities(SensitivitySolverBase, ODE15sMixin):
         solver.usesens = True
         solver.report_continuously = True
         return solver
-
-
-
-
-

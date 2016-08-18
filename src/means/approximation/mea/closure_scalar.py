@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Scalar moment closure
 ------
@@ -7,9 +8,8 @@ This part of the package provides the original
 as well as the base class for all closers.
 
 """
-
-
 import sympy as sp
+
 from means.util.sympyhelpers import substitute_all
 
 

@@ -1,5 +1,9 @@
+from __future__ import absolute_import, print_function
+
 import unittest
+
 import sympy
+
 from means.util.sympyhelpers import sympy_expressions_equal
 from means.util.sympyhelpers import to_sympy_matrix
 from means.approximation.mea.closure_gamma import GammaClosure

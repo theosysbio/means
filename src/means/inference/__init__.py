@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Parameter Inference
 -----
@@ -14,5 +15,5 @@ or inference from random starting points (:class:`~means.inference.InferenceWith
 Some basic inference result plotting functionality is also provided by the package, see the documentation for
 :class:`~means.inference.InferenceResult` for more information on this.
 """
-from inference import *
-from results import InferenceResult, InferenceResultsCollection
+from .inference import *
+from .results import InferenceResult, InferenceResultsCollection

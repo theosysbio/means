@@ -1,7 +1,15 @@
+from __future__ import absolute_import, print_function
+
 import os
 import unittest
+from StringIO import StringIO
+from tempfile import mkstemp
+import cPickle as pickle
+
+import numpy as np
 from assimulo.solvers.sundials import CVodeError
 from sympy import Symbol, MutableDenseMatrix, Float
+
 from means import TrajectoryCollection, SolverException
 from means.core import ODEProblem, Moment, VarianceTerm
 from means.inference import Inference
@@ -10,10 +18,6 @@ from means.io.serialise import dump, load
 from means.examples.sample_models import MODEL_P53, MODEL_MICHAELIS_MENTEN, MODEL_LOTKA_VOLTERRA, \
                                          MODEL_HES1, MODEL_DIMERISATION
 from means.simulation import Trajectory, TrajectoryWithSensitivityData, SensitivityTerm, Simulation
-import numpy as np
-from StringIO import StringIO
-from tempfile import mkstemp
-import cPickle as pickle
 
 def _sample_problem():
     lhs_terms = [Moment(np.array([1, 0, 0]), symbol='y_0'),
@@ -242,5 +246,3 @@ class TestPickleSerialisation(TestSerialisation):
 
         e = SolverException(None, CVodeError('Test', 14.9))
         self._roundtrip(e)
-
-

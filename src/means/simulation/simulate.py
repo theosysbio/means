@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Simulate
 --------
@@ -8,7 +9,7 @@ dynamic of an :class:`~means.core.problems.ODEProblem`.
 A wide range of numerical solver are available:
 
 >>> from means import Simulation
->>> print Simulation.supported_solvers()
+>>> print(Simulation.supported_solvers())
 
 In order to simulate a system, it is necessary to provide values for
 the initial conditions and parameters (constants):
@@ -35,6 +36,7 @@ See the documentation of :class:`Simulation` for additional information.
 """
 
 import numpy as np
+
 from means.io.serialise import SerialisableObject
 from means.simulation.solvers import available_solvers
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData, TrajectoryCollection

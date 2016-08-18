@@ -1,4 +1,7 @@
+from __future__ import absolute_import, print_function
+
 import numpy as np
+
 def _label_axes(ax, x_label, y_label, fontsize=20, rotate_x_ticks=True):
     ax.set_xlabel(x_label, fontsize=fontsize)
     ax.set_ylabel(y_label, fontsize=fontsize)
@@ -108,4 +111,3 @@ def plot_2d_trajectory(x, y,
 
     if legend:
         ax.legend()
-

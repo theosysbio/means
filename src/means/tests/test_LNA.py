@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 import unittest
 
 import sympy
@@ -43,4 +45,3 @@ class TestLNA(unittest.TestCase):
 
         assert_sympy_expressions_equal(correct_rhs, answer_rhs)
         self.assertEqual(correct_lhs, answer_lhs)
-

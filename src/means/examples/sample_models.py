@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 """
 Sample Models
 -----
@@ -6,7 +7,7 @@ This part of the package provides examples of simple
 and well characterised models to play with.
 
 >>> from means.examples.sample_models import MODEL_P53
->>> print MODEL_P53
+>>> print(MODEL_P53)
 
 """
 
