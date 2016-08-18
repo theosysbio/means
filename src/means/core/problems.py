@@ -212,23 +212,23 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         STRING_MOM = 'List of moments:'
 
         left_hand_side = self.left_hand_side_descriptors
-        preamble = ["\documentclass{article}"]
-        preamble += ["\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
+        preamble = ["\\documentclass{article}"]
+        preamble += ["\\usepackage[landscape, margin=0.5in, a3paper]{geometry}"]
         lines = ["\\begin{document}"]
-        lines += ["\section*{%s}" % STRING_RIGHT_HAND]
+        lines += ["\\section*{%s}" % STRING_RIGHT_HAND]
 
-        lines += ["$\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
+        lines += ["$\\dot {0} = {1} {2}$".format(str(sympy.latex(lhs.symbol)), str(sympy.latex(rhs)), r"\\")
                     for (rhs, lhs) in zip(self.right_hand_side, left_hand_side)]
 
         lines += [r"\\"] * 5
 
-        lines += ["\section*{%s}" % STRING_MOM]
+        lines += ["\\section*{%s}" % STRING_MOM]
 
 
-        lines += ["$\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
+        lines += ["$\\dot {0}$: {1} {2}".format(str(sympy.latex(lhs.symbol)), str(lhs), r"\\")
                        for lhs in left_hand_side if isinstance(lhs, Moment)]
 
-        lines += ["\end{document}"]
+        lines += ["\\end{document}"]
 
         return '\n'.join(preamble + lines)
 
