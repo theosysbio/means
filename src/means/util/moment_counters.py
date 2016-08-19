@@ -45,7 +45,7 @@ def generate_n_and_k_counters(max_order, species, central_symbols_prefix="M_", r
 
         #this mimics the order in the original code
         print(k_counter_descriptors)
-        k_counter_descriptors = sorted(k_counter_descriptors, key=lambda x, y: sum(x) - sum(y))
+        k_counter_descriptors = sorted(k_counter_descriptors, key=sum)
         #k_counter_descriptors = [[r for r in reversed(k)] for k in k_counter_descriptors]
 
         k_counter_symbols = [sp.Symbol(raw_symbols_prefix + "_".join([str(s) for s in count]))
