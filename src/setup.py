@@ -16,19 +16,27 @@ non-expert users in stochastic analysis.
 # numpy and cython are required for assimulo installation, yet their setup.py is badly done
 # so the setup fails. Add these checks so our error message is displayed instead
 # can be removed once assimulo ups their game.
+missing_dependicies = []
+
 try:
     import cython
 except ImportError:
-    raise ImportError('Please install cython first `pip install cython`')
+    missing_dependicies.append('Cython')
 
 try:
     import numpy
 except ImportError:
-    raise ImportError('Please install numpy first `pip install numpy`')
+    missing_dependicies.append('numpy')
+
+if missing_dependicies:
+    raise ImportError('Please install {} first: `pip install {}`'.format(
+        ' and '.join(missing_dependicies),
+        ' '.join(missing_dependicies)
+    ))
 # ---------------------------------------------------------------------------------------------------------
 setup(
     name='means',
-    version='1.0.0',
+    version='1.0.1-dev',
 
     description='Moment Expansion Approximation method implementation with simulation and inference packages',
     long_description=DESCRIPTION,
@@ -58,7 +66,7 @@ setup(
         "matplotlib>=1.1.0",
         "scipy>=0.10.1",
         "PyYAML>=3.10",
-        "Assimulo>=2.5.1",
+        "Assimulo>=2.8",
     ],
     tests_require=['nose'],
     test_suite='nose.collector'
