@@ -13,6 +13,7 @@ import numpy as np
 from scipy.special import gammaln
 
 from means.core import Moment
+from means.compat import iteritems
 from means.simulation.solvers import NP_FLOATING_POINT_PRECISION
 
 def _supported_distances_lookup():
@@ -157,7 +158,7 @@ def _compile_mean_variance_lookup(trajectories):
             variances[species_id] = trajectory.values
 
     combined_lookup = {}
-    for species, mean in means.iteritems():
+    for species, mean in iteritems(means):
         combined_lookup[species] = _MeanVariance(mean, variances[species])
 
     return combined_lookup

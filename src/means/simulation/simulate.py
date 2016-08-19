@@ -47,11 +47,11 @@ def _validate_problem(problem):
     problem.validate()
 
     if problem.method == "MEA":
-        moments = filter(lambda x: isinstance(x, Moment), problem.left_hand_side_descriptors)
-        if problem.left_hand_side.rows != len(moments):
+        moments = [x for x in problem.left_hand_side_descriptors if isinstance(x, Moment)]
+        if problem.left_hand_side.rows != moments:
             raise ValueError("There are {0} equations and {1} moments. "
                              "For MEA problems, the same number is expected.".format(problem.left_hand_side.rows,
-                                                                                     len(moments)))
+                                                                                     moments))
     elif problem.method == 'LNA':
         # FIXME: do some validation for LNA here
         pass

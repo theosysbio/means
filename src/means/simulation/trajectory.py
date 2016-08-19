@@ -22,6 +22,7 @@ import numbers
 
 import numpy as np
 
+from means.compat import unicode_compatible
 from means.core.descriptors import Descriptor, Moment
 from means.io.serialise import SerialisableObject
 from means.simulation import SensitivityTerm
@@ -380,6 +381,7 @@ def perturbed_trajectory(trajectory, sensitivity_trajectory, delta=1e-4):
                                     delta))
 
 
+@unicode_compatible
 class TrajectoryCollection(SerialisableObject):
     """
     A container of trajectories with representation functions for matplotlib and IPythonNoteBook.
@@ -514,11 +516,8 @@ class TrajectoryCollection(SerialisableObject):
         from IPython.display import SVG
         return SVG(self._repr_svg_())
 
-    def __unicode__(self):
-        return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<{self.__class__.__name__}>\n{self.trajectories!r}".format(self=self)
 
     def __repr__(self):
         return str(self)

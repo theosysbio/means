@@ -95,7 +95,7 @@ class TestInference(unittest.TestCase):
                 parameters,
                 variables)
 
-            self.assertEqual(values_with_variability, correct_values_with_variability)
+            self.assertEqual(values_with_variability, list(correct_values_with_variability))
             self.assertEqual(constraints, correct_constraints)
 
         parameters = [0.001, 0.5, 330.0]
@@ -115,8 +115,8 @@ class TestInference(unittest.TestCase):
             p = Inference(self.dimer_problem, parameters, initial_conditions,
                           variable_parameters, [Trajectory([1, 2, 3], [1, 2, 3], Moment([1], symbol='x'))])
 
-            self.assertEquals(p.starting_parameters_with_variability, expected_parameters_with_variability)
-            self.assertEqual(p.starting_conditions_with_variability, expected_initial_conditions_with_variability)
+            self.assertEquals(p.starting_parameters_with_variability, list(expected_parameters_with_variability))
+            self.assertEqual(p.starting_conditions_with_variability, list(expected_initial_conditions_with_variability))
             self.assertEqual(p.constraints, expected_constraints)
 
         symbol_keys = {Symbol('c_1'): None, Symbol('c_2'): (329, 330), Symbol('y_0'): [319, 321]}

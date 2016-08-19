@@ -11,6 +11,7 @@ import inspect
 from assimulo.problem import Explicit_Problem
 import numpy as np
 
+from means.compat import iteritems
 from means.simulation import SensitivityTerm
 from means.simulation.trajectory import Trajectory, TrajectoryWithSensitivityData
 from means.util.memoisation import memoised_property, MemoisableObject
@@ -107,7 +108,7 @@ def parse_flag(exception_message):
 #-- Base solver functionality ---------------------------------------------------------------
 
 def _set_kwargs_as_attributes(instance, **kwargs):
-    for attribute, value in kwargs.iteritems():
+    for attribute, value in iteritems(kwargs):
         setattr(instance, attribute, value)
     return instance
 

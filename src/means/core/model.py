@@ -44,11 +44,12 @@ and stochastic simulations (e.g. :mod:`~means.simulation.ssa`).
 
 import sympy
 
+from means.compat import text_type, unicode_compatible
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal
 
-
+@unicode_compatible
 class Model(SerialisableObject, LatexPrintableObject):
     """
     Stores the model of reactions we want to analyse
@@ -152,7 +153,7 @@ class Model(SerialisableObject, LatexPrintableObject):
         return len(self.__parameters)
 
 
-    def __unicode__(self):
+    def __str__(self):
         return u"{0.__class__!r}\n" \
                u"Species: {0.species!r}\n" \
                u"Parameters: {0.parameters!r}\n" \
@@ -162,9 +163,6 @@ class Model(SerialisableObject, LatexPrintableObject):
                u"\n" \
                u"Propensities:\n" \
                u"{0.propensities!r}".format(self)
-
-    def __str__(self):
-        return unicode(self).encode("utf8")
 
     def __repr__(self):
         return str(self)

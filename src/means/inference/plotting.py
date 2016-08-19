@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 
+from means.compat import iteritems
+
 def _label_axes(ax, x_label, y_label, fontsize=20, rotate_x_ticks=True):
     ax.set_xlabel(x_label, fontsize=fontsize)
     ax.set_ylabel(y_label, fontsize=fontsize)
@@ -30,7 +32,8 @@ def plot_contour(x, y, z, x_label, y_label, ax=None, fmt='%.3f', *args, **kwargs
             seen_values[xi, yi] = [zi]
 
     new_x, new_y, new_z = [], [], []
-    for (xi, yi), zi_list in seen_values.iteritems():
+    for xyi, zi_list in iteritems(seen_values):
+        xi, yi = xyi
         new_x.append(xi)
         new_y.append(yi)
 

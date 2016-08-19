@@ -5,6 +5,7 @@ import operator
 import sympy as sp
 
 from means.approximation.mea.mea_helpers import make_k_chose_e
+from means.compat import reduce
 
 
 def _make_alpha(n_vec, k_vec, ymat):

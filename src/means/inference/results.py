@@ -5,14 +5,15 @@ Inference Results
 This part of the package provides classes to store and manage the results
 of inference.
 """
+from means.compat import unicode_compatible, iteritems
 from means.inference.plotting import plot_contour, plot_2d_trajectory
-
 from means.io.serialise import SerialisableObject
 from means.util.logs import get_logger
 from means.util.memoisation import memoised_property, MemoisableObject
 
 logger = get_logger(__name__)
 
+@unicode_compatible
 class ConvergenceStatusBase(SerialisableObject):
 
     def __init__(self, convergence_achieved):
@@ -26,11 +27,8 @@ class ConvergenceStatusBase(SerialisableObject):
     def _convergence_achieved_str(self):
         return 'convergence achieved' if self.convergence_achieved else 'convergence not achieved'
 
-    def __unicode__(self):
-        return u"<Inference {self._convergence_achieved_str}>".format(self=self)
-
     def __str__(self):
-        return unicode(self).encode("utf8")
+        return u"<Inference {self._convergence_achieved_str}>".format(self=self)
 
     def __repr__(self):
         return str(self)
@@ -41,6 +39,8 @@ class ConvergenceStatusBase(SerialisableObject):
 
         return self.convergence_achieved == other.convergence_achieved
 
+
+@unicode_compatible
 class NormalConvergenceStatus(ConvergenceStatusBase):
 
     yaml_tag = '!convergence-status'
@@ -65,7 +65,7 @@ class NormalConvergenceStatus(ConvergenceStatusBase):
     def warn_flag(self):
         return self.__warn_flag
 
-    def __unicode__(self):
+    def __str__(self):
         return u"<Inference {self._convergence_achieved_str} " \
                u"in {self.iterations_taken} iterations " \
                u"and {self.function_calls_made} function calls>".format(self=self)
@@ -87,6 +87,7 @@ class NormalConvergenceStatus(ConvergenceStatusBase):
             and self.warn_flag == other.warn_flag
 
 
+@unicode_compatible
 class SolverErrorConvergenceStatus(ConvergenceStatusBase):
 
     yaml_tag = '!multiple-solver-errors'
@@ -94,7 +95,7 @@ class SolverErrorConvergenceStatus(ConvergenceStatusBase):
     def __init__(self):
         super(SolverErrorConvergenceStatus, self).__init__(False)
 
-    def __unicode__(self):
+    def __str__(self):
         return u"<Inference {self._convergence_achieved_str} " \
                u"as it was cancelled after maximum number of solver errors occurred.".format(self=self)
 
@@ -109,6 +110,8 @@ class SolverErrorConvergenceStatus(ConvergenceStatusBase):
 
         return super(SolverErrorConvergenceStatus, self).__eq__(other)
 
+
+@unicode_compatible
 class InferenceResultsCollection(SerialisableObject):
     __inference_results = None
 
@@ -153,7 +156,7 @@ class InferenceResultsCollection(SerialisableObject):
     def best(self):
         return self.__inference_results[0]
 
-    def __unicode__(self):
+    def __str__(self):
         return u"""
         {self.__class__!r}
 
@@ -162,18 +165,13 @@ class InferenceResultsCollection(SerialisableObject):
         {self.best!r}
         """.format(self=self)
 
-    def __str__(self):
-        return unicode(self).encode("utf8")
-
     def __repr__(self):
         return str(self)
-
 
     def plot(self):
         from matplotlib import pyplot as plt
 
         trajectory_descriptions = [x.description for x in self.results[0].starting_trajectories]
-
 
         # Plot in reverse order so the best one is always on top
         reversed_results = list(reversed(self.results))
@@ -249,6 +247,7 @@ class InferenceResultsCollection(SerialisableObject):
                                               *args, **kwargs)
 
 
+@unicode_compatible
 class InferenceResult(SerialisableObject, MemoisableObject):
 
     __inference = None
@@ -544,7 +543,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
             if kwargs is None:
                 kwargs = {}
 
-            for key, value in default_data.iteritems():
+            for key, value in iteritems(default_data):
                 if key not in kwargs:
                     kwargs[key] = value
 
@@ -626,7 +625,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
 
                 list_.append((trajectory, kwargs_optimal_trajectories))
 
-        for description, trajectories_list in trajectories_by_description.iteritems():
+        for description, trajectories_list in iteritems(trajectories_by_description):
             if len(trajectories_by_description) > 1:
                 plt.figure()
             plt.title(description)
@@ -638,7 +637,7 @@ class InferenceResult(SerialisableObject, MemoisableObject):
                 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
 
 
-    def __unicode__(self):
+    def __str__(self):
         return u"""
         {self.__class__!r}
         Starting Parameters: {self.starting_parameters!r}
@@ -653,9 +652,6 @@ class InferenceResult(SerialisableObject, MemoisableObject):
 
     def __repr__(self):
         return str(self)
-
-    def __str__(self):
-        return unicode(self).encode('utf8')
 
     @classmethod
     def to_yaml(cls, dumper, data):

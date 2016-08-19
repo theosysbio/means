@@ -15,6 +15,7 @@ defined below.
 import numpy as np
 import sympy
 
+from means.compat import text_type, unicode_compatible
 from means.io.serialise import SerialisableObject
 
 
@@ -37,6 +38,7 @@ class Descriptor(SerialisableObject):
         """
         return str(self)
 
+@unicode_compatible
 class ODETermBase(Descriptor):
     """
     Base class for explaining terms in the ODE expressions.
@@ -72,9 +74,6 @@ class ODETermBase(Descriptor):
         return str(self)
 
     def __str__(self):
-        return unicode(self).encode('utf8')
-
-    def __unicode__(self):
         return u'{0}({1})'.format(self.__class__.__name__, self.symbol)
 
     def mathtext(self):
@@ -84,7 +83,7 @@ class ODETermBase(Descriptor):
     def _repr_latex(self):
         return '${0}$'.format(self.symbol)
 
-
+@unicode_compatible
 class VarianceTerm(ODETermBase):
     """
     Signifies that a particular equation generated from the model is part of a Variance Term
@@ -110,7 +109,7 @@ class VarianceTerm(ODETermBase):
     def position(self):
         return self._position
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{0}(position{1}, symbol={2})'.format(self.__class__.__name__, self.position, self.symbol)
 
     def _repr_latex_(self):
@@ -127,7 +126,7 @@ class VarianceTerm(ODETermBase):
         mapping = [('symbol', str(data.symbol)), ('position', data.position)]
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
-
+@unicode_compatible
 class Moment(ODETermBase):
     """
     An annotator for ODE expressions that describes that a particular expression in a set of ODEs corresponds to a Moment
@@ -220,11 +219,8 @@ class Moment(ODETermBase):
         """
         return (self.n_vector >= other.n_vector).all()
 
-    def __unicode__(self):
-        return u'{self.__class__.__name__}({self.n_vector!r}, symbol={self.symbol!r})'.format(self=self)
-
     def __str__(self):
-        return unicode(self).encode("utf8")
+        return u'{self.__class__.__name__}({self.n_vector!r}, symbol={self.symbol!r})'.format(self=self)
 
     def __repr__(self):
         return str(self)

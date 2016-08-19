@@ -11,6 +11,7 @@ import operator
 
 import sympy as sp
 
+from means.compat import reduce
 from means.util.decorators import cache
 from means.util.sympyhelpers import product
 

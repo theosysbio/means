@@ -22,16 +22,8 @@ class LatexPrintableObject(object):
         :param filename_or_file_handle: filename or already opened file handle to output to
         :return:
         """
-
-        if isinstance(filename_or_file_handle, basestring):
-            file_handle = file(filename_or_file_handle, 'w')
-            we_opened = True
-        else:
-            file_handle = filename_or_file_handle
-            we_opened = False
-
         try:
-            file_handle.write(self.latex)
-        finally:
-            if we_opened:
-                file_handle.close()
+            with open(filename_or_file_handle, 'w') as f:
+                f.write(self.latex)
+        except TypeError:
+            filename_or_file_handle.write(self.latex)

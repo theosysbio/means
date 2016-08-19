@@ -12,6 +12,7 @@ import sympy
 from sympy.core.sympify import SympifyError
 import numpy as np
 
+from means.compat import reduce
 
 def substitute_all(sp_object, pairs):
     """

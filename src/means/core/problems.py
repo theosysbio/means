@@ -28,6 +28,7 @@ from sympy.utilities.autowrap import autowrap
 
 from means.core.model import Model
 from means.core.descriptors import Moment
+from means.compat import string_types, unicode_compatible, iteritems
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 from means.util.memoisation import memoised_property, MemoisableObject
@@ -35,6 +36,7 @@ from means.util.sympyhelpers import to_list_of_symbols, to_sympy_column_matrix, 
 from means.util.sympyhelpers import sympy_expressions_equal
 
 
+@unicode_compatible
 class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
     """
     Creates a `ODEProblem` object that stores a system of ODEs describing the kinetic of a system.
@@ -93,7 +95,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
 
     @property
     def number_of_species(self):
-        species = [it[1]  for it in self._descriptions_dict.iteritems() if
+        species = [it[1]  for it in iteritems(self._descriptions_dict) if
             isinstance(it[1], Moment) and it[1].order == 1]
 
         return len(species)
@@ -157,7 +159,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         :type symbol: basestring|:class:`sympy.Symbol`
         :return:
         """
-        if isinstance(symbol, basestring):
+        if isinstance(symbol, string_types):
             symbol = sympy.Symbol(symbol)
 
         try:
@@ -165,9 +167,7 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
         except KeyError:
             raise KeyError("Symbol {0!r} not found in left-hand-side of the equations".format(symbol))
 
-
-
-    def __unicode__(self):
+    def __str__(self):
         equations_pretty_str = '\n\n'.join(['{0!r}:\n    {1!r}'.format(x, y) for x, y in zip(self.left_hand_side_descriptors,
                                                                                            self.right_hand_side)])
         return u"{0.__class__!r}\n" \
@@ -176,9 +176,6 @@ class ODEProblem(SerialisableObject, LatexPrintableObject, MemoisableObject):
                u"\n" \
                u"Equations:\n\n" \
                u"{1}\n".format(self, equations_pretty_str)
-
-    def __str__(self):
-        return unicode(self).encode("utf8")
 
     def __repr__(self):
         return str(self)

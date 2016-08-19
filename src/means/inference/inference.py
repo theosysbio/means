@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 from scipy.optimize import fmin
 from sympy import Symbol
 
+from means.compat import iteritems
 from means.inference.distances import get_distance_function
 from means.inference.hypercube import hypercube
 from means.inference.parallelisation import raw_results_in_parallel
@@ -291,7 +292,7 @@ class Inference(SerialisableObject, MemoisableObject):
         # Variable parameters are assumed to be validated here and only in {symbol : range_} format
         variable_parameters = data.variable_parameters
         # Convert key to string as sympy is a bit too smart and does not allow sorting symbols
-        variable_parameters = {str(key): value for key, value in variable_parameters.iteritems()}
+        variable_parameters = {str(key): value for key, value in iteritems(variable_parameters)}
 
         mapping = [('problem', data.problem),
                    ('starting_parameters', data.starting_parameters),
@@ -355,9 +356,8 @@ class Inference(SerialisableObject, MemoisableObject):
 
         constraints = parameter_constraints + initial_condition_constraints
 
-        assert(constraints is None or len(constraints) == len(filter(lambda x: x[1],
-                                                                     starting_parameters_with_variability +
-                                                                     starting_conditions_with_variability)))
+        assert(constraints is None or len(constraints) == sum(
+            bool(x[1]) for x in starting_parameters_with_variability + starting_conditions_with_variability))
         self.__constraints = constraints
 
         self.__observed_trajectories = observed_trajectories
@@ -418,7 +418,7 @@ class Inference(SerialisableObject, MemoisableObject):
             variable_parameters = {p: None for p in variable_parameters}
 
         variable_parameters_symbolic = {}
-        for parameter, range_ in variable_parameters.iteritems():
+        for parameter, range_ in iteritems(variable_parameters):
             if not isinstance(parameter, Symbol):
                 parameter = Symbol(parameter)
             if range_ is not None:

@@ -2,15 +2,18 @@ from __future__ import absolute_import, print_function
 
 import os
 import unittest
-from StringIO import StringIO
 from tempfile import mkstemp
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import numpy as np
 from assimulo.solvers.sundials import CVodeError
 from sympy import Symbol, MutableDenseMatrix, Float
 
 from means import TrajectoryCollection, SolverException
+from means.compat import StringIO
 from means.core import ODEProblem, Moment, VarianceTerm
 from means.inference import Inference
 from means.inference.results import InferenceResult, NormalConvergenceStatus

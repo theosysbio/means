@@ -91,18 +91,11 @@ def from_file(filename_or_file_object):
     :type filename_or_file_object: basestring|file
     :return:
     """
-    if isinstance(filename_or_file_object, basestring):
-        file_ = open(filename_or_file_object, 'r')
-        we_opened = True
-    else:
-        we_opened = False
-        file_ = filename_or_file_object
-
     try:
-        data = load(file_.read())
-    finally:
-        if we_opened:
-            file_.close()
+        with open(filename_or_file_object, 'r') as f:
+            data = load(f.read())
+    except TypeError:
+        data = load(filename_or_file_object.read())
 
     return data
 

@@ -114,7 +114,7 @@ class GammaClosure(ClosureBase):
             alpha_m = [self._gamma_factorial(a,n) for n in range(2, n_moment+1)]
 
             # Substitute alpha term for symbolic species
-            subs_pairs += zip(Y_to_substitute, alpha_m)
+            subs_pairs += list(zip(Y_to_substitute, alpha_m))
             subs_pairs.append((symbolic_species[i], a)) # Add first order expression to the end
         Y_exprs = substitute_all(Y_exprs, subs_pairs)
 

@@ -11,6 +11,7 @@ import sympy as sp
 from sympy.utilities.iterables import multiset_partitions
 
 from means.util.sympyhelpers import product
+from means.compat import reduce
 from .closure_scalar import ClosureBase
 
 

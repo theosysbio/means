@@ -6,6 +6,7 @@ import sympy as sp
 
 from means.approximation.approximation_baseclass import ApproximationBaseClass
 from means.core import Moment, VarianceTerm, ODEProblem
+from means.compat import reduce
 
 
 def lna_approximation(model):
