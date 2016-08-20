@@ -12,7 +12,7 @@ except ImportError:
 
 try:
     # py2
-    reduce
+    reduce = reduce
 except NameError:
     # py3
     from functools import reduce
