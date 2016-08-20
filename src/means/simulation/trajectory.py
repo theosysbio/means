@@ -209,7 +209,14 @@ class Trajectory(SerialisableObject):
     def __add__(self, other):
         return self._arithmetic_operation(other, operator.add)
     def __div__(self, other):
+        # / in python 2
         return self._arithmetic_operation(other, operator.div)
+    def __truediv__(self, other):
+        # / in python 3 (or 2 with future import)
+        return self._arithmetic_operation(other, operator.truediv)
+    def __floordiv__(self, other):
+        # // in python 2 and 3
+        return self._arithmetic_operation(other, operator.floordiv)
     def __mul__(self, other):
         return self._arithmetic_operation(other, operator.mul)
     def __sub__(self, other):
