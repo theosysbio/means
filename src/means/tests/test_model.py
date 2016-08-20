@@ -202,18 +202,22 @@ class TestModelInitialisation(unittest.TestCase):
         # List
         m = Model(self.SAMPLE_VARIABLES,
                   self.SAMPLE_CONSTANTS,
-                  map(sympy.sympify, ['c_0*y_0*(y_0 + y_1 - 181)',
-                                      'c_1*(-y_0 - y_1 + 301)',
-                                      'c_2*(-y_0 - y_1 + 301)']),
+                  [sympy.sympify(v) for v in [
+                        'c_0*y_0*(y_0 + y_1 - 181)',
+                        'c_1*(-y_0 - y_1 + 301)',
+                        'c_2*(-y_0 - y_1 + 301)',
+                  ]],
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.propensities, answer)
 
         # Double list
         m = Model(self.SAMPLE_VARIABLES,
                   self.SAMPLE_CONSTANTS,
-                  [map(sympy.sympify, ['c_0*y_0*(y_0 + y_1 - 181)',
-                                       'c_1*(-y_0 - y_1 + 301)',
-                                       'c_2*(-y_0 - y_1 + 301)'])],
+                  [[sympy.sympify(v) for v in [
+                        'c_0*y_0*(y_0 + y_1 - 181)',
+                        'c_1*(-y_0 - y_1 + 301)',
+                        'c_2*(-y_0 - y_1 + 301)',
+                  ]]],
                   self.SAMPLE_STOICHIOMETRY_MATRIX)
         self.assertEqual(m.propensities, answer)
 

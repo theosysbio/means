@@ -98,7 +98,7 @@ class CentralMomentsTestCase(unittest.TestCase):
         ])
 
 
-        species = sympy.Matrix(map(sympy.var, ['y_0', 'y_1']))
+        species = sympy.Matrix([sympy.var(v) for v in ['y_0', 'y_1']])
 
         propensities = to_sympy_matrix(['c_0*y_0*(y_0 + y_1 - 181)',
                                                         'c_1*(-y_0 - y_1 + 301)',
