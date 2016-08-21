@@ -15,7 +15,7 @@ defined below.
 import numpy as np
 import sympy
 
-from means.compat import text_type, unicode_compatible
+from means.compat import unicode_compatible
 from means.io.serialise import SerialisableObject
 
 

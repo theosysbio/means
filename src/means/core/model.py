@@ -44,7 +44,7 @@ and stochastic simulations (e.g. :mod:`~means.simulation.ssa`).
 
 import sympy
 
-from means.compat import text_type, unicode_compatible
+from means.compat import unicode_compatible
 from means.io.latex import LatexPrintableObject
 from means.io.serialise import SerialisableObject
 from means.util.sympyhelpers import to_sympy_matrix, to_sympy_column_matrix, to_list_of_symbols, sympy_expressions_equal

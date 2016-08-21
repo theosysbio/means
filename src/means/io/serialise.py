@@ -69,33 +69,34 @@ def to_file(data, filename_or_file_object):
 
     :param data: Object to write to file
     :param filename_or_file_object: filename/or opened file buffer to write to
-    :type filename_or_file_object: basestring|file
+    :type filename_or_file_object: string|file
     """
-    if isinstance(filename_or_file_object, basestring):
-        file_ = open(filename_or_file_object, 'w')
-        we_opened = True
-    else:
-        file_ = filename_or_file_object
-        we_opened = False
-
     try:
-        file_.write(dump(data))
-    finally:
-        if we_opened:
-            file_.close()
+        file = open(filename_or_file_object, 'w')
+    except TypeError:
+        filename_or_file_object.write(dump(data))
+    else:
+        try:
+            file.write(dump(data))
+        finally:
+            file.close()
 
 def from_file(filename_or_file_object):
     """
     Read data from the specified file.
     :param filename_or_file_object: filename of the file or an opened :class:`file` buffer to that file
-    :type filename_or_file_object: basestring|file
+    :type filename_or_file_object: string|file
     :return:
     """
     try:
-        with open(filename_or_file_object, 'r') as f:
-            data = load(f.read())
+        file = open(filename_or_file_object, 'r')
     except TypeError:
         data = load(filename_or_file_object.read())
+    else:
+        try:
+            data = load(file.read())
+        finally:
+            file.close()
 
     return data
 

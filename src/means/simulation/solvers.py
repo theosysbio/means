@@ -213,7 +213,7 @@ class SolverBase(MemoisableObject):
         """
         Property That would return the exception class thrown by a specific solver the subclases can override.
         """
-        return None
+        return Exception
 
     @memoised_property
     def _solver(self):
